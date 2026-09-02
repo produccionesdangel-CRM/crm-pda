@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro PDA - Estudio Fotografía</title>
+    <title>Registro PDA - Estudio Fotografía (Firebase Sync)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <style>
         /* ============================================ */
@@ -203,6 +207,62 @@
             color: var(--color-texto-secundario);
             font-size: 14px;
             margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        /* Estado de sincronización */
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            background-color: var(--color-bg-terciario);
+            border: 1px solid var(--color-borde);
+        }
+
+        .sync-status .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        .sync-status .sync-dot.online {
+            background-color: var(--color-verde);
+        }
+
+        .sync-status .sync-dot.offline {
+            background-color: var(--color-rojo);
+            animation: none;
+        }
+
+        .sync-status .sync-dot.syncing {
+            background-color: var(--color-naranja);
+            animation: pulse-fast 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @keyframes pulse-fast {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.8); }
+        }
+
+        .sync-status .sync-text {
+            color: var(--color-texto-secundario);
+            white-space: nowrap;
         }
 
         /* ============================================ */
@@ -1070,6 +1130,38 @@
         }
 
         /* ============================================ */
+        /* NOTIFICACIONES                               */
+        /* ============================================ */
+        .notificacion {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--color-acento);
+            color: #0d0d0d;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease;
+            max-width: 350px;
+        }
+
+        .notificacion i {
+            margin-right: 8px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100px); opacity: 0; }
+        }
+
+        /* ============================================ */
         /* SCROLLBAR                                    */
         /* ============================================ */
         ::-webkit-scrollbar {
@@ -1263,7 +1355,7 @@
             </ul>
             
             <div class="sidebar-footer">
-                <div class="version">v2.8</div>
+                <div class="version">v2.8 🔥 Firebase</div>
             </div>
         </nav>
 
@@ -1273,12 +1365,22 @@
             <section id="seccion-informes" class="seccion active">
                 <div class="seccion-header">
                     <h1><i class="fas fa-chart-pie"></i> Informes y Análisis</h1>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                        <button class="btn-verde" id="btn-exportar-datos">
-                            <i class="fas fa-download"></i> Exportar Datos
+                    <div class="header-actions">
+                        <div class="sync-status" id="sync-status">
+                            <span class="sync-dot offline" id="sync-dot"></span>
+                            <span class="sync-text" id="sync-text">Conectando...</span>
+                        </div>
+                        <button class="btn-verde" id="btn-sync-firebase">
+                            <i class="fas fa-cloud-upload-alt"></i> Sincronizar Nube
                         </button>
-                        <button class="btn-azul" id="btn-importar-datos">
-                            <i class="fas fa-upload"></i> Importar Datos
+                        <button class="btn-azul" id="btn-cargar-firebase">
+                            <i class="fas fa-cloud-download-alt"></i> Cargar desde Nube
+                        </button>
+                        <button class="btn-secundario" id="btn-exportar-datos">
+                            <i class="fas fa-download"></i> Exportar
+                        </button>
+                        <button class="btn-secundario" id="btn-importar-datos">
+                            <i class="fas fa-upload"></i> Importar
                         </button>
                         <input type="file" id="input-importar-datos" accept=".json" style="display:none;">
                     </div>
@@ -1577,13 +1679,27 @@
     </div>
 
     <!-- ========================================= -->
-    <!-- JAVASCRIPT                                -->
+    <!-- JAVASCRIPT CON FIREBASE                   -->
     <!-- ========================================= -->
     <script>
         // ============================================================
-        // CONFIGURACIÓN INICIAL - v2.8
+        // CONFIGURACIÓN DE FIREBASE - TU CONFIGURACIÓN
         // ============================================================
-        console.log('🚀 Registro PDA v2.8 - Iniciando...');
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAqHelYUMSfuZpOBLb-_0LEKnoxH9yF8Ts",
+            authDomain: "crm-pda.firebaseapp.com",
+            databaseURL: "https://crm-pda-default-rtdb.firebaseio.com",
+            projectId: "crm-pda",
+            storageBucket: "crm-pda.firebasestorage.app",
+            messagingSenderId: "308550111377",
+            appId: "1:308550111377:web:893128880c21e2de16af30"
+        };
+
+        // ============================================================
+        // CONFIGURACIÓN INICIAL
+        // ============================================================
+        console.log('🚀 Registro PDA v2.8 - Con Firebase Sync');
 
         const FASES_DISPONIBLES = [
             'Interesado', 'Cotización', 'Negociación', 
@@ -1605,11 +1721,31 @@
             'Otro'
         ];
 
-        let paquetes = JSON.parse(localStorage.getItem('paquetes')) || [];
-        let serviciosAdicionales = JSON.parse(localStorage.getItem('serviciosAdicionales')) || [];
-        let prospectos = JSON.parse(localStorage.getItem('prospectos')) || [];
-        let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
-        let tareas = JSON.parse(localStorage.getItem('tareas')) || [];
+        let paquetes = [];
+        let serviciosAdicionales = [];
+        let prospectos = [];
+        let clientes = [];
+        let tareas = [];
+
+        // ============================================================
+        // INICIALIZAR FIREBASE
+        // ============================================================
+        
+        let database = null;
+        let sincronizandoFirebase = false;
+        let primerCarga = true;
+        let estadoSync = {
+            conectado: false,
+            modo: 'local' // 'local' o 'firebase'
+        };
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            console.log('✅ Firebase inicializado correctamente');
+        } catch (error) {
+            console.error('❌ Error inicializando Firebase:', error);
+        }
 
         // ============================================================
         // UTILIDADES
@@ -1646,12 +1782,20 @@
             return '$' + cantidad.toLocaleString('es-MX');
         }
 
-        function guardarDatos() {
+        function guardarDatosLocal() {
             localStorage.setItem('paquetes', JSON.stringify(paquetes));
             localStorage.setItem('serviciosAdicionales', JSON.stringify(serviciosAdicionales));
             localStorage.setItem('prospectos', JSON.stringify(prospectos));
             localStorage.setItem('clientes', JSON.stringify(clientes));
             localStorage.setItem('tareas', JSON.stringify(tareas));
+        }
+
+        function cargarDatosLocal() {
+            paquetes = JSON.parse(localStorage.getItem('paquetes')) || [];
+            serviciosAdicionales = JSON.parse(localStorage.getItem('serviciosAdicionales')) || [];
+            prospectos = JSON.parse(localStorage.getItem('prospectos')) || [];
+            clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+            tareas = JSON.parse(localStorage.getItem('tareas')) || [];
         }
 
         function obtenerPaquete(id) {
@@ -1706,6 +1850,185 @@
         }
 
         // ============================================================
+        // FUNCIONES DE SINCRONIZACIÓN CON FIREBASE
+        // ============================================================
+
+        function actualizarEstadoSync(estado, texto) {
+            const dot = document.getElementById('sync-dot');
+            const text = document.getElementById('sync-text');
+            
+            if (!dot || !text) return;
+            
+            dot.className = 'sync-dot';
+            if (estado === 'online') {
+                dot.classList.add('online');
+                text.textContent = texto || 'Conectado a Firebase';
+                estadoSync.conectado = true;
+            } else if (estado === 'offline') {
+                dot.classList.add('offline');
+                text.textContent = texto || 'Modo local';
+                estadoSync.conectado = false;
+            } else if (estado === 'syncing') {
+                dot.classList.add('syncing');
+                text.textContent = texto || 'Sincronizando...';
+            }
+        }
+
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            const colores = {
+                info: 'var(--color-azul)',
+                success: 'var(--color-verde)',
+                warning: 'var(--color-naranja)',
+                error: 'var(--color-rojo)'
+            };
+            
+            const iconos = {
+                info: 'fa-info-circle',
+                success: 'fa-check-circle',
+                warning: 'fa-exclamation-triangle',
+                error: 'fa-times-circle'
+            };
+
+            const notificacion = document.createElement('div');
+            notificacion.className = 'notificacion';
+            notificacion.style.background = colores[tipo] || colores.info;
+            notificacion.style.color = tipo === 'info' ? '#ffffff' : '#0d0d0d';
+            notificacion.innerHTML = `<i class="fas ${iconos[tipo] || iconos.info}"></i> ${mensaje}`;
+            document.body.appendChild(notificacion);
+            
+            setTimeout(() => {
+                notificacion.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notificacion.remove(), 300);
+            }, 3500);
+        }
+
+        async function guardarEnFirebase() {
+            if (!database) {
+                console.warn('⚠️ Firebase no inicializado');
+                return false;
+            }
+            
+            if (sincronizandoFirebase) {
+                console.log('⏳ Ya hay una sincronización en curso');
+                return false;
+            }
+            
+            try {
+                sincronizandoFirebase = true;
+                actualizarEstadoSync('syncing', 'Guardando en Firebase...');
+                
+                const datos = {
+                    paquetes: paquetes,
+                    serviciosAdicionales: serviciosAdicionales,
+                    prospectos: prospectos,
+                    clientes: clientes,
+                    tareas: tareas,
+                    ultimaActualizacion: new Date().toISOString()
+                };
+                
+                await database.ref('datos').set(datos);
+                
+                console.log('✅ Datos guardados en Firebase');
+                actualizarEstadoSync('online', 'Datos guardados');
+                mostrarNotificacion('✅ Datos sincronizados con Firebase', 'success');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Error guardando en Firebase:', error);
+                actualizarEstadoSync('offline', 'Error al guardar');
+                mostrarNotificacion('❌ Error al guardar en Firebase: ' + error.message, 'error');
+                return false;
+            } finally {
+                sincronizandoFirebase = false;
+            }
+        }
+
+        async function cargarDesdeFirebase() {
+            if (!database) {
+                console.warn('⚠️ Firebase no inicializado');
+                return false;
+            }
+            
+            try {
+                actualizarEstadoSync('syncing', 'Cargando desde Firebase...');
+                
+                const snapshot = await database.ref('datos').once('value');
+                const datos = snapshot.val();
+                
+                if (datos) {
+                    if (datos.paquetes) paquetes = datos.paquetes;
+                    if (datos.serviciosAdicionales) serviciosAdicionales = datos.serviciosAdicionales;
+                    if (datos.prospectos) prospectos = datos.prospectos;
+                    if (datos.clientes) clientes = datos.clientes;
+                    if (datos.tareas) tareas = datos.tareas;
+                    
+                    guardarDatosLocal();
+                    renderizarTodo();
+                    
+                    console.log('✅ Datos cargados desde Firebase');
+                    actualizarEstadoSync('online', 'Datos sincronizados');
+                    mostrarNotificacion('📥 Datos cargados desde Firebase', 'info');
+                    return true;
+                } else {
+                    console.log('📝 No hay datos en Firebase, guardando datos locales...');
+                    await guardarEnFirebase();
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Error cargando desde Firebase:', error);
+                actualizarEstadoSync('offline', 'Error de conexión');
+                mostrarNotificacion('❌ Error al cargar desde Firebase: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        function escucharCambiosFirebase() {
+            if (!database) {
+                console.warn('⚠️ Firebase no inicializado, no se pueden escuchar cambios');
+                return;
+            }
+            
+            database.ref('datos').on('value', (snapshot) => {
+                const datos = snapshot.val();
+                if (!datos) return;
+                
+                if (sincronizandoFirebase) return;
+                if (primerCarga) {
+                    primerCarga = false;
+                    return;
+                }
+                
+                console.log('🔄 Detectado cambio en Firebase, actualizando...');
+                
+                let huboCambios = false;
+                if (datos.paquetes) { paquetes = datos.paquetes; huboCambios = true; }
+                if (datos.serviciosAdicionales) { serviciosAdicionales = datos.serviciosAdicionales; huboCambios = true; }
+                if (datos.prospectos) { prospectos = datos.prospectos; huboCambios = true; }
+                if (datos.clientes) { clientes = datos.clientes; huboCambios = true; }
+                if (datos.tareas) { tareas = datos.tareas; huboCambios = true; }
+                
+                if (huboCambios) {
+                    guardarDatosLocal();
+                    renderizarTodo();
+                    mostrarNotificacion('📥 Datos actualizados desde la nube', 'success');
+                    actualizarEstadoSync('online', 'Actualizado en tiempo real');
+                }
+            });
+        }
+
+        // ============================================================
+        // GUARDAR DATOS (SOBRESCRITO)
+        // ============================================================
+        
+        function guardarDatos() {
+            guardarDatosLocal();
+            
+            if (estadoSync.modo === 'firebase' && database) {
+                guardarEnFirebase();
+            }
+        }
+
+        // ============================================================
         // NAVEGACIÓN
         // ============================================================
         const menuItems = document.querySelectorAll('.menu-item');
@@ -1742,6 +2065,17 @@
             }
         }
 
+        function renderizarTodo() {
+            renderizarPaquetes();
+            renderizarServicios();
+            renderizarProspectos();
+            renderizarClientes();
+            renderizarContratos();
+            renderizarCalendario();
+            renderizarInformes();
+            actualizarFiltrosInformes();
+        }
+
         // ============================================================
         // MODAL
         // ============================================================
@@ -1769,15 +2103,10 @@
         });
 
         // ============================================================
-        // EXPORTAR E IMPORTAR DATOS - VERSIÓN MEJORADA
+        // EXPORTAR E IMPORTAR DATOS (MANUAL)
         // ============================================================
-
-        /**
-         * Exporta los datos permitiendo elegir la ubicación de guardado
-         * Usa la API showSaveFilePicker cuando está disponible (Chrome/Edge)
-         * Fallback a descarga tradicional si no está disponible
-         */
-        document.getElementById('btn-exportar-datos').addEventListener('click', async function() {
+        
+        document.getElementById('btn-exportar-datos').addEventListener('click', function() {
             try {
                 const datos = {
                     version: '2.8',
@@ -1791,129 +2120,139 @@
                 
                 const json = JSON.stringify(datos, null, 2);
                 const blob = new Blob([json], { type: 'application/json' });
-                const nombreArchivo = `registro_pda_datos_${obtenerFechaActual()}.json`;
-                
-                // Verificar si el navegador soporta la API File System Access
-                if ('showSaveFilePicker' in window) {
-                    try {
-                        // Usar la API moderna para elegir ubicación
-                        const opciones = {
-                            suggestedName: nombreArchivo,
-                            types: [{
-                                description: 'Archivo JSON',
-                                accept: { 'application/json': ['.json'] }
-                            }]
-                        };
-                        
-                        const fileHandle = await window.showSaveFilePicker(opciones);
-                        const writable = await fileHandle.createWritable();
-                        await writable.write(blob);
-                        await writable.close();
-                        
-                        alert('✅ Datos exportados correctamente en la ubicación seleccionada');
-                        return;
-                    } catch (error) {
-                        // Si el usuario cancela o hay error, continuar con fallback
-                        if (error.name === 'AbortError') {
-                            console.log('⏹️ Usuario canceló la selección de ubicación');
-                            return;
-                        }
-                        console.warn('⚠️ Error en showSaveFilePicker, usando fallback:', error);
-                        // Continuar con fallback
-                    }
-                }
-                
-                // === FALLBACK: Descarga tradicional ===
-                // Crear un enlace y simular clic (guarda en Descargas)
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = nombreArchivo;
+                a.download = `registro_pda_${obtenerFechaActual()}.json`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
+                URL.revokeObjectURL(url);
                 
-                // Liberar URL después de un tiempo
-                setTimeout(() => URL.revokeObjectURL(url), 5000);
-                
-                alert('✅ Datos exportados correctamente (guardado en carpeta de Descargas)');
-                
-                // Mensaje adicional sobre la ubicación
-                console.info('💡 Para usar la exportación con selección de ubicación, usa Chrome o Edge.');
-                
+                mostrarNotificacion('✅ Datos exportados correctamente', 'success');
             } catch (error) {
-                console.error('❌ Error al exportar datos:', error);
-                alert('❌ Error al exportar los datos: ' + error.message);
+                mostrarNotificacion('❌ Error al exportar: ' + error.message, 'error');
             }
         });
         
-        /**
-         * Importa datos desde un archivo JSON seleccionado por el usuario
-         * Permite elegir cualquier archivo desde cualquier ubicación
-         */
         document.getElementById('btn-importar-datos').addEventListener('click', function() {
-            // Crear un input file y disparar la selección
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.style.display = 'none';
-            
-            input.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    try {
-                        const datos = JSON.parse(event.target.result);
-                        
-                        // Validar estructura del archivo
-                        if (!datos.paquetes || !datos.serviciosAdicionales || 
-                            !datos.prospectos || !datos.clientes) {
-                            alert('❌ El archivo no tiene el formato correcto de datos de PDA');
-                            return;
-                        }
-                        
-                        // Confirmar antes de reemplazar datos
-                        if (!confirm('⚠️ Esto reemplazará TODOS los datos actuales. ¿Continuar?')) {
-                            return;
-                        }
-                        
-                        // Actualizar datos
-                        paquetes = datos.paquetes || [];
-                        serviciosAdicionales = datos.serviciosAdicionales || [];
-                        prospectos = datos.prospectos || [];
-                        clientes = datos.clientes || [];
-                        tareas = datos.tareas || [];
-                        
-                        guardarDatos();
-                        
-                        // Renderizar todas las secciones
-                        renderizarPaquetes();
-                        renderizarServicios();
-                        renderizarProspectos();
-                        renderizarClientes();
-                        renderizarContratos();
-                        renderizarCalendario();
-                        renderizarInformes();
-                        actualizarFiltrosInformes();
-                        
-                        alert('✅ Datos importados correctamente desde:\n' + file.name);
-                        
-                    } catch (error) {
-                        alert('❌ Error al leer el archivo: ' + error.message);
-                    }
-                };
-                reader.readAsText(file);
-                
-                // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
-                this.value = '';
-            });
-            
-            document.body.appendChild(input);
-            input.click();
-            document.body.removeChild(input);
+            document.getElementById('input-importar-datos').click();
         });
+        
+        document.getElementById('input-importar-datos').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const datos = JSON.parse(event.target.result);
+                    
+                    if (!datos.paquetes || !datos.serviciosAdicionales || 
+                        !datos.prospectos || !datos.clientes) {
+                        mostrarNotificacion('❌ Formato de archivo incorrecto', 'error');
+                        return;
+                    }
+                    
+                    if (!confirm('⚠️ Esto reemplazará TODOS los datos actuales. ¿Continuar?')) {
+                        return;
+                    }
+                    
+                    paquetes = datos.paquetes || [];
+                    serviciosAdicionales = datos.serviciosAdicionales || [];
+                    prospectos = datos.prospectos || [];
+                    clientes = datos.clientes || [];
+                    tareas = datos.tareas || [];
+                    
+                    guardarDatos();
+                    renderizarTodo();
+                    
+                    mostrarNotificacion('✅ Datos importados correctamente', 'success');
+                    
+                } catch (error) {
+                    mostrarNotificacion('❌ Error al leer el archivo: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+            this.value = '';
+        });
+
+        // ============================================================
+        // BOTONES DE FIREBASE
+        // ============================================================
+        
+        document.getElementById('btn-sync-firebase').addEventListener('click', async function() {
+            if (!database) {
+                mostrarNotificacion('⚠️ Firebase no está disponible', 'error');
+                return;
+            }
+            
+            if (estadoSync.modo === 'firebase') {
+                await guardarEnFirebase();
+            } else {
+                mostrarNotificacion('⚠️ Modo local activo. Intentando conectar...', 'warning');
+                await inicializarFirebase();
+            }
+        });
+
+        document.getElementById('btn-cargar-firebase').addEventListener('click', async function() {
+            if (!database) {
+                mostrarNotificacion('⚠️ Firebase no está disponible', 'error');
+                return;
+            }
+            
+            if (confirm('¿Cargar datos desde Firebase? (Reemplazará datos locales)')) {
+                await cargarDesdeFirebase();
+            }
+        });
+
+        // ============================================================
+        // INICIALIZAR FIREBASE
+        // ============================================================
+        
+        async function inicializarFirebase() {
+            if (!database) {
+                actualizarEstadoSync('offline', 'Firebase no disponible');
+                estadoSync.modo = 'local';
+                return false;
+            }
+            
+            try {
+                console.log('🔌 Conectando a Firebase...');
+                actualizarEstadoSync('syncing', 'Conectando a Firebase...');
+                
+                // Probar conexión
+                await database.ref('test').set('testing');
+                await database.ref('test').remove();
+                
+                console.log('✅ Conectado a Firebase');
+                estadoSync.modo = 'firebase';
+                actualizarEstadoSync('online', 'Firebase Conectado');
+                
+                // Cargar datos
+                await cargarDesdeFirebase();
+                
+                // Escuchar cambios
+                escucharCambiosFirebase();
+                
+                // Sincronización automática periódica
+                setInterval(async () => {
+                    if (!sincronizandoFirebase && estadoSync.modo === 'firebase') {
+                        await guardarEnFirebase();
+                    }
+                }, 30000); // Cada 30 segundos
+                
+                mostrarNotificacion('🔥 Conexión con Firebase establecida', 'success');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Error conectando a Firebase:', error);
+                estadoSync.modo = 'local';
+                actualizarEstadoSync('offline', 'Modo local');
+                mostrarNotificacion('⚠️ No se pudo conectar a Firebase. Modo local activado.', 'warning');
+                return false;
+            }
+        }
 
         // ============================================================
         // PAQUETES - CRUD
@@ -1972,7 +2311,7 @@
             const vigencia = document.getElementById('paquete-vigencia').value;
             
             if (!nombre || !descripcion || !precio || !vigencia) {
-                alert('Todos los campos marcados con * son obligatorios');
+                mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
                 return;
             }
             
@@ -2039,7 +2378,7 @@
         }
 
         // ============================================================
-        // SERVICIOS - CRUD
+        // SERVICIOS - CRUD (COMPLETO)
         // ============================================================
         document.getElementById('btn-nuevo-servicio').addEventListener('click', function() {
             mostrarFormularioServicio();
@@ -2095,7 +2434,7 @@
             const vigencia = document.getElementById('servicio-vigencia').value;
             
             if (!nombre || !descripcion || !precio || !vigencia) {
-                alert('Todos los campos marcados con * son obligatorios');
+                mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
                 return;
             }
             
@@ -2162,7 +2501,7 @@
         }
 
         // ============================================================
-        // PROSPECTOS - CRUD
+        // PROSPECTOS - CRUD (COMPLETO)
         // ============================================================
         document.getElementById('btn-nuevo-prospecto').addEventListener('click', function() {
             mostrarFormularioProspecto();
@@ -2222,7 +2561,7 @@
             const notasGenerales = document.getElementById('prospecto-notas').value.trim();
             
             if (!nombre || !faseActual) {
-                alert('Todos los campos marcados con * son obligatorios');
+                mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
                 return;
             }
             
@@ -2327,9 +2666,6 @@
             }
         }
 
-        // ============================================================
-        // CONVERTIR PROSPECTO A CLIENTE
-        // ============================================================
         function convertirProspecto(id) {
             const prospecto = obtenerProspecto(id);
             if (!prospecto) return;
@@ -2360,11 +2696,11 @@
             renderizarProspectos();
             renderizarClientes();
             
-            alert('✅ Prospecto convertido a cliente exitosamente');
+            mostrarNotificacion('✅ Prospecto convertido a cliente exitosamente', 'success');
         }
 
         // ============================================================
-        // CLIENTES - CRUD
+        // CLIENTES - CRUD (COMPLETO)
         // ============================================================
         document.getElementById('btn-nuevo-cliente').addEventListener('click', function() {
             mostrarFormularioCliente();
@@ -2424,7 +2760,7 @@
             const notasGenerales = document.getElementById('cliente-notas').value.trim();
             
             if (!nombre || !telefono || !estado) {
-                alert('Todos los campos marcados con * son obligatorios');
+                mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
                 return;
             }
             
@@ -2533,7 +2869,7 @@
         // ============================================================
         document.getElementById('btn-nuevo-contrato').addEventListener('click', function() {
             if (clientes.length === 0) {
-                alert('⚠️ Primero debes registrar al menos un cliente');
+                mostrarNotificacion('⚠️ Primero debes registrar al menos un cliente', 'warning');
                 return;
             }
             mostrarFormularioContrato(null);
@@ -2795,6 +3131,7 @@
             
             abrirModal(titulo, html);
             
+            // Lógica del formulario (igual que antes)
             const tipoSelect = document.getElementById('contrato-tipo');
             const seccionPaquete = document.getElementById('seccion-paquete');
             const seccionSoloServicio = document.getElementById('seccion-solo-servicio');
@@ -2915,7 +3252,7 @@
                     esNotaEliminacion: true
                 });
                 actualizarListaPagos();
-                alert('✅ Pago eliminado correctamente. Queda registro en el historial.');
+                mostrarNotificacion('✅ Pago eliminado correctamente', 'success');
             };
             
             window.eliminarCargo = function(index) {
@@ -2932,14 +3269,14 @@
                     esNotaEliminacion: true
                 });
                 actualizarListaCargos();
-                alert('✅ Cargo extra eliminado correctamente. Queda registro en el historial.');
+                mostrarNotificacion('✅ Cargo extra eliminado correctamente', 'success');
             };
             
             document.getElementById('btn-agregar-pago')?.addEventListener('click', function() {
                 const montoInput = document.getElementById('contrato-nuevo-pago');
                 const monto = parseFloat(montoInput.value);
                 if (!monto || monto <= 0) {
-                    alert('Ingresa un monto válido');
+                    mostrarNotificacion('Ingresa un monto válido', 'warning');
                     return;
                 }
                 pagosArr.push({
@@ -2958,11 +3295,11 @@
                 const descripcion = descInput.value.trim();
                 const monto = parseFloat(montoInput.value);
                 if (!monto || monto <= 0) {
-                    alert('Ingresa un monto válido');
+                    mostrarNotificacion('Ingresa un monto válido', 'warning');
                     return;
                 }
                 if (!descripcion) {
-                    alert('Ingresa una descripción del cargo');
+                    mostrarNotificacion('Ingresa una descripción del cargo', 'warning');
                     return;
                 }
                 cargosArr.push({
@@ -3089,14 +3426,14 @@
             }
             
             if (!clienteId || !festejado || !fechaEvento || !precioFinal || !estado) {
-                alert('Todos los campos marcados con * son obligatorios');
+                mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
                 return;
             }
-            if (tipo === 'paquete' && !paqueteId) { alert('Selecciona un paquete'); return; }
-            if (tipo === 'solo-servicio' && !servicioId) { alert('Selecciona un servicio'); return; }
+            if (tipo === 'paquete' && !paqueteId) { mostrarNotificacion('Selecciona un paquete', 'warning'); return; }
+            if (tipo === 'solo-servicio' && !servicioId) { mostrarNotificacion('Selecciona un servicio', 'warning'); return; }
             
             const cliente = obtenerCliente(clienteId);
-            if (!cliente) { alert('Cliente no encontrado'); return; }
+            if (!cliente) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
             
             const pagosFinales = pagosArr.filter(p => !p.eliminado);
             const cargosFinales = cargosArr.filter(c => !c.eliminado);
@@ -3248,19 +3585,15 @@
             contenedor.innerHTML = html;
         }
 
-        // ============================================================
-        // FUNCIONES DE CONTRATOS - GLOBALES
-        // ============================================================
         window.editarContrato = function(clienteId, contratoId) {
-            console.log('✏️ Editando contrato:', clienteId, contratoId);
             const cliente = obtenerCliente(clienteId);
             if (!cliente) {
-                console.error('❌ Cliente no encontrado:', clienteId);
+                mostrarNotificacion('Cliente no encontrado', 'error');
                 return;
             }
             const contrato = cliente.contratos.find(c => c.id === contratoId);
             if (!contrato) {
-                console.error('❌ Contrato no encontrado:', contratoId);
+                mostrarNotificacion('Contrato no encontrado', 'error');
                 return;
             }
             mostrarFormularioContrato(clienteId, 'Editar Contrato', contrato);
@@ -3274,7 +3607,7 @@
             const monto = prompt('Ingresa el monto del pago:', '0');
             if (monto === null) return;
             const montoNum = parseFloat(monto);
-            if (isNaN(montoNum) || montoNum <= 0) { alert('Ingresa un monto válido'); return; }
+            if (isNaN(montoNum) || montoNum <= 0) { mostrarNotificacion('Ingresa un monto válido', 'warning'); return; }
             if (!contrato.pagos) contrato.pagos = [];
             contrato.pagos.push({
                 monto: montoNum,
@@ -3285,7 +3618,7 @@
             renderizarContratos();
             renderizarClientes();
             renderizarInformes();
-            alert(`✅ Pago de ${formatearMoneda(montoNum)} registrado correctamente`);
+            mostrarNotificacion(`✅ Pago de ${formatearMoneda(montoNum)} registrado`, 'success');
         }
 
         function eliminarContrato(clienteId, contratoId) {
@@ -3302,23 +3635,17 @@
         }
 
         // ============================================================
-        // FUNCIONES GLOBALES PARA EL CALENDARIO
+        // FUNCIONES PARA EL CALENDARIO
         // ============================================================
-
+        
         window.abrirContratoDesdeCalendario = function(clienteId, contratoId) {
-            console.log('🔍 Abriendo contrato desde calendario:', clienteId, contratoId);
             cambiarSeccion('contratos');
-            setTimeout(function() {
-                if (typeof window.editarContrato === 'function') {
-                    window.editarContrato(clienteId, contratoId);
-                } else {
-                    console.error('❌ editarContrato no está definida');
-                }
+            setTimeout(() => {
+                window.editarContrato(clienteId, contratoId);
             }, 400);
         };
 
         window.editarTareaDesdeCalendario = function(id) {
-            console.log('🔍 Editando tarea desde calendario:', id);
             const tarea = tareas.find(t => t.id === id);
             if (tarea) mostrarFormularioTarea(tarea);
         };
@@ -3347,7 +3674,10 @@
         };
 
         window.mostrarFormularioContratoDesdeCalendario = function(fecha) {
-            if (clientes.length === 0) { alert('⚠️ Primero debes registrar al menos un cliente'); return; }
+            if (clientes.length === 0) {
+                mostrarNotificacion('⚠️ Primero debes registrar al menos un cliente', 'warning');
+                return;
+            }
             const opcionesClientes = clientes.map(c => `<option value="${c.id}">${c.nombre} (${c.estado})</option>`).join('');
             const html = `
                 <form id="form-contrato-rapido">
@@ -3363,16 +3693,14 @@
             document.getElementById('form-contrato-rapido').addEventListener('submit', function(e) {
                 e.preventDefault();
                 const clienteId = document.getElementById('contrato-rapido-cliente').value;
-                if (!clienteId) { alert('Selecciona un cliente'); return; }
+                if (!clienteId) { mostrarNotificacion('Selecciona un cliente', 'warning'); return; }
                 cerrarModal();
                 setTimeout(() => {
-                    if (typeof mostrarFormularioContrato === 'function') {
-                        mostrarFormularioContrato(clienteId, 'Nuevo Contrato - ' + formatearFecha(fecha));
-                        setTimeout(() => {
-                            const fechaInput = document.getElementById('contrato-fecha-evento');
-                            if (fechaInput) fechaInput.value = fecha;
-                        }, 200);
-                    }
+                    mostrarFormularioContrato(clienteId, 'Nuevo Contrato - ' + formatearFecha(fecha));
+                    setTimeout(() => {
+                        const fechaInput = document.getElementById('contrato-fecha-evento');
+                        if (fechaInput) fechaInput.value = fecha;
+                    }, 200);
                 }, 100);
             });
         };
@@ -3453,7 +3781,10 @@
                 const fecha = document.getElementById('tarea-fecha').value;
                 const descripcion = document.getElementById('tarea-descripcion').value.trim();
                 const notas = document.getElementById('tarea-notas').value.trim();
-                if (!tipo || !fecha || !descripcion) { alert('Todos los campos marcados con * son obligatorios'); return; }
+                if (!tipo || !fecha || !descripcion) {
+                    mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
+                    return;
+                }
                 if (id) {
                     const index = tareas.findIndex(t => t.id === id);
                     if (index !== -1) tareas[index] = { ...tareas[index], tipo, clienteId, fecha, descripcion, notas };
@@ -3681,7 +4012,7 @@
         }
 
         // ============================================================
-        // INFORMES - VERSIÓN 2.8 CON DESGLOSE COMPLETO
+        // INFORMES
         // ============================================================
         document.getElementById('btn-filtrar-informes').addEventListener('click', renderizarInformes);
         document.getElementById('btn-limpiar-informes').addEventListener('click', function() {
@@ -3723,7 +4054,6 @@
                 });
             });
             
-            // Filtros
             if (filtroPaquete !== 'todos') {
                 todosContratos = todosContratos.filter(c => c.paqueteId === filtroPaquete);
             }
@@ -3748,12 +4078,10 @@
                 todosContratos = todosContratos.filter(c => c.estado === filtroEstadoContrato);
             }
             
-            // ===== MÉTRICAS PRINCIPALES =====
             const totalProspectos = prospectos.length;
             const totalClientes = clientesFiltrados.length;
             const totalContratos = todosContratos.length;
             
-            // Calcular ingresos totales
             let ingresosTotales = 0;
             let totalPagadoGeneral = 0;
             let totalCargosGenerales = 0;
@@ -3778,11 +4106,7 @@
                 return;
             }
             
-            // ============================================================
-            // DESGLOSE DETALLADO COMPLETO (VERSIÓN 2.5)
-            // ============================================================
-            
-            // ===== 1. PAQUETES VENDIDOS =====
+            // Desglose completo
             const paquetesVendidos = {};
             todosContratos.filter(c => c.tipo === 'paquete').forEach(c => {
                 const nombre = obtenerNombrePaquete(c.paqueteId);
@@ -3793,7 +4117,6 @@
                 paquetesVendidos[nombre].ingresos += c.precioFinal;
             });
             
-            // ===== 2. SERVICIOS INDIVIDUALES (Solo Servicio) =====
             const serviciosIndividuales = {};
             todosContratos.filter(c => c.tipo === 'solo-servicio').forEach(c => {
                 const nombre = obtenerNombreServicio(c.servicioId);
@@ -3806,7 +4129,6 @@
                 }
             });
             
-            // ===== 3. SERVICIOS ADICIONALES EN PAQUETES =====
             const serviciosAdicionalesEnPaquetes = {};
             todosContratos.filter(c => c.tipo === 'paquete').forEach(c => {
                 if (c.serviciosIds) {
@@ -3822,7 +4144,6 @@
                 }
             });
             
-            // ===== 4. TOTAL SERVICIOS (suma de adicionales + individuales) =====
             const totalServicios = {};
             Object.entries(serviciosAdicionalesEnPaquetes).forEach(([nombre, cantidad]) => {
                 totalServicios[nombre] = (totalServicios[nombre] || 0) + cantidad;
@@ -3831,7 +4152,6 @@
                 totalServicios[nombre] = (totalServicios[nombre] || 0) + data.cantidad;
             });
             
-            // ===== 5. PROSPECTOS POR FASE =====
             const fasesProspectos = {};
             prospectos.forEach(p => {
                 if (!fasesProspectos[p.faseActual]) {
@@ -3840,7 +4160,6 @@
                 fasesProspectos[p.faseActual]++;
             });
             
-            // ===== 6. ESTADOS DE CONTRATOS =====
             const estadosContratos = {};
             todosContratos.forEach(c => {
                 if (!estadosContratos[c.estado]) {
@@ -3849,20 +4168,13 @@
                 estadosContratos[c.estado]++;
             });
             
-            // ===== 7. RESULTADOS POR TIPO =====
             const contratosPaquete = todosContratos.filter(c => c.tipo === 'paquete').length;
             const contratosSoloServicio = todosContratos.filter(c => c.tipo === 'solo-servicio').length;
             
-            // ===== 8. TAREAS =====
             const tareasPendientes = tareas.filter(t => !t.completada).length;
             const tareasCompletadas = tareas.filter(t => t.completada).length;
             
-            // ============================================================
-            // GENERAR HTML DEL DESGLOSE COMPLETO
-            // ============================================================
-            
             let html = `
-                <!-- FILA 1: Paquetes vendidos + Servicios individuales -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
                     <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
                         <h4 style="color:var(--color-acento);margin-bottom:12px;">📦 Paquetes vendidos</h4>
@@ -3895,7 +4207,6 @@
                     </div>
                 </div>
                 
-                <!-- FILA 2: Servicios más contratados + Distribución + Resumen financiero -->
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:24px;">
                     <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
                         <h4 style="color:var(--color-acento);margin-bottom:12px;">📊 Servicios más contratados</h4>
@@ -3957,7 +4268,6 @@
                     </div>
                 </div>
                 
-                <!-- FILA 3: Prospectos por fase + Estados de contratos + Tareas -->
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:24px;">
                     <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
                         <h4 style="color:var(--color-acento);margin-bottom:12px;">👥 Prospectos por fase</h4>
@@ -3996,7 +4306,7 @@
                         </div>
                         <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
                             <span>Pendientes</span>
-                            <span style:${tareasPendientes > 0 ? 'color:var(--color-naranja);' : 'color:var(--color-verde);'}>${tareasPendientes}</span>
+                            <span style="color:${tareasPendientes > 0 ? 'var(--color-naranja)' : 'var(--color-verde)'};">${tareasPendientes}</span>
                         </div>
                         <div style="display:flex;justify-content:space-between;padding:4px 0;">
                             <span>Completadas</span>
@@ -4006,7 +4316,6 @@
                 </div>
             `;
             
-            // Tabla detallada de contratos (si hay)
             if (todosContratos.length > 0) {
                 html += `
                     <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
@@ -4072,19 +4381,14 @@
         // ============================================================
         // INICIALIZACIÓN
         // ============================================================
-        console.log('✅ Registro PDA v2.8 Iniciado correctamente');
-        console.log('📦 Paquetes:', paquetes.length);
-        console.log('🔧 Servicios:', serviciosAdicionales.length);
-        console.log('👥 Prospectos:', prospectos.length);
-        console.log('⭐ Clientes:', clientes.length);
-        console.log('📋 Contratos:', obtenerContratos().length);
-        console.log('📌 Tareas:', tareas.length);
-        console.log('📊 Informes con desglose completo v2.5 restaurado');
-        console.log('💾 Exportación mejorada: puedes elegir dónde guardar el archivo');
-        console.log('📂 Importación mejorada: puedes elegir cualquier archivo desde cualquier ubicación');
         
+        console.log('🚀 Registro PDA v2.8 con Firebase Sync');
+        
+        // Cargar datos locales
+        cargarDatosLocal();
+        
+        // Renderizar todo
         actualizarFiltrosInformes();
-        
         renderizarPaquetes();
         renderizarServicios();
         renderizarProspectos();
@@ -4093,16 +4397,21 @@
         renderizarCalendario();
         renderizarInformes();
         
-        console.log('🎬 Registro PDA v2.8 listo para usar!');
-        console.log('📅 Calendario con fechas corregidas');
-        console.log('📌 Tareas vinculables a clientes y prospectos');
-        console.log('📊 Informes con desglose detallado completo');
-        console.log('📦 Paquetes, servicios individuales y adicionales');
-        console.log('📋 Distribución de contratos y estados');
-        console.log('💰 Resumen financiero completo');
-        console.log('👥 Prospectos por fase');
-        console.log('📋 Lista detallada de contratos');
-        console.log('💡 Para exportar con selección de ubicación, usa Chrome o Edge');
+        console.log('📊 Datos cargados:');
+        console.log(`📦 Paquetes: ${paquetes.length}`);
+        console.log(`🔧 Servicios: ${serviciosAdicionales.length}`);
+        console.log(`👥 Prospectos: ${prospectos.length}`);
+        console.log(`⭐ Clientes: ${clientes.length}`);
+        console.log(`📌 Tareas: ${tareas.length}`);
+        
+        // Inicializar Firebase
+        setTimeout(async () => {
+            await inicializarFirebase();
+        }, 1000);
+        
+        console.log('🔥 Firebase Sync activado - Los datos se sincronizan automáticamente');
+        console.log('💡 Usa "Sincronizar Nube" para forzar la sincronización');
     </script>
 </body>
 </html>
+🔥 Firebase integrado - Sincronización en tiempo real
