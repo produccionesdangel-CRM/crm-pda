@@ -1679,7 +1679,7 @@
     </div>
 
     <!-- ========================================= -->
-    <!-- JAVASCRIPT CON FIREBASE                   -->
+    <!-- JAVASCRIPT CON FIREBASE Y TAREAS CORREGIDAS -->
     <!-- ========================================= -->
     <script>
         // ============================================================
@@ -3706,6 +3706,186 @@
         };
 
         // ============================================================
+        // TAREAS - CRUD COMPLETO Y CORREGIDO
+        // ============================================================
+        
+        // Función para mostrar el formulario de tarea
+        function mostrarFormularioTarea(tarea = null) {
+            const esEdicion = tarea !== null;
+            const titulo = esEdicion ? 'Editar Tarea' : 'Nueva Tarea';
+            
+            const opcionesTipo = TIPOS_TAREA.map(t => 
+                `<option value="${t}" ${tarea && tarea.tipo === t ? 'selected' : ''}>${t}</option>`
+            ).join('');
+            
+            // Opciones para vincular cliente/prospecto
+            let opcionesCliente = ['<option value="">Sin vincular</option>'];
+            
+            // Clientes
+            clientes.forEach(c => {
+                opcionesCliente.push(`<option value="${c.id}" ${tarea && tarea.clienteId === c.id ? 'selected' : ''}>${c.nombre} (Cliente)</option>`);
+            });
+            
+            // Prospectos (solo los que no son clientes aún)
+            prospectos.forEach(p => {
+                if (!p.clienteId) {
+                    opcionesCliente.push(`<option value="pro_${p.id}" ${tarea && tarea.clienteId === 'pro_' + p.id ? 'selected' : ''}>${p.nombre} (Prospecto)</option>`);
+                }
+            });
+            
+            const fechaTarea = tarea ? tarea.fecha : obtenerFechaActual();
+            const estadoChecked = tarea && tarea.completada ? 'checked' : '';
+            
+            const html = `
+                <form id="form-tarea">
+                    <input type="hidden" id="tarea-id" value="${tarea ? tarea.id : ''}">
+                    
+                    <div class="form-grupo">
+                        <label>Tipo de tarea *</label>
+                        <select id="tarea-tipo" required>${opcionesTipo}</select>
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label>Cliente / Prospecto vinculado</label>
+                        <select id="tarea-cliente">${opcionesCliente.join('')}</select>
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label>Fecha *</label>
+                        <input type="date" id="tarea-fecha" required value="${fechaTarea}">
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label>Descripción *</label>
+                        <textarea id="tarea-descripcion" required placeholder="Describe la tarea a realizar...">${tarea ? tarea.descripcion : ''}</textarea>
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label>Notas adicionales (opcional)</label>
+                        <textarea id="tarea-notas" placeholder="Detalles adicionales...">${tarea ? tarea.notas : ''}</textarea>
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="tarea-completada" ${estadoChecked}>
+                            <span>Marcar como completada</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-acciones">
+                        <button type="button" class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
+                        <button type="submit" class="btn-primario">${esEdicion ? 'Actualizar' : 'Guardar Tarea'}</button>
+                    </div>
+                </form>
+            `;
+            
+            abrirModal(titulo, html);
+            
+            document.getElementById('form-tarea').addEventListener('submit', function(e) {
+                e.preventDefault();
+                guardarTarea(esEdicion);
+            });
+        }
+
+        // Función para guardar tarea
+        function guardarTarea(esEdicion) {
+            const id = document.getElementById('tarea-id').value;
+            const tipo = document.getElementById('tarea-tipo').value;
+            const clienteId = document.getElementById('tarea-cliente').value || null;
+            const fecha = document.getElementById('tarea-fecha').value;
+            const descripcion = document.getElementById('tarea-descripcion').value.trim();
+            const notas = document.getElementById('tarea-notas').value.trim();
+            const completada = document.getElementById('tarea-completada').checked;
+            
+            if (!tipo || !fecha || !descripcion) {
+                mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
+                return;
+            }
+            
+            if (esEdicion) {
+                // Editar tarea existente
+                const index = tareas.findIndex(t => t.id === id);
+                if (index !== -1) {
+                    tareas[index] = { 
+                        ...tareas[index], 
+                        tipo, 
+                        clienteId, 
+                        fecha, 
+                        descripcion, 
+                        notas,
+                        completada: completada,
+                        fechaModificacion: obtenerFechaHoraActual()
+                    };
+                    if (completada && !tareas[index].fechaCompletada) {
+                        tareas[index].fechaCompletada = obtenerFechaHoraActual();
+                    } else if (!completada) {
+                        tareas[index].fechaCompletada = null;
+                    }
+                }
+            } else {
+                // Crear nueva tarea
+                const nuevaTarea = { 
+                    id: generarId(), 
+                    tipo, 
+                    clienteId, 
+                    fecha, 
+                    descripcion, 
+                    notas, 
+                    completada: completada,
+                    fechaCreacion: obtenerFechaHoraActual(),
+                    fechaModificacion: obtenerFechaHoraActual()
+                };
+                if (completada) {
+                    nuevaTarea.fechaCompletada = obtenerFechaHoraActual();
+                }
+                tareas.push(nuevaTarea);
+            }
+            
+            guardarDatos();
+            cerrarModal();
+            renderizarCalendario();
+            renderizarInformes();
+            mostrarNotificacion(esEdicion ? '✅ Tarea actualizada' : '✅ Tarea creada correctamente', 'success');
+        }
+
+        // Función para editar tarea (desde la lista)
+        function editarTarea(id) {
+            const tarea = tareas.find(t => t.id === id);
+            if (tarea) mostrarFormularioTarea(tarea);
+        }
+
+        // Función para eliminar tarea
+        function eliminarTarea(id) {
+            if (confirm('¿Eliminar esta tarea?')) {
+                tareas = tareas.filter(t => t.id !== id);
+                guardarDatos();
+                renderizarCalendario();
+                renderizarInformes();
+                mostrarNotificacion('✅ Tarea eliminada', 'success');
+            }
+        }
+
+        // Función para alternar estado completado
+        function alternarCompletarTarea(id) {
+            const tarea = tareas.find(t => t.id === id);
+            if (!tarea) return;
+            
+            tarea.completada = !tarea.completada;
+            if (tarea.completada) {
+                tarea.fechaCompletada = obtenerFechaHoraActual();
+                mostrarNotificacion('✅ Tarea completada', 'success');
+            } else {
+                tarea.fechaCompletada = null;
+                mostrarNotificacion('🔄 Tarea reabierta', 'info');
+            }
+            tarea.fechaModificacion = obtenerFechaHoraActual();
+            
+            guardarDatos();
+            renderizarCalendario();
+            renderizarInformes();
+        }
+
+        // ============================================================
         // CALENDARIO
         // ============================================================
         
@@ -3741,60 +3921,6 @@
 
         function fechaLocalToString(ano, mes, dia) {
             return `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-        }
-
-        function mostrarFormularioTarea(tarea = null) {
-            const esEdicion = tarea !== null;
-            const titulo = esEdicion ? 'Editar Tarea' : 'Nueva Tarea';
-            const opcionesTipo = TIPOS_TAREA.map(t => `<option value="${t}" ${tarea && tarea.tipo === t ? 'selected' : ''}>${t}</option>`).join('');
-            const opcionesCliente = ['<option value="">Sin vincular</option>'];
-            clientes.forEach(c => {
-                opcionesCliente.push(`<option value="${c.id}" ${tarea && tarea.clienteId === c.id ? 'selected' : ''}>${c.nombre} (Cliente)</option>`);
-            });
-            prospectos.forEach(p => {
-                if (!p.clienteId) {
-                    opcionesCliente.push(`<option value="pro_${p.id}" ${tarea && tarea.clienteId === 'pro_' + p.id ? 'selected' : ''}>${p.nombre} (Prospecto)</option>`);
-                }
-            });
-            const fechaTarea = tarea ? tarea.fecha : obtenerFechaActual();
-            
-            const html = `
-                <form id="form-tarea">
-                    <input type="hidden" id="tarea-id" value="${tarea ? tarea.id : ''}">
-                    <div class="form-grupo"><label>Tipo de tarea *</label><select id="tarea-tipo" required>${opcionesTipo}</select></div>
-                    <div class="form-grupo"><label>Cliente / Prospecto vinculado</label><select id="tarea-cliente">${opcionesCliente.join('')}</select></div>
-                    <div class="form-grupo"><label>Fecha *</label><input type="date" id="tarea-fecha" required value="${fechaTarea}"></div>
-                    <div class="form-grupo"><label>Descripción *</label><textarea id="tarea-descripcion" required placeholder="Describe la tarea a realizar...">${tarea ? tarea.descripcion : ''}</textarea></div>
-                    <div class="form-grupo"><label>Notas adicionales (opcional)</label><textarea id="tarea-notas" placeholder="Detalles adicionales...">${tarea ? tarea.notas : ''}</textarea></div>
-                    <div class="form-acciones">
-                        <button type="button" class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
-                        <button type="submit" class="btn-primario">${esEdicion ? 'Actualizar' : 'Guardar Tarea'}</button>
-                    </div>
-                </form>
-            `;
-            abrirModal(titulo, html);
-            document.getElementById('form-tarea').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const id = document.getElementById('tarea-id').value;
-                const tipo = document.getElementById('tarea-tipo').value;
-                const clienteId = document.getElementById('tarea-cliente').value || null;
-                const fecha = document.getElementById('tarea-fecha').value;
-                const descripcion = document.getElementById('tarea-descripcion').value.trim();
-                const notas = document.getElementById('tarea-notas').value.trim();
-                if (!tipo || !fecha || !descripcion) {
-                    mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
-                    return;
-                }
-                if (id) {
-                    const index = tareas.findIndex(t => t.id === id);
-                    if (index !== -1) tareas[index] = { ...tareas[index], tipo, clienteId, fecha, descripcion, notas };
-                } else {
-                    tareas.push({ id: generarId(), tipo, clienteId, fecha, descripcion, notas, completada: false, fechaCreacion: obtenerFechaHoraActual() });
-                }
-                guardarDatos();
-                cerrarModal();
-                renderizarCalendario();
-            });
         }
 
         function renderizarCalendario() {
@@ -3874,7 +4000,8 @@
                         const nombreCliente = obtenerNombreCliente(t.clienteId);
                         const claseCompletada = t.completada ? 'evento-completada' : 'evento-tarea';
                         const icono = t.completada ? '✅' : '📌';
-                        eventosHTML += `<div class="evento ${claseCompletada}" onclick="evento.stopPropagation(); editarTareaDesdeCalendario('${t.id}')" title="${t.tipo}: ${t.descripcion} - ${nombreCliente}">${icono} ${t.tipo}</div>`;
+                        const titulo = t.completada ? '(Completada) ' : '';
+                        eventosHTML += `<div class="evento ${claseCompletada}" onclick="evento.stopPropagation(); editarTareaDesdeCalendario('${t.id}')" title="${titulo}${t.tipo}: ${t.descripcion} - ${nombreCliente}">${icono} ${t.tipo}</div>`;
                         eventosMostrados++;
                     }
                 });
@@ -3914,23 +4041,38 @@
         function renderizarListaTareas() {
             const contenedor = document.getElementById('lista-tareas');
             if (!contenedor) return;
+            
             const filtro = document.getElementById('filtro-tareas-calendario').value;
             const busqueda = document.getElementById('buscar-calendario').value.toLowerCase().trim();
+            
             let tareasMostrar = [...tareas];
+            
+            // Ordenar por fecha (más reciente primero)
             tareasMostrar.sort((a, b) => b.fecha.localeCompare(a.fecha));
-            if (filtro === 'pendientes') tareasMostrar = tareasMostrar.filter(t => !t.completada);
-            else if (filtro === 'completadas') tareasMostrar = tareasMostrar.filter(t => t.completada);
-            else if (filtro === 'contratos') tareasMostrar = [];
+            
+            // Aplicar filtros
+            if (filtro === 'pendientes') {
+                tareasMostrar = tareasMostrar.filter(t => !t.completada);
+            } else if (filtro === 'completadas') {
+                tareasMostrar = tareasMostrar.filter(t => t.completada);
+            } else if (filtro === 'contratos') {
+                tareasMostrar = [];
+            }
+            
             if (busqueda) {
                 tareasMostrar = tareasMostrar.filter(t => {
                     const nombreCliente = obtenerNombreCliente(t.clienteId);
-                    return nombreCliente.toLowerCase().includes(busqueda) || t.descripcion.toLowerCase().includes(busqueda) || t.tipo.toLowerCase().includes(busqueda);
+                    return nombreCliente.toLowerCase().includes(busqueda) || 
+                           t.descripcion.toLowerCase().includes(busqueda) || 
+                           t.tipo.toLowerCase().includes(busqueda);
                 });
             }
+            
             if (tareasMostrar.length === 0) {
                 contenedor.innerHTML = '<p class="mensaje-vacio">No hay tareas que coincidan con los filtros</p>';
                 return;
             }
+            
             let html = '';
             tareasMostrar.forEach(t => {
                 const nombreCliente = obtenerNombreCliente(t.clienteId);
@@ -3938,17 +4080,32 @@
                 const claseCompletada = t.completada ? 'etiqueta-completado' : 'etiqueta-pendiente';
                 const estadoLabel = t.completada ? '✅ Completada' : '⏳ Pendiente';
                 const iconoCompletar = t.completada ? 'fa-undo' : 'fa-check';
+                
                 html += `
                     <div class="tarjeta-registro">
                         <div class="tarjeta-info">
-                            <div class="tarjeta-titulo">${t.tipo}<span class="tarjeta-etiqueta ${claseTipo}">${t.tipo}</span><span class="tarjeta-etiqueta ${claseCompletada}">${estadoLabel}</span></div>
-                            <div class="tarjeta-detalle">${t.descripcion}</div>
-                            <div class="tarjeta-detalle">📅 ${formatearFecha(t.fecha)}${t.clienteId ? `| 👤 ${nombreCliente}` : ''}</div>
+                            <div class="tarjeta-titulo">
+                                ${t.tipo}
+                                <span class="tarjeta-etiqueta ${claseTipo}">${t.tipo}</span>
+                                <span class="tarjeta-etiqueta ${claseCompletada}">${estadoLabel}</span>
+                            </div>
+                            <div class="tarjeta-detalle">
+                                ${t.descripcion}
+                            </div>
+                            <div class="tarjeta-detalle">
+                                📅 ${formatearFecha(t.fecha)}
+                                ${t.clienteId ? `| 👤 ${nombreCliente}` : ''}
+                            </div>
                             ${t.notas ? `<div class="tarjeta-detalle"><small>📝 ${t.notas}</small></div>` : ''}
-                            <div class="tarjeta-detalle"><small>🕐 Creada: ${formatearFechaHora(t.fechaCreacion)}</small></div>
+                            <div class="tarjeta-detalle">
+                                <small>🕐 Creada: ${formatearFechaHora(t.fechaCreacion)}</small>
+                                ${t.fechaCompletada ? ` | ✅ Completada: ${formatearFechaHora(t.fechaCompletada)}` : ''}
+                            </div>
                         </div>
                         <div class="tarjeta-acciones">
-                            <button class="btn-completar" onclick="alternarCompletarTarea('${t.id}')" title="${t.completada ? 'Reabrir' : 'Completar'}"><i class="fas ${iconoCompletar}"></i></button>
+                            <button class="btn-completar" onclick="alternarCompletarTarea('${t.id}')" title="${t.completada ? 'Reabrir' : 'Completar'}">
+                                <i class="fas ${iconoCompletar}"></i>
+                            </button>
                             <button class="btn-editar" onclick="editarTarea('${t.id}')"><i class="fas fa-edit"></i></button>
                             <button class="btn-eliminar" onclick="eliminarTarea('${t.id}')"><i class="fas fa-trash"></i></button>
                         </div>
@@ -3956,29 +4113,6 @@
                 `;
             });
             contenedor.innerHTML = html;
-        }
-
-        function alternarCompletarTarea(id) {
-            const tarea = tareas.find(t => t.id === id);
-            if (!tarea) return;
-            tarea.completada = !tarea.completada;
-            if (tarea.completada) tarea.fechaCompletada = obtenerFechaHoraActual();
-            else tarea.fechaCompletada = null;
-            guardarDatos();
-            renderizarCalendario();
-        }
-
-        function editarTarea(id) {
-            const tarea = tareas.find(t => t.id === id);
-            if (tarea) mostrarFormularioTarea(tarea);
-        }
-
-        function eliminarTarea(id) {
-            if (confirm('¿Eliminar esta tarea?')) {
-                tareas = tareas.filter(t => t.id !== id);
-                guardarDatos();
-                renderizarCalendario();
-            }
         }
 
         // ============================================================
@@ -4012,7 +4146,7 @@
         }
 
         // ============================================================
-        // INFORMES
+        // INFORMES (CON TAREAS INCLUIDAS)
         // ============================================================
         document.getElementById('btn-filtrar-informes').addEventListener('click', renderizarInformes);
         document.getElementById('btn-limpiar-informes').addEventListener('click', function() {
@@ -4101,7 +4235,7 @@
             document.getElementById('total-contratos').textContent = totalContratos;
             document.getElementById('total-ingresos').textContent = formatearMoneda(ingresosTotales);
             
-            if (todosContratos.length === 0 && prospectos.length === 0) {
+            if (todosContratos.length === 0 && prospectos.length === 0 && tareas.length === 0) {
                 contenedor.innerHTML = '<p class="mensaje-vacio">No hay datos para mostrar con los filtros seleccionados</p>';
                 return;
             }
@@ -4171,10 +4305,21 @@
             const contratosPaquete = todosContratos.filter(c => c.tipo === 'paquete').length;
             const contratosSoloServicio = todosContratos.filter(c => c.tipo === 'solo-servicio').length;
             
+            // Estadísticas de tareas
             const tareasPendientes = tareas.filter(t => !t.completada).length;
             const tareasCompletadas = tareas.filter(t => t.completada).length;
             
+            // Tareas por tipo
+            const tareasPorTipo = {};
+            tareas.forEach(t => {
+                if (!tareasPorTipo[t.tipo]) {
+                    tareasPorTipo[t.tipo] = 0;
+                }
+                tareasPorTipo[t.tipo]++;
+            });
+            
             let html = `
+                <!-- FILA 1: Paquetes vendidos + Servicios individuales -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
                     <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
                         <h4 style="color:var(--color-acento);margin-bottom:12px;">📦 Paquetes vendidos</h4>
@@ -4207,6 +4352,7 @@
                     </div>
                 </div>
                 
+                <!-- FILA 2: Servicios más contratados + Distribución + Resumen financiero -->
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:24px;">
                     <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
                         <h4 style="color:var(--color-acento);margin-bottom:12px;">📊 Servicios más contratados</h4>
@@ -4268,6 +4414,7 @@
                     </div>
                 </div>
                 
+                <!-- FILA 3: Prospectos + Estados contratos + Tareas -->
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:24px;">
                     <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
                         <h4 style="color:var(--color-acento);margin-bottom:12px;">👥 Prospectos por fase</h4>
@@ -4312,6 +4459,17 @@
                             <span>Completadas</span>
                             <span style="color:var(--color-verde);">${tareasCompletadas}</span>
                         </div>
+                        ${Object.entries(tareasPorTipo).length > 0 ? `
+                            <div style="margin-top:8px;border-top:1px solid var(--color-borde);padding-top:8px;">
+                                ${Object.entries(tareasPorTipo)
+                                    .map(([tipo, cantidad]) => 
+                                        `<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--color-texto-secundario);">
+                                            <span>${tipo}</span>
+                                            <span>${cantidad}</span>
+                                        </div>`
+                                    ).join('')}
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
             `;
@@ -4383,6 +4541,7 @@
         // ============================================================
         
         console.log('🚀 Registro PDA v2.8 con Firebase Sync');
+        console.log('📋 Las tareas ahora se guardan y sincronizan correctamente');
         
         // Cargar datos locales
         cargarDatosLocal();
@@ -4411,6 +4570,8 @@
         
         console.log('🔥 Firebase Sync activado - Los datos se sincronizan automáticamente');
         console.log('💡 Usa "Sincronizar Nube" para forzar la sincronización');
+        console.log('📋 Las tareas se muestran en: Calendario → Lista de tareas');
+        console.log('📋 Las tareas también aparecen en los Informes');
     </script>
 </body>
 </html>
