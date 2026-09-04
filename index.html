@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro PDA v2.9 - Estudio Fotografía (Firebase Sync)</title>
+    <title>Registro PDA - Estudio Fotografía (Firebase Sync)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Firebase SDKs -->
@@ -170,8 +170,14 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .seccion-header {
@@ -197,6 +203,12 @@
             margin-right: 12px;
         }
 
+        .seccion-header p {
+            color: var(--color-texto-secundario);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
         .header-actions {
             display: flex;
             gap: 8px;
@@ -204,6 +216,7 @@
             align-items: center;
         }
 
+        /* Estado de sincronización */
         .sync-status {
             display: flex;
             align-items: center;
@@ -252,6 +265,9 @@
             white-space: nowrap;
         }
 
+        /* ============================================ */
+        /* BOTONES                                      */
+        /* ============================================ */
         .btn-primario {
             background-color: var(--color-acento);
             color: #0d0d0d;
@@ -360,24 +376,6 @@
             background-color: #00e5ff;
         }
 
-        .btn-morado {
-            background-color: var(--color-morado);
-            color: #ffffff;
-            border: none;
-            padding: 6px 14px;
-            border-radius: var(--border-radius);
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .btn-morado:hover {
-            background-color: #7b1fa2;
-        }
-
         .btn-eliminar-item {
             background: none;
             border: none;
@@ -431,42 +429,9 @@
             color: #ffffff;
         }
 
-        .btn-ver-contrato {
-            background-color: var(--color-morado);
-            color: #ffffff;
-            border: none;
-            padding: 4px 12px;
-            border-radius: var(--border-radius);
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .btn-ver-contrato:hover {
-            background-color: #7b1fa2;
-        }
-
-        .btn-ver-prospecto {
-            background-color: var(--color-cian);
-            color: #0d0d0d;
-            border: none;
-            padding: 4px 12px;
-            border-radius: var(--border-radius);
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .btn-ver-prospecto:hover {
-            background-color: #00e5ff;
-        }
-
+        /* ============================================ */
+        /* FILTROS                                      */
+        /* ============================================ */
         .filtros-container {
             display: flex;
             flex-wrap: wrap;
@@ -513,6 +478,9 @@
             border-color: var(--color-acento);
         }
 
+        /* ============================================ */
+        /* MÉTRICAS                                     */
+        /* ============================================ */
         .metricas-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -559,6 +527,9 @@
             color: var(--color-texto-secundario);
         }
 
+        /* ============================================ */
+        /* LISTAS DE DATOS                              */
+        /* ============================================ */
         #lista-prospectos,
         #lista-clientes,
         #lista-paquetes,
@@ -660,8 +631,6 @@
         .etiqueta-escoger { background-color: #ffc107; color: #0d0d0d; }
         .etiqueta-recoger { background-color: #795548; color: #ffffff; }
         .etiqueta-otro { background-color: #757575; color: #ffffff; }
-        .etiqueta-tarea-pendiente { background-color: #ff9800; color: #ffffff; }
-        .etiqueta-tarea-completada { background-color: #4caf50; color: #ffffff; }
 
         .tarjeta-acciones {
             display: flex;
@@ -691,47 +660,10 @@
         .tarjeta-acciones .btn-convertir:hover { color: var(--color-verde); }
         .tarjeta-acciones .btn-pago:hover { color: var(--color-naranja); }
         .tarjeta-acciones .btn-completar:hover { color: var(--color-verde); }
-        .tarjeta-acciones .btn-ver-contrato:hover { color: var(--color-morado); }
-        .tarjeta-acciones .btn-ver-prospecto:hover { color: var(--color-cian); }
 
-        .historial-tareas {
-            background-color: var(--color-bg-primario);
-            border-radius: var(--border-radius);
-            padding: 8px 12px;
-            margin-top: 4px;
-            border-left: 3px solid var(--color-acento);
-        }
-
-        .historial-tareas .tarea-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 4px 0;
-            border-bottom: 1px solid var(--color-borde);
-            font-size: 12px;
-            gap: 8px;
-        }
-
-        .historial-tareas .tarea-item:last-child {
-            border-bottom: none;
-        }
-
-        .historial-tareas .tarea-estado {
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-
-        .historial-tareas .tarea-estado.pendiente {
-            background-color: var(--color-naranja);
-            color: #ffffff;
-        }
-
-        .historial-tareas .tarea-estado.completada {
-            background-color: var(--color-verde);
-            color: #ffffff;
-        }
-
+        /* ============================================ */
+        /* CALENDARIO                                   */
+        /* ============================================ */
         .calendario-container {
             background-color: var(--color-bg-secundario);
             border: 1px solid var(--color-borde);
@@ -906,6 +838,9 @@
         .leyenda-color-tarea { background-color: rgba(255, 152, 0, 0.3); border-left: 3px solid var(--color-naranja); }
         .leyenda-color-completada { background-color: rgba(76, 175, 80, 0.2); border-left: 3px solid var(--color-verde); }
 
+        /* ============================================ */
+        /* INFORMES DETALLE                             */
+        /* ============================================ */
         .informes-detalle {
             background-color: var(--color-bg-secundario);
             border: 1px solid var(--color-borde);
@@ -930,6 +865,9 @@
             font-weight: 500;
         }
 
+        /* ============================================ */
+        /* MODAL                                        */
+        /* ============================================ */
         .modal {
             display: none;
             position: fixed;
@@ -994,6 +932,9 @@
             padding: 24px;
         }
 
+        /* ============================================ */
+        /* FORMULARIOS                                  */
+        /* ============================================ */
         .form-grupo {
             margin-bottom: 16px;
         }
@@ -1049,28 +990,13 @@
         }
 
         .form-grupo .pagos-container,
-        .form-grupo .cargos-container,
-        .form-grupo .tareas-container {
+        .form-grupo .cargos-container {
             background-color: var(--color-bg-terciario);
             padding: 12px;
             border-radius: var(--border-radius);
             border: 1px solid var(--color-borde);
             max-height: 200px;
             overflow-y: auto;
-        }
-
-        .form-grupo .tarea-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 4px 8px;
-            border-bottom: 1px solid var(--color-borde);
-            font-size: 12px;
-            gap: 8px;
-        }
-
-        .form-grupo .tarea-item:last-child {
-            border-bottom: none;
         }
 
         .form-grupo .pago-item,
@@ -1173,6 +1099,9 @@
             color: var(--color-acento);
         }
 
+        /* ============================================ */
+        /* TABLAS                                       */
+        /* ============================================ */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -1200,6 +1129,9 @@
             background-color: var(--color-bg-terciario);
         }
 
+        /* ============================================ */
+        /* NOTIFICACIONES                               */
+        /* ============================================ */
         .notificacion {
             position: fixed;
             bottom: 20px;
@@ -1229,6 +1161,9 @@
             to { transform: translateX(100px); opacity: 0; }
         }
 
+        /* ============================================ */
+        /* SCROLLBAR                                    */
+        /* ============================================ */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -1247,6 +1182,9 @@
             background: var(--color-bg-hover);
         }
 
+        /* ============================================ */
+        /* RESPONSIVE                                   */
+        /* ============================================ */
         @media (max-width: 768px) {
             .sidebar {
                 width: 60px;
@@ -1378,6 +1316,7 @@
 </head>
 <body>
     <div class="app-container">
+        <!-- MENÚ LATERAL -->
         <nav class="sidebar">
             <div class="logo">
                 <i class="fas fa-camera"></i>
@@ -1416,10 +1355,11 @@
             </ul>
             
             <div class="sidebar-footer">
-                <div class="version">v2.9 🔥 Firebase</div>
+                <div class="version">v2.8 🔥 Firebase</div>
             </div>
         </nav>
 
+        <!-- CONTENIDO PRINCIPAL -->
         <main class="main-content">
             <!-- SECCIÓN: INFORMES -->
             <section id="seccion-informes" class="seccion active">
@@ -1712,6 +1652,7 @@
                     </div>
                 </div>
 
+                <!-- Lista de tareas -->
                 <div style="margin-top:24px;">
                     <h3 style="color:var(--color-texto-secundario);font-weight:400;margin-bottom:12px;"><i class="fas fa-tasks"></i> Lista de tareas</h3>
                     <div id="lista-tareas">
@@ -1722,6 +1663,9 @@
         </main>
     </div>
 
+    <!-- ========================================= -->
+    <!-- MODAL                                     -->
+    <!-- ========================================= -->
     <div id="modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1734,9 +1678,12 @@
         </div>
     </div>
 
+    <!-- ========================================= -->
+    <!-- JAVASCRIPT CON FIREBASE Y TAREAS CORREGIDAS -->
+    <!-- ========================================= -->
     <script>
         // ============================================================
-        // CONFIGURACIÓN DE FIREBASE
+        // CONFIGURACIÓN DE FIREBASE - TU CONFIGURACIÓN
         // ============================================================
         
         const firebaseConfig = {
@@ -1752,7 +1699,7 @@
         // ============================================================
         // CONFIGURACIÓN INICIAL
         // ============================================================
-        console.log('🚀 Registro PDA v2.9 - MIGRACIÓN DE DATOS');
+        console.log('🚀 Registro PDA v2.8 - Con Firebase Sync');
 
         const FASES_DISPONIBLES = [
             'Interesado', 'Cotización', 'Negociación', 
@@ -1761,7 +1708,7 @@
 
         const ESTADOS_CONTRATO = ['Pendiente', 'Completado', 'Cancelado'];
         const ESTADOS_CLIENTE = ['Activo', 'Inactivo', 'Cancelado'];
-
+        
         const TIPOS_TAREA = [
             'Llamar',
             'Enviar mensaje',
@@ -1771,7 +1718,6 @@
             'Visita',
             'Escoger fotos',
             'Recoger material',
-            'Entrega de fotos',
             'Otro'
         ];
 
@@ -1784,13 +1730,13 @@
         // ============================================================
         // INICIALIZAR FIREBASE
         // ============================================================
-
+        
         let database = null;
         let sincronizandoFirebase = false;
         let primerCarga = true;
         let estadoSync = {
             conectado: false,
-            modo: 'local'
+            modo: 'local' // 'local' o 'firebase'
         };
 
         try {
@@ -1836,142 +1782,75 @@
             return '$' + cantidad.toLocaleString('es-MX');
         }
 
-        // ============================================================
-        // MIGRACIÓN DE DATOS - ¡ESTA ES LA CLAVE!
-        // ============================================================
-
-        function migrarDatosViejos() {
-            console.log('🔄 Verificando y migrando datos...');
-            let cambios = false;
-            
-            try {
-                // Migrar clientes
-                if (clientes && Array.isArray(clientes)) {
-                    clientes.forEach(cliente => {
-                        if (cliente) {
-                            if (!cliente.tareasVinculadas) {
-                                cliente.tareasVinculadas = [];
-                                cambios = true;
-                            }
-                            if (!cliente.contratos) {
-                                cliente.contratos = [];
-                                cambios = true;
-                            }
-                            if (!cliente.faseOrigen) {
-                                cliente.faseOrigen = 'Cliente';
-                                cambios = true;
-                            }
-                        }
-                    });
-                }
-                
-                // Migrar prospectos
-                if (prospectos && Array.isArray(prospectos)) {
-                    prospectos.forEach(prospecto => {
-                        if (prospecto) {
-                            if (!prospecto.tareasVinculadas) {
-                                prospecto.tareasVinculadas = [];
-                                cambios = true;
-                            }
-                            if (!prospecto.fechaRegistro) {
-                                prospecto.fechaRegistro = obtenerFechaActual();
-                                cambios = true;
-                            }
-                            if (!prospecto.historialFases) {
-                                prospecto.historialFases = [{ fase: prospecto.faseActual || 'Interesado', fecha: obtenerFechaActual(), notas: 'Registro inicial' }];
-                                cambios = true;
-                            }
-                        }
-                    });
-                }
-                
-                // Migrar contratos dentro de clientes
-                if (clientes && Array.isArray(clientes)) {
-                    clientes.forEach(cliente => {
-                        if (cliente && cliente.contratos && Array.isArray(cliente.contratos)) {
-                            cliente.contratos.forEach(contrato => {
-                                if (contrato) {
-                                    if (!contrato.tareasVinculadas) {
-                                        contrato.tareasVinculadas = [];
-                                        cambios = true;
-                                    }
-                                    if (!contrato.fechaContrato) {
-                                        contrato.fechaContrato = obtenerFechaActual();
-                                        cambios = true;
-                                    }
-                                    if (!contrato.estado) {
-                                        contrato.estado = 'Pendiente';
-                                        cambios = true;
-                                    }
-                                }
-                            });
-                        }
-                    });
-                }
-                
-                // Verificar que tareas existe
-                if (!tareas || !Array.isArray(tareas)) {
-                    tareas = [];
-                    cambios = true;
-                }
-                
-                if (cambios) {
-                    console.log('✅ Datos migrados al nuevo formato');
-                    guardarDatosLocal();
-                } else {
-                    console.log('✅ Datos ya están en el formato correcto');
-                }
-            } catch (error) {
-                console.error('❌ Error en migración:', error);
-            }
-            
-            return cambios;
-        }
-
-        // ============================================================
-        // GUARDAR Y CARGAR DATOS (CON MIGRACIÓN)
-        // ============================================================
-
         function guardarDatosLocal() {
-            try {
-                localStorage.setItem('paquetes', JSON.stringify(paquetes || []));
-                localStorage.setItem('serviciosAdicionales', JSON.stringify(serviciosAdicionales || []));
-                localStorage.setItem('prospectos', JSON.stringify(prospectos || []));
-                localStorage.setItem('clientes', JSON.stringify(clientes || []));
-                localStorage.setItem('tareas', JSON.stringify(tareas || []));
-                console.log('💾 Datos guardados localmente. Tareas:', tareas ? tareas.length : 0);
-            } catch (error) {
-                console.error('❌ Error guardando datos localmente:', error);
-            }
+            localStorage.setItem('paquetes', JSON.stringify(paquetes));
+            localStorage.setItem('serviciosAdicionales', JSON.stringify(serviciosAdicionales));
+            localStorage.setItem('prospectos', JSON.stringify(prospectos));
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            localStorage.setItem('tareas', JSON.stringify(tareas));
         }
 
         function cargarDatosLocal() {
-            try {
-                paquetes = JSON.parse(localStorage.getItem('paquetes')) || [];
-                serviciosAdicionales = JSON.parse(localStorage.getItem('serviciosAdicionales')) || [];
-                prospectos = JSON.parse(localStorage.getItem('prospectos')) || [];
-                clientes = JSON.parse(localStorage.getItem('clientes')) || [];
-                tareas = JSON.parse(localStorage.getItem('tareas')) || [];
-                
-                console.log('📂 Datos cargados localmente.');
-                console.log(`📦 Paquetes: ${paquetes.length}`);
-                console.log(`🔧 Servicios: ${serviciosAdicionales.length}`);
-                console.log(`👥 Prospectos: ${prospectos.length}`);
-                console.log(`⭐ Clientes: ${clientes.length}`);
-                console.log(`📌 Tareas: ${tareas.length}`);
-                
-                // Ejecutar migración
-                migrarDatosViejos();
-                
-                return true;
-            } catch (error) {
-                console.error('❌ Error cargando datos:', error);
-                return false;
-            }
+            paquetes = JSON.parse(localStorage.getItem('paquetes')) || [];
+            serviciosAdicionales = JSON.parse(localStorage.getItem('serviciosAdicionales')) || [];
+            prospectos = JSON.parse(localStorage.getItem('prospectos')) || [];
+            clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+            tareas = JSON.parse(localStorage.getItem('tareas')) || [];
+        }
+
+        function obtenerPaquete(id) {
+            return paquetes.find(p => p.id === id);
+        }
+
+        function obtenerServicio(id) {
+            return serviciosAdicionales.find(s => s.id === id);
+        }
+
+        function obtenerCliente(id) {
+            return clientes.find(c => c.id === id);
+        }
+
+        function obtenerProspecto(id) {
+            return prospectos.find(p => p.id === id);
+        }
+
+        function obtenerNombrePaquete(id) {
+            const p = obtenerPaquete(id);
+            return p ? p.nombre : 'Paquete no encontrado';
+        }
+
+        function obtenerNombreServicio(id) {
+            const s = obtenerServicio(id);
+            return s ? s.nombre : 'Servicio no encontrado';
+        }
+
+        function obtenerNombreCliente(id) {
+            if (!id) return 'No asignado';
+            const c = obtenerCliente(id);
+            if (c) return c.nombre;
+            const p = obtenerProspecto(id);
+            if (p) return p.nombre + ' (Prospecto)';
+            return 'No asignado';
+        }
+
+        function obtenerContratos() {
+            let todos = [];
+            clientes.forEach(cliente => {
+                cliente.contratos.forEach(contrato => {
+                    todos.push({
+                        ...contrato,
+                        clienteNombre: cliente.nombre,
+                        clienteId: cliente.id,
+                        clienteEstado: cliente.estado,
+                        clienteFase: cliente.faseOrigen || 'No especificada'
+                    });
+                });
+            });
+            return todos;
         }
 
         // ============================================================
-        // FUNCIONES DE SINCRONIZACIÓN CON FIREBASE (CON MIGRACIÓN)
+        // FUNCIONES DE SINCRONIZACIÓN CON FIREBASE
         // ============================================================
 
         function actualizarEstadoSync(estado, texto) {
@@ -2023,10 +1902,6 @@
             }, 3500);
         }
 
-        // ============================================================
-        // GUARDAR EN FIREBASE (CON MIGRACIÓN)
-        // ============================================================
-
         async function guardarEnFirebase() {
             if (!database) {
                 console.warn('⚠️ Firebase no inicializado');
@@ -2042,17 +1917,13 @@
                 sincronizandoFirebase = true;
                 actualizarEstadoSync('syncing', 'Guardando en Firebase...');
                 
-                // Migrar antes de guardar
-                migrarDatosViejos();
-                
                 const datos = {
-                    paquetes: paquetes || [],
-                    serviciosAdicionales: serviciosAdicionales || [],
-                    prospectos: prospectos || [],
-                    clientes: clientes || [],
-                    tareas: tareas || [],
-                    ultimaActualizacion: new Date().toISOString(),
-                    version: '2.9'
+                    paquetes: paquetes,
+                    serviciosAdicionales: serviciosAdicionales,
+                    prospectos: prospectos,
+                    clientes: clientes,
+                    tareas: tareas,
+                    ultimaActualizacion: new Date().toISOString()
                 };
                 
                 await database.ref('datos').set(datos);
@@ -2071,10 +1942,6 @@
                 sincronizandoFirebase = false;
             }
         }
-
-        // ============================================================
-        // CARGAR DESDE FIREBASE (CON MIGRACIÓN)
-        // ============================================================
 
         async function cargarDesdeFirebase() {
             if (!database) {
@@ -2095,13 +1962,10 @@
                     if (datos.clientes) clientes = datos.clientes;
                     if (datos.tareas) tareas = datos.tareas;
                     
-                    // Migrar los datos cargados
-                    migrarDatosViejos();
-                    
                     guardarDatosLocal();
                     renderizarTodo();
                     
-                    console.log('✅ Datos cargados desde Firebase. Tareas:', tareas ? tareas.length : 0);
+                    console.log('✅ Datos cargados desde Firebase');
                     actualizarEstadoSync('online', 'Datos sincronizados');
                     mostrarNotificacion('📥 Datos cargados desde Firebase', 'info');
                     return true;
@@ -2118,13 +1982,9 @@
             }
         }
 
-        // ============================================================
-        // ESCUCHAR CAMBIOS EN TIEMPO REAL (CON MIGRACIÓN)
-        // ============================================================
-
         function escucharCambiosFirebase() {
             if (!database) {
-                console.warn('⚠️ Firebase no inicializado');
+                console.warn('⚠️ Firebase no inicializado, no se pueden escuchar cambios');
                 return;
             }
             
@@ -2145,15 +2005,9 @@
                 if (datos.serviciosAdicionales) { serviciosAdicionales = datos.serviciosAdicionales; huboCambios = true; }
                 if (datos.prospectos) { prospectos = datos.prospectos; huboCambios = true; }
                 if (datos.clientes) { clientes = datos.clientes; huboCambios = true; }
-                if (datos.tareas) { 
-                    tareas = datos.tareas; 
-                    huboCambios = true; 
-                    console.log('📋 Tareas actualizadas desde Firebase:', tareas ? tareas.length : 0);
-                }
+                if (datos.tareas) { tareas = datos.tareas; huboCambios = true; }
                 
                 if (huboCambios) {
-                    // Migrar los datos cargados
-                    migrarDatosViejos();
                     guardarDatosLocal();
                     renderizarTodo();
                     mostrarNotificacion('📥 Datos actualizados desde la nube', 'success');
@@ -2163,11 +2017,10 @@
         }
 
         // ============================================================
-        // GUARDAR DATOS (PRINCIPAL CON MIGRACIÓN)
+        // GUARDAR DATOS (SOBRESCRITO)
         // ============================================================
-
+        
         function guardarDatos() {
-            migrarDatosViejos();
             guardarDatosLocal();
             
             if (estadoSync.modo === 'firebase' && database) {
@@ -2176,220 +2029,8 @@
         }
 
         // ============================================================
-        // FUNCIONES DE OBJETOS
-        // ============================================================
-
-        function obtenerPaquete(id) {
-            if (!paquetes || !Array.isArray(paquetes)) return null;
-            return paquetes.find(p => p && p.id === id);
-        }
-
-        function obtenerServicio(id) {
-            if (!serviciosAdicionales || !Array.isArray(serviciosAdicionales)) return null;
-            return serviciosAdicionales.find(s => s && s.id === id);
-        }
-
-        function obtenerCliente(id) {
-            if (!clientes || !Array.isArray(clientes)) return null;
-            return clientes.find(c => c && c.id === id);
-        }
-
-        function obtenerProspecto(id) {
-            if (!prospectos || !Array.isArray(prospectos)) return null;
-            return prospectos.find(p => p && p.id === id);
-        }
-
-        function obtenerNombrePaquete(id) {
-            const p = obtenerPaquete(id);
-            return p ? p.nombre : 'Paquete no encontrado';
-        }
-
-        function obtenerNombreServicio(id) {
-            const s = obtenerServicio(id);
-            return s ? s.nombre : 'Servicio no encontrado';
-        }
-
-        function obtenerNombreCliente(id) {
-            if (!id) return 'No asignado';
-            const c = obtenerCliente(id);
-            if (c) return c.nombre || 'Cliente';
-            const p = obtenerProspecto(id);
-            if (p) return (p.nombre || 'Prospecto') + ' (Prospecto)';
-            return 'No asignado';
-        }
-
-        function obtenerContratos() {
-            let todos = [];
-            try {
-                if (clientes && Array.isArray(clientes)) {
-                    clientes.forEach(cliente => {
-                        if (cliente && cliente.contratos && Array.isArray(cliente.contratos)) {
-                            cliente.contratos.forEach(contrato => {
-                                if (contrato) {
-                                    todos.push({
-                                        ...contrato,
-                                        clienteNombre: cliente.nombre || 'Cliente sin nombre',
-                                        clienteId: cliente.id,
-                                        clienteEstado: cliente.estado || 'Activo',
-                                        clienteFase: cliente.faseOrigen || 'No especificada'
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('❌ Error obteniendo contratos:', error);
-            }
-            return todos;
-        }
-
-        // ============================================================
-        // FUNCIONES PARA TAREAS - VINCULACIÓN CON CONTRATOS Y PROSPECTOS
-        // ============================================================
-
-        function obtenerEntidadVinculada(tarea) {
-            if (!tarea || !tarea.entidadVinculada) return null;
-            
-            try {
-                const [tipo, id] = tarea.entidadVinculada.split('_');
-                
-                if (tipo === 'cliente') {
-                    const cliente = obtenerCliente(id);
-                    if (cliente) {
-                        return {
-                            tipo: 'cliente',
-                            datos: cliente,
-                            nombre: cliente.nombre || 'Cliente',
-                            contrato: cliente.contratos && cliente.contratos.length > 0 ? cliente.contratos[cliente.contratos.length - 1] : null
-                        };
-                    }
-                } else if (tipo === 'prospecto') {
-                    const prospecto = obtenerProspecto(id);
-                    if (prospecto) {
-                        return {
-                            tipo: 'prospecto',
-                            datos: prospecto,
-                            nombre: prospecto.nombre || 'Prospecto'
-                        };
-                    }
-                } else if (tipo === 'contrato') {
-                    if (clientes && Array.isArray(clientes)) {
-                        for (const cliente of clientes) {
-                            if (cliente && cliente.contratos && Array.isArray(cliente.contratos)) {
-                                const contrato = cliente.contratos.find(c => c && c.id === id);
-                                if (contrato) {
-                                    return {
-                                        tipo: 'contrato',
-                                        datos: contrato,
-                                        clienteNombre: cliente.nombre || 'Cliente',
-                                        clienteId: cliente.id,
-                                        nombre: contrato.festejado || cliente.nombre || 'Contrato'
-                                    };
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Error obteniendo entidad vinculada:', error);
-            }
-            
-            return null;
-        }
-
-        function vincularTareaAEntidad(tareaId, entidadTipo, entidadId) {
-            try {
-                if (!tareas || !Array.isArray(tareas)) {
-                    tareas = [];
-                }
-                
-                const tarea = tareas.find(t => t && t.id === tareaId);
-                if (!tarea) return false;
-                
-                tarea.entidadVinculada = entidadTipo + '_' + entidadId;
-                tarea.fechaVinculacion = obtenerFechaHoraActual();
-                
-                if (entidadTipo === 'cliente') {
-                    const cliente = obtenerCliente(entidadId);
-                    if (cliente) {
-                        if (!cliente.tareasVinculadas) cliente.tareasVinculadas = [];
-                        if (!cliente.tareasVinculadas.includes(tareaId)) {
-                            cliente.tareasVinculadas.push(tareaId);
-                        }
-                    }
-                } else if (entidadTipo === 'prospecto') {
-                    const prospecto = obtenerProspecto(entidadId);
-                    if (prospecto) {
-                        if (!prospecto.tareasVinculadas) prospecto.tareasVinculadas = [];
-                        if (!prospecto.tareasVinculadas.includes(tareaId)) {
-                            prospecto.tareasVinculadas.push(tareaId);
-                        }
-                    }
-                } else if (entidadTipo === 'contrato') {
-                    if (clientes && Array.isArray(clientes)) {
-                        for (const cliente of clientes) {
-                            if (cliente && cliente.contratos && Array.isArray(cliente.contratos)) {
-                                const contrato = cliente.contratos.find(c => c && c.id === entidadId);
-                                if (contrato) {
-                                    if (!contrato.tareasVinculadas) contrato.tareasVinculadas = [];
-                                    if (!contrato.tareasVinculadas.includes(tareaId)) {
-                                        contrato.tareasVinculadas.push(tareaId);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                guardarDatos();
-                return true;
-            } catch (error) {
-                console.error('❌ Error vinculando tarea:', error);
-                return false;
-            }
-        }
-
-        function obtenerTareasDeEntidad(entidadTipo, entidadId) {
-            const tareasVinculadas = [];
-            
-            try {
-                if (entidadTipo === 'cliente') {
-                    const cliente = obtenerCliente(entidadId);
-                    if (cliente && cliente.tareasVinculadas) {
-                        tareasVinculadas.push(...cliente.tareasVinculadas);
-                    }
-                } else if (entidadTipo === 'prospecto') {
-                    const prospecto = obtenerProspecto(entidadId);
-                    if (prospecto && prospecto.tareasVinculadas) {
-                        tareasVinculadas.push(...prospecto.tareasVinculadas);
-                    }
-                } else if (entidadTipo === 'contrato') {
-                    if (clientes && Array.isArray(clientes)) {
-                        for (const cliente of clientes) {
-                            if (cliente && cliente.contratos && Array.isArray(cliente.contratos)) {
-                                const contrato = cliente.contratos.find(c => c && c.id === entidadId);
-                                if (contrato && contrato.tareasVinculadas) {
-                                    tareasVinculadas.push(...contrato.tareasVinculadas);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Error obteniendo tareas de entidad:', error);
-            }
-            
-            if (!tareas || !Array.isArray(tareas)) return [];
-            return tareas.filter(t => t && tareasVinculadas.includes(t.id));
-        }
-
-        // ============================================================
         // NAVEGACIÓN
         // ============================================================
-
         const menuItems = document.querySelectorAll('.menu-item');
 
         function cambiarSeccion(seccionId) {
@@ -2438,7 +2079,6 @@
         // ============================================================
         // MODAL
         // ============================================================
-
         const modal = document.getElementById('modal');
         const modalTitulo = document.getElementById('modal-titulo');
         const modalBody = document.getElementById('modal-body');
@@ -2463,20 +2103,19 @@
         });
 
         // ============================================================
-        // EXPORTAR E IMPORTAR DATOS
+        // EXPORTAR E IMPORTAR DATOS (MANUAL)
         // ============================================================
-
+        
         document.getElementById('btn-exportar-datos').addEventListener('click', function() {
             try {
-                migrarDatosViejos();
                 const datos = {
-                    version: '2.9',
+                    version: '2.8',
                     fechaExportacion: obtenerFechaActual(),
-                    paquetes: paquetes || [],
-                    serviciosAdicionales: serviciosAdicionales || [],
-                    prospectos: prospectos || [],
-                    clientes: clientes || [],
-                    tareas: tareas || []
+                    paquetes: paquetes,
+                    serviciosAdicionales: serviciosAdicionales,
+                    prospectos: prospectos,
+                    clientes: clientes,
+                    tareas: tareas
                 };
                 
                 const json = JSON.stringify(datos, null, 2);
@@ -2495,11 +2134,11 @@
                 mostrarNotificacion('❌ Error al exportar: ' + error.message, 'error');
             }
         });
-
+        
         document.getElementById('btn-importar-datos').addEventListener('click', function() {
             document.getElementById('input-importar-datos').click();
         });
-
+        
         document.getElementById('input-importar-datos').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -2525,8 +2164,6 @@
                     clientes = datos.clientes || [];
                     tareas = datos.tareas || [];
                     
-                    // Migrar los datos importados
-                    migrarDatosViejos();
                     guardarDatos();
                     renderizarTodo();
                     
@@ -2543,7 +2180,7 @@
         // ============================================================
         // BOTONES DE FIREBASE
         // ============================================================
-
+        
         document.getElementById('btn-sync-firebase').addEventListener('click', async function() {
             if (!database) {
                 mostrarNotificacion('⚠️ Firebase no está disponible', 'error');
@@ -2572,7 +2209,7 @@
         // ============================================================
         // INICIALIZAR FIREBASE
         // ============================================================
-
+        
         async function inicializarFirebase() {
             if (!database) {
                 actualizarEstadoSync('offline', 'Firebase no disponible');
@@ -2584,6 +2221,7 @@
                 console.log('🔌 Conectando a Firebase...');
                 actualizarEstadoSync('syncing', 'Conectando a Firebase...');
                 
+                // Probar conexión
                 await database.ref('test').set('testing');
                 await database.ref('test').remove();
                 
@@ -2591,14 +2229,18 @@
                 estadoSync.modo = 'firebase';
                 actualizarEstadoSync('online', 'Firebase Conectado');
                 
+                // Cargar datos
                 await cargarDesdeFirebase();
+                
+                // Escuchar cambios
                 escucharCambiosFirebase();
                 
+                // Sincronización automática periódica
                 setInterval(async () => {
                     if (!sincronizandoFirebase && estadoSync.modo === 'firebase') {
                         await guardarEnFirebase();
                     }
-                }, 30000);
+                }, 30000); // Cada 30 segundos
                 
                 mostrarNotificacion('🔥 Conexión con Firebase establecida', 'success');
                 return true;
@@ -2692,22 +2334,21 @@
             const contenedor = document.getElementById('lista-paquetes');
             if (!contenedor) return;
             
-            if (!paquetes || paquetes.length === 0) {
+            if (paquetes.length === 0) {
                 contenedor.innerHTML = '<p class="mensaje-vacio">No hay paquetes registrados</p>';
                 return;
             }
             
             let html = '';
             paquetes.forEach(p => {
-                if (!p) return;
-                const precioFinal = (p.precio || 0) - (p.descuento || 0);
+                const precioFinal = p.precio - (p.descuento || 0);
                 html += `
                     <div class="tarjeta-registro">
                         <div class="tarjeta-info">
-                            <div class="tarjeta-titulo">${p.nombre || 'Sin nombre'}</div>
-                            <div class="tarjeta-detalle">${p.descripcion || ''}</div>
+                            <div class="tarjeta-titulo">${p.nombre}</div>
+                            <div class="tarjeta-detalle">${p.descripcion}</div>
                             <div class="tarjeta-detalle">
-                                Precio: ${formatearMoneda(p.precio || 0)}
+                                Precio: ${formatearMoneda(p.precio)}
                                 ${p.descuento ? ` - Descuento: ${formatearMoneda(p.descuento)} = ${formatearMoneda(precioFinal)}` : ''}
                                 | Vigencia: ${formatearFecha(p.vigencia)}
                             </div>
@@ -2729,7 +2370,7 @@
 
         function eliminarPaquete(id) {
             if (confirm('¿Eliminar este paquete?')) {
-                paquetes = paquetes.filter(p => p && p.id !== id);
+                paquetes = paquetes.filter(p => p.id !== id);
                 guardarDatos();
                 renderizarPaquetes();
                 actualizarFiltrosInformes();
@@ -2737,32 +2378,2176 @@
         }
 
         // ============================================================
-        // SERVICIOS - CRUD (RESUMIDO PARA AHORRAR ESPACIO)
+        // SERVICIOS - CRUD (COMPLETO)
         // ============================================================
-        // [Las funciones de servicios, prospectos, clientes, contratos, 
-        // calendario e informes se mantienen igual que en la versión anterior]
-        // Para no exceder el límite de caracteres, se incluye la versión completa
-        // en el siguiente mensaje.
-        console.log('✅ V2.9 Cargada con migración de datos');
-        console.log('📋 Los datos antiguos se migrarán automáticamente');
+        document.getElementById('btn-nuevo-servicio').addEventListener('click', function() {
+            mostrarFormularioServicio();
+        });
+
+        function mostrarFormularioServicio(servicio = null) {
+            const esEdicion = servicio !== null;
+            const titulo = esEdicion ? 'Editar Servicio' : 'Nuevo Servicio';
+            
+            const html = `
+                <form id="form-servicio">
+                    <input type="hidden" id="servicio-id" value="${servicio ? servicio.id : ''}">
+                    <div class="form-grupo">
+                        <label>Nombre *</label>
+                        <input type="text" id="servicio-nombre" required value="${servicio ? servicio.nombre : ''}">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Descripción *</label>
+                        <textarea id="servicio-descripcion" required>${servicio ? servicio.descripcion : ''}</textarea>
+                    </div>
+                    <div class="form-grupo">
+                        <label>Precio *</label>
+                        <input type="number" id="servicio-precio" required min="0" value="${servicio ? servicio.precio : ''}">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Descuento (pesos)</label>
+                        <input type="number" id="servicio-descuento" min="0" value="${servicio ? servicio.descuento : 0}">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Vigencia *</label>
+                        <input type="date" id="servicio-vigencia" required value="${servicio ? servicio.vigencia : ''}">
+                    </div>
+                    <div class="form-acciones">
+                        <button type="button" class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
+                        <button type="submit" class="btn-primario">${esEdicion ? 'Actualizar' : 'Guardar'}</button>
+                    </div>
+                </form>
+            `;
+            
+            abrirModal(titulo, html);
+            document.getElementById('form-servicio').addEventListener('submit', function(e) {
+                e.preventDefault();
+                guardarServicio(esEdicion);
+            });
+        }
+
+        function guardarServicio(esEdicion) {
+            const id = document.getElementById('servicio-id').value;
+            const nombre = document.getElementById('servicio-nombre').value.trim();
+            const descripcion = document.getElementById('servicio-descripcion').value.trim();
+            const precio = parseFloat(document.getElementById('servicio-precio').value);
+            const descuento = parseFloat(document.getElementById('servicio-descuento').value) || 0;
+            const vigencia = document.getElementById('servicio-vigencia').value;
+            
+            if (!nombre || !descripcion || !precio || !vigencia) {
+                mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
+                return;
+            }
+            
+            if (esEdicion) {
+                const index = serviciosAdicionales.findIndex(s => s.id === id);
+                if (index !== -1) {
+                    serviciosAdicionales[index] = { ...serviciosAdicionales[index], nombre, descripcion, precio, descuento, vigencia };
+                }
+            } else {
+                serviciosAdicionales.push({ id: generarId(), nombre, descripcion, precio, descuento, vigencia });
+            }
+            
+            guardarDatos();
+            cerrarModal();
+            renderizarServicios();
+            actualizarFiltrosInformes();
+        }
+
+        function renderizarServicios() {
+            const contenedor = document.getElementById('lista-servicios');
+            if (!contenedor) return;
+            
+            if (serviciosAdicionales.length === 0) {
+                contenedor.innerHTML = '<p class="mensaje-vacio">No hay servicios registrados</p>';
+                return;
+            }
+            
+            let html = '';
+            serviciosAdicionales.forEach(s => {
+                const precioFinal = s.precio - (s.descuento || 0);
+                html += `
+                    <div class="tarjeta-registro">
+                        <div class="tarjeta-info">
+                            <div class="tarjeta-titulo">${s.nombre}</div>
+                            <div class="tarjeta-detalle">${s.descripcion}</div>
+                            <div class="tarjeta-detalle">
+                                Precio: ${formatearMoneda(s.precio)}
+                                ${s.descuento ? ` - Descuento: ${formatearMoneda(s.descuento)} = ${formatearMoneda(precioFinal)}` : ''}
+                                | Vigencia: ${formatearFecha(s.vigencia)}
+                            </div>
+                        </div>
+                        <div class="tarjeta-acciones">
+                            <button class="btn-editar" onclick="editarServicio('${s.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn-eliminar" onclick="eliminarServicio('${s.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            contenedor.innerHTML = html;
+        }
+
+        function editarServicio(id) {
+            const s = obtenerServicio(id);
+            if (s) mostrarFormularioServicio(s);
+        }
+
+        function eliminarServicio(id) {
+            if (confirm('¿Eliminar este servicio?')) {
+                serviciosAdicionales = serviciosAdicionales.filter(s => s.id !== id);
+                guardarDatos();
+                renderizarServicios();
+                actualizarFiltrosInformes();
+            }
+        }
+
+        // ============================================================
+        // PROSPECTOS - CRUD (COMPLETO)
+        // ============================================================
+        document.getElementById('btn-nuevo-prospecto').addEventListener('click', function() {
+            mostrarFormularioProspecto();
+        });
+
+        function mostrarFormularioProspecto(prospecto = null) {
+            const esEdicion = prospecto !== null;
+            const titulo = esEdicion ? 'Editar Prospecto' : 'Nuevo Prospecto';
+            
+            const opcionesFases = FASES_DISPONIBLES.map(f => 
+                `<option value="${f}" ${prospecto && prospecto.faseActual === f ? 'selected' : ''}>${f}</option>`
+            ).join('');
+            
+            const html = `
+                <form id="form-prospecto">
+                    <input type="hidden" id="prospecto-id" value="${prospecto ? prospecto.id : ''}">
+                    <div class="form-grupo">
+                        <label>Nombre *</label>
+                        <input type="text" id="prospecto-nombre" required value="${prospecto ? prospecto.nombre : ''}">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Teléfono (opcional)</label>
+                        <input type="text" id="prospecto-telefono" value="${prospecto ? prospecto.telefono : ''}">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Email (opcional)</label>
+                        <input type="email" id="prospecto-email" value="${prospecto ? prospecto.email : ''}">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Fase *</label>
+                        <select id="prospecto-fase" required>${opcionesFases}</select>
+                    </div>
+                    <div class="form-grupo">
+                        <label>Notas (opcional)</label>
+                        <textarea id="prospecto-notas">${prospecto ? prospecto.notasGenerales : ''}</textarea>
+                    </div>
+                    <div class="form-acciones">
+                        <button type="button" class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
+                        <button type="submit" class="btn-primario">${esEdicion ? 'Actualizar' : 'Guardar'}</button>
+                    </div>
+                </form>
+            `;
+            
+            abrirModal(titulo, html);
+            document.getElementById('form-prospecto').addEventListener('submit', function(e) {
+                e.preventDefault();
+                guardarProspecto(esEdicion);
+            });
+        }
+
+        function guardarProspecto(esEdicion) {
+            const id = document.getElementById('prospecto-id').value;
+            const nombre = document.getElementById('prospecto-nombre').value.trim();
+            const telefono = document.getElementById('prospecto-telefono').value.trim();
+            const email = document.getElementById('prospecto-email').value.trim();
+            const faseActual = document.getElementById('prospecto-fase').value;
+            const notasGenerales = document.getElementById('prospecto-notas').value.trim();
+            
+            if (!nombre || !faseActual) {
+                mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
+                return;
+            }
+            
+            if (esEdicion) {
+                const index = prospectos.findIndex(p => p.id === id);
+                if (index !== -1) {
+                    const p = prospectos[index];
+                    if (p.faseActual !== faseActual) {
+                        p.historialFases.push({ fase: faseActual, fecha: obtenerFechaActual(), notas: 'Cambio de fase' });
+                    }
+                    p.nombre = nombre;
+                    p.telefono = telefono;
+                    p.email = email;
+                    p.faseActual = faseActual;
+                    p.notasGenerales = notasGenerales;
+                }
+            } else {
+                prospectos.push({
+                    id: generarId(),
+                    nombre,
+                    telefono,
+                    email,
+                    faseActual,
+                    historialFases: [{ fase: faseActual, fecha: obtenerFechaActual(), notas: 'Registro inicial' }],
+                    notasGenerales,
+                    clienteId: null,
+                    fechaRegistro: obtenerFechaActual()
+                });
+            }
+            
+            guardarDatos();
+            cerrarModal();
+            renderizarProspectos();
+        }
+
+        function renderizarProspectos() {
+            const contenedor = document.getElementById('lista-prospectos');
+            if (!contenedor) return;
+            
+            const filtroFase = document.getElementById('filtro-fase-prospecto').value;
+            const busqueda = document.getElementById('buscar-prospecto').value.toLowerCase().trim();
+            
+            let filtrados = [...prospectos];
+            if (filtroFase !== 'todas') {
+                filtrados = filtrados.filter(p => p.faseActual === filtroFase);
+            }
+            if (busqueda) {
+                filtrados = filtrados.filter(p => 
+                    p.nombre.toLowerCase().includes(busqueda) || 
+                    (p.telefono && p.telefono.includes(busqueda))
+                );
+            }
+            
+            if (filtrados.length === 0) {
+                contenedor.innerHTML = '<p class="mensaje-vacio">No hay prospectos</p>';
+                return;
+            }
+            
+            let html = '';
+            filtrados.forEach(p => {
+                const claseFase = `etiqueta-${p.faseActual.toLowerCase()}`;
+                const esCliente = p.clienteId !== null;
+                
+                html += `
+                    <div class="tarjeta-registro">
+                        <div class="tarjeta-info">
+                            <div class="tarjeta-titulo">
+                                ${p.nombre}
+                                <span class="tarjeta-etiqueta ${claseFase}">${p.faseActual}</span>
+                                ${esCliente ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">✅ Cliente</span>' : ''}
+                            </div>
+                            <div class="tarjeta-detalle">
+                                ${p.telefono ? `📞 ${p.telefono}` : ''}
+                                ${p.email ? `| ✉️ ${p.email}` : ''}
+                                | Registrado: ${formatearFecha(p.fechaRegistro)}
+                            </div>
+                            <div class="tarjeta-detalle">
+                                <small>Historial: ${p.historialFases.map(h => `${h.fase} (${formatearFecha(h.fecha)})`).join(' → ')}</small>
+                            </div>
+                        </div>
+                        <div class="tarjeta-acciones">
+                            <button class="btn-editar" onclick="editarProspecto('${p.id}')"><i class="fas fa-edit"></i></button>
+                            ${!esCliente ? `<button class="btn-convertir" onclick="convertirProspecto('${p.id}')"><i class="fas fa-user-check"></i></button>` : ''}
+                            <button class="btn-eliminar" onclick="eliminarProspecto('${p.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            contenedor.innerHTML = html;
+        }
+
+        function editarProspecto(id) {
+            const p = obtenerProspecto(id);
+            if (p) mostrarFormularioProspecto(p);
+        }
+
+        function eliminarProspecto(id) {
+            if (confirm('¿Eliminar este prospecto?')) {
+                prospectos = prospectos.filter(p => p.id !== id);
+                guardarDatos();
+                renderizarProspectos();
+            }
+        }
+
+        function convertirProspecto(id) {
+            const prospecto = obtenerProspecto(id);
+            if (!prospecto) return;
+            
+            prospecto.faseActual = 'Contrato';
+            prospecto.historialFases.push({
+                fase: 'Contrato',
+                fecha: obtenerFechaActual(),
+                notas: 'Convertido a cliente'
+            });
+            
+            const nuevoCliente = {
+                id: generarId(),
+                nombre: prospecto.nombre,
+                telefono: prospecto.telefono || '',
+                email: prospecto.email || '',
+                fechaRegistro: obtenerFechaActual(),
+                estado: 'Activo',
+                faseOrigen: prospecto.faseActual,
+                contratos: [],
+                notasGenerales: prospecto.notasGenerales || ''
+            };
+            
+            clientes.push(nuevoCliente);
+            prospecto.clienteId = nuevoCliente.id;
+            
+            guardarDatos();
+            renderizarProspectos();
+            renderizarClientes();
+            
+            mostrarNotificacion('✅ Prospecto convertido a cliente exitosamente', 'success');
+        }
+
+        // ============================================================
+        // CLIENTES - CRUD (COMPLETO)
+        // ============================================================
+        document.getElementById('btn-nuevo-cliente').addEventListener('click', function() {
+            mostrarFormularioCliente();
+        });
+
+        function mostrarFormularioCliente(cliente = null) {
+            const esEdicion = cliente !== null;
+            const titulo = esEdicion ? 'Editar Cliente' : 'Nuevo Cliente';
+            
+            const opcionesEstado = ESTADOS_CLIENTE.map(e => 
+                `<option value="${e}" ${cliente && cliente.estado === e ? 'selected' : ''}>${e}</option>`
+            ).join('');
+            
+            const html = `
+                <form id="form-cliente">
+                    <input type="hidden" id="cliente-id" value="${cliente ? cliente.id : ''}">
+                    <div class="form-grupo">
+                        <label>Nombre *</label>
+                        <input type="text" id="cliente-nombre" required value="${cliente ? cliente.nombre : ''}">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Teléfono *</label>
+                        <input type="text" id="cliente-telefono" required value="${cliente ? cliente.telefono : ''}">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Email (opcional)</label>
+                        <input type="email" id="cliente-email" value="${cliente ? cliente.email : ''}">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Estado *</label>
+                        <select id="cliente-estado" required>${opcionesEstado}</select>
+                    </div>
+                    <div class="form-grupo">
+                        <label>Notas (opcional)</label>
+                        <textarea id="cliente-notas">${cliente ? cliente.notasGenerales : ''}</textarea>
+                    </div>
+                    <div class="form-acciones">
+                        <button type="button" class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
+                        <button type="submit" class="btn-primario">${esEdicion ? 'Actualizar' : 'Guardar'}</button>
+                    </div>
+                </form>
+            `;
+            
+            abrirModal(titulo, html);
+            document.getElementById('form-cliente').addEventListener('submit', function(e) {
+                e.preventDefault();
+                guardarCliente(esEdicion);
+            });
+        }
+
+        function guardarCliente(esEdicion) {
+            const id = document.getElementById('cliente-id').value;
+            const nombre = document.getElementById('cliente-nombre').value.trim();
+            const telefono = document.getElementById('cliente-telefono').value.trim();
+            const email = document.getElementById('cliente-email').value.trim();
+            const estado = document.getElementById('cliente-estado').value;
+            const notasGenerales = document.getElementById('cliente-notas').value.trim();
+            
+            if (!nombre || !telefono || !estado) {
+                mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
+                return;
+            }
+            
+            if (esEdicion) {
+                const index = clientes.findIndex(c => c.id === id);
+                if (index !== -1) {
+                    clientes[index] = { ...clientes[index], nombre, telefono, email, estado, notasGenerales };
+                }
+            } else {
+                clientes.push({
+                    id: generarId(),
+                    nombre,
+                    telefono,
+                    email,
+                    fechaRegistro: obtenerFechaActual(),
+                    estado,
+                    faseOrigen: 'Nuevo cliente',
+                    contratos: [],
+                    notasGenerales
+                });
+            }
+            
+            guardarDatos();
+            cerrarModal();
+            renderizarClientes();
+        }
+
+        function renderizarClientes() {
+            const contenedor = document.getElementById('lista-clientes');
+            if (!contenedor) return;
+            
+            const filtroEstado = document.getElementById('filtro-estado-cliente-lista').value;
+            const busqueda = document.getElementById('buscar-cliente').value.toLowerCase().trim();
+            
+            let filtrados = [...clientes];
+            if (filtroEstado !== 'todos') {
+                filtrados = filtrados.filter(c => c.estado === filtroEstado);
+            }
+            if (busqueda) {
+                filtrados = filtrados.filter(c => 
+                    c.nombre.toLowerCase().includes(busqueda) || 
+                    c.telefono.includes(busqueda)
+                );
+            }
+            
+            if (filtrados.length === 0) {
+                contenedor.innerHTML = '<p class="mensaje-vacio">No hay clientes</p>';
+                return;
+            }
+            
+            let html = '';
+            filtrados.forEach(c => {
+                const totalContratos = c.contratos.length;
+                const estadoClase = c.estado === 'Activo' ? 'etiqueta-interesado' : 
+                                   c.estado === 'Inactivo' ? 'etiqueta-inactivo' : 'etiqueta-cancelado';
+                
+                html += `
+                    <div class="tarjeta-registro">
+                        <div class="tarjeta-info">
+                            <div class="tarjeta-titulo">
+                                ${c.nombre}
+                                <span class="tarjeta-etiqueta ${estadoClase}">${c.estado}</span>
+                                ${c.faseOrigen ? `<span class="tarjeta-etiqueta" style="background:var(--color-azul);color:#fff;">Origen: ${c.faseOrigen}</span>` : ''}
+                            </div>
+                            <div class="tarjeta-detalle">
+                                📞 ${c.telefono}
+                                ${c.email ? `| ✉️ ${c.email}` : ''}
+                                | Registrado: ${formatearFecha(c.fechaRegistro)}
+                            </div>
+                            <div class="tarjeta-detalle">
+                                <strong>Contratos:</strong> ${totalContratos} total
+                                ${c.contratos.length > 0 ? `| Último: ${formatearFecha(c.contratos[c.contratos.length - 1].fechaContrato)}` : ''}
+                            </div>
+                        </div>
+                        <div class="tarjeta-acciones">
+                            <button class="btn-editar" onclick="editarCliente('${c.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn-convertir" onclick="mostrarFormularioContrato('${c.id}')" title="Agregar contrato"><i class="fas fa-file-contract"></i></button>
+                            <button class="btn-eliminar" onclick="eliminarCliente('${c.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            contenedor.innerHTML = html;
+        }
+
+        function editarCliente(id) {
+            const c = obtenerCliente(id);
+            if (c) mostrarFormularioCliente(c);
+        }
+
+        function eliminarCliente(id) {
+            if (confirm('¿Eliminar este cliente y todos sus contratos?')) {
+                clientes = clientes.filter(c => c.id !== id);
+                prospectos.forEach(p => {
+                    if (p.clienteId === id) p.clienteId = null;
+                });
+                guardarDatos();
+                renderizarClientes();
+                renderizarProspectos();
+                renderizarContratos();
+            }
+        }
+
+        // ============================================================
+        // CONTRATOS - FUNCIONES COMPLETAS
+        // ============================================================
+        document.getElementById('btn-nuevo-contrato').addEventListener('click', function() {
+            if (clientes.length === 0) {
+                mostrarNotificacion('⚠️ Primero debes registrar al menos un cliente', 'warning');
+                return;
+            }
+            mostrarFormularioContrato(null);
+        });
+
+        function generarOpcionesHora() {
+            let opciones = '';
+            for (let h = 0; h < 24; h++) {
+                for (let m = 0; m < 60; m += 30) {
+                    const horaStr = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                    opciones += `<option value="${horaStr}">${horaStr}</option>`;
+                }
+            }
+            return opciones;
+        }
+
+        const OPCIONES_HORA = generarOpcionesHora();
+
+        function mostrarFormularioContrato(clienteId = null, titulo = 'Nuevo Contrato', contrato = null) {
+            const esEdicion = contrato !== null;
+            const tipoContrato = contrato ? contrato.tipo : 'paquete';
+            
+            const opcionesClientes = clientes.map(c => 
+                `<option value="${c.id}" ${clienteId === c.id ? 'selected' : ''}>${c.nombre} (${c.estado})</option>`
+            ).join('');
+            
+            const opcionesPaquetes = paquetes.map(p => 
+                `<option value="${p.id}" ${contrato && contrato.paqueteId === p.id ? 'selected' : ''}>${p.nombre} - ${formatearMoneda(p.precio - (p.descuento || 0))}</option>`
+            ).join('');
+            
+            const opcionesServicios = serviciosAdicionales.map(s => {
+                const checked = contrato && contrato.servicioId === s.id ? 'selected' : '';
+                return `<option value="${s.id}" ${checked}>${s.nombre} - ${formatearMoneda(s.precio - (s.descuento || 0))}</option>`;
+            }).join('');
+            
+            const opcionesServiciosMulti = serviciosAdicionales.map(s => {
+                const checked = contrato && contrato.serviciosIds && contrato.serviciosIds.includes(s.id) ? 'checked' : '';
+                return `<label style="display:block;margin:4px 0;color:var(--color-texto-primario);">
+                    <input type="checkbox" class="servicio-check" value="${s.id}" data-precio="${s.precio - (s.descuento || 0)}" ${checked}>
+                    ${s.nombre} - ${formatearMoneda(s.precio - (s.descuento || 0))}
+                </label>`;
+            }).join('');
+            
+            const pagos = contrato && contrato.pagos ? [...contrato.pagos] : [];
+            const cargos = contrato && contrato.cargos ? [...contrato.cargos] : [];
+            
+            let infoCliente = '';
+            if (clienteId) {
+                const cliente = obtenerCliente(clienteId);
+                if (cliente) {
+                    infoCliente = `
+                        <div class="info-cliente">
+                            <p><strong>${cliente.nombre}</strong></p>
+                            <p>📞 ${cliente.telefono} ${cliente.email ? `| ✉️ ${cliente.email}` : ''}</p>
+                            <p>🏷️ Origen: ${cliente.faseOrigen || 'No especificado'} | Estado: ${cliente.estado}</p>
+                            <p>📋 Contratos previos: ${cliente.contratos.length}</p>
+                        </div>
+                    `;
+                }
+            }
+            
+            const pagosValidos = pagos.filter(p => !p.eliminado);
+            const cargosValidos = cargos.filter(c => !c.eliminado);
+            const totalPagos = pagosValidos.reduce((sum, p) => sum + p.monto, 0);
+            const totalCargos = cargosValidos.reduce((sum, c) => sum + c.monto, 0);
+            const precioFinal = contrato ? contrato.precioFinal : 0;
+            const totalAPagar = precioFinal + totalCargos;
+            const saldoPendiente = totalAPagar - totalPagos;
+            
+            const html = `
+                <form id="form-contrato">
+                    <input type="hidden" id="contrato-id" value="${contrato ? contrato.id : ''}">
+                    <input type="hidden" id="contrato-pagos" value='${JSON.stringify(pagos)}'>
+                    <input type="hidden" id="contrato-cargos" value='${JSON.stringify(cargos)}'>
+                    
+                    <div class="form-grupo">
+                        <label>Cliente (contratante) *</label>
+                        <select id="contrato-cliente" required ${clienteId ? 'disabled' : ''}>
+                            <option value="">Seleccionar cliente...</option>
+                            ${opcionesClientes}
+                        </select>
+                        ${clienteId ? `<input type="hidden" id="contrato-cliente-id" value="${clienteId}">` : ''}
+                    </div>
+                    
+                    ${infoCliente}
+                    
+                    <div class="form-grupo">
+                        <label>Nombre del festejado *</label>
+                        <input type="text" id="contrato-festejado" required placeholder="Nombre de la persona homenajeada" value="${contrato ? contrato.festejado : ''}">
+                        <small style="color:var(--color-texto-secundario);">Persona que es el centro del evento (quinceañera, novia, bautizado, etc.)</small>
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label>Tipo de contrato *</label>
+                        <select id="contrato-tipo" required>
+                            <option value="paquete" ${tipoContrato === 'paquete' ? 'selected' : ''}>📦 Paquete completo</option>
+                            <option value="solo-servicio" ${tipoContrato === 'solo-servicio' ? 'selected' : ''}>🔧 Solo servicio adicional</option>
+                        </select>
+                        <small style="color:var(--color-texto-secundario);">Selecciona si el cliente contrata un paquete completo o solo un servicio</small>
+                    </div>
+                    
+                    <div id="seccion-paquete" style="${tipoContrato === 'paquete' ? '' : 'display:none;'}">
+                        <div class="form-grupo">
+                            <label>Paquete *</label>
+                            <select id="contrato-paquete" ${tipoContrato === 'paquete' ? 'required' : ''}>
+                                <option value="">Seleccionar paquete...</option>
+                                ${opcionesPaquetes}
+                            </select>
+                        </div>
+                        <div class="form-grupo">
+                            <label>Servicios adicionales (opcional)</label>
+                            <div style="background:var(--color-bg-primario);padding:12px;border-radius:var(--border-radius);">
+                                ${opcionesServiciosMulti || '<p style="color:var(--color-texto-secundario);">No hay servicios adicionales registrados</p>'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="seccion-solo-servicio" style="${tipoContrato === 'solo-servicio' ? '' : 'display:none;'}">
+                        <div class="form-grupo">
+                            <label>Servicio *</label>
+                            <select id="contrato-servicio" ${tipoContrato === 'solo-servicio' ? 'required' : ''}>
+                                <option value="">Seleccionar servicio...</option>
+                                ${opcionesServicios}
+                            </select>
+                            <small style="color:var(--color-texto-secundario);">El cliente contrata este servicio sin paquete</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row-2col">
+                        <div class="form-grupo">
+                            <label>Fecha del evento *</label>
+                            <input type="date" id="contrato-fecha-evento" required value="${contrato ? contrato.fechaEvento : ''}">
+                        </div>
+                        <div class="form-grupo">
+                            <label>Hora del evento</label>
+                            <select id="contrato-hora-evento">
+                                <option value="">Sin especificar</option>
+                                ${OPCIONES_HORA}
+                            </select>
+                            <small style="color:var(--color-texto-secundario);">Formato 24h (ej: 14:30)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label>Dirección del evento religioso (Iglesia/Templo)</label>
+                        <input type="text" id="contrato-direccion-evento" placeholder="Dirección de la iglesia o templo" value="${contrato ? contrato.direccionEvento : ''}">
+                        <small style="color:var(--color-texto-secundario);">Dirección del lugar donde se realizará la ceremonia religiosa</small>
+                    </div>
+                    
+                    <div class="row-2col">
+                        <div class="form-grupo">
+                            <label>Dirección de la recepción</label>
+                            <input type="text" id="contrato-direccion-recepcion" placeholder="Dirección del salón de eventos" value="${contrato ? contrato.direccionRecepcion : ''}">
+                        </div>
+                        <div class="form-grupo">
+                            <label>Hora de la recepción</label>
+                            <select id="contrato-hora-recepcion">
+                                <option value="">Sin especificar</option>
+                                ${OPCIONES_HORA}
+                            </select>
+                            <small style="color:var(--color-texto-secundario);">Formato 24h (ej: 20:00)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;margin-top:8px;">
+                        <h4 style="color:var(--color-acento);margin-bottom:12px;"><i class="fas fa-calculator"></i> Precios</h4>
+                        <div class="row-2col">
+                            <div class="form-grupo">
+                                <label>Precio base (automático)</label>
+                                <input type="number" id="contrato-precio-base" readonly style="background:var(--color-bg-primario);opacity:0.7;" value="${contrato ? contrato.precioBase : ''}">
+                                <small style="color:var(--color-texto-secundario);">Suma de paquete + servicios seleccionados</small>
+                            </div>
+                            <div class="form-grupo">
+                                <label>Precio final (editable)</label>
+                                <input type="number" id="contrato-precio-final" min="0" step="100" value="${contrato ? contrato.precioFinal : ''}">
+                                <small style="color:var(--color-texto-secundario);">Puedes modificar este valor si hay acuerdos especiales</small>
+                                <small style="color:var(--color-texto-secundario);font-style:italic;">Puede ser igual, mayor o menor que el precio base</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;margin-top:8px;">
+                        <h4 style="color:var(--color-naranja);margin-bottom:12px;"><i class="fas fa-plus-circle"></i> Cargos Extras</h4>
+                        <small style="color:var(--color-texto-secundario);display:block;margin-bottom:12px;">Agrega cargos adicionales por servicios no contemplados inicialmente (fotos extra, cambios de tamaño, etc.)</small>
+                        <div class="row-2col">
+                            <div class="form-grupo">
+                                <label>Descripción del cargo</label>
+                                <input type="text" id="cargo-descripcion" placeholder="Ej: Fotos extra, Álbum adicional...">
+                            </div>
+                            <div class="form-grupo">
+                                <label>Monto del cargo</label>
+                                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                    <input type="number" id="cargo-monto" placeholder="Monto" min="0" step="100" style="flex:1;min-width:120px;">
+                                    <button type="button" class="btn-cian" id="btn-agregar-cargo">
+                                        <i class="fas fa-plus"></i> Agregar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-grupo">
+                            <label>Historial de cargos extras</label>
+                            <div class="cargos-container" id="cargos-lista"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;margin-top:8px;">
+                        <h4 style="color:var(--color-verde);margin-bottom:12px;"><i class="fas fa-coins"></i> Pagos</h4>
+                        <div class="row-2col">
+                            <div class="form-grupo">
+                                <label>Anticipo (pago inicial)</label>
+                                <input type="number" id="contrato-anticipo" min="0" step="100" placeholder="0" value="${contrato && contrato.anticipo ? contrato.anticipo : ''}">
+                                <small style="color:var(--color-texto-secundario);">Monto del anticipo que se descuenta del total</small>
+                            </div>
+                            <div class="form-grupo">
+                                <label>Agregar nuevo pago</label>
+                                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                    <input type="number" id="contrato-nuevo-pago" placeholder="Monto" min="0" step="100" style="flex:1;min-width:120px;">
+                                    <button type="button" class="btn-naranja" id="btn-agregar-pago">
+                                        <i class="fas fa-plus"></i> Agregar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-grupo">
+                            <label>Historial de pagos</label>
+                            <div class="pagos-container" id="pagos-lista"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;margin-top:8px;">
+                        <h4 style="color:var(--color-acento);margin-bottom:12px;"><i class="fas fa-chart-line"></i> Resumen Financiero</h4>
+                        <div class="resumen-financiero" id="resumen-financiero">
+                            <div class="fila"><span>Precio final</span><span id="resumen-precio-final">${formatearMoneda(precioFinal)}</span></div>
+                            <div class="fila"><span>Cargos extras</span><span id="resumen-cargos">${formatearMoneda(totalCargos)}</span></div>
+                            <div class="fila" style="font-weight:bold;color:var(--color-texto-primario);"><span>Total a pagar</span><span id="resumen-total">${formatearMoneda(totalAPagar)}</span></div>
+                            <div class="fila" style="border-top:2px solid var(--color-borde);margin-top:4px;padding-top:4px;"><span>Total pagado</span><span id="resumen-pagado" style="color:var(--color-verde);">${formatearMoneda(totalPagos)}</span></div>
+                            <div class="fila total"><span>Saldo pendiente</span><span id="resumen-saldo" style="color:${saldoPendiente === 0 ? 'var(--color-verde)' : 'var(--color-naranja)'};">${formatearMoneda(saldoPendiente)}</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label>Estado del contrato *</label>
+                        <select id="contrato-estado" required>
+                            ${ESTADOS_CONTRATO.map(e => `<option value="${e}" ${contrato && contrato.estado === e ? 'selected' : ''}>${e}</option>`).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label>Notas del contrato</label>
+                        <textarea id="contrato-notas" placeholder="Acuerdos especiales, modificaciones, descuentos adicionales...">${contrato ? contrato.notas : ''}</textarea>
+                    </div>
+                    
+                    <div class="form-acciones">
+                        <button type="button" class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
+                        <button type="submit" class="btn-primario">${esEdicion ? 'Actualizar' : 'Guardar Contrato'}</button>
+                    </div>
+                </form>
+            `;
+            
+            abrirModal(titulo, html);
+            
+            // Lógica del formulario (igual que antes)
+            const tipoSelect = document.getElementById('contrato-tipo');
+            const seccionPaquete = document.getElementById('seccion-paquete');
+            const seccionSoloServicio = document.getElementById('seccion-solo-servicio');
+            const paqueteSelect = document.getElementById('contrato-paquete');
+            const servicioSelect = document.getElementById('contrato-servicio');
+            
+            tipoSelect.addEventListener('change', function() {
+                const tipo = this.value;
+                if (tipo === 'paquete') {
+                    seccionPaquete.style.display = '';
+                    seccionSoloServicio.style.display = 'none';
+                    paqueteSelect.required = true;
+                    servicioSelect.required = false;
+                    servicioSelect.value = '';
+                } else {
+                    seccionPaquete.style.display = 'none';
+                    seccionSoloServicio.style.display = '';
+                    paqueteSelect.required = false;
+                    paqueteSelect.value = '';
+                    servicioSelect.required = true;
+                }
+                calcularPrecios();
+            });
+            
+            let pagosArr = contrato && contrato.pagos ? [...contrato.pagos] : [];
+            let cargosArr = contrato && contrato.cargos ? [...contrato.cargos] : [];
+            
+            function actualizarListaPagos() {
+                const lista = document.getElementById('pagos-lista');
+                if (!lista) return;
+                if (pagosArr.length === 0) {
+                    lista.innerHTML = '<p style="color:var(--color-texto-secundario);font-size:13px;">Sin pagos registrados</p>';
+                } else {
+                    let html = '';
+                    pagosArr.forEach((p, index) => {
+                        const isEliminado = p.eliminado === true;
+                        const claseEliminado = isEliminado ? 'pago-eliminado' : '';
+                        const textoEliminado = isEliminado ? ' (Eliminado)' : '';
+                        html += `
+                            <div class="pago-item ${claseEliminado}">
+                                <div class="pago-info">
+                                    <span class="pago-monto">${formatearMoneda(p.monto)}${textoEliminado}</span>
+                                    <span class="pago-fecha">${formatearFechaHora(p.fecha)}</span>
+                                    ${p.nota ? `<span style="font-size:11px;color:var(--color-texto-secundario);">${p.nota}</span>` : ''}
+                                </div>
+                                ${!isEliminado && !p.esNotaEliminacion ? `
+                                    <button type="button" class="btn-eliminar-item" onclick="eliminarPago(${index})" title="Eliminar pago">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                    lista.innerHTML = html;
+                }
+                actualizarResumen();
+            }
+            
+            function actualizarListaCargos() {
+                const lista = document.getElementById('cargos-lista');
+                if (!lista) return;
+                if (cargosArr.length === 0) {
+                    lista.innerHTML = '<p style="color:var(--color-texto-secundario);font-size:13px;">Sin cargos extras registrados</p>';
+                } else {
+                    let html = '';
+                    cargosArr.forEach((c, index) => {
+                        const isEliminado = c.eliminado === true;
+                        const claseEliminado = isEliminado ? 'pago-eliminado' : '';
+                        const textoEliminado = isEliminado ? ' (Eliminado)' : '';
+                        html += `
+                            <div class="cargo-item ${claseEliminado}">
+                                <div class="cargo-info">
+                                    <span class="cargo-monto">${formatearMoneda(c.monto)}${textoEliminado}</span>
+                                    <span class="cargo-fecha">${formatearFechaHora(c.fecha)}</span>
+                                    ${c.nota ? `<span style="font-size:11px;color:var(--color-texto-secundario);">${c.nota}</span>` : ''}
+                                </div>
+                                ${!isEliminado && !c.esNotaEliminacion ? `
+                                    <button type="button" class="btn-eliminar-item" onclick="eliminarCargo(${index})" title="Eliminar cargo extra">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                    lista.innerHTML = html;
+                }
+                actualizarResumen();
+            }
+            
+            function actualizarResumen() {
+                const pagosValidos = pagosArr.filter(p => !p.eliminado);
+                const cargosValidos = cargosArr.filter(c => !c.eliminado);
+                const precioFinal = parseFloat(document.getElementById('contrato-precio-final').value) || 0;
+                const totalCargos = cargosValidos.reduce((sum, c) => sum + c.monto, 0);
+                const totalPagos = pagosValidos.reduce((sum, p) => sum + p.monto, 0);
+                const totalAPagar = precioFinal + totalCargos;
+                const saldo = totalAPagar - totalPagos;
+                document.getElementById('resumen-precio-final').textContent = formatearMoneda(precioFinal);
+                document.getElementById('resumen-cargos').textContent = formatearMoneda(totalCargos);
+                document.getElementById('resumen-total').textContent = formatearMoneda(totalAPagar);
+                document.getElementById('resumen-pagado').textContent = formatearMoneda(totalPagos);
+                const saldoEl = document.getElementById('resumen-saldo');
+                saldoEl.textContent = formatearMoneda(saldo);
+                saldoEl.style.color = saldo === 0 ? 'var(--color-verde)' : 'var(--color-naranja)';
+            }
+            
+            window.eliminarPago = function(index) {
+                if (!confirm('¿Eliminar este pago? Se registrará en el historial como eliminado.')) return;
+                const pago = pagosArr[index];
+                if (!pago) return;
+                pago.eliminado = true;
+                pago.nota = (pago.nota || '') + ' | ELIMINADO: ' + obtenerFechaHoraActual();
+                pagosArr.push({
+                    monto: 0,
+                    fecha: obtenerFechaHoraActual(),
+                    nota: `⚠️ Pago de ${formatearMoneda(pago.monto)} eliminado (fecha original: ${formatearFechaHora(pago.fecha)})`,
+                    eliminado: false,
+                    esNotaEliminacion: true
+                });
+                actualizarListaPagos();
+                mostrarNotificacion('✅ Pago eliminado correctamente', 'success');
+            };
+            
+            window.eliminarCargo = function(index) {
+                if (!confirm('¿Eliminar este cargo extra? Se registrará en el historial como eliminado.')) return;
+                const cargo = cargosArr[index];
+                if (!cargo) return;
+                cargo.eliminado = true;
+                cargo.nota = (cargo.nota || '') + ' | ELIMINADO: ' + obtenerFechaHoraActual();
+                cargosArr.push({
+                    monto: 0,
+                    fecha: obtenerFechaHoraActual(),
+                    nota: `⚠️ Cargo extra de ${formatearMoneda(cargo.monto)} eliminado (fecha original: ${formatearFechaHora(cargo.fecha)})`,
+                    eliminado: false,
+                    esNotaEliminacion: true
+                });
+                actualizarListaCargos();
+                mostrarNotificacion('✅ Cargo extra eliminado correctamente', 'success');
+            };
+            
+            document.getElementById('btn-agregar-pago')?.addEventListener('click', function() {
+                const montoInput = document.getElementById('contrato-nuevo-pago');
+                const monto = parseFloat(montoInput.value);
+                if (!monto || monto <= 0) {
+                    mostrarNotificacion('Ingresa un monto válido', 'warning');
+                    return;
+                }
+                pagosArr.push({
+                    monto: monto,
+                    fecha: obtenerFechaHoraActual(),
+                    nota: `Pago registrado por ${formatearMoneda(monto)}`
+                });
+                actualizarListaPagos();
+                montoInput.value = '';
+                montoInput.focus();
+            });
+            
+            document.getElementById('btn-agregar-cargo')?.addEventListener('click', function() {
+                const descInput = document.getElementById('cargo-descripcion');
+                const montoInput = document.getElementById('cargo-monto');
+                const descripcion = descInput.value.trim();
+                const monto = parseFloat(montoInput.value);
+                if (!monto || monto <= 0) {
+                    mostrarNotificacion('Ingresa un monto válido', 'warning');
+                    return;
+                }
+                if (!descripcion) {
+                    mostrarNotificacion('Ingresa una descripción del cargo', 'warning');
+                    return;
+                }
+                cargosArr.push({
+                    monto: monto,
+                    fecha: obtenerFechaHoraActual(),
+                    nota: `Cargo extra: ${descripcion} - ${formatearMoneda(monto)}`
+                });
+                actualizarListaCargos();
+                descInput.value = '';
+                montoInput.value = '';
+                descInput.focus();
+            });
+            
+            const precioBaseInput = document.getElementById('contrato-precio-base');
+            const precioFinalInput = document.getElementById('contrato-precio-final');
+            const anticipoInput = document.getElementById('contrato-anticipo');
+            const servicioChecks = document.querySelectorAll('.servicio-check');
+            
+            function calcularPrecios() {
+                let precioBase = 0;
+                const tipo = tipoSelect.value;
+                if (tipo === 'paquete') {
+                    const paqueteId = paqueteSelect.value;
+                    const paquete = obtenerPaquete(paqueteId);
+                    if (paquete) precioBase = paquete.precio - (paquete.descuento || 0);
+                    servicioChecks.forEach(cb => {
+                        if (cb.checked) {
+                            const servicio = obtenerServicio(cb.value);
+                            if (servicio) precioBase += servicio.precio - (servicio.descuento || 0);
+                        }
+                    });
+                } else {
+                    const servicioId = servicioSelect.value;
+                    const servicio = obtenerServicio(servicioId);
+                    if (servicio) precioBase = servicio.precio - (servicio.descuento || 0);
+                }
+                precioBaseInput.value = precioBase;
+                const precioFinalActual = parseFloat(precioFinalInput.value);
+                if (!precioFinalActual || precioFinalActual === 0) {
+                    precioFinalInput.value = precioBase;
+                }
+                actualizarResumen();
+            }
+            
+            paqueteSelect.addEventListener('change', calcularPrecios);
+            servicioSelect.addEventListener('change', calcularPrecios);
+            servicioChecks.forEach(cb => { cb.addEventListener('change', calcularPrecios); });
+            precioFinalInput.addEventListener('input', actualizarResumen);
+            
+            anticipoInput?.addEventListener('change', function() {
+                const anticipoVal = parseFloat(this.value) || 0;
+                if (anticipoVal > 0) {
+                    const existeAnticipo = pagosArr.some(p => p.nota && p.nota.includes('Anticipo') && !p.eliminado);
+                    if (!existeAnticipo) {
+                        pagosArr.push({
+                            monto: anticipoVal,
+                            fecha: obtenerFechaHoraActual(),
+                            nota: `Anticipo registrado por ${formatearMoneda(anticipoVal)}`
+                        });
+                        actualizarListaPagos();
+                    }
+                }
+                actualizarResumen();
+            });
+            
+            if (clienteId) {
+                const cliente = obtenerCliente(clienteId);
+                if (cliente) {
+                    const infoDiv = document.querySelector('.info-cliente');
+                    if (infoDiv) {
+                        infoDiv.innerHTML = `
+                            <p><strong>${cliente.nombre}</strong></p>
+                            <p>📞 ${cliente.telefono} ${cliente.email ? `| ✉️ ${cliente.email}` : ''}</p>
+                            <p>🏷️ Origen: ${cliente.faseOrigen || 'No especificado'} | Estado: ${cliente.estado}</p>
+                            <p>📋 Contratos previos: ${cliente.contratos.length}</p>
+                        `;
+                    }
+                }
+            }
+            
+            actualizarListaPagos();
+            actualizarListaCargos();
+            setTimeout(function() {
+                const precioBase = parseFloat(document.getElementById('contrato-precio-base').value) || 0;
+                const precioFinalInputEl = document.getElementById('contrato-precio-final');
+                if (!precioFinalInputEl.value || parseFloat(precioFinalInputEl.value) === 0) {
+                    precioFinalInputEl.value = precioBase;
+                }
+                actualizarResumen();
+            }, 200);
+            
+            document.getElementById('form-contrato').addEventListener('submit', function(e) {
+                e.preventDefault();
+                guardarContrato(esEdicion, pagosArr, cargosArr);
+            });
+        }
+
+        window.mostrarFormularioContrato = mostrarFormularioContrato;
+
+        function guardarContrato(esEdicion, pagosArr = [], cargosArr = []) {
+            const contratoId = document.getElementById('contrato-id').value;
+            let clienteId = document.getElementById('contrato-cliente-id')?.value;
+            if (!clienteId) clienteId = document.getElementById('contrato-cliente').value;
+            
+            const tipo = document.getElementById('contrato-tipo').value;
+            const festejado = document.getElementById('contrato-festejado').value.trim();
+            const fechaEvento = document.getElementById('contrato-fecha-evento').value;
+            const horaEvento = document.getElementById('contrato-hora-evento').value;
+            const direccionEvento = document.getElementById('contrato-direccion-evento').value.trim();
+            const horaRecepcion = document.getElementById('contrato-hora-recepcion').value;
+            const direccionRecepcion = document.getElementById('contrato-direccion-recepcion').value.trim();
+            const precioBase = parseFloat(document.getElementById('contrato-precio-base').value);
+            const precioFinal = parseFloat(document.getElementById('contrato-precio-final').value);
+            const estado = document.getElementById('contrato-estado').value;
+            const notas = document.getElementById('contrato-notas').value.trim();
+            const anticipo = parseFloat(document.getElementById('contrato-anticipo')?.value) || 0;
+            
+            let paqueteId = null, servicioId = null, serviciosIds = [];
+            if (tipo === 'paquete') {
+                paqueteId = document.getElementById('contrato-paquete').value;
+                document.querySelectorAll('.servicio-check:checked').forEach(cb => serviciosIds.push(cb.value));
+            } else {
+                servicioId = document.getElementById('contrato-servicio').value;
+            }
+            
+            if (!clienteId || !festejado || !fechaEvento || !precioFinal || !estado) {
+                mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
+                return;
+            }
+            if (tipo === 'paquete' && !paqueteId) { mostrarNotificacion('Selecciona un paquete', 'warning'); return; }
+            if (tipo === 'solo-servicio' && !servicioId) { mostrarNotificacion('Selecciona un servicio', 'warning'); return; }
+            
+            const cliente = obtenerCliente(clienteId);
+            if (!cliente) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
+            
+            const pagosFinales = pagosArr.filter(p => !p.eliminado);
+            const cargosFinales = cargosArr.filter(c => !c.eliminado);
+            
+            if (anticipo > 0) {
+                const existeAnticipo = pagosFinales.some(p => p.nota && p.nota.includes('Anticipo'));
+                if (!existeAnticipo) {
+                    pagosFinales.push({
+                        monto: anticipo,
+                        fecha: obtenerFechaHoraActual(),
+                        nota: `Anticipo registrado por ${formatearMoneda(anticipo)}`
+                    });
+                }
+            }
+            
+            const nuevoContrato = {
+                id: contratoId || generarId(),
+                tipo, festejado, paqueteId, servicioId, serviciosIds,
+                fechaEvento, horaEvento: horaEvento || null, direccionEvento,
+                horaRecepcion: horaRecepcion || null, direccionRecepcion,
+                precioBase, precioFinal, descuentoAplicado: precioBase - precioFinal,
+                anticipo, pagos: pagosFinales, cargos: cargosFinales,
+                notas, fechaContrato: obtenerFechaActual(), estado
+            };
+            
+            if (esEdicion) {
+                const index = cliente.contratos.findIndex(c => c.id === contratoId);
+                if (index !== -1) cliente.contratos[index] = nuevoContrato;
+            } else {
+                cliente.contratos.push(nuevoContrato);
+            }
+            
+            guardarDatos();
+            cerrarModal();
+            renderizarContratos();
+            renderizarClientes();
+            renderizarInformes();
+        }
+
+        // ============================================================
+        // RENDERIZAR CONTRATOS
+        // ============================================================
+        function renderizarContratos() {
+            const contenedor = document.getElementById('lista-contratos');
+            if (!contenedor) return;
+            
+            const filtroEstado = document.getElementById('filtro-estado-contrato-lista').value;
+            const filtroTipo = document.getElementById('filtro-tipo-contrato').value;
+            const busqueda = document.getElementById('buscar-contrato').value.toLowerCase().trim();
+            
+            let todos = obtenerContratos();
+            
+            if (filtroEstado !== 'todos') {
+                todos = todos.filter(c => c.estado === filtroEstado);
+            }
+            if (filtroTipo !== 'todos') {
+                todos = todos.filter(c => c.tipo === filtroTipo);
+            }
+            if (busqueda) {
+                todos = todos.filter(c => 
+                    c.clienteNombre.toLowerCase().includes(busqueda) || 
+                    (c.festejado && c.festejado.toLowerCase().includes(busqueda))
+                );
+            }
+            
+            if (todos.length === 0) {
+                contenedor.innerHTML = '<p class="mensaje-vacio">No hay contratos registrados</p>';
+                return;
+            }
+            
+            let html = '';
+            todos.forEach(c => {
+                const estadoClase = c.estado === 'Completado' ? 'etiqueta-completado' : 
+                                   c.estado === 'Pendiente' ? 'etiqueta-pendiente' : 'etiqueta-cancelado';
+                
+                const tipoClase = c.tipo === 'paquete' ? 'etiqueta-paquete' : 'etiqueta-solo-servicio';
+                const tipoLabel = c.tipo === 'paquete' ? '📦 Paquete' : '🔧 Solo Servicio';
+                
+                let itemNombre = '';
+                if (c.tipo === 'paquete') {
+                    itemNombre = obtenerNombrePaquete(c.paqueteId);
+                    const serviciosNombres = c.serviciosIds ? c.serviciosIds.map(id => obtenerNombreServicio(id)).filter(n => n !== 'Servicio no encontrado').join(', ') : '';
+                    if (serviciosNombres) {
+                        itemNombre += ` + ${serviciosNombres}`;
+                    }
+                } else {
+                    itemNombre = obtenerNombreServicio(c.servicioId);
+                }
+                
+                const pagosValidos = c.pagos ? c.pagos.filter(p => !p.eliminado) : [];
+                const cargosValidos = c.cargos ? c.cargos.filter(cg => !cg.eliminado) : [];
+                
+                const totalPagos = pagosValidos.reduce((sum, p) => sum + p.monto, 0);
+                const totalCargos = cargosValidos.reduce((sum, cg) => sum + cg.monto, 0);
+                const totalAPagar = c.precioFinal + totalCargos;
+                const saldoPendiente = totalAPagar - totalPagos;
+                
+                const horaEvento = c.horaEvento ? ` ${c.horaEvento} hrs` : '';
+                const horaRecepcion = c.horaRecepcion ? ` ${c.horaRecepcion} hrs` : '';
+                
+                html += `
+                    <div class="tarjeta-registro">
+                        <div class="tarjeta-info">
+                            <div class="tarjeta-titulo">
+                                ${c.clienteNombre}
+                                <span class="tarjeta-etiqueta ${estadoClase}">${c.estado}</span>
+                                <span class="tarjeta-etiqueta ${tipoClase}">${tipoLabel}</span>
+                                ${saldoPendiente === 0 && c.estado === 'Completado' ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">💰 Liquidado</span>' : ''}
+                            </div>
+                            <div class="tarjeta-detalle">
+                                🎉 <strong>Festejado:</strong> ${c.festejado || 'No especificado'}
+                            </div>
+                            <div class="tarjeta-detalle">
+                                ${c.tipo === 'paquete' ? '📦' : '🔧'} ${itemNombre}
+                            </div>
+                            <div class="tarjeta-detalle">
+                                📅 Evento: ${formatearFecha(c.fechaEvento)}${horaEvento} | Contrato: ${formatearFecha(c.fechaContrato)}
+                            </div>
+                            <div class="tarjeta-detalle">
+                                ${c.direccionEvento ? `⛪ ${c.direccionEvento}` : ''}
+                                ${c.direccionRecepcion ? ` | 🎉 ${c.direccionRecepcion}${horaRecepcion}` : ''}
+                            </div>
+                            <div class="tarjeta-detalle">
+                                💰 Base: ${formatearMoneda(c.precioBase)} | Final: <strong>${formatearMoneda(c.precioFinal)}</strong>
+                                ${c.cargos && c.cargos.length > 0 ? `| + Cargos: ${formatearMoneda(totalCargos)}` : ''}
+                            </div>
+                            <div class="tarjeta-detalle">
+                                💵 Pagado: ${formatearMoneda(totalPagos)} | Pendiente: <strong>${formatearMoneda(saldoPendiente)}</strong>
+                                ${c.anticipo ? `| Anticipo: ${formatearMoneda(c.anticipo)}` : ''}
+                            </div>
+                            ${c.pagos && c.pagos.length > 0 ? 
+                                `<div class="tarjeta-detalle"><small>📋 ${c.pagos.length} pagos registrados</small></div>` : ''}
+                            ${c.cargos && c.cargos.length > 0 ? 
+                                `<div class="tarjeta-detalle"><small>📋 ${c.cargos.length} cargos extras</small></div>` : ''}
+                            ${c.notas ? `<div class="tarjeta-detalle"><small>📝 ${c.notas}</small></div>` : ''}
+                            <div class="tarjeta-detalle">
+                                <small>🏷️ Origen cliente: ${c.clienteFase || 'No especificado'}</small>
+                            </div>
+                        </div>
+                        <div class="tarjeta-acciones">
+                            <button class="btn-editar" onclick="editarContrato('${c.clienteId}','${c.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn-pago" onclick="agregarPagoRapido('${c.clienteId}','${c.id}')" title="Agregar pago"><i class="fas fa-coins"></i></button>
+                            <button class="btn-eliminar" onclick="eliminarContrato('${c.clienteId}','${c.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            contenedor.innerHTML = html;
+        }
+
+        window.editarContrato = function(clienteId, contratoId) {
+            const cliente = obtenerCliente(clienteId);
+            if (!cliente) {
+                mostrarNotificacion('Cliente no encontrado', 'error');
+                return;
+            }
+            const contrato = cliente.contratos.find(c => c.id === contratoId);
+            if (!contrato) {
+                mostrarNotificacion('Contrato no encontrado', 'error');
+                return;
+            }
+            mostrarFormularioContrato(clienteId, 'Editar Contrato', contrato);
+        };
+
+        function agregarPagoRapido(clienteId, contratoId) {
+            const cliente = obtenerCliente(clienteId);
+            if (!cliente) return;
+            const contrato = cliente.contratos.find(c => c.id === contratoId);
+            if (!contrato) return;
+            const monto = prompt('Ingresa el monto del pago:', '0');
+            if (monto === null) return;
+            const montoNum = parseFloat(monto);
+            if (isNaN(montoNum) || montoNum <= 0) { mostrarNotificacion('Ingresa un monto válido', 'warning'); return; }
+            if (!contrato.pagos) contrato.pagos = [];
+            contrato.pagos.push({
+                monto: montoNum,
+                fecha: obtenerFechaHoraActual(),
+                nota: `Pago registrado por ${formatearMoneda(montoNum)}`
+            });
+            guardarDatos();
+            renderizarContratos();
+            renderizarClientes();
+            renderizarInformes();
+            mostrarNotificacion(`✅ Pago de ${formatearMoneda(montoNum)} registrado`, 'success');
+        }
+
+        function eliminarContrato(clienteId, contratoId) {
+            if (confirm('¿Eliminar este contrato?')) {
+                const cliente = obtenerCliente(clienteId);
+                if (cliente) {
+                    cliente.contratos = cliente.contratos.filter(c => c.id !== contratoId);
+                    guardarDatos();
+                    renderizarContratos();
+                    renderizarClientes();
+                    renderizarInformes();
+                }
+            }
+        }
+
+        // ============================================================
+        // FUNCIONES PARA EL CALENDARIO
+        // ============================================================
         
+        window.abrirContratoDesdeCalendario = function(clienteId, contratoId) {
+            cambiarSeccion('contratos');
+            setTimeout(() => {
+                window.editarContrato(clienteId, contratoId);
+            }, 400);
+        };
+
+        window.editarTareaDesdeCalendario = function(id) {
+            const tarea = tareas.find(t => t.id === id);
+            if (tarea) mostrarFormularioTarea(tarea);
+        };
+
+        window.mostrarOpcionesDia = function(fecha) {
+            const html = `
+                <div style="text-align:center;padding:10px;">
+                    <h3 style="color:var(--color-acento);margin-bottom:16px;">📅 ${formatearFecha(fecha)}</h3>
+                    <p style="color:var(--color-texto-secundario);margin-bottom:20px;">¿Qué deseas hacer en esta fecha?</p>
+                    <div style="display:flex;flex-direction:column;gap:12px;max-width:300px;margin:0 auto;">
+                        <button class="btn-primario" onclick="cerrarModal(); setTimeout(() => mostrarFormularioTareaConFecha('${fecha}'), 100);" style="justify-content:center;width:100%;">
+                            <i class="fas fa-tasks"></i> Crear Tarea
+                        </button>
+                        <button class="btn-azul" onclick="cerrarModal(); setTimeout(() => mostrarFormularioContratoDesdeCalendario('${fecha}'), 100);" style="justify-content:center;width:100%;background-color:var(--color-azul);">
+                            <i class="fas fa-file-contract"></i> Crear Contrato
+                        </button>
+                        <button class="btn-secundario" onclick="cerrarModal();" style="justify-content:center;width:100%;">Cancelar</button>
+                    </div>
+                </div>
+            `;
+            abrirModal('Opciones del día', html);
+        };
+
+        window.mostrarFormularioTareaConFecha = function(fecha) {
+            mostrarFormularioTarea({ fecha: fecha });
+        };
+
+        window.mostrarFormularioContratoDesdeCalendario = function(fecha) {
+            if (clientes.length === 0) {
+                mostrarNotificacion('⚠️ Primero debes registrar al menos un cliente', 'warning');
+                return;
+            }
+            const opcionesClientes = clientes.map(c => `<option value="${c.id}">${c.nombre} (${c.estado})</option>`).join('');
+            const html = `
+                <form id="form-contrato-rapido">
+                    <div class="form-grupo"><label>Selecciona el cliente *</label><select id="contrato-rapido-cliente" required><option value="">Seleccionar cliente...</option>${opcionesClientes}</select></div>
+                    <div class="form-grupo"><label>Fecha del evento</label><input type="date" id="contrato-rapido-fecha" value="${fecha}" readonly style="opacity:0.7;"></div>
+                    <div class="form-acciones">
+                        <button type="button" class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
+                        <button type="submit" class="btn-primario">Continuar</button>
+                    </div>
+                </form>
+            `;
+            abrirModal('Crear contrato para ' + formatearFecha(fecha), html);
+            document.getElementById('form-contrato-rapido').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const clienteId = document.getElementById('contrato-rapido-cliente').value;
+                if (!clienteId) { mostrarNotificacion('Selecciona un cliente', 'warning'); return; }
+                cerrarModal();
+                setTimeout(() => {
+                    mostrarFormularioContrato(clienteId, 'Nuevo Contrato - ' + formatearFecha(fecha));
+                    setTimeout(() => {
+                        const fechaInput = document.getElementById('contrato-fecha-evento');
+                        if (fechaInput) fechaInput.value = fecha;
+                    }, 200);
+                }, 100);
+            });
+        };
+
+        // ============================================================
+        // TAREAS - CRUD COMPLETO Y CORREGIDO
+        // ============================================================
+        
+        // Función para mostrar el formulario de tarea
+        function mostrarFormularioTarea(tarea = null) {
+            const esEdicion = tarea !== null;
+            const titulo = esEdicion ? 'Editar Tarea' : 'Nueva Tarea';
+            
+            const opcionesTipo = TIPOS_TAREA.map(t => 
+                `<option value="${t}" ${tarea && tarea.tipo === t ? 'selected' : ''}>${t}</option>`
+            ).join('');
+            
+            // Opciones para vincular cliente/prospecto
+            let opcionesCliente = ['<option value="">Sin vincular</option>'];
+            
+            // Clientes
+            clientes.forEach(c => {
+                opcionesCliente.push(`<option value="${c.id}" ${tarea && tarea.clienteId === c.id ? 'selected' : ''}>${c.nombre} (Cliente)</option>`);
+            });
+            
+            // Prospectos (solo los que no son clientes aún)
+            prospectos.forEach(p => {
+                if (!p.clienteId) {
+                    opcionesCliente.push(`<option value="pro_${p.id}" ${tarea && tarea.clienteId === 'pro_' + p.id ? 'selected' : ''}>${p.nombre} (Prospecto)</option>`);
+                }
+            });
+            
+            const fechaTarea = tarea ? tarea.fecha : obtenerFechaActual();
+            const estadoChecked = tarea && tarea.completada ? 'checked' : '';
+            
+            const html = `
+                <form id="form-tarea">
+                    <input type="hidden" id="tarea-id" value="${tarea ? tarea.id : ''}">
+                    
+                    <div class="form-grupo">
+                        <label>Tipo de tarea *</label>
+                        <select id="tarea-tipo" required>${opcionesTipo}</select>
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label>Cliente / Prospecto vinculado</label>
+                        <select id="tarea-cliente">${opcionesCliente.join('')}</select>
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label>Fecha *</label>
+                        <input type="date" id="tarea-fecha" required value="${fechaTarea}">
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label>Descripción *</label>
+                        <textarea id="tarea-descripcion" required placeholder="Describe la tarea a realizar...">${tarea ? tarea.descripcion : ''}</textarea>
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label>Notas adicionales (opcional)</label>
+                        <textarea id="tarea-notas" placeholder="Detalles adicionales...">${tarea ? tarea.notas : ''}</textarea>
+                    </div>
+                    
+                    <div class="form-grupo">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="tarea-completada" ${estadoChecked}>
+                            <span>Marcar como completada</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-acciones">
+                        <button type="button" class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
+                        <button type="submit" class="btn-primario">${esEdicion ? 'Actualizar' : 'Guardar Tarea'}</button>
+                    </div>
+                </form>
+            `;
+            
+            abrirModal(titulo, html);
+            
+            document.getElementById('form-tarea').addEventListener('submit', function(e) {
+                e.preventDefault();
+                guardarTarea(esEdicion);
+            });
+        }
+
+        // Función para guardar tarea
+        function guardarTarea(esEdicion) {
+            const id = document.getElementById('tarea-id').value;
+            const tipo = document.getElementById('tarea-tipo').value;
+            const clienteId = document.getElementById('tarea-cliente').value || null;
+            const fecha = document.getElementById('tarea-fecha').value;
+            const descripcion = document.getElementById('tarea-descripcion').value.trim();
+            const notas = document.getElementById('tarea-notas').value.trim();
+            const completada = document.getElementById('tarea-completada').checked;
+            
+            if (!tipo || !fecha || !descripcion) {
+                mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
+                return;
+            }
+            
+            if (esEdicion) {
+                // Editar tarea existente
+                const index = tareas.findIndex(t => t.id === id);
+                if (index !== -1) {
+                    tareas[index] = { 
+                        ...tareas[index], 
+                        tipo, 
+                        clienteId, 
+                        fecha, 
+                        descripcion, 
+                        notas,
+                        completada: completada,
+                        fechaModificacion: obtenerFechaHoraActual()
+                    };
+                    if (completada && !tareas[index].fechaCompletada) {
+                        tareas[index].fechaCompletada = obtenerFechaHoraActual();
+                    } else if (!completada) {
+                        tareas[index].fechaCompletada = null;
+                    }
+                }
+            } else {
+                // Crear nueva tarea
+                const nuevaTarea = { 
+                    id: generarId(), 
+                    tipo, 
+                    clienteId, 
+                    fecha, 
+                    descripcion, 
+                    notas, 
+                    completada: completada,
+                    fechaCreacion: obtenerFechaHoraActual(),
+                    fechaModificacion: obtenerFechaHoraActual()
+                };
+                if (completada) {
+                    nuevaTarea.fechaCompletada = obtenerFechaHoraActual();
+                }
+                tareas.push(nuevaTarea);
+            }
+            
+            guardarDatos();
+            cerrarModal();
+            renderizarCalendario();
+            renderizarInformes();
+            mostrarNotificacion(esEdicion ? '✅ Tarea actualizada' : '✅ Tarea creada correctamente', 'success');
+        }
+
+        // Función para editar tarea (desde la lista)
+        function editarTarea(id) {
+            const tarea = tareas.find(t => t.id === id);
+            if (tarea) mostrarFormularioTarea(tarea);
+        }
+
+        // Función para eliminar tarea
+        function eliminarTarea(id) {
+            if (confirm('¿Eliminar esta tarea?')) {
+                tareas = tareas.filter(t => t.id !== id);
+                guardarDatos();
+                renderizarCalendario();
+                renderizarInformes();
+                mostrarNotificacion('✅ Tarea eliminada', 'success');
+            }
+        }
+
+        // Función para alternar estado completado
+        function alternarCompletarTarea(id) {
+            const tarea = tareas.find(t => t.id === id);
+            if (!tarea) return;
+            
+            tarea.completada = !tarea.completada;
+            if (tarea.completada) {
+                tarea.fechaCompletada = obtenerFechaHoraActual();
+                mostrarNotificacion('✅ Tarea completada', 'success');
+            } else {
+                tarea.fechaCompletada = null;
+                mostrarNotificacion('🔄 Tarea reabierta', 'info');
+            }
+            tarea.fechaModificacion = obtenerFechaHoraActual();
+            
+            guardarDatos();
+            renderizarCalendario();
+            renderizarInformes();
+        }
+
+        // ============================================================
+        // CALENDARIO
+        // ============================================================
+        
+        let fechaActualCal = new Date();
+        let mesActualCal = fechaActualCal.getMonth();
+        let anoActualCal = fechaActualCal.getFullYear();
+
+        document.getElementById('btn-nueva-tarea').addEventListener('click', function() {
+            mostrarFormularioTarea();
+        });
+
+        document.getElementById('btn-mes-anterior').addEventListener('click', function() {
+            mesActualCal--;
+            if (mesActualCal < 0) { mesActualCal = 11; anoActualCal--; }
+            renderizarCalendario();
+        });
+
+        document.getElementById('btn-mes-siguiente').addEventListener('click', function() {
+            mesActualCal++;
+            if (mesActualCal > 11) { mesActualCal = 0; anoActualCal++; }
+            renderizarCalendario();
+        });
+
+        document.getElementById('btn-mes-actual').addEventListener('click', function() {
+            const hoy = new Date();
+            mesActualCal = hoy.getMonth();
+            anoActualCal = hoy.getFullYear();
+            renderizarCalendario();
+        });
+
+        document.getElementById('filtro-tareas-calendario').addEventListener('change', renderizarCalendario);
+        document.getElementById('buscar-calendario').addEventListener('input', renderizarCalendario);
+
+        function fechaLocalToString(ano, mes, dia) {
+            return `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        }
+
+        function renderizarCalendario() {
+            const grid = document.getElementById('calendario-grid');
+            const titulo = document.getElementById('calendario-mes-ano');
+            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            titulo.textContent = `${meses[mesActualCal]} ${anoActualCal}`;
+            
+            const primerDia = new Date(anoActualCal, mesActualCal, 1).getDay();
+            const diasEnMes = new Date(anoActualCal, mesActualCal + 1, 0).getDate();
+            const diasEnMesAnterior = new Date(anoActualCal, mesActualCal, 0).getDate();
+            
+            const contratos = obtenerContratos();
+            const tareasFiltradas = tareas.filter(t => {
+                const fechaTarea = new Date(t.fecha + 'T12:00:00');
+                return fechaTarea.getMonth() === mesActualCal && fechaTarea.getFullYear() === anoActualCal;
+            });
+            
+            const filtroTareas = document.getElementById('filtro-tareas-calendario').value;
+            const busqueda = document.getElementById('buscar-calendario').value.toLowerCase().trim();
+            
+            const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            let html = '';
+            diasSemana.forEach(d => html += `<div class="dia-nombre">${d}</div>`);
+            
+            for (let i = 0; i < primerDia; i++) {
+                const dia = diasEnMesAnterior - primerDia + i + 1;
+                html += `<div class="dia otro-mes"><div class="numero">${dia}</div></div>`;
+            }
+            
+            const hoy = new Date();
+            const hoyNum = hoy.getDate();
+            const hoyMes = hoy.getMonth();
+            const hoyAno = hoy.getFullYear();
+            
+            for (let dia = 1; dia <= diasEnMes; dia++) {
+                const fechaStr = fechaLocalToString(anoActualCal, mesActualCal, dia);
+                const esHoy = (dia === hoyNum && mesActualCal === hoyMes && anoActualCal === hoyAno);
+                
+                const eventosContratos = contratos.filter(c => c.fechaEvento === fechaStr);
+                const eventosTareas = tareasFiltradas.filter(t => t.fecha === fechaStr);
+                
+                let tareasMostrar = eventosTareas;
+                if (filtroTareas === 'pendientes') tareasMostrar = tareasMostrar.filter(t => !t.completada);
+                else if (filtroTareas === 'completadas') tareasMostrar = tareasMostrar.filter(t => t.completada);
+                else if (filtroTareas === 'contratos') tareasMostrar = [];
+                
+                if (busqueda) {
+                    const clienteNombres = [];
+                    eventosContratos.forEach(c => {
+                        if (c.clienteNombre.toLowerCase().includes(busqueda) || (c.festejado && c.festejado.toLowerCase().includes(busqueda))) clienteNombres.push(c);
+                    });
+                    eventosContratos.length = 0;
+                    eventosContratos.push(...clienteNombres);
+                    tareasMostrar = tareasMostrar.filter(t => {
+                        const nombreCliente = obtenerNombreCliente(t.clienteId);
+                        return nombreCliente.toLowerCase().includes(busqueda) || t.descripcion.toLowerCase().includes(busqueda);
+                    });
+                }
+                
+                let eventosHTML = '';
+                let eventosMostrados = 0;
+                const maxMostrar = 3;
+                
+                eventosContratos.forEach((c) => {
+                    if (eventosMostrados < maxMostrar) {
+                        const nombreCliente = c.festejado ? `${c.festejado} (${c.clienteNombre})` : c.clienteNombre;
+                        const clienteId = c.clienteId;
+                        const contratoId = c.id;
+                        eventosHTML += `<div class="evento evento-contrato" onclick="evento.stopPropagation(); abrirContratoDesdeCalendario('${clienteId}','${contratoId}')" title="Contrato: ${nombreCliente} - ${obtenerNombrePaquete(c.paqueteId)}">📋 ${nombreCliente}</div>`;
+                        eventosMostrados++;
+                    }
+                });
+                
+                tareasMostrar.forEach((t) => {
+                    if (eventosMostrados < maxMostrar) {
+                        const nombreCliente = obtenerNombreCliente(t.clienteId);
+                        const claseCompletada = t.completada ? 'evento-completada' : 'evento-tarea';
+                        const icono = t.completada ? '✅' : '📌';
+                        const titulo = t.completada ? '(Completada) ' : '';
+                        eventosHTML += `<div class="evento ${claseCompletada}" onclick="evento.stopPropagation(); editarTareaDesdeCalendario('${t.id}')" title="${titulo}${t.tipo}: ${t.descripcion} - ${nombreCliente}">${icono} ${t.tipo}</div>`;
+                        eventosMostrados++;
+                    }
+                });
+                
+                const totalEventos = eventosContratos.length + tareasMostrar.length;
+                if (totalEventos > maxMostrar) eventosHTML += `<div class="evento-mas">+${totalEventos - maxMostrar} más</div>`;
+                
+                const claseHoy = esHoy ? 'hoy' : '';
+                html += `
+                    <div class="dia ${claseHoy}" data-fecha="${fechaStr}" data-mes="${mesActualCal}" data-ano="${anoActualCal}" data-dia="${dia}">
+                        <div class="numero">${dia}</div>
+                        ${eventosHTML}
+                    </div>
+                `;
+            }
+            
+            const totalDias = primerDia + diasEnMes;
+            const diasRestantes = (7 - (totalDias % 7)) % 7;
+            for (let i = 1; i <= diasRestantes; i++) {
+                html += `<div class="dia otro-mes"><div class="numero">${i}</div></div>`;
+            }
+            
+            grid.innerHTML = html;
+            
+            document.querySelectorAll('.dia:not(.otro-mes)').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    if (e.target === this || e.target.classList.contains('numero')) {
+                        const fecha = this.dataset.fecha;
+                        if (fecha) mostrarOpcionesDia(fecha);
+                    }
+                });
+            });
+            
+            renderizarListaTareas();
+        }
+
+        function renderizarListaTareas() {
+            const contenedor = document.getElementById('lista-tareas');
+            if (!contenedor) return;
+            
+            const filtro = document.getElementById('filtro-tareas-calendario').value;
+            const busqueda = document.getElementById('buscar-calendario').value.toLowerCase().trim();
+            
+            let tareasMostrar = [...tareas];
+            
+            // Ordenar por fecha (más reciente primero)
+            tareasMostrar.sort((a, b) => b.fecha.localeCompare(a.fecha));
+            
+            // Aplicar filtros
+            if (filtro === 'pendientes') {
+                tareasMostrar = tareasMostrar.filter(t => !t.completada);
+            } else if (filtro === 'completadas') {
+                tareasMostrar = tareasMostrar.filter(t => t.completada);
+            } else if (filtro === 'contratos') {
+                tareasMostrar = [];
+            }
+            
+            if (busqueda) {
+                tareasMostrar = tareasMostrar.filter(t => {
+                    const nombreCliente = obtenerNombreCliente(t.clienteId);
+                    return nombreCliente.toLowerCase().includes(busqueda) || 
+                           t.descripcion.toLowerCase().includes(busqueda) || 
+                           t.tipo.toLowerCase().includes(busqueda);
+                });
+            }
+            
+            if (tareasMostrar.length === 0) {
+                contenedor.innerHTML = '<p class="mensaje-vacio">No hay tareas que coincidan con los filtros</p>';
+                return;
+            }
+            
+            let html = '';
+            tareasMostrar.forEach(t => {
+                const nombreCliente = obtenerNombreCliente(t.clienteId);
+                const claseTipo = `etiqueta-${t.tipo.toLowerCase().replace(' ', '-')}`;
+                const claseCompletada = t.completada ? 'etiqueta-completado' : 'etiqueta-pendiente';
+                const estadoLabel = t.completada ? '✅ Completada' : '⏳ Pendiente';
+                const iconoCompletar = t.completada ? 'fa-undo' : 'fa-check';
+                
+                html += `
+                    <div class="tarjeta-registro">
+                        <div class="tarjeta-info">
+                            <div class="tarjeta-titulo">
+                                ${t.tipo}
+                                <span class="tarjeta-etiqueta ${claseTipo}">${t.tipo}</span>
+                                <span class="tarjeta-etiqueta ${claseCompletada}">${estadoLabel}</span>
+                            </div>
+                            <div class="tarjeta-detalle">
+                                ${t.descripcion}
+                            </div>
+                            <div class="tarjeta-detalle">
+                                📅 ${formatearFecha(t.fecha)}
+                                ${t.clienteId ? `| 👤 ${nombreCliente}` : ''}
+                            </div>
+                            ${t.notas ? `<div class="tarjeta-detalle"><small>📝 ${t.notas}</small></div>` : ''}
+                            <div class="tarjeta-detalle">
+                                <small>🕐 Creada: ${formatearFechaHora(t.fechaCreacion)}</small>
+                                ${t.fechaCompletada ? ` | ✅ Completada: ${formatearFechaHora(t.fechaCompletada)}` : ''}
+                            </div>
+                        </div>
+                        <div class="tarjeta-acciones">
+                            <button class="btn-completar" onclick="alternarCompletarTarea('${t.id}')" title="${t.completada ? 'Reabrir' : 'Completar'}">
+                                <i class="fas ${iconoCompletar}"></i>
+                            </button>
+                            <button class="btn-editar" onclick="editarTarea('${t.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn-eliminar" onclick="eliminarTarea('${t.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            contenedor.innerHTML = html;
+        }
+
+        // ============================================================
+        // ACTUALIZAR FILTROS DE INFORMES
+        // ============================================================
+        function actualizarFiltrosInformes() {
+            const filtroPaquete = document.getElementById('filtro-paquete');
+            const filtroServicio = document.getElementById('filtro-servicio');
+            if (filtroPaquete) {
+                const valorActual = filtroPaquete.value;
+                filtroPaquete.innerHTML = '<option value="todos">Todos</option>';
+                paquetes.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id;
+                    option.textContent = p.nombre;
+                    filtroPaquete.appendChild(option);
+                });
+                filtroPaquete.value = valorActual;
+            }
+            if (filtroServicio) {
+                const valorActual = filtroServicio.value;
+                filtroServicio.innerHTML = '<option value="todos">Todos</option>';
+                serviciosAdicionales.forEach(s => {
+                    const option = document.createElement('option');
+                    option.value = s.id;
+                    option.textContent = s.nombre;
+                    filtroServicio.appendChild(option);
+                });
+                filtroServicio.value = valorActual;
+            }
+        }
+
+        // ============================================================
+        // INFORMES (CON TAREAS INCLUIDAS)
+        // ============================================================
+        document.getElementById('btn-filtrar-informes').addEventListener('click', renderizarInformes);
+        document.getElementById('btn-limpiar-informes').addEventListener('click', function() {
+            document.getElementById('filtro-fecha-inicio').value = '';
+            document.getElementById('filtro-fecha-fin').value = '';
+            document.getElementById('filtro-estado-cliente').value = 'todos';
+            document.getElementById('filtro-estado-contrato').value = 'todos';
+            document.getElementById('filtro-paquete').value = 'todos';
+            document.getElementById('filtro-servicio').value = 'todos';
+            renderizarInformes();
+        });
+
+        function renderizarInformes() {
+            const contenedor = document.getElementById('contenedor-informes');
+            if (!contenedor) return;
+            
+            const fechaInicio = document.getElementById('filtro-fecha-inicio').value;
+            const fechaFin = document.getElementById('filtro-fecha-fin').value;
+            const filtroEstadoCliente = document.getElementById('filtro-estado-cliente').value;
+            const filtroEstadoContrato = document.getElementById('filtro-estado-contrato').value;
+            const filtroPaquete = document.getElementById('filtro-paquete').value;
+            const filtroServicio = document.getElementById('filtro-servicio').value;
+            
+            let clientesFiltrados = [...clientes];
+            if (filtroEstadoCliente !== 'todos') {
+                clientesFiltrados = clientesFiltrados.filter(c => c.estado === filtroEstadoCliente);
+            }
+            
+            let todosContratos = [];
+            clientesFiltrados.forEach(cliente => {
+                cliente.contratos.forEach(contrato => {
+                    todosContratos.push({
+                        ...contrato,
+                        clienteNombre: cliente.nombre,
+                        clienteId: cliente.id,
+                        clienteEstado: cliente.estado,
+                        clienteFase: cliente.faseOrigen || 'No especificado'
+                    });
+                });
+            });
+            
+            if (filtroPaquete !== 'todos') {
+                todosContratos = todosContratos.filter(c => c.paqueteId === filtroPaquete);
+            }
+            if (filtroServicio !== 'todos') {
+                todosContratos = todosContratos.filter(c => {
+                    if (c.tipo === 'paquete' && c.serviciosIds) {
+                        return c.serviciosIds.includes(filtroServicio);
+                    }
+                    if (c.tipo === 'solo-servicio') {
+                        return c.servicioId === filtroServicio;
+                    }
+                    return false;
+                });
+            }
+            if (fechaInicio) {
+                todosContratos = todosContratos.filter(c => c.fechaContrato >= fechaInicio);
+            }
+            if (fechaFin) {
+                todosContratos = todosContratos.filter(c => c.fechaContrato <= fechaFin);
+            }
+            if (filtroEstadoContrato !== 'todos') {
+                todosContratos = todosContratos.filter(c => c.estado === filtroEstadoContrato);
+            }
+            
+            const totalProspectos = prospectos.length;
+            const totalClientes = clientesFiltrados.length;
+            const totalContratos = todosContratos.length;
+            
+            let ingresosTotales = 0;
+            let totalPagadoGeneral = 0;
+            let totalCargosGenerales = 0;
+            
+            todosContratos.forEach(c => {
+                const pagosValidos = c.pagos ? c.pagos.filter(p => !p.eliminado) : [];
+                const cargosValidos = c.cargos ? c.cargos.filter(cg => !cg.eliminado) : [];
+                const totalCargos = cargosValidos.reduce((sum, cg) => sum + cg.monto, 0);
+                const totalPagos = pagosValidos.reduce((sum, p) => sum + p.monto, 0);
+                ingresosTotales += c.precioFinal + totalCargos;
+                totalPagadoGeneral += totalPagos;
+                totalCargosGenerales += totalCargos;
+            });
+            
+            document.getElementById('total-prospectos').textContent = totalProspectos;
+            document.getElementById('total-clientes').textContent = totalClientes;
+            document.getElementById('total-contratos').textContent = totalContratos;
+            document.getElementById('total-ingresos').textContent = formatearMoneda(ingresosTotales);
+            
+            if (todosContratos.length === 0 && prospectos.length === 0 && tareas.length === 0) {
+                contenedor.innerHTML = '<p class="mensaje-vacio">No hay datos para mostrar con los filtros seleccionados</p>';
+                return;
+            }
+            
+            // Desglose completo
+            const paquetesVendidos = {};
+            todosContratos.filter(c => c.tipo === 'paquete').forEach(c => {
+                const nombre = obtenerNombrePaquete(c.paqueteId);
+                if (!paquetesVendidos[nombre]) {
+                    paquetesVendidos[nombre] = { cantidad: 0, ingresos: 0 };
+                }
+                paquetesVendidos[nombre].cantidad++;
+                paquetesVendidos[nombre].ingresos += c.precioFinal;
+            });
+            
+            const serviciosIndividuales = {};
+            todosContratos.filter(c => c.tipo === 'solo-servicio').forEach(c => {
+                const nombre = obtenerNombreServicio(c.servicioId);
+                if (nombre !== 'Servicio no encontrado') {
+                    if (!serviciosIndividuales[nombre]) {
+                        serviciosIndividuales[nombre] = { cantidad: 0, ingresos: 0 };
+                    }
+                    serviciosIndividuales[nombre].cantidad++;
+                    serviciosIndividuales[nombre].ingresos += c.precioFinal;
+                }
+            });
+            
+            const serviciosAdicionalesEnPaquetes = {};
+            todosContratos.filter(c => c.tipo === 'paquete').forEach(c => {
+                if (c.serviciosIds) {
+                    c.serviciosIds.forEach(id => {
+                        const nombre = obtenerNombreServicio(id);
+                        if (nombre !== 'Servicio no encontrado') {
+                            if (!serviciosAdicionalesEnPaquetes[nombre]) {
+                                serviciosAdicionalesEnPaquetes[nombre] = 0;
+                            }
+                            serviciosAdicionalesEnPaquetes[nombre]++;
+                        }
+                    });
+                }
+            });
+            
+            const totalServicios = {};
+            Object.entries(serviciosAdicionalesEnPaquetes).forEach(([nombre, cantidad]) => {
+                totalServicios[nombre] = (totalServicios[nombre] || 0) + cantidad;
+            });
+            Object.entries(serviciosIndividuales).forEach(([nombre, data]) => {
+                totalServicios[nombre] = (totalServicios[nombre] || 0) + data.cantidad;
+            });
+            
+            const fasesProspectos = {};
+            prospectos.forEach(p => {
+                if (!fasesProspectos[p.faseActual]) {
+                    fasesProspectos[p.faseActual] = 0;
+                }
+                fasesProspectos[p.faseActual]++;
+            });
+            
+            const estadosContratos = {};
+            todosContratos.forEach(c => {
+                if (!estadosContratos[c.estado]) {
+                    estadosContratos[c.estado] = 0;
+                }
+                estadosContratos[c.estado]++;
+            });
+            
+            const contratosPaquete = todosContratos.filter(c => c.tipo === 'paquete').length;
+            const contratosSoloServicio = todosContratos.filter(c => c.tipo === 'solo-servicio').length;
+            
+            // Estadísticas de tareas
+            const tareasPendientes = tareas.filter(t => !t.completada).length;
+            const tareasCompletadas = tareas.filter(t => t.completada).length;
+            
+            // Tareas por tipo
+            const tareasPorTipo = {};
+            tareas.forEach(t => {
+                if (!tareasPorTipo[t.tipo]) {
+                    tareasPorTipo[t.tipo] = 0;
+                }
+                tareasPorTipo[t.tipo]++;
+            });
+            
+            let html = `
+                <!-- FILA 1: Paquetes vendidos + Servicios individuales -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+                    <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
+                        <h4 style="color:var(--color-acento);margin-bottom:12px;">📦 Paquetes vendidos</h4>
+                        ${Object.entries(paquetesVendidos).length === 0 ? 
+                            '<p style="color:var(--color-texto-secundario);">No hay paquetes vendidos</p>' :
+                            Object.entries(paquetesVendidos)
+                                .sort((a, b) => b[1].cantidad - a[1].cantidad)
+                                .map(([nombre, datos]) => 
+                                    `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                                        <span>${nombre}</span>
+                                        <span>${datos.cantidad} contratos - ${formatearMoneda(datos.ingresos)}</span>
+                                    </div>`
+                                ).join('')
+                        }
+                    </div>
+                    
+                    <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
+                        <h4 style="color:var(--color-acento);margin-bottom:12px;">🔧 Servicios individuales</h4>
+                        ${Object.entries(serviciosIndividuales).length === 0 ? 
+                            '<p style="color:var(--color-texto-secundario);">No hay servicios contratados de forma individual</p>' :
+                            Object.entries(serviciosIndividuales)
+                                .sort((a, b) => b[1].cantidad - a[1].cantidad)
+                                .map(([nombre, datos]) => 
+                                    `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                                        <span>${nombre}</span>
+                                        <span>${datos.cantidad} contratos - ${formatearMoneda(datos.ingresos)}</span>
+                                    </div>`
+                                ).join('')
+                        }
+                    </div>
+                </div>
+                
+                <!-- FILA 2: Servicios más contratados + Distribución + Resumen financiero -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:24px;">
+                    <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
+                        <h4 style="color:var(--color-acento);margin-bottom:12px;">📊 Servicios más contratados</h4>
+                        ${Object.entries(totalServicios).length === 0 ? 
+                            '<p style="color:var(--color-texto-secundario);">No hay servicios contratados</p>' :
+                            Object.entries(totalServicios)
+                                .sort((a, b) => b[1] - a[1])
+                                .map(([nombre, cantidad]) => 
+                                    `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                                        <span>${nombre}</span>
+                                        <span>${cantidad} contrataciones</span>
+                                    </div>`
+                                ).join('')
+                        }
+                    </div>
+                    
+                    <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
+                        <h4 style="color:var(--color-acento);margin-bottom:12px;">📋 Distribución de contratos</h4>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                            <span>📦 Paquetes</span>
+                            <span>${contratosPaquete}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                            <span>🔧 Solo Servicio</span>
+                            <span>${contratosSoloServicio}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                            <span>📋 Total contratos</span>
+                            <span>${totalContratos}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;">
+                            <span>👥 Clientes</span>
+                            <span>${totalClientes}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
+                        <h4 style="color:var(--color-acento);margin-bottom:12px;">📈 Resumen financiero</h4>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                            <span>Total contratos</span>
+                            <span>${totalContratos}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                            <span>Ingreso total</span>
+                            <span style="color:var(--color-acento);font-weight:bold;">${formatearMoneda(ingresosTotales)}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                            <span>Cargos extras</span>
+                            <span style="color:var(--color-naranja);font-weight:bold;">${formatearMoneda(totalCargosGenerales)}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                            <span>Total pagado</span>
+                            <span style="color:var(--color-verde);font-weight:bold;">${formatearMoneda(totalPagadoGeneral)}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;">
+                            <span>Pendiente por cobrar</span>
+                            <span style="color:var(--color-naranja);font-weight:bold;">${formatearMoneda(ingresosTotales - totalPagadoGeneral)}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FILA 3: Prospectos + Estados contratos + Tareas -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:24px;">
+                    <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
+                        <h4 style="color:var(--color-acento);margin-bottom:12px;">👥 Prospectos por fase</h4>
+                        ${Object.entries(fasesProspectos).length === 0 ? 
+                            '<p style="color:var(--color-texto-secundario);">No hay prospectos</p>' :
+                            Object.entries(fasesProspectos)
+                                .sort((a, b) => b[1] - a[1])
+                                .map(([fase, cantidad]) => 
+                                    `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                                        <span>${fase}</span>
+                                        <span>${cantidad}</span>
+                                    </div>`
+                                ).join('')
+                        }
+                    </div>
+                    
+                    <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
+                        <h4 style="color:var(--color-acento);margin-bottom:12px;">📊 Estados de contratos</h4>
+                        ${Object.entries(estadosContratos).length === 0 ? 
+                            '<p style="color:var(--color-texto-secundario);">No hay contratos</p>' :
+                            Object.entries(estadosContratos)
+                                .map(([estado, cantidad]) => 
+                                    `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                                        <span>${estado}</span>
+                                        <span>${cantidad}</span>
+                                    </div>`
+                                ).join('')
+                        }
+                    </div>
+                    
+                    <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
+                        <h4 style="color:var(--color-acento);margin-bottom:12px;">📋 Tareas</h4>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                            <span>Total tareas</span>
+                            <span>${tareas.length}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
+                            <span>Pendientes</span>
+                            <span style="color:${tareasPendientes > 0 ? 'var(--color-naranja)' : 'var(--color-verde)'};">${tareasPendientes}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:4px 0;">
+                            <span>Completadas</span>
+                            <span style="color:var(--color-verde);">${tareasCompletadas}</span>
+                        </div>
+                        ${Object.entries(tareasPorTipo).length > 0 ? `
+                            <div style="margin-top:8px;border-top:1px solid var(--color-borde);padding-top:8px;">
+                                ${Object.entries(tareasPorTipo)
+                                    .map(([tipo, cantidad]) => 
+                                        `<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--color-texto-secundario);">
+                                            <span>${tipo}</span>
+                                            <span>${cantidad}</span>
+                                        </div>`
+                                    ).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            if (todosContratos.length > 0) {
+                html += `
+                    <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
+                        <h4 style="color:var(--color-acento);margin-bottom:12px;">📋 Lista detallada de contratos</h4>
+                        <div style="overflow-x:auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Festejado</th>
+                                        <th>Tipo</th>
+                                        <th>Paquete/Servicio</th>
+                                        <th>Evento</th>
+                                        <th>Estado</th>
+                                        <th style="text-align:right;">Monto</th>
+                                        <th style="text-align:right;">Pagado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${todosContratos.map(c => {
+                                        const pagosValidos = c.pagos ? c.pagos.filter(p => !p.eliminado) : [];
+                                        const cargosValidos = c.cargos ? c.cargos.filter(cg => !cg.eliminado) : [];
+                                        const totalPagos = pagosValidos.reduce((sum, p) => sum + p.monto, 0);
+                                        const totalCargos = cargosValidos.reduce((sum, cg) => sum + cg.monto, 0);
+                                        const totalAPagar = c.precioFinal + totalCargos;
+                                        const saldo = totalAPagar - totalPagos;
+                                        const tipoLabel = c.tipo === 'paquete' ? '📦 Paquete' : '🔧 Servicio';
+                                        const itemNombre = c.tipo === 'paquete' ? obtenerNombrePaquete(c.paqueteId) : obtenerNombreServicio(c.servicioId);
+                                        return `
+                                            <tr>
+                                                <td>${c.clienteNombre}</td>
+                                                <td>${c.festejado || '-'}</td>
+                                                <td>${tipoLabel}</td>
+                                                <td>${itemNombre}</td>
+                                                <td>${formatearFecha(c.fechaEvento)}</td>
+                                                <td><span class="tarjeta-etiqueta ${c.estado === 'Completado' ? 'etiqueta-completado' : c.estado === 'Pendiente' ? 'etiqueta-pendiente' : 'etiqueta-cancelado'}">${c.estado}</span></td>
+                                                <td style="text-align:right;font-weight:600;">${formatearMoneda(totalAPagar)}</td>
+                                                <td style="text-align:right;color:${saldo === 0 ? 'var(--color-verde)' : 'var(--color-naranja)'};">${formatearMoneda(totalPagos)}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            contenedor.innerHTML = html;
+        }
+
+        // ============================================================
+        // FILTROS EN TIEMPO REAL
+        // ============================================================
+        document.getElementById('filtro-fase-prospecto').addEventListener('change', renderizarProspectos);
+        document.getElementById('buscar-prospecto').addEventListener('input', renderizarProspectos);
+        document.getElementById('filtro-estado-cliente-lista').addEventListener('change', renderizarClientes);
+        document.getElementById('buscar-cliente').addEventListener('input', renderizarClientes);
+        document.getElementById('filtro-estado-contrato-lista').addEventListener('change', renderizarContratos);
+        document.getElementById('filtro-tipo-contrato').addEventListener('change', renderizarContratos);
+        document.getElementById('buscar-contrato').addEventListener('input', renderizarContratos);
+
         // ============================================================
         // INICIALIZACIÓN
         // ============================================================
         
-        console.log('🚀 Registro PDA v2.9 - CON MIGRACIÓN AUTOMÁTICA');
-        console.log('📋 Los datos antiguos se convertirán automáticamente');
+        console.log('🚀 Registro PDA v2.8 con Firebase Sync');
+        console.log('📋 Las tareas ahora se guardan y sincronizan correctamente');
         
+        // Cargar datos locales
         cargarDatosLocal();
         
-        // Forzar migración después de cargar
-        setTimeout(() => {
-            migrarDatosViejos();
-            renderizarTodo();
-            console.log('✅ Migración completada');
-        }, 500);
-        
         // Renderizar todo
+        actualizarFiltrosInformes();
         renderizarPaquetes();
         renderizarServicios();
         renderizarProspectos();
@@ -2770,21 +4555,24 @@
         renderizarContratos();
         renderizarCalendario();
         renderizarInformes();
-        actualizarFiltrosInformes();
         
         console.log('📊 Datos cargados:');
-        console.log(`📦 Paquetes: ${paquetes ? paquetes.length : 0}`);
-        console.log(`🔧 Servicios: ${serviciosAdicionales ? serviciosAdicionales.length : 0}`);
-        console.log(`👥 Prospectos: ${prospectos ? prospectos.length : 0}`);
-        console.log(`⭐ Clientes: ${clientes ? clientes.length : 0}`);
-        console.log(`📌 Tareas: ${tareas ? tareas.length : 0}`);
+        console.log(`📦 Paquetes: ${paquetes.length}`);
+        console.log(`🔧 Servicios: ${serviciosAdicionales.length}`);
+        console.log(`👥 Prospectos: ${prospectos.length}`);
+        console.log(`⭐ Clientes: ${clientes.length}`);
+        console.log(`📌 Tareas: ${tareas.length}`);
         
+        // Inicializar Firebase
         setTimeout(async () => {
             await inicializarFirebase();
-        }, 1500);
+        }, 1000);
         
-        console.log('🔥 Firebase Sync activado');
-        console.log('🔗 Las tareas se vinculan automáticamente a clientes, prospectos y contratos');
+        console.log('🔥 Firebase Sync activado - Los datos se sincronizan automáticamente');
+        console.log('💡 Usa "Sincronizar Nube" para forzar la sincronización');
+        console.log('📋 Las tareas se muestran en: Calendario → Lista de tareas');
+        console.log('📋 Las tareas también aparecen en los Informes');
     </script>
 </body>
 </html>
+🔥 Firebase integrado - Sincronización en tiempo real
