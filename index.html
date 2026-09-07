@@ -3,23 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro PDA - Estudio Fotografía (Firebase Sync)</title>
+    <title>Registro PDA v2.8.4 - Estudio Fotografía</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <style>
-        /* ============================================ */
-        /* CONFIGURACIÓN GLOBAL                         */
-        /* ============================================ */
+        /* ===== TODOS LOS ESTILOS IGUALES QUE EN V2.8 ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         :root {
             --color-bg-primario: #0d0d0d;
             --color-bg-secundario: #1a1a1a;
@@ -41,7 +36,6 @@
             --border-radius: 8px;
             --sidebar-width: 220px;
         }
-
         html, body {
             height: 100%;
             margin: 0;
@@ -51,14 +45,12 @@
             color: var(--color-texto-primario);
             overflow: hidden;
         }
-
         .app-container {
             display: flex;
             height: 100vh;
             width: 100vw;
             overflow: hidden;
         }
-
         .sidebar {
             width: var(--sidebar-width);
             min-width: var(--sidebar-width);
@@ -70,7 +62,6 @@
             overflow-y: auto;
             z-index: 100;
         }
-
         .logo {
             padding: 24px 20px;
             display: flex;
@@ -79,26 +70,22 @@
             border-bottom: 1px solid var(--color-borde);
             background-color: #0a0a0a;
         }
-
         .logo i {
             font-size: 28px;
             color: var(--color-acento);
         }
-
         .logo span {
             font-size: 18px;
             font-weight: 700;
             color: #ffffff;
             letter-spacing: 0.5px;
         }
-
         .menu {
             list-style: none;
             padding: 16px 12px;
             flex: 1;
             margin: 0;
         }
-
         .menu-item {
             display: flex;
             align-items: center;
@@ -116,42 +103,35 @@
             width: 100%;
             text-align: left;
         }
-
         .menu-item:hover {
             background-color: var(--color-bg-hover);
             color: #ffffff;
         }
-
         .menu-item.active {
             background-color: var(--color-bg-terciario);
             color: var(--color-acento);
         }
-
         .menu-item i {
             font-size: 18px;
             width: 24px;
             text-align: center;
             flex-shrink: 0;
         }
-
         .menu-item span {
             font-size: 14px;
             font-weight: 500;
             white-space: nowrap;
         }
-
         .sidebar-footer {
             padding: 16px 20px;
             border-top: 1px solid var(--color-borde);
             text-align: center;
             background-color: #0a0a0a;
         }
-
         .version {
             color: var(--color-texto-secundario);
             font-size: 12px;
         }
-
         .main-content {
             flex: 1;
             padding: 24px 32px;
@@ -159,27 +139,17 @@
             height: 100vh;
             background-color: var(--color-bg-primario);
         }
-
         .seccion {
             display: none;
             animation: fadeIn 0.3s ease;
         }
-
         .seccion.active {
             display: block;
         }
-
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
         .seccion-header {
             display: flex;
             justify-content: space-between;
@@ -190,33 +160,22 @@
             flex-wrap: wrap;
             gap: 12px;
         }
-
         .seccion-header h1 {
             font-size: 28px;
             font-weight: 300;
             color: #ffffff;
             margin: 0;
         }
-
         .seccion-header h1 i {
             color: var(--color-acento);
             margin-right: 12px;
         }
-
-        .seccion-header p {
-            color: var(--color-texto-secundario);
-            font-size: 14px;
-            margin-top: 4px;
-        }
-
         .header-actions {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
             align-items: center;
         }
-
-        /* Estado de sincronización */
         .sync-status {
             display: flex;
             align-items: center;
@@ -227,7 +186,6 @@
             background-color: var(--color-bg-terciario);
             border: 1px solid var(--color-borde);
         }
-
         .sync-status .sync-dot {
             width: 8px;
             height: 8px;
@@ -235,39 +193,29 @@
             display: inline-block;
             animation: pulse 2s infinite;
         }
-
         .sync-status .sync-dot.online {
             background-color: var(--color-verde);
         }
-
         .sync-status .sync-dot.offline {
             background-color: var(--color-rojo);
             animation: none;
         }
-
         .sync-status .sync-dot.syncing {
             background-color: var(--color-naranja);
             animation: pulse-fast 0.5s infinite;
         }
-
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
         }
-
         @keyframes pulse-fast {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.3; transform: scale(0.8); }
         }
-
         .sync-status .sync-text {
             color: var(--color-texto-secundario);
             white-space: nowrap;
         }
-
-        /* ============================================ */
-        /* BOTONES                                      */
-        /* ============================================ */
         .btn-primario {
             background-color: var(--color-acento);
             color: #0d0d0d;
@@ -282,13 +230,11 @@
             align-items: center;
             gap: 8px;
         }
-
         .btn-primario:hover {
             background-color: var(--color-acento-hover);
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(201, 168, 76, 0.3);
         }
-
         .btn-secundario {
             background-color: var(--color-bg-terciario);
             color: var(--color-texto-primario);
@@ -299,11 +245,9 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-
         .btn-secundario:hover {
             background-color: var(--color-bg-hover);
         }
-
         .btn-verde {
             background-color: var(--color-verde);
             color: #ffffff;
@@ -317,11 +261,9 @@
             align-items: center;
             gap: 6px;
         }
-
         .btn-verde:hover {
             background-color: #45a049;
         }
-
         .btn-azul {
             background-color: var(--color-azul);
             color: #ffffff;
@@ -335,11 +277,9 @@
             align-items: center;
             gap: 6px;
         }
-
         .btn-azul:hover {
             background-color: #1e88e5;
         }
-
         .btn-naranja {
             background-color: var(--color-naranja);
             color: #ffffff;
@@ -353,11 +293,9 @@
             align-items: center;
             gap: 4px;
         }
-
         .btn-naranja:hover {
             background-color: #e68900;
         }
-
         .btn-cian {
             background-color: var(--color-cian);
             color: #0d0d0d;
@@ -371,11 +309,57 @@
             align-items: center;
             gap: 4px;
         }
-
         .btn-cian:hover {
             background-color: #00e5ff;
         }
-
+        .btn-morado {
+            background-color: var(--color-morado);
+            color: #ffffff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: var(--border-radius);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-morado:hover {
+            background-color: #7b1fa2;
+        }
+        .btn-imprimir {
+            background-color: #1a237e;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-imprimir:hover {
+            background-color: #283593;
+        }
+        .btn-calendar {
+            background-color: #4285f4;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-calendar:hover {
+            background-color: #5a95f5;
+        }
         .btn-eliminar-item {
             background: none;
             border: none;
@@ -386,12 +370,10 @@
             font-size: 12px;
             transition: all 0.2s ease;
         }
-
         .btn-eliminar-item:hover {
             background-color: var(--color-rojo);
             color: #ffffff;
         }
-
         .btn-filtrar {
             background-color: var(--color-azul);
             color: #ffffff;
@@ -405,11 +387,9 @@
             align-items: center;
             gap: 6px;
         }
-
         .btn-filtrar:hover {
             background-color: #1e88e5;
         }
-
         .btn-limpiar {
             background-color: var(--color-bg-terciario);
             color: var(--color-texto-secundario);
@@ -423,15 +403,10 @@
             align-items: center;
             gap: 6px;
         }
-
         .btn-limpiar:hover {
             background-color: var(--color-bg-hover);
             color: #ffffff;
         }
-
-        /* ============================================ */
-        /* FILTROS                                      */
-        /* ============================================ */
         .filtros-container {
             display: flex;
             flex-wrap: wrap;
@@ -443,7 +418,6 @@
             margin-bottom: 24px;
             border: 1px solid var(--color-borde);
         }
-
         .filtro-grupo {
             display: flex;
             flex-direction: column;
@@ -451,7 +425,6 @@
             flex: 0 1 auto;
             min-width: 140px;
         }
-
         .filtro-grupo label {
             font-size: 11px;
             color: var(--color-texto-secundario);
@@ -459,7 +432,6 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
         .filtro-grupo input,
         .filtro-grupo select {
             background-color: var(--color-bg-primario);
@@ -471,23 +443,17 @@
             min-width: 150px;
             font-family: inherit;
         }
-
         .filtro-grupo input:focus,
         .filtro-grupo select:focus {
             outline: none;
             border-color: var(--color-acento);
         }
-
-        /* ============================================ */
-        /* MÉTRICAS                                     */
-        /* ============================================ */
         .metricas-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }
-
         .metrica-card {
             background-color: var(--color-bg-secundario);
             border: 1px solid var(--color-borde);
@@ -497,7 +463,6 @@
             align-items: center;
             gap: 16px;
         }
-
         .metrica-icono {
             width: 48px;
             height: 48px;
@@ -510,26 +475,19 @@
             color: var(--color-acento);
             flex-shrink: 0;
         }
-
         .metrica-info {
             display: flex;
             flex-direction: column;
         }
-
         .metrica-valor {
             font-size: 24px;
             font-weight: 700;
             color: #ffffff;
         }
-
         .metrica-etiqueta {
             font-size: 12px;
             color: var(--color-texto-secundario);
         }
-
-        /* ============================================ */
-        /* LISTAS DE DATOS                              */
-        /* ============================================ */
         #lista-prospectos,
         #lista-clientes,
         #lista-paquetes,
@@ -542,7 +500,6 @@
             padding: 16px;
             min-height: 200px;
         }
-
         .mensaje-vacio {
             color: var(--color-texto-secundario);
             text-align: center;
@@ -550,7 +507,6 @@
             font-size: 16px;
             margin: 0;
         }
-
         .tarjeta-registro {
             background-color: var(--color-bg-terciario);
             border: 1px solid var(--color-borde);
@@ -563,11 +519,9 @@
             transition: all 0.2s ease;
             gap: 16px;
         }
-
         .tarjeta-registro:hover {
             border-color: var(--color-acento);
         }
-
         .tarjeta-info {
             display: flex;
             flex-direction: column;
@@ -575,7 +529,6 @@
             flex: 1;
             min-width: 0;
         }
-
         .tarjeta-titulo {
             font-size: 16px;
             font-weight: 600;
@@ -585,22 +538,18 @@
             align-items: center;
             gap: 6px;
         }
-
         .tarjeta-detalle {
             font-size: 13px;
             color: var(--color-texto-secundario);
             word-break: break-word;
         }
-
         .tarjeta-detalle strong {
             color: var(--color-texto-primario);
         }
-
         .tarjeta-detalle small {
             font-size: 12px;
             opacity: 0.8;
         }
-
         .tarjeta-etiqueta {
             display: inline-block;
             padding: 2px 10px;
@@ -609,7 +558,6 @@
             font-weight: 600;
             white-space: nowrap;
         }
-
         .etiqueta-interesado { background-color: #4caf50; color: #ffffff; }
         .etiqueta-cotizacion { background-color: #2196f3; color: #ffffff; }
         .etiqueta-negociacion { background-color: #ff9800; color: #ffffff; }
@@ -621,7 +569,6 @@
         .etiqueta-completado { background-color: #4caf50; color: #ffffff; }
         .etiqueta-solo-servicio { background-color: #9c27b0; color: #ffffff; }
         .etiqueta-paquete { background-color: #2196f3; color: #ffffff; }
-
         .etiqueta-llamar { background-color: #4caf50; color: #ffffff; }
         .etiqueta-enviar { background-color: #2196f3; color: #ffffff; }
         .etiqueta-confirmar { background-color: #ff9800; color: #ffffff; }
@@ -631,14 +578,12 @@
         .etiqueta-escoger { background-color: #ffc107; color: #0d0d0d; }
         .etiqueta-recoger { background-color: #795548; color: #ffffff; }
         .etiqueta-otro { background-color: #757575; color: #ffffff; }
-
         .tarjeta-acciones {
             display: flex;
             gap: 4px;
             flex-shrink: 0;
             flex-wrap: wrap;
         }
-
         .tarjeta-acciones button {
             background: none;
             border: none;
@@ -649,28 +594,23 @@
             transition: all 0.2s ease;
             font-size: 14px;
         }
-
         .tarjeta-acciones button:hover {
             background-color: var(--color-bg-hover);
             color: #ffffff;
         }
-
         .tarjeta-acciones .btn-editar:hover { color: var(--color-acento); }
         .tarjeta-acciones .btn-eliminar:hover { color: var(--color-rojo); }
         .tarjeta-acciones .btn-convertir:hover { color: var(--color-verde); }
         .tarjeta-acciones .btn-pago:hover { color: var(--color-naranja); }
         .tarjeta-acciones .btn-completar:hover { color: var(--color-verde); }
-
-        /* ============================================ */
-        /* CALENDARIO                                   */
-        /* ============================================ */
+        .tarjeta-acciones .btn-imprimir:hover { color: #1a237e; }
+        .tarjeta-acciones .btn-calendar:hover { color: #4285f4; }
         .calendario-container {
             background-color: var(--color-bg-secundario);
             border: 1px solid var(--color-borde);
             border-radius: var(--border-radius);
             padding: 20px;
         }
-
         .calendario-header {
             display: flex;
             justify-content: space-between;
@@ -679,24 +619,20 @@
             flex-wrap: wrap;
             gap: 12px;
         }
-
         .calendario-header h2 {
             font-size: 24px;
             font-weight: 400;
             color: #ffffff;
         }
-
         .calendario-header h2 i {
             color: var(--color-acento);
             margin-right: 8px;
         }
-
         .calendario-nav {
             display: flex;
             gap: 8px;
             align-items: center;
         }
-
         .calendario-nav button {
             background-color: var(--color-bg-terciario);
             border: 1px solid var(--color-borde);
@@ -706,27 +642,22 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-
         .calendario-nav button:hover {
             background-color: var(--color-bg-hover);
         }
-
         .calendario-nav .btn-hoy {
             background-color: var(--color-acento);
             color: #0d0d0d;
             font-weight: 600;
         }
-
         .calendario-nav .btn-hoy:hover {
             background-color: var(--color-acento-hover);
         }
-
         .calendario-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 2px;
         }
-
         .calendario-grid .dia-nombre {
             text-align: center;
             padding: 8px 4px;
@@ -736,7 +667,6 @@
             background-color: var(--color-bg-terciario);
             border-radius: var(--border-radius);
         }
-
         .calendario-grid .dia {
             min-height: 100px;
             background-color: var(--color-bg-terciario);
@@ -746,26 +676,21 @@
             cursor: pointer;
             position: relative;
         }
-
         .calendario-grid .dia:hover {
             background-color: var(--color-bg-hover);
         }
-
         .calendario-grid .dia.otro-mes {
             opacity: 0.3;
         }
-
         .calendario-grid .dia.hoy {
             border: 2px solid var(--color-acento);
         }
-
         .calendario-grid .dia .numero {
             font-size: 14px;
             font-weight: 600;
             color: var(--color-texto-secundario);
             margin-bottom: 4px;
         }
-
         .calendario-grid .dia .evento {
             font-size: 10px;
             padding: 2px 4px;
@@ -778,31 +703,26 @@
             transition: all 0.2s ease;
             pointer-events: auto;
         }
-
         .calendario-grid .dia .evento:hover {
             transform: scale(1.02);
             filter: brightness(1.2);
         }
-
         .calendario-grid .dia .evento-contrato {
             background-color: rgba(33, 150, 243, 0.3);
             border-left: 3px solid var(--color-azul);
             color: var(--color-texto-primario);
         }
-
         .calendario-grid .dia .evento-tarea {
             background-color: rgba(255, 152, 0, 0.3);
             border-left: 3px solid var(--color-naranja);
             color: var(--color-texto-primario);
         }
-
         .calendario-grid .dia .evento-completada {
             background-color: rgba(76, 175, 80, 0.2);
             border-left: 3px solid var(--color-verde);
             color: var(--color-texto-secundario);
             text-decoration: line-through;
         }
-
         .calendario-grid .dia .evento-mas {
             font-size: 10px;
             color: var(--color-texto-secundario);
@@ -810,7 +730,6 @@
             padding: 2px;
             font-weight: 600;
         }
-
         .leyenda-calendario {
             display: flex;
             gap: 16px;
@@ -819,7 +738,6 @@
             padding-top: 16px;
             border-top: 1px solid var(--color-borde);
         }
-
         .leyenda-calendario .leyenda-item {
             display: flex;
             align-items: center;
@@ -827,47 +745,34 @@
             font-size: 12px;
             color: var(--color-texto-secundario);
         }
-
         .leyenda-calendario .leyenda-color {
             width: 16px;
             height: 16px;
             border-radius: 4px;
         }
-
         .leyenda-color-contrato { background-color: rgba(33, 150, 243, 0.3); border-left: 3px solid var(--color-azul); }
         .leyenda-color-tarea { background-color: rgba(255, 152, 0, 0.3); border-left: 3px solid var(--color-naranja); }
         .leyenda-color-completada { background-color: rgba(76, 175, 80, 0.2); border-left: 3px solid var(--color-verde); }
-
-        /* ============================================ */
-        /* INFORMES DETALLE                             */
-        /* ============================================ */
         .informes-detalle {
             background-color: var(--color-bg-secundario);
             border: 1px solid var(--color-borde);
             border-radius: var(--border-radius);
             padding: 20px;
         }
-
         .informes-detalle h3 {
             font-weight: 400;
             color: var(--color-texto-secundario);
             margin: 0 0 16px 0;
         }
-
         .informes-detalle h3 i {
             color: var(--color-acento);
             margin-right: 8px;
         }
-
         .informes-detalle h4 {
             color: var(--color-acento);
             margin: 0 0 12px 0;
             font-weight: 500;
         }
-
-        /* ============================================ */
-        /* MODAL                                        */
-        /* ============================================ */
         .modal {
             display: none;
             position: fixed;
@@ -880,11 +785,9 @@
             align-items: center;
             justify-content: center;
         }
-
         .modal.active {
             display: flex;
         }
-
         .modal-content {
             background-color: var(--color-bg-secundario);
             border-radius: var(--border-radius);
@@ -895,7 +798,6 @@
             border: 1px solid var(--color-borde);
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
         }
-
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -904,14 +806,12 @@
             border-bottom: 1px solid var(--color-borde);
             background-color: var(--color-bg-primario);
         }
-
         .modal-header h2 {
             font-size: 20px;
             font-weight: 500;
             color: #ffffff;
             margin: 0;
         }
-
         .modal-cerrar {
             background: none;
             border: none;
@@ -922,23 +822,16 @@
             padding: 0 8px;
             line-height: 1;
         }
-
         .modal-cerrar:hover {
             color: #ffffff;
             transform: rotate(90deg);
         }
-
         .modal-body {
             padding: 24px;
         }
-
-        /* ============================================ */
-        /* FORMULARIOS                                  */
-        /* ============================================ */
         .form-grupo {
             margin-bottom: 16px;
         }
-
         .form-grupo label {
             display: block;
             font-size: 13px;
@@ -946,7 +839,6 @@
             margin-bottom: 4px;
             font-weight: 500;
         }
-
         .form-grupo input,
         .form-grupo select,
         .form-grupo textarea {
@@ -959,36 +851,30 @@
             font-size: 14px;
             font-family: inherit;
         }
-
         .form-grupo input:focus,
         .form-grupo select:focus,
         .form-grupo textarea:focus {
             outline: none;
             border-color: var(--color-acento);
         }
-
         .form-grupo input:disabled {
             opacity: 0.6;
             cursor: not-allowed;
         }
-
         .form-grupo textarea {
             resize: vertical;
             min-height: 80px;
         }
-
         .form-grupo .info-cliente {
             background-color: var(--color-bg-terciario);
             padding: 12px;
             border-radius: var(--border-radius);
             border-left: 3px solid var(--color-acento);
         }
-
         .form-grupo .info-cliente p {
             margin: 4px 0;
             font-size: 14px;
         }
-
         .form-grupo .pagos-container,
         .form-grupo .cargos-container {
             background-color: var(--color-bg-terciario);
@@ -998,7 +884,6 @@
             max-height: 200px;
             overflow-y: auto;
         }
-
         .form-grupo .pago-item,
         .form-grupo .cargo-item {
             display: flex;
@@ -1009,12 +894,10 @@
             font-size: 13px;
             gap: 8px;
         }
-
         .form-grupo .pago-item:last-child,
         .form-grupo .cargo-item:last-child {
             border-bottom: none;
         }
-
         .form-grupo .pago-item .pago-info,
         .form-grupo .cargo-item .cargo-info {
             display: flex;
@@ -1023,34 +906,28 @@
             flex-wrap: wrap;
             flex: 1;
         }
-
         .form-grupo .pago-monto {
             color: var(--color-verde);
             font-weight: 600;
         }
-
         .form-grupo .cargo-monto {
             color: var(--color-naranja);
             font-weight: 600;
         }
-
         .form-grupo .pago-fecha,
         .form-grupo .cargo-fecha {
             color: var(--color-texto-secundario);
             font-size: 12px;
         }
-
         .form-grupo .pago-eliminado {
             color: var(--color-rojo);
             font-style: italic;
             opacity: 0.7;
         }
-
         .form-grupo .pago-eliminado .pago-monto {
             color: var(--color-rojo);
             text-decoration: line-through;
         }
-
         .form-acciones {
             display: flex;
             gap: 12px;
@@ -1058,56 +935,44 @@
             justify-content: flex-end;
             flex-wrap: wrap;
         }
-
         .form-acciones .btn-primario {
             min-width: 120px;
             justify-content: center;
         }
-
         .row-2col {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
         }
-
         .row-3col {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 16px;
         }
-
         .resumen-financiero {
             background-color: var(--color-bg-primario);
             padding: 12px 16px;
             border-radius: var(--border-radius);
             border: 1px solid var(--color-borde);
         }
-
         .resumen-financiero .fila {
             display: flex;
             justify-content: space-between;
             padding: 4px 0;
             border-bottom: 1px solid var(--color-borde);
         }
-
         .resumen-financiero .fila:last-child {
             border-bottom: none;
         }
-
         .resumen-financiero .total {
             font-weight: 700;
             color: var(--color-acento);
         }
-
-        /* ============================================ */
-        /* TABLAS                                       */
-        /* ============================================ */
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
         }
-
         table thead th {
             text-align: left;
             padding: 8px 12px;
@@ -1118,20 +983,14 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
         table tbody td {
             padding: 8px 12px;
             border-bottom: 1px solid var(--color-borde);
             color: var(--color-texto-primario);
         }
-
         table tbody tr:hover {
             background-color: var(--color-bg-terciario);
         }
-
-        /* ============================================ */
-        /* NOTIFICACIONES                               */
-        /* ============================================ */
         .notificacion {
             position: fixed;
             bottom: 20px;
@@ -1146,133 +1005,219 @@
             animation: slideIn 0.3s ease;
             max-width: 350px;
         }
-
         .notificacion i {
             margin-right: 8px;
         }
-
         @keyframes slideIn {
             from { transform: translateX(100px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-
         @keyframes slideOut {
             from { transform: translateX(0); opacity: 1; }
             to { transform: translateX(100px); opacity: 0; }
         }
-
-        /* ============================================ */
-        /* SCROLLBAR                                    */
-        /* ============================================ */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
-
         ::-webkit-scrollbar-track {
             background: var(--color-bg-primario);
         }
-
         ::-webkit-scrollbar-thumb {
             background: var(--color-bg-terciario);
             border-radius: 4px;
         }
-
         ::-webkit-scrollbar-thumb:hover {
             background: var(--color-bg-hover);
         }
 
         /* ============================================ */
-        /* RESPONSIVE                                   */
+        /* ESTILOS DE IMPRESIÓN - SIMPLIFICADOS         */
         /* ============================================ */
+        @media print {
+            .sidebar, .menu, .filtros-container, .header-actions, .sync-status, 
+            .seccion-header .btn-primario, .seccion-header .btn-secundario,
+            .seccion-header .btn-verde, .seccion-header .btn-azul,
+            .tarjeta-acciones, .btn-editar, .btn-eliminar, .btn-pago,
+            .btn-imprimir, .btn-completar, .btn-calendar,
+            .modal, .modal-content, .modal-header, .modal-body,
+            .form-acciones, #modal, .notificacion, .calendario-container,
+            .leyenda-calendario, .calendario-nav, .calendario-grid {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+                overflow: visible !important;
+                font-family: 'Segoe UI', Arial, sans-serif !important;
+            }
+            .main-content {
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                height: auto !important;
+                background: white !important;
+            }
+            .seccion {
+                display: block !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            #impresion-contenedor {
+                display: block !important;
+                padding: 15px !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+                font-size: 11px !important;
+                line-height: 1.4 !important;
+                background: white !important;
+                color: black !important;
+            }
+            #impresion-contenedor h1 {
+                font-size: 16px !important;
+                margin: 0 0 8px 0 !important;
+                padding: 0 !important;
+                color: #0d0d0d !important;
+                text-align: center !important;
+                border-bottom: 2px solid #333 !important;
+                padding-bottom: 6px !important;
+            }
+            #impresion-contenedor .seccion-print {
+                margin-bottom: 8px !important;
+                padding: 6px 10px !important;
+                border: 1px solid #ddd !important;
+                border-radius: 4px !important;
+                background: #fafafa !important;
+            }
+            #impresion-contenedor .seccion-print h3 {
+                font-size: 13px !important;
+                margin: 0 0 4px 0 !important;
+                color: #1a237e !important;
+                border-bottom: 1px solid #ddd !important;
+                padding-bottom: 3px !important;
+            }
+            #impresion-contenedor .fila {
+                display: flex !important;
+                justify-content: space-between !important;
+                padding: 2px 0 !important;
+                border-bottom: 1px solid #eee !important;
+                font-size: 11px !important;
+            }
+            #impresion-contenedor .fila:last-child {
+                border-bottom: none !important;
+            }
+            #impresion-contenedor .fila .label {
+                font-weight: 600 !important;
+                color: #333 !important;
+            }
+            #impresion-contenedor .fila .valor {
+                color: #0d0d0d !important;
+                text-align: right !important;
+            }
+            #impresion-contenedor table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 10px !important;
+                margin-top: 4px !important;
+            }
+            #impresion-contenedor table th {
+                background: #f0f0f0 !important;
+                color: #0d0d0d !important;
+                border: 1px solid #ccc !important;
+                padding: 3px 6px !important;
+                text-align: left !important;
+                font-size: 10px !important;
+            }
+            #impresion-contenedor table td {
+                border: 1px solid #ccc !important;
+                padding: 3px 6px !important;
+                color: #0d0d0d !important;
+                font-size: 10px !important;
+            }
+            #impresion-contenedor .total-resumen {
+                margin-top: 6px !important;
+                padding-top: 6px !important;
+                border-top: 2px solid #333 !important;
+                font-weight: 700 !important;
+            }
+            .seccion-header {
+                display: none !important;
+            }
+            .seccion-header h1 {
+                display: none !important;
+            }
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 width: 60px;
                 min-width: 60px;
             }
-            
             .logo span,
             .menu-item span,
             .sidebar-footer {
                 display: none;
             }
-            
             .menu-item {
                 justify-content: center;
                 padding: 14px;
             }
-            
             .menu-item i {
                 font-size: 20px;
                 width: auto;
             }
-            
             .main-content {
                 padding: 16px;
             }
-            
             .seccion-header h1 {
                 font-size: 20px;
             }
-            
             .metricas-container {
                 grid-template-columns: 1fr 1fr;
             }
-            
             .filtros-container {
                 flex-direction: column;
                 align-items: stretch;
             }
-            
             .filtro-grupo {
                 min-width: auto;
             }
-            
             .filtro-grupo input,
             .filtro-grupo select {
                 min-width: auto;
             }
-            
             .tarjeta-registro {
                 flex-direction: column;
                 align-items: stretch;
             }
-            
             .tarjeta-acciones {
                 justify-content: flex-end;
                 margin-top: 8px;
                 border-top: 1px solid var(--color-borde);
                 padding-top: 8px;
             }
-            
             .modal-content {
                 width: 95%;
                 margin: 10px;
             }
-            
             .row-2col,
             .row-3col {
                 grid-template-columns: 1fr;
             }
-            
             .form-grupo .pago-item,
             .form-grupo .cargo-item {
                 flex-wrap: wrap;
             }
-
             .calendario-grid .dia {
                 min-height: 60px;
                 font-size: 12px;
             }
-
             .calendario-grid .dia .evento {
                 font-size: 8px;
             }
-
             .calendario-grid .dia .numero {
                 font-size: 11px;
             }
-
             .calendario-header h2 {
                 font-size: 18px;
             }
@@ -1282,32 +1227,26 @@
             .metricas-container {
                 grid-template-columns: 1fr;
             }
-            
             .seccion-header {
                 flex-direction: column;
                 align-items: stretch;
             }
-            
             .form-acciones {
                 flex-direction: column;
             }
-            
             .form-acciones button {
                 width: 100%;
                 justify-content: center;
             }
-
             .calendario-grid .dia {
                 min-height: 40px;
                 font-size: 10px;
                 padding: 3px;
             }
-
             .calendario-grid .dia .evento {
                 font-size: 7px;
                 padding: 1px 2px;
             }
-
             .calendario-grid .dia .numero {
                 font-size: 10px;
             }
@@ -1316,13 +1255,11 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- MENÚ LATERAL -->
         <nav class="sidebar">
             <div class="logo">
                 <i class="fas fa-camera"></i>
                 <span>Registro PDA</span>
             </div>
-            
             <ul class="menu">
                 <li class="menu-item active" data-seccion="informes">
                     <i class="fas fa-chart-pie"></i>
@@ -1353,13 +1290,11 @@
                     <span>Calendario</span>
                 </li>
             </ul>
-            
             <div class="sidebar-footer">
-                <div class="version">v2.8 🔥 Firebase</div>
+                <div class="version">v2.8.4 🔥</div>
             </div>
         </nav>
 
-        <!-- CONTENIDO PRINCIPAL -->
         <main class="main-content">
             <!-- SECCIÓN: INFORMES -->
             <section id="seccion-informes" class="seccion active">
@@ -1370,22 +1305,13 @@
                             <span class="sync-dot offline" id="sync-dot"></span>
                             <span class="sync-text" id="sync-text">Conectando...</span>
                         </div>
-                        <button class="btn-verde" id="btn-sync-firebase">
-                            <i class="fas fa-cloud-upload-alt"></i> Sincronizar Nube
-                        </button>
-                        <button class="btn-azul" id="btn-cargar-firebase">
-                            <i class="fas fa-cloud-download-alt"></i> Cargar desde Nube
-                        </button>
-                        <button class="btn-secundario" id="btn-exportar-datos">
-                            <i class="fas fa-download"></i> Exportar
-                        </button>
-                        <button class="btn-secundario" id="btn-importar-datos">
-                            <i class="fas fa-upload"></i> Importar
-                        </button>
+                        <button class="btn-verde" id="btn-sync-firebase"><i class="fas fa-cloud-upload-alt"></i> Sincronizar</button>
+                        <button class="btn-azul" id="btn-cargar-firebase"><i class="fas fa-cloud-download-alt"></i> Cargar</button>
+                        <button class="btn-secundario" id="btn-exportar-datos"><i class="fas fa-download"></i> Exportar</button>
+                        <button class="btn-secundario" id="btn-importar-datos"><i class="fas fa-upload"></i> Importar</button>
                         <input type="file" id="input-importar-datos" accept=".json" style="display:none;">
                     </div>
                 </div>
-                
                 <div class="filtros-container">
                     <div class="filtro-grupo">
                         <label>Fecha desde</label>
@@ -1428,7 +1354,6 @@
                     <button class="btn-filtrar" id="btn-filtrar-informes"><i class="fas fa-search"></i> Aplicar filtros</button>
                     <button class="btn-limpiar" id="btn-limpiar-informes"><i class="fas fa-undo"></i> Limpiar</button>
                 </div>
-
                 <div class="metricas-container">
                     <div class="metrica-card">
                         <div class="metrica-icono"><i class="fas fa-users"></i></div>
@@ -1459,7 +1384,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="informes-detalle">
                     <h3><i class="fas fa-chart-bar"></i> Desglose detallado</h3>
                     <div id="contenedor-informes">
@@ -1472,11 +1396,8 @@
             <section id="seccion-prospectos" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-users"></i> Prospectos</h1>
-                    <button class="btn-primario" id="btn-nuevo-prospecto">
-                        <i class="fas fa-plus"></i> Nuevo Prospecto
-                    </button>
+                    <button class="btn-primario" id="btn-nuevo-prospecto"><i class="fas fa-plus"></i> Nuevo Prospecto</button>
                 </div>
-
                 <div class="filtros-container">
                     <div class="filtro-grupo">
                         <label>Filtrar por fase</label>
@@ -1496,7 +1417,6 @@
                         <input type="text" id="buscar-prospecto" placeholder="Nombre o teléfono...">
                     </div>
                 </div>
-
                 <div id="lista-prospectos">
                     <p class="mensaje-vacio">No hay prospectos registrados</p>
                 </div>
@@ -1506,11 +1426,8 @@
             <section id="seccion-clientes" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-user-check"></i> Clientes</h1>
-                    <button class="btn-primario" id="btn-nuevo-cliente">
-                        <i class="fas fa-plus"></i> Nuevo Cliente
-                    </button>
+                    <button class="btn-primario" id="btn-nuevo-cliente"><i class="fas fa-plus"></i> Nuevo Cliente</button>
                 </div>
-
                 <div class="filtros-container">
                     <div class="filtro-grupo">
                         <label>Estado</label>
@@ -1526,7 +1443,6 @@
                         <input type="text" id="buscar-cliente" placeholder="Nombre o teléfono...">
                     </div>
                 </div>
-
                 <div id="lista-clientes">
                     <p class="mensaje-vacio">No hay clientes registrados</p>
                 </div>
@@ -1536,11 +1452,8 @@
             <section id="seccion-contratos" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-file-contract"></i> Contratos</h1>
-                    <button class="btn-primario" id="btn-nuevo-contrato">
-                        <i class="fas fa-plus"></i> Nuevo Contrato
-                    </button>
+                    <button class="btn-primario" id="btn-nuevo-contrato"><i class="fas fa-plus"></i> Nuevo Contrato</button>
                 </div>
-
                 <div class="filtros-container">
                     <div class="filtro-grupo">
                         <label>Estado</label>
@@ -1565,7 +1478,6 @@
                         <small style="color:var(--color-texto-secundario);">Busca por nombre del cliente o del festejado</small>
                     </div>
                 </div>
-
                 <div id="lista-contratos">
                     <p class="mensaje-vacio">No hay contratos registrados</p>
                 </div>
@@ -1575,11 +1487,8 @@
             <section id="seccion-paquetes" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-box"></i> Paquetes</h1>
-                    <button class="btn-primario" id="btn-nuevo-paquete">
-                        <i class="fas fa-plus"></i> Nuevo Paquete
-                    </button>
+                    <button class="btn-primario" id="btn-nuevo-paquete"><i class="fas fa-plus"></i> Nuevo Paquete</button>
                 </div>
-
                 <div id="lista-paquetes">
                     <p class="mensaje-vacio">No hay paquetes registrados</p>
                 </div>
@@ -1589,11 +1498,8 @@
             <section id="seccion-servicios" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-tools"></i> Servicios Adicionales</h1>
-                    <button class="btn-primario" id="btn-nuevo-servicio">
-                        <i class="fas fa-plus"></i> Nuevo Servicio
-                    </button>
+                    <button class="btn-primario" id="btn-nuevo-servicio"><i class="fas fa-plus"></i> Nuevo Servicio</button>
                 </div>
-
                 <div id="lista-servicios">
                     <p class="mensaje-vacio">No hay servicios adicionales registrados</p>
                 </div>
@@ -1603,11 +1509,8 @@
             <section id="seccion-calendario" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-calendar-alt"></i> Calendario</h1>
-                    <button class="btn-primario" id="btn-nueva-tarea">
-                        <i class="fas fa-plus"></i> Nueva Tarea
-                    </button>
+                    <button class="btn-primario" id="btn-nueva-tarea"><i class="fas fa-plus"></i> Nueva Tarea</button>
                 </div>
-
                 <div class="filtros-container">
                     <div class="filtro-grupo">
                         <label>Filtrar tareas</label>
@@ -1623,7 +1526,6 @@
                         <input type="text" id="buscar-calendario" placeholder="Cliente o festejado...">
                     </div>
                 </div>
-
                 <div class="calendario-container" id="calendario-container">
                     <div class="calendario-header">
                         <h2 id="calendario-titulo"><i class="fas fa-calendar"></i> <span id="calendario-mes-ano">Enero 2025</span></h2>
@@ -1633,9 +1535,7 @@
                             <button id="btn-mes-siguiente"><i class="fas fa-chevron-right"></i></button>
                         </div>
                     </div>
-                    <div id="calendario-grid" class="calendario-grid">
-                        <!-- Generado por JavaScript -->
-                    </div>
+                    <div id="calendario-grid" class="calendario-grid"></div>
                     <div class="leyenda-calendario">
                         <div class="leyenda-item">
                             <div class="leyenda-color leyenda-color-contrato"></div>
@@ -1651,8 +1551,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Lista de tareas -->
                 <div style="margin-top:24px;">
                     <h3 style="color:var(--color-texto-secundario);font-weight:400;margin-bottom:12px;"><i class="fas fa-tasks"></i> Lista de tareas</h3>
                     <div id="lista-tareas">
@@ -1663,29 +1561,23 @@
         </main>
     </div>
 
-    <!-- ========================================= -->
-    <!-- MODAL                                     -->
-    <!-- ========================================= -->
     <div id="modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modal-titulo">Título del modal</h2>
                 <button class="modal-cerrar" id="modal-cerrar">&times;</button>
             </div>
-            <div class="modal-body" id="modal-body">
-                <!-- Contenido dinámico -->
-            </div>
+            <div class="modal-body" id="modal-body"></div>
         </div>
     </div>
 
-    <!-- ========================================= -->
-    <!-- JAVASCRIPT CON FIREBASE Y TAREAS CORREGIDAS -->
-    <!-- ========================================= -->
+    <!-- CONTENEDOR PARA IMPRESIÓN SIMPLIFICADA -->
+    <div id="impresion-contenedor" style="display:none;"></div>
+
     <script>
         // ============================================================
-        // CONFIGURACIÓN DE FIREBASE - TU CONFIGURACIÓN
+        // CONFIGURACIÓN DE FIREBASE
         // ============================================================
-        
         const firebaseConfig = {
             apiKey: "AIzaSyAqHelYUMSfuZpOBLb-_0LEKnoxH9yF8Ts",
             authDomain: "crm-pda.firebaseapp.com",
@@ -1699,7 +1591,7 @@
         // ============================================================
         // CONFIGURACIÓN INICIAL
         // ============================================================
-        console.log('🚀 Registro PDA v2.8 - Con Firebase Sync');
+        console.log('🚀 Registro PDA v2.8.4 - Con Google Calendar');
 
         const FASES_DISPONIBLES = [
             'Interesado', 'Cotización', 'Negociación', 
@@ -1708,17 +1600,10 @@
 
         const ESTADOS_CONTRATO = ['Pendiente', 'Completado', 'Cancelado'];
         const ESTADOS_CLIENTE = ['Activo', 'Inactivo', 'Cancelado'];
-        
         const TIPOS_TAREA = [
-            'Llamar',
-            'Enviar mensaje',
-            'Confirmar',
-            'Resolver dudas',
-            'Sesión de fotos',
-            'Visita',
-            'Escoger fotos',
-            'Recoger material',
-            'Otro'
+            'Llamar', 'Enviar mensaje', 'Confirmar',
+            'Resolver dudas', 'Sesión de fotos', 'Visita',
+            'Escoger fotos', 'Recoger material', 'Entrega de fotos', 'Otro'
         ];
 
         let paquetes = [];
@@ -1730,14 +1615,10 @@
         // ============================================================
         // INICIALIZAR FIREBASE
         // ============================================================
-        
         let database = null;
         let sincronizandoFirebase = false;
         let primerCarga = true;
-        let estadoSync = {
-            conectado: false,
-            modo: 'local' // 'local' o 'firebase'
-        };
+        let estadoSync = { conectado: false, modo: 'local' };
 
         try {
             firebase.initializeApp(firebaseConfig);
@@ -1782,36 +1663,168 @@
             return '$' + cantidad.toLocaleString('es-MX');
         }
 
+        // ============================================================
+        // FUNCIÓN PARA CREAR EVENTO EN GOOGLE CALENDAR
+        // ============================================================
+        function crearEventoGoogleCalendar(clienteId, contratoId) {
+            const cliente = obtenerCliente(clienteId);
+            if (!cliente) {
+                mostrarNotificacion('❌ Cliente no encontrado', 'error');
+                return;
+            }
+
+            const contrato = cliente.contratos.find(c => c.id === contratoId);
+            if (!contrato) {
+                mostrarNotificacion('❌ Contrato no encontrado', 'error');
+                return;
+            }
+
+            // Validar que tenga fecha de evento
+            if (!contrato.fechaEvento) {
+                mostrarNotificacion('⚠️ El contrato no tiene fecha de evento registrada', 'warning');
+                return;
+            }
+
+            // Preparar datos para Google Calendar
+            const titulo = `📸 Sesión de fotos: ${contrato.festejado || 'Evento'}`;
+            
+            // Construir fecha/hora para Google Calendar (formato YYYYMMDDTHHMMSS)
+            let fechaEvento = contrato.fechaEvento.replace(/-/g, '');
+            let horaEvento = contrato.horaEvento ? contrato.horaEvento.replace(':', '') : '120000';
+            
+            // Si tiene hora, usarla, si no, usar 12:00 por defecto
+            const fechaInicio = fechaEvento + 'T' + horaEvento;
+            
+            // Duración del evento (2 horas por defecto)
+            const horaInicio = parseInt(horaEvento.substring(0, 2));
+            const minInicio = parseInt(horaEvento.substring(2, 4));
+            let horaFin = horaInicio + 2;
+            let minFin = minInicio;
+            if (horaFin >= 24) {
+                horaFin = 23;
+                minFin = 59;
+            }
+            const horaFinStr = String(horaFin).padStart(2, '0') + String(minFin).padStart(2, '0') + '00';
+            const fechaFin = fechaEvento + 'T' + horaFinStr;
+
+            // Construir descripción con todos los detalles del contrato
+            let descripcion = `📋 Detalles del Contrato\n`;
+            descripcion += `═${'═'.repeat(40)}\n\n`;
+            descripcion += `👤 Cliente: ${cliente.nombre}\n`;
+            descripcion += `📞 Teléfono: ${cliente.telefono || 'No especificado'}\n`;
+            if (cliente.email) descripcion += `✉️ Email: ${cliente.email}\n`;
+            descripcion += `\n🎉 Festejado: ${contrato.festejado || 'No especificado'}\n`;
+            descripcion += `📦 Paquete/Servicio: ${contrato.tipo === 'paquete' ? obtenerNombrePaquete(contrato.paqueteId) : obtenerNombreServicio(contrato.servicioId)}\n`;
+            
+            // Servicios adicionales si es paquete
+            if (contrato.tipo === 'paquete' && contrato.serviciosIds && contrato.serviciosIds.length > 0) {
+                const serviciosNombres = contrato.serviciosIds.map(id => obtenerNombreServicio(id)).filter(n => n !== 'Servicio no encontrado');
+                if (serviciosNombres.length > 0) {
+                    descripcion += `➕ Servicios adicionales: ${serviciosNombres.join(', ')}\n`;
+                }
+            }
+            
+            descripcion += `\n📍 Evento Religioso: ${contrato.direccionEvento || 'No especificado'}\n`;
+            descripcion += `🎉 Recepción: ${contrato.direccionRecepcion || 'No especificado'}\n`;
+            if (contrato.horaRecepcion) descripcion += `⏰ Hora Recepción: ${contrato.horaRecepcion} hrs\n`;
+            
+            // Financiero
+            const pagosValidos = contrato.pagos ? contrato.pagos.filter(p => !p.eliminado) : [];
+            const cargosValidos = contrato.cargos ? contrato.cargos.filter(c => !c.eliminado) : [];
+            const totalPagos = pagosValidos.reduce((sum, p) => sum + p.monto, 0);
+            const totalCargos = cargosValidos.reduce((sum, c) => sum + c.monto, 0);
+            const totalAPagar = contrato.precioFinal + totalCargos;
+            const saldoPendiente = totalAPagar - totalPagos;
+            
+            descripcion += `\n💰 Financiero\n`;
+            descripcion += `  Precio Final: ${formatearMoneda(contrato.precioFinal || 0)}\n`;
+            if (totalCargos > 0) descripcion += `  Cargos Extras: ${formatearMoneda(totalCargos)}\n`;
+            descripcion += `  Total a Pagar: ${formatearMoneda(totalAPagar)}\n`;
+            descripcion += `  Pagado: ${formatearMoneda(totalPagos)}\n`;
+            descripcion += `  Saldo Pendiente: ${formatearMoneda(saldoPendiente)}\n`;
+            if (contrato.anticipo) descripcion += `  Anticipo: ${formatearMoneda(contrato.anticipo)}\n`;
+            
+            if (contrato.notas) {
+                descripcion += `\n📝 Notas:\n${contrato.notas}\n`;
+            }
+            
+            descripcion += `\n${'═'.repeat(50)}\n`;
+            descripcion += `📄 ID Contrato: ${contrato.id.substring(0, 8)}\n`;
+            descripcion += `📅 Generado desde Registro PDA`;
+
+            // Codificar para URL
+            const urlParams = new URLSearchParams({
+                action: 'TEMPLATE',
+                text: titulo,
+                dates: `${fechaInicio}/${fechaFin}`,
+                details: descripcion,
+                location: contrato.direccionEvento || contrato.direccionRecepcion || ''
+            });
+
+            const url = `https://calendar.google.com/calendar/render?${urlParams.toString()}`;
+            
+            // Abrir en nueva pestaña
+            window.open(url, '_blank');
+            
+            mostrarNotificacion('📅 Abriendo Google Calendar...', 'info');
+        }
+
+        // ============================================================
+        // GUARDAR Y CARGAR DATOS
+        // ============================================================
         function guardarDatosLocal() {
-            localStorage.setItem('paquetes', JSON.stringify(paquetes));
-            localStorage.setItem('serviciosAdicionales', JSON.stringify(serviciosAdicionales));
-            localStorage.setItem('prospectos', JSON.stringify(prospectos));
-            localStorage.setItem('clientes', JSON.stringify(clientes));
-            localStorage.setItem('tareas', JSON.stringify(tareas));
+            try {
+                localStorage.setItem('paquetes', JSON.stringify(paquetes || []));
+                localStorage.setItem('serviciosAdicionales', JSON.stringify(serviciosAdicionales || []));
+                localStorage.setItem('prospectos', JSON.stringify(prospectos || []));
+                localStorage.setItem('clientes', JSON.stringify(clientes || []));
+                localStorage.setItem('tareas', JSON.stringify(tareas || []));
+                console.log('💾 Datos guardados localmente.');
+            } catch (error) {
+                console.error('❌ Error guardando datos:', error);
+            }
         }
 
         function cargarDatosLocal() {
-            paquetes = JSON.parse(localStorage.getItem('paquetes')) || [];
-            serviciosAdicionales = JSON.parse(localStorage.getItem('serviciosAdicionales')) || [];
-            prospectos = JSON.parse(localStorage.getItem('prospectos')) || [];
-            clientes = JSON.parse(localStorage.getItem('clientes')) || [];
-            tareas = JSON.parse(localStorage.getItem('tareas')) || [];
+            try {
+                paquetes = JSON.parse(localStorage.getItem('paquetes')) || [];
+                serviciosAdicionales = JSON.parse(localStorage.getItem('serviciosAdicionales')) || [];
+                prospectos = JSON.parse(localStorage.getItem('prospectos')) || [];
+                clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+                tareas = JSON.parse(localStorage.getItem('tareas')) || [];
+                console.log('📂 Datos cargados localmente.');
+                console.log(`📦 Paquetes: ${paquetes.length}`);
+                console.log(`👥 Prospectos: ${prospectos.length}`);
+                console.log(`⭐ Clientes: ${clientes.length}`);
+                console.log(`📌 Tareas: ${tareas.length}`);
+                return true;
+            } catch (error) {
+                console.error('❌ Error cargando datos:', error);
+                return false;
+            }
         }
 
+        // ============================================================
+        // FUNCIONES DE OBJETOS
+        // ============================================================
         function obtenerPaquete(id) {
-            return paquetes.find(p => p.id === id);
+            if (!paquetes || !Array.isArray(paquetes)) return null;
+            return paquetes.find(p => p && p.id === id);
         }
 
         function obtenerServicio(id) {
-            return serviciosAdicionales.find(s => s.id === id);
+            if (!serviciosAdicionales || !Array.isArray(serviciosAdicionales)) return null;
+            return serviciosAdicionales.find(s => s && s.id === id);
         }
 
         function obtenerCliente(id) {
-            return clientes.find(c => c.id === id);
+            if (!clientes || !Array.isArray(clientes)) return null;
+            return clientes.find(c => c && c.id === id);
         }
 
         function obtenerProspecto(id) {
-            return prospectos.find(p => p.id === id);
+            if (!prospectos || !Array.isArray(prospectos)) return null;
+            return prospectos.find(p => p && p.id === id);
         }
 
         function obtenerNombrePaquete(id) {
@@ -1827,38 +1840,269 @@
         function obtenerNombreCliente(id) {
             if (!id) return 'No asignado';
             const c = obtenerCliente(id);
-            if (c) return c.nombre;
+            if (c) return c.nombre || 'Cliente';
             const p = obtenerProspecto(id);
-            if (p) return p.nombre + ' (Prospecto)';
+            if (p) return (p.nombre || 'Prospecto') + ' (Prospecto)';
             return 'No asignado';
         }
 
         function obtenerContratos() {
             let todos = [];
-            clientes.forEach(cliente => {
-                cliente.contratos.forEach(contrato => {
-                    todos.push({
-                        ...contrato,
-                        clienteNombre: cliente.nombre,
-                        clienteId: cliente.id,
-                        clienteEstado: cliente.estado,
-                        clienteFase: cliente.faseOrigen || 'No especificada'
+            try {
+                if (clientes && Array.isArray(clientes)) {
+                    clientes.forEach(cliente => {
+                        if (cliente && cliente.contratos && Array.isArray(cliente.contratos)) {
+                            cliente.contratos.forEach(contrato => {
+                                if (contrato) {
+                                    todos.push({
+                                        ...contrato,
+                                        clienteNombre: cliente.nombre || 'Cliente sin nombre',
+                                        clienteId: cliente.id,
+                                        clienteEstado: cliente.estado || 'Activo',
+                                        clienteFase: cliente.faseOrigen || 'No especificada'
+                                    });
+                                }
+                            });
+                        }
                     });
-                });
-            });
+                }
+            } catch (error) {
+                console.error('❌ Error obteniendo contratos:', error);
+            }
             return todos;
         }
 
         // ============================================================
-        // FUNCIONES DE SINCRONIZACIÓN CON FIREBASE
+        // FUNCIÓN GENERAR VISTA DE IMPRESIÓN - SIMPLIFICADA
         // ============================================================
+        function generarVistaImpresion(clienteId, contratoId) {
+            const cliente = obtenerCliente(clienteId);
+            if (!cliente) {
+                mostrarNotificacion('❌ Cliente no encontrado', 'error');
+                return;
+            }
 
+            const contrato = cliente.contratos.find(c => c.id === contratoId);
+            if (!contrato) {
+                mostrarNotificacion('❌ Contrato no encontrado', 'error');
+                return;
+            }
+
+            // Calcular totales
+            const pagosValidos = contrato.pagos ? contrato.pagos.filter(p => !p.eliminado) : [];
+            const cargosValidos = contrato.cargos ? contrato.cargos.filter(c => !c.eliminado) : [];
+            const totalPagos = pagosValidos.reduce((sum, p) => sum + p.monto, 0);
+            const totalCargos = cargosValidos.reduce((sum, c) => sum + c.monto, 0);
+            const totalAPagar = contrato.precioFinal + totalCargos;
+            const saldoPendiente = totalAPagar - totalPagos;
+
+            // Obtener nombre del paquete/servicio
+            let itemNombre = '';
+            if (contrato.tipo === 'paquete') {
+                itemNombre = obtenerNombrePaquete(contrato.paqueteId);
+                const serviciosNombres = contrato.serviciosIds ? contrato.serviciosIds.map(id => obtenerNombreServicio(id)).filter(n => n !== 'Servicio no encontrado').join(', ') : '';
+                if (serviciosNombres) {
+                    itemNombre += ` + ${serviciosNombres}`;
+                }
+            } else {
+                itemNombre = obtenerNombreServicio(contrato.servicioId);
+            }
+
+            const horaEvento = contrato.horaEvento ? ` ${contrato.horaEvento} hrs` : '';
+            const horaRecepcion = contrato.horaRecepcion ? ` ${contrato.horaRecepcion} hrs` : '';
+
+            // GENERAR HTML SIMPLIFICADO - UNA SOLA HOJA
+            let html = `
+                <div style="max-width: 700px; margin: 0 auto; padding: 15px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #0d0d0d; line-height: 1.4;">
+                    
+                    <!-- TÍTULO -->
+                    <h1 style="font-size: 16px; margin: 0 0 8px 0; text-align: center; border-bottom: 2px solid #333; padding-bottom: 6px; color: #0d0d0d;">
+                        CONTRATO DE SERVICIOS
+                    </h1>
+                    
+                    <!-- CLIENTE -->
+                    <div style="margin-bottom: 6px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 3px; background: #fafafa;">
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">Cliente:</span>
+                            <span>${cliente.nombre}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">Teléfono:</span>
+                            <span>${cliente.telefono || 'No especificado'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+                            <span style="font-weight: 600;">Email:</span>
+                            <span>${cliente.email || 'No especificado'}</span>
+                        </div>
+                    </div>
+
+                    <!-- CONTRATO -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin-bottom: 6px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 3px; background: #fafafa;">
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">Festejado:</span>
+                            <span>${contrato.festejado || 'No especificado'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">Tipo:</span>
+                            <span>${contrato.tipo === 'paquete' ? 'Paquete' : 'Solo Servicio'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">Estado:</span>
+                            <span>${contrato.estado || 'Pendiente'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">Fecha Contrato:</span>
+                            <span>${formatearFecha(contrato.fechaContrato)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">Fecha Evento:</span>
+                            <span>${formatearFecha(contrato.fechaEvento)}${horaEvento}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+                            <span style="font-weight: 600;">Paquete/Servicio:</span>
+                            <span>${itemNombre || 'No especificado'}</span>
+                        </div>
+                    </div>
+
+                    <!-- DIRECCIONES -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin-bottom: 6px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 3px; background: #fafafa;">
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">Evento Religioso:</span>
+                            <span>${contrato.direccionEvento || 'No especificada'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+                            <span style="font-weight: 600;">Recepción:</span>
+                            <span>${contrato.direccionRecepcion || 'No especificada'}${horaRecepcion}</span>
+                        </div>
+                    </div>
+
+                    <!-- FINANCIERO -->
+                    <div style="margin-bottom: 6px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 3px; background: #fafafa;">
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">Precio Base:</span>
+                            <span>${formatearMoneda(contrato.precioBase || 0)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">Precio Final:</span>
+                            <span>${formatearMoneda(contrato.precioFinal || 0)}</span>
+                        </div>
+                        ${totalCargos > 0 ? `
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">Cargos Extras:</span>
+                            <span>${formatearMoneda(totalCargos)}</span>
+                        </div>` : ''}
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600;">Total a Pagar:</span>
+                            <span style="font-weight: 700;">${formatearMoneda(totalAPagar)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee;">
+                            <span style="font-weight: 600; color: #4caf50;">Total Pagado:</span>
+                            <span style="color: #4caf50; font-weight: 600;">${formatearMoneda(totalPagos)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+                            <span style="font-weight: 600; color: ${saldoPendiente === 0 ? '#4caf50' : '#ff9800'};">Saldo Pendiente:</span>
+                            <span style="font-weight: 700; color: ${saldoPendiente === 0 ? '#4caf50' : '#ff9800'};">${formatearMoneda(saldoPendiente)}</span>
+                        </div>
+                        ${contrato.anticipo ? `
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; border-top: 1px solid #eee; margin-top: 2px; padding-top: 2px;">
+                            <span style="font-weight: 600;">Anticipo:</span>
+                            <span>${formatearMoneda(contrato.anticipo)}</span>
+                        </div>` : ''}
+                    </div>
+
+                    <!-- PAGOS -->
+                    ${pagosValidos.length > 0 ? `
+                    <div style="margin-bottom: 4px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 3px; background: #fafafa;">
+                        <div style="font-weight: 600; font-size: 12px; border-bottom: 1px solid #ddd; padding-bottom: 3px; margin-bottom: 3px;">💵 Pagos</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="padding: 2px 5px; text-align: left; font-size: 10px;">Fecha</th>
+                                    <th style="padding: 2px 5px; text-align: right; font-size: 10px;">Monto</th>
+                                    <th style="padding: 2px 5px; text-align: left; font-size: 10px;">Nota</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${pagosValidos.map(p => `
+                                    <tr>
+                                        <td style="padding: 2px 5px; font-size: 10px;">${formatearFechaHora(p.fecha)}</td>
+                                        <td style="padding: 2px 5px; text-align: right; font-size: 10px; font-weight: 600;">${formatearMoneda(p.monto)}</td>
+                                        <td style="padding: 2px 5px; font-size: 10px; color: #555;">${p.nota || ''}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    ` : ''}
+
+                    <!-- CARGOS EXTRAS -->
+                    ${cargosValidos.length > 0 ? `
+                    <div style="margin-bottom: 4px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 3px; background: #fafafa;">
+                        <div style="font-weight: 600; font-size: 12px; border-bottom: 1px solid #ddd; padding-bottom: 3px; margin-bottom: 3px;">📦 Cargos Extras</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="padding: 2px 5px; text-align: left; font-size: 10px;">Fecha</th>
+                                    <th style="padding: 2px 5px; text-align: right; font-size: 10px;">Monto</th>
+                                    <th style="padding: 2px 5px; text-align: left; font-size: 10px;">Descripción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${cargosValidos.map(c => `
+                                    <tr>
+                                        <td style="padding: 2px 5px; font-size: 10px;">${formatearFechaHora(c.fecha)}</td>
+                                        <td style="padding: 2px 5px; text-align: right; font-size: 10px; font-weight: 600;">${formatearMoneda(c.monto)}</td>
+                                        <td style="padding: 2px 5px; font-size: 10px; color: #555;">${c.nota || ''}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    ` : ''}
+
+                    <!-- NOTAS -->
+                    ${contrato.notas ? `
+                    <div style="margin-bottom: 4px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 3px; background: #fafafa;">
+                        <div style="font-weight: 600; font-size: 12px; border-bottom: 1px solid #ddd; padding-bottom: 3px; margin-bottom: 3px;">📝 Notas</div>
+                        <div style="font-size: 11px; color: #555;">${contrato.notas}</div>
+                    </div>
+                    ` : ''}
+
+                    <!-- PIE DE PÁGINA -->
+                    <div style="text-align: center; border-top: 1px solid #ccc; padding-top: 6px; margin-top: 6px; font-size: 9px; color: #999;">
+                        Documento generado: ${formatearFechaHora(obtenerFechaHoraActual())} | PDA v2.8.4
+                    </div>
+                </div>
+            `;
+
+            // Colocar en contenedor de impresión
+            const contenedor = document.getElementById('impresion-contenedor');
+            contenedor.innerHTML = html;
+            contenedor.style.display = 'block';
+
+            // Forzar que solo el contenedor se imprima
+            const originalTitle = document.title;
+            document.title = 'Contrato - ' + cliente.nombre;
+
+            // Imprimir
+            window.print();
+
+            // Restaurar
+            setTimeout(() => {
+                contenedor.style.display = 'none';
+                document.title = originalTitle;
+            }, 500);
+
+            mostrarNotificacion('📄 Enviando a impresión...', 'info');
+        }
+
+        // ============================================================
+        // FUNCIONES DE SINCRONIZACIÓN (RESUMIDAS)
+        // ============================================================
         function actualizarEstadoSync(estado, texto) {
             const dot = document.getElementById('sync-dot');
             const text = document.getElementById('sync-text');
-            
             if (!dot || !text) return;
-            
             dot.className = 'sync-dot';
             if (estado === 'online') {
                 dot.classList.add('online');
@@ -1881,148 +2125,26 @@
                 warning: 'var(--color-naranja)',
                 error: 'var(--color-rojo)'
             };
-            
             const iconos = {
                 info: 'fa-info-circle',
                 success: 'fa-check-circle',
                 warning: 'fa-exclamation-triangle',
                 error: 'fa-times-circle'
             };
-
             const notificacion = document.createElement('div');
             notificacion.className = 'notificacion';
             notificacion.style.background = colores[tipo] || colores.info;
             notificacion.style.color = tipo === 'info' ? '#ffffff' : '#0d0d0d';
             notificacion.innerHTML = `<i class="fas ${iconos[tipo] || iconos.info}"></i> ${mensaje}`;
             document.body.appendChild(notificacion);
-            
             setTimeout(() => {
                 notificacion.style.animation = 'slideOut 0.3s ease';
                 setTimeout(() => notificacion.remove(), 300);
             }, 3500);
         }
 
-        async function guardarEnFirebase() {
-            if (!database) {
-                console.warn('⚠️ Firebase no inicializado');
-                return false;
-            }
-            
-            if (sincronizandoFirebase) {
-                console.log('⏳ Ya hay una sincronización en curso');
-                return false;
-            }
-            
-            try {
-                sincronizandoFirebase = true;
-                actualizarEstadoSync('syncing', 'Guardando en Firebase...');
-                
-                const datos = {
-                    paquetes: paquetes,
-                    serviciosAdicionales: serviciosAdicionales,
-                    prospectos: prospectos,
-                    clientes: clientes,
-                    tareas: tareas,
-                    ultimaActualizacion: new Date().toISOString()
-                };
-                
-                await database.ref('datos').set(datos);
-                
-                console.log('✅ Datos guardados en Firebase');
-                actualizarEstadoSync('online', 'Datos guardados');
-                mostrarNotificacion('✅ Datos sincronizados con Firebase', 'success');
-                return true;
-                
-            } catch (error) {
-                console.error('❌ Error guardando en Firebase:', error);
-                actualizarEstadoSync('offline', 'Error al guardar');
-                mostrarNotificacion('❌ Error al guardar en Firebase: ' + error.message, 'error');
-                return false;
-            } finally {
-                sincronizandoFirebase = false;
-            }
-        }
-
-        async function cargarDesdeFirebase() {
-            if (!database) {
-                console.warn('⚠️ Firebase no inicializado');
-                return false;
-            }
-            
-            try {
-                actualizarEstadoSync('syncing', 'Cargando desde Firebase...');
-                
-                const snapshot = await database.ref('datos').once('value');
-                const datos = snapshot.val();
-                
-                if (datos) {
-                    if (datos.paquetes) paquetes = datos.paquetes;
-                    if (datos.serviciosAdicionales) serviciosAdicionales = datos.serviciosAdicionales;
-                    if (datos.prospectos) prospectos = datos.prospectos;
-                    if (datos.clientes) clientes = datos.clientes;
-                    if (datos.tareas) tareas = datos.tareas;
-                    
-                    guardarDatosLocal();
-                    renderizarTodo();
-                    
-                    console.log('✅ Datos cargados desde Firebase');
-                    actualizarEstadoSync('online', 'Datos sincronizados');
-                    mostrarNotificacion('📥 Datos cargados desde Firebase', 'info');
-                    return true;
-                } else {
-                    console.log('📝 No hay datos en Firebase, guardando datos locales...');
-                    await guardarEnFirebase();
-                    return false;
-                }
-            } catch (error) {
-                console.error('❌ Error cargando desde Firebase:', error);
-                actualizarEstadoSync('offline', 'Error de conexión');
-                mostrarNotificacion('❌ Error al cargar desde Firebase: ' + error.message, 'error');
-                return false;
-            }
-        }
-
-        function escucharCambiosFirebase() {
-            if (!database) {
-                console.warn('⚠️ Firebase no inicializado, no se pueden escuchar cambios');
-                return;
-            }
-            
-            database.ref('datos').on('value', (snapshot) => {
-                const datos = snapshot.val();
-                if (!datos) return;
-                
-                if (sincronizandoFirebase) return;
-                if (primerCarga) {
-                    primerCarga = false;
-                    return;
-                }
-                
-                console.log('🔄 Detectado cambio en Firebase, actualizando...');
-                
-                let huboCambios = false;
-                if (datos.paquetes) { paquetes = datos.paquetes; huboCambios = true; }
-                if (datos.serviciosAdicionales) { serviciosAdicionales = datos.serviciosAdicionales; huboCambios = true; }
-                if (datos.prospectos) { prospectos = datos.prospectos; huboCambios = true; }
-                if (datos.clientes) { clientes = datos.clientes; huboCambios = true; }
-                if (datos.tareas) { tareas = datos.tareas; huboCambios = true; }
-                
-                if (huboCambios) {
-                    guardarDatosLocal();
-                    renderizarTodo();
-                    mostrarNotificacion('📥 Datos actualizados desde la nube', 'success');
-                    actualizarEstadoSync('online', 'Actualizado en tiempo real');
-                }
-            });
-        }
-
-        // ============================================================
-        // GUARDAR DATOS (SOBRESCRITO)
-        // ============================================================
-        
         function guardarDatos() {
             guardarDatosLocal();
-            
             if (estadoSync.modo === 'firebase' && database) {
                 guardarEnFirebase();
             }
@@ -2037,7 +2159,6 @@
             document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active'));
             const seccion = document.getElementById('seccion-' + seccionId);
             if (seccion) seccion.classList.add('active');
-            
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
             const menuItem = document.querySelector(`.menu-item[data-seccion="${seccionId}"]`);
             if (menuItem) menuItem.classList.add('active');
@@ -2103,159 +2224,7 @@
         });
 
         // ============================================================
-        // EXPORTAR E IMPORTAR DATOS (MANUAL)
-        // ============================================================
-        
-        document.getElementById('btn-exportar-datos').addEventListener('click', function() {
-            try {
-                const datos = {
-                    version: '2.8',
-                    fechaExportacion: obtenerFechaActual(),
-                    paquetes: paquetes,
-                    serviciosAdicionales: serviciosAdicionales,
-                    prospectos: prospectos,
-                    clientes: clientes,
-                    tareas: tareas
-                };
-                
-                const json = JSON.stringify(datos, null, 2);
-                const blob = new Blob([json], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `registro_pda_${obtenerFechaActual()}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                mostrarNotificacion('✅ Datos exportados correctamente', 'success');
-            } catch (error) {
-                mostrarNotificacion('❌ Error al exportar: ' + error.message, 'error');
-            }
-        });
-        
-        document.getElementById('btn-importar-datos').addEventListener('click', function() {
-            document.getElementById('input-importar-datos').click();
-        });
-        
-        document.getElementById('input-importar-datos').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                try {
-                    const datos = JSON.parse(event.target.result);
-                    
-                    if (!datos.paquetes || !datos.serviciosAdicionales || 
-                        !datos.prospectos || !datos.clientes) {
-                        mostrarNotificacion('❌ Formato de archivo incorrecto', 'error');
-                        return;
-                    }
-                    
-                    if (!confirm('⚠️ Esto reemplazará TODOS los datos actuales. ¿Continuar?')) {
-                        return;
-                    }
-                    
-                    paquetes = datos.paquetes || [];
-                    serviciosAdicionales = datos.serviciosAdicionales || [];
-                    prospectos = datos.prospectos || [];
-                    clientes = datos.clientes || [];
-                    tareas = datos.tareas || [];
-                    
-                    guardarDatos();
-                    renderizarTodo();
-                    
-                    mostrarNotificacion('✅ Datos importados correctamente', 'success');
-                    
-                } catch (error) {
-                    mostrarNotificacion('❌ Error al leer el archivo: ' + error.message, 'error');
-                }
-            };
-            reader.readAsText(file);
-            this.value = '';
-        });
-
-        // ============================================================
-        // BOTONES DE FIREBASE
-        // ============================================================
-        
-        document.getElementById('btn-sync-firebase').addEventListener('click', async function() {
-            if (!database) {
-                mostrarNotificacion('⚠️ Firebase no está disponible', 'error');
-                return;
-            }
-            
-            if (estadoSync.modo === 'firebase') {
-                await guardarEnFirebase();
-            } else {
-                mostrarNotificacion('⚠️ Modo local activo. Intentando conectar...', 'warning');
-                await inicializarFirebase();
-            }
-        });
-
-        document.getElementById('btn-cargar-firebase').addEventListener('click', async function() {
-            if (!database) {
-                mostrarNotificacion('⚠️ Firebase no está disponible', 'error');
-                return;
-            }
-            
-            if (confirm('¿Cargar datos desde Firebase? (Reemplazará datos locales)')) {
-                await cargarDesdeFirebase();
-            }
-        });
-
-        // ============================================================
-        // INICIALIZAR FIREBASE
-        // ============================================================
-        
-        async function inicializarFirebase() {
-            if (!database) {
-                actualizarEstadoSync('offline', 'Firebase no disponible');
-                estadoSync.modo = 'local';
-                return false;
-            }
-            
-            try {
-                console.log('🔌 Conectando a Firebase...');
-                actualizarEstadoSync('syncing', 'Conectando a Firebase...');
-                
-                // Probar conexión
-                await database.ref('test').set('testing');
-                await database.ref('test').remove();
-                
-                console.log('✅ Conectado a Firebase');
-                estadoSync.modo = 'firebase';
-                actualizarEstadoSync('online', 'Firebase Conectado');
-                
-                // Cargar datos
-                await cargarDesdeFirebase();
-                
-                // Escuchar cambios
-                escucharCambiosFirebase();
-                
-                // Sincronización automática periódica
-                setInterval(async () => {
-                    if (!sincronizandoFirebase && estadoSync.modo === 'firebase') {
-                        await guardarEnFirebase();
-                    }
-                }, 30000); // Cada 30 segundos
-                
-                mostrarNotificacion('🔥 Conexión con Firebase establecida', 'success');
-                return true;
-                
-            } catch (error) {
-                console.error('❌ Error conectando a Firebase:', error);
-                estadoSync.modo = 'local';
-                actualizarEstadoSync('offline', 'Modo local');
-                mostrarNotificacion('⚠️ No se pudo conectar a Firebase. Modo local activado.', 'warning');
-                return false;
-            }
-        }
-
-        // ============================================================
-        // PAQUETES - CRUD
+        // PAQUETES - CRUD (RESUMIDO)
         // ============================================================
         document.getElementById('btn-nuevo-paquete').addEventListener('click', function() {
             mostrarFormularioPaquete();
@@ -2264,7 +2233,6 @@
         function mostrarFormularioPaquete(paquete = null) {
             const esEdicion = paquete !== null;
             const titulo = esEdicion ? 'Editar Paquete' : 'Nuevo Paquete';
-            
             const html = `
                 <form id="form-paquete">
                     <input type="hidden" id="paquete-id" value="${paquete ? paquete.id : ''}">
@@ -2294,7 +2262,6 @@
                     </div>
                 </form>
             `;
-            
             abrirModal(titulo, html);
             document.getElementById('form-paquete').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -2309,12 +2276,10 @@
             const precio = parseFloat(document.getElementById('paquete-precio').value);
             const descuento = parseFloat(document.getElementById('paquete-descuento').value) || 0;
             const vigencia = document.getElementById('paquete-vigencia').value;
-            
             if (!nombre || !descripcion || !precio || !vigencia) {
                 mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
                 return;
             }
-            
             if (esEdicion) {
                 const index = paquetes.findIndex(p => p.id === id);
                 if (index !== -1) {
@@ -2323,7 +2288,6 @@
             } else {
                 paquetes.push({ id: generarId(), nombre, descripcion, precio, descuento, vigencia });
             }
-            
             guardarDatos();
             cerrarModal();
             renderizarPaquetes();
@@ -2333,22 +2297,21 @@
         function renderizarPaquetes() {
             const contenedor = document.getElementById('lista-paquetes');
             if (!contenedor) return;
-            
-            if (paquetes.length === 0) {
+            if (!paquetes || paquetes.length === 0) {
                 contenedor.innerHTML = '<p class="mensaje-vacio">No hay paquetes registrados</p>';
                 return;
             }
-            
             let html = '';
             paquetes.forEach(p => {
-                const precioFinal = p.precio - (p.descuento || 0);
+                if (!p) return;
+                const precioFinal = (p.precio || 0) - (p.descuento || 0);
                 html += `
                     <div class="tarjeta-registro">
                         <div class="tarjeta-info">
-                            <div class="tarjeta-titulo">${p.nombre}</div>
-                            <div class="tarjeta-detalle">${p.descripcion}</div>
+                            <div class="tarjeta-titulo">${p.nombre || 'Sin nombre'}</div>
+                            <div class="tarjeta-detalle">${p.descripcion || ''}</div>
                             <div class="tarjeta-detalle">
-                                Precio: ${formatearMoneda(p.precio)}
+                                Precio: ${formatearMoneda(p.precio || 0)}
                                 ${p.descuento ? ` - Descuento: ${formatearMoneda(p.descuento)} = ${formatearMoneda(precioFinal)}` : ''}
                                 | Vigencia: ${formatearFecha(p.vigencia)}
                             </div>
@@ -2370,7 +2333,7 @@
 
         function eliminarPaquete(id) {
             if (confirm('¿Eliminar este paquete?')) {
-                paquetes = paquetes.filter(p => p.id !== id);
+                paquetes = paquetes.filter(p => p && p.id !== id);
                 guardarDatos();
                 renderizarPaquetes();
                 actualizarFiltrosInformes();
@@ -2378,7 +2341,7 @@
         }
 
         // ============================================================
-        // SERVICIOS - CRUD (COMPLETO)
+        // SERVICIOS - CRUD (RESUMIDO)
         // ============================================================
         document.getElementById('btn-nuevo-servicio').addEventListener('click', function() {
             mostrarFormularioServicio();
@@ -2387,7 +2350,6 @@
         function mostrarFormularioServicio(servicio = null) {
             const esEdicion = servicio !== null;
             const titulo = esEdicion ? 'Editar Servicio' : 'Nuevo Servicio';
-            
             const html = `
                 <form id="form-servicio">
                     <input type="hidden" id="servicio-id" value="${servicio ? servicio.id : ''}">
@@ -2417,7 +2379,6 @@
                     </div>
                 </form>
             `;
-            
             abrirModal(titulo, html);
             document.getElementById('form-servicio').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -2432,12 +2393,10 @@
             const precio = parseFloat(document.getElementById('servicio-precio').value);
             const descuento = parseFloat(document.getElementById('servicio-descuento').value) || 0;
             const vigencia = document.getElementById('servicio-vigencia').value;
-            
             if (!nombre || !descripcion || !precio || !vigencia) {
                 mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
                 return;
             }
-            
             if (esEdicion) {
                 const index = serviciosAdicionales.findIndex(s => s.id === id);
                 if (index !== -1) {
@@ -2446,7 +2405,6 @@
             } else {
                 serviciosAdicionales.push({ id: generarId(), nombre, descripcion, precio, descuento, vigencia });
             }
-            
             guardarDatos();
             cerrarModal();
             renderizarServicios();
@@ -2456,22 +2414,21 @@
         function renderizarServicios() {
             const contenedor = document.getElementById('lista-servicios');
             if (!contenedor) return;
-            
-            if (serviciosAdicionales.length === 0) {
+            if (!serviciosAdicionales || serviciosAdicionales.length === 0) {
                 contenedor.innerHTML = '<p class="mensaje-vacio">No hay servicios registrados</p>';
                 return;
             }
-            
             let html = '';
             serviciosAdicionales.forEach(s => {
-                const precioFinal = s.precio - (s.descuento || 0);
+                if (!s) return;
+                const precioFinal = (s.precio || 0) - (s.descuento || 0);
                 html += `
                     <div class="tarjeta-registro">
                         <div class="tarjeta-info">
-                            <div class="tarjeta-titulo">${s.nombre}</div>
-                            <div class="tarjeta-detalle">${s.descripcion}</div>
+                            <div class="tarjeta-titulo">${s.nombre || 'Sin nombre'}</div>
+                            <div class="tarjeta-detalle">${s.descripcion || ''}</div>
                             <div class="tarjeta-detalle">
-                                Precio: ${formatearMoneda(s.precio)}
+                                Precio: ${formatearMoneda(s.precio || 0)}
                                 ${s.descuento ? ` - Descuento: ${formatearMoneda(s.descuento)} = ${formatearMoneda(precioFinal)}` : ''}
                                 | Vigencia: ${formatearFecha(s.vigencia)}
                             </div>
@@ -2493,7 +2450,7 @@
 
         function eliminarServicio(id) {
             if (confirm('¿Eliminar este servicio?')) {
-                serviciosAdicionales = serviciosAdicionales.filter(s => s.id !== id);
+                serviciosAdicionales = serviciosAdicionales.filter(s => s && s.id !== id);
                 guardarDatos();
                 renderizarServicios();
                 actualizarFiltrosInformes();
@@ -2501,7 +2458,7 @@
         }
 
         // ============================================================
-        // PROSPECTOS - CRUD (COMPLETO)
+        // PROSPECTOS - CRUD (RESUMIDO)
         // ============================================================
         document.getElementById('btn-nuevo-prospecto').addEventListener('click', function() {
             mostrarFormularioProspecto();
@@ -2510,11 +2467,9 @@
         function mostrarFormularioProspecto(prospecto = null) {
             const esEdicion = prospecto !== null;
             const titulo = esEdicion ? 'Editar Prospecto' : 'Nuevo Prospecto';
-            
             const opcionesFases = FASES_DISPONIBLES.map(f => 
                 `<option value="${f}" ${prospecto && prospecto.faseActual === f ? 'selected' : ''}>${f}</option>`
             ).join('');
-            
             const html = `
                 <form id="form-prospecto">
                     <input type="hidden" id="prospecto-id" value="${prospecto ? prospecto.id : ''}">
@@ -2544,7 +2499,6 @@
                     </div>
                 </form>
             `;
-            
             abrirModal(titulo, html);
             document.getElementById('form-prospecto').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -2559,12 +2513,10 @@
             const email = document.getElementById('prospecto-email').value.trim();
             const faseActual = document.getElementById('prospecto-fase').value;
             const notasGenerales = document.getElementById('prospecto-notas').value.trim();
-            
             if (!nombre || !faseActual) {
                 mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
                 return;
             }
-            
             if (esEdicion) {
                 const index = prospectos.findIndex(p => p.id === id);
                 if (index !== -1) {
@@ -2591,7 +2543,6 @@
                     fechaRegistro: obtenerFechaActual()
                 });
             }
-            
             guardarDatos();
             cerrarModal();
             renderizarProspectos();
@@ -2600,31 +2551,27 @@
         function renderizarProspectos() {
             const contenedor = document.getElementById('lista-prospectos');
             if (!contenedor) return;
-            
             const filtroFase = document.getElementById('filtro-fase-prospecto').value;
             const busqueda = document.getElementById('buscar-prospecto').value.toLowerCase().trim();
-            
             let filtrados = [...prospectos];
             if (filtroFase !== 'todas') {
-                filtrados = filtrados.filter(p => p.faseActual === filtroFase);
+                filtrados = filtrados.filter(p => p && p.faseActual === filtroFase);
             }
             if (busqueda) {
                 filtrados = filtrados.filter(p => 
-                    p.nombre.toLowerCase().includes(busqueda) || 
-                    (p.telefono && p.telefono.includes(busqueda))
+                    p && (p.nombre.toLowerCase().includes(busqueda) || 
+                    (p.telefono && p.telefono.includes(busqueda)))
                 );
             }
-            
             if (filtrados.length === 0) {
                 contenedor.innerHTML = '<p class="mensaje-vacio">No hay prospectos</p>';
                 return;
             }
-            
             let html = '';
             filtrados.forEach(p => {
+                if (!p) return;
                 const claseFase = `etiqueta-${p.faseActual.toLowerCase()}`;
                 const esCliente = p.clienteId !== null;
-                
                 html += `
                     <div class="tarjeta-registro">
                         <div class="tarjeta-info">
@@ -2660,7 +2607,7 @@
 
         function eliminarProspecto(id) {
             if (confirm('¿Eliminar este prospecto?')) {
-                prospectos = prospectos.filter(p => p.id !== id);
+                prospectos = prospectos.filter(p => p && p.id !== id);
                 guardarDatos();
                 renderizarProspectos();
             }
@@ -2669,14 +2616,12 @@
         function convertirProspecto(id) {
             const prospecto = obtenerProspecto(id);
             if (!prospecto) return;
-            
             prospecto.faseActual = 'Contrato';
             prospecto.historialFases.push({
                 fase: 'Contrato',
                 fecha: obtenerFechaActual(),
                 notas: 'Convertido a cliente'
             });
-            
             const nuevoCliente = {
                 id: generarId(),
                 nombre: prospecto.nombre,
@@ -2688,19 +2633,16 @@
                 contratos: [],
                 notasGenerales: prospecto.notasGenerales || ''
             };
-            
             clientes.push(nuevoCliente);
             prospecto.clienteId = nuevoCliente.id;
-            
             guardarDatos();
             renderizarProspectos();
             renderizarClientes();
-            
             mostrarNotificacion('✅ Prospecto convertido a cliente exitosamente', 'success');
         }
 
         // ============================================================
-        // CLIENTES - CRUD (COMPLETO)
+        // CLIENTES - CRUD (RESUMIDO)
         // ============================================================
         document.getElementById('btn-nuevo-cliente').addEventListener('click', function() {
             mostrarFormularioCliente();
@@ -2709,11 +2651,9 @@
         function mostrarFormularioCliente(cliente = null) {
             const esEdicion = cliente !== null;
             const titulo = esEdicion ? 'Editar Cliente' : 'Nuevo Cliente';
-            
             const opcionesEstado = ESTADOS_CLIENTE.map(e => 
                 `<option value="${e}" ${cliente && cliente.estado === e ? 'selected' : ''}>${e}</option>`
             ).join('');
-            
             const html = `
                 <form id="form-cliente">
                     <input type="hidden" id="cliente-id" value="${cliente ? cliente.id : ''}">
@@ -2743,7 +2683,6 @@
                     </div>
                 </form>
             `;
-            
             abrirModal(titulo, html);
             document.getElementById('form-cliente').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -2758,12 +2697,10 @@
             const email = document.getElementById('cliente-email').value.trim();
             const estado = document.getElementById('cliente-estado').value;
             const notasGenerales = document.getElementById('cliente-notas').value.trim();
-            
             if (!nombre || !telefono || !estado) {
                 mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
                 return;
             }
-            
             if (esEdicion) {
                 const index = clientes.findIndex(c => c.id === id);
                 if (index !== -1) {
@@ -2782,7 +2719,6 @@
                     notasGenerales
                 });
             }
-            
             guardarDatos();
             cerrarModal();
             renderizarClientes();
@@ -2791,32 +2727,28 @@
         function renderizarClientes() {
             const contenedor = document.getElementById('lista-clientes');
             if (!contenedor) return;
-            
             const filtroEstado = document.getElementById('filtro-estado-cliente-lista').value;
             const busqueda = document.getElementById('buscar-cliente').value.toLowerCase().trim();
-            
             let filtrados = [...clientes];
             if (filtroEstado !== 'todos') {
-                filtrados = filtrados.filter(c => c.estado === filtroEstado);
+                filtrados = filtrados.filter(c => c && c.estado === filtroEstado);
             }
             if (busqueda) {
                 filtrados = filtrados.filter(c => 
-                    c.nombre.toLowerCase().includes(busqueda) || 
-                    c.telefono.includes(busqueda)
+                    c && (c.nombre.toLowerCase().includes(busqueda) || 
+                    c.telefono.includes(busqueda))
                 );
             }
-            
             if (filtrados.length === 0) {
                 contenedor.innerHTML = '<p class="mensaje-vacio">No hay clientes</p>';
                 return;
             }
-            
             let html = '';
             filtrados.forEach(c => {
-                const totalContratos = c.contratos.length;
+                if (!c) return;
+                const totalContratos = c.contratos ? c.contratos.length : 0;
                 const estadoClase = c.estado === 'Activo' ? 'etiqueta-interesado' : 
                                    c.estado === 'Inactivo' ? 'etiqueta-inactivo' : 'etiqueta-cancelado';
-                
                 html += `
                     <div class="tarjeta-registro">
                         <div class="tarjeta-info">
@@ -2832,7 +2764,7 @@
                             </div>
                             <div class="tarjeta-detalle">
                                 <strong>Contratos:</strong> ${totalContratos} total
-                                ${c.contratos.length > 0 ? `| Último: ${formatearFecha(c.contratos[c.contratos.length - 1].fechaContrato)}` : ''}
+                                ${c.contratos && c.contratos.length > 0 ? `| Último: ${formatearFecha(c.contratos[c.contratos.length - 1].fechaContrato)}` : ''}
                             </div>
                         </div>
                         <div class="tarjeta-acciones">
@@ -2853,9 +2785,9 @@
 
         function eliminarCliente(id) {
             if (confirm('¿Eliminar este cliente y todos sus contratos?')) {
-                clientes = clientes.filter(c => c.id !== id);
+                clientes = clientes.filter(c => c && c.id !== id);
                 prospectos.forEach(p => {
-                    if (p.clienteId === id) p.clienteId = null;
+                    if (p && p.clienteId === id) p.clienteId = null;
                 });
                 guardarDatos();
                 renderizarClientes();
@@ -2865,7 +2797,7 @@
         }
 
         // ============================================================
-        // CONTRATOS - FUNCIONES COMPLETAS
+        // CONTRATOS - CON BOTÓN DE IMPRESIÓN Y GOOGLE CALENDAR
         // ============================================================
         document.getElementById('btn-nuevo-contrato').addEventListener('click', function() {
             if (clientes.length === 0) {
@@ -2925,7 +2857,7 @@
                             <p><strong>${cliente.nombre}</strong></p>
                             <p>📞 ${cliente.telefono} ${cliente.email ? `| ✉️ ${cliente.email}` : ''}</p>
                             <p>🏷️ Origen: ${cliente.faseOrigen || 'No especificado'} | Estado: ${cliente.estado}</p>
-                            <p>📋 Contratos previos: ${cliente.contratos.length}</p>
+                            <p>📋 Contratos previos: ${cliente.contratos ? cliente.contratos.length : 0}</p>
                         </div>
                     `;
                 }
@@ -2959,7 +2891,7 @@
                     <div class="form-grupo">
                         <label>Nombre del festejado *</label>
                         <input type="text" id="contrato-festejado" required placeholder="Nombre de la persona homenajeada" value="${contrato ? contrato.festejado : ''}">
-                        <small style="color:var(--color-texto-secundario);">Persona que es el centro del evento (quinceañera, novia, bautizado, etc.)</small>
+                        <small style="color:var(--color-texto-secundario);">Persona que es el centro del evento</small>
                     </div>
                     
                     <div class="form-grupo">
@@ -2968,7 +2900,6 @@
                             <option value="paquete" ${tipoContrato === 'paquete' ? 'selected' : ''}>📦 Paquete completo</option>
                             <option value="solo-servicio" ${tipoContrato === 'solo-servicio' ? 'selected' : ''}>🔧 Solo servicio adicional</option>
                         </select>
-                        <small style="color:var(--color-texto-secundario);">Selecciona si el cliente contrata un paquete completo o solo un servicio</small>
                     </div>
                     
                     <div id="seccion-paquete" style="${tipoContrato === 'paquete' ? '' : 'display:none;'}">
@@ -2994,7 +2925,6 @@
                                 <option value="">Seleccionar servicio...</option>
                                 ${opcionesServicios}
                             </select>
-                            <small style="color:var(--color-texto-secundario);">El cliente contrata este servicio sin paquete</small>
                         </div>
                     </div>
                     
@@ -3009,14 +2939,12 @@
                                 <option value="">Sin especificar</option>
                                 ${OPCIONES_HORA}
                             </select>
-                            <small style="color:var(--color-texto-secundario);">Formato 24h (ej: 14:30)</small>
                         </div>
                     </div>
                     
                     <div class="form-grupo">
-                        <label>Dirección del evento religioso (Iglesia/Templo)</label>
+                        <label>Dirección del evento religioso</label>
                         <input type="text" id="contrato-direccion-evento" placeholder="Dirección de la iglesia o templo" value="${contrato ? contrato.direccionEvento : ''}">
-                        <small style="color:var(--color-texto-secundario);">Dirección del lugar donde se realizará la ceremonia religiosa</small>
                     </div>
                     
                     <div class="row-2col">
@@ -3030,7 +2958,6 @@
                                 <option value="">Sin especificar</option>
                                 ${OPCIONES_HORA}
                             </select>
-                            <small style="color:var(--color-texto-secundario);">Formato 24h (ej: 20:00)</small>
                         </div>
                     </div>
                     
@@ -3040,20 +2967,16 @@
                             <div class="form-grupo">
                                 <label>Precio base (automático)</label>
                                 <input type="number" id="contrato-precio-base" readonly style="background:var(--color-bg-primario);opacity:0.7;" value="${contrato ? contrato.precioBase : ''}">
-                                <small style="color:var(--color-texto-secundario);">Suma de paquete + servicios seleccionados</small>
                             </div>
                             <div class="form-grupo">
                                 <label>Precio final (editable)</label>
                                 <input type="number" id="contrato-precio-final" min="0" step="100" value="${contrato ? contrato.precioFinal : ''}">
-                                <small style="color:var(--color-texto-secundario);">Puedes modificar este valor si hay acuerdos especiales</small>
-                                <small style="color:var(--color-texto-secundario);font-style:italic;">Puede ser igual, mayor o menor que el precio base</small>
                             </div>
                         </div>
                     </div>
                     
                     <div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;margin-top:8px;">
                         <h4 style="color:var(--color-naranja);margin-bottom:12px;"><i class="fas fa-plus-circle"></i> Cargos Extras</h4>
-                        <small style="color:var(--color-texto-secundario);display:block;margin-bottom:12px;">Agrega cargos adicionales por servicios no contemplados inicialmente (fotos extra, cambios de tamaño, etc.)</small>
                         <div class="row-2col">
                             <div class="form-grupo">
                                 <label>Descripción del cargo</label>
@@ -3081,7 +3004,6 @@
                             <div class="form-grupo">
                                 <label>Anticipo (pago inicial)</label>
                                 <input type="number" id="contrato-anticipo" min="0" step="100" placeholder="0" value="${contrato && contrato.anticipo ? contrato.anticipo : ''}">
-                                <small style="color:var(--color-texto-secundario);">Monto del anticipo que se descuenta del total</small>
                             </div>
                             <div class="form-grupo">
                                 <label>Agregar nuevo pago</label>
@@ -3131,31 +3053,7 @@
             
             abrirModal(titulo, html);
             
-            // Lógica del formulario (igual que antes)
-            const tipoSelect = document.getElementById('contrato-tipo');
-            const seccionPaquete = document.getElementById('seccion-paquete');
-            const seccionSoloServicio = document.getElementById('seccion-solo-servicio');
-            const paqueteSelect = document.getElementById('contrato-paquete');
-            const servicioSelect = document.getElementById('contrato-servicio');
-            
-            tipoSelect.addEventListener('change', function() {
-                const tipo = this.value;
-                if (tipo === 'paquete') {
-                    seccionPaquete.style.display = '';
-                    seccionSoloServicio.style.display = 'none';
-                    paqueteSelect.required = true;
-                    servicioSelect.required = false;
-                    servicioSelect.value = '';
-                } else {
-                    seccionPaquete.style.display = 'none';
-                    seccionSoloServicio.style.display = '';
-                    paqueteSelect.required = false;
-                    paqueteSelect.value = '';
-                    servicioSelect.required = true;
-                }
-                calcularPrecios();
-            });
-            
+            // Lógica de pagos y cargos (igual que en V2.8)
             let pagosArr = contrato && contrato.pagos ? [...contrato.pagos] : [];
             let cargosArr = contrato && contrato.cargos ? [...contrato.cargos] : [];
             
@@ -3313,6 +3211,30 @@
                 descInput.focus();
             });
             
+            const tipoSelect = document.getElementById('contrato-tipo');
+            const seccionPaquete = document.getElementById('seccion-paquete');
+            const seccionSoloServicio = document.getElementById('seccion-solo-servicio');
+            const paqueteSelect = document.getElementById('contrato-paquete');
+            const servicioSelect = document.getElementById('contrato-servicio');
+            
+            tipoSelect.addEventListener('change', function() {
+                const tipo = this.value;
+                if (tipo === 'paquete') {
+                    seccionPaquete.style.display = '';
+                    seccionSoloServicio.style.display = 'none';
+                    paqueteSelect.required = true;
+                    servicioSelect.required = false;
+                    servicioSelect.value = '';
+                } else {
+                    seccionPaquete.style.display = 'none';
+                    seccionSoloServicio.style.display = '';
+                    paqueteSelect.required = false;
+                    paqueteSelect.value = '';
+                    servicioSelect.required = true;
+                }
+                calcularPrecios();
+            });
+            
             const precioBaseInput = document.getElementById('contrato-precio-base');
             const precioFinalInput = document.getElementById('contrato-precio-final');
             const anticipoInput = document.getElementById('contrato-anticipo');
@@ -3374,7 +3296,7 @@
                             <p><strong>${cliente.nombre}</strong></p>
                             <p>📞 ${cliente.telefono} ${cliente.email ? `| ✉️ ${cliente.email}` : ''}</p>
                             <p>🏷️ Origen: ${cliente.faseOrigen || 'No especificado'} | Estado: ${cliente.estado}</p>
-                            <p>📋 Contratos previos: ${cliente.contratos.length}</p>
+                            <p>📋 Contratos previos: ${cliente.contratos ? cliente.contratos.length : 0}</p>
                         `;
                     }
                 }
@@ -3396,8 +3318,6 @@
                 guardarContrato(esEdicion, pagosArr, cargosArr);
             });
         }
-
-        window.mostrarFormularioContrato = mostrarFormularioContrato;
 
         function guardarContrato(esEdicion, pagosArr = [], cargosArr = []) {
             const contratoId = document.getElementById('contrato-id').value;
@@ -3461,8 +3381,11 @@
             
             if (esEdicion) {
                 const index = cliente.contratos.findIndex(c => c.id === contratoId);
-                if (index !== -1) cliente.contratos[index] = nuevoContrato;
+                if (index !== -1) {
+                    cliente.contratos[index] = nuevoContrato;
+                }
             } else {
+                if (!cliente.contratos) cliente.contratos = [];
                 cliente.contratos.push(nuevoContrato);
             }
             
@@ -3474,7 +3397,7 @@
         }
 
         // ============================================================
-        // RENDERIZAR CONTRATOS
+        // RENDERIZAR CONTRATOS (CON BOTÓN DE IMPRESIÓN Y CALENDARIO)
         // ============================================================
         function renderizarContratos() {
             const contenedor = document.getElementById('lista-contratos');
@@ -3506,6 +3429,7 @@
             
             let html = '';
             todos.forEach(c => {
+                if (!c) return;
                 const estadoClase = c.estado === 'Completado' ? 'etiqueta-completado' : 
                                    c.estado === 'Pendiente' ? 'etiqueta-pendiente' : 'etiqueta-cancelado';
                 
@@ -3576,6 +3500,8 @@
                         <div class="tarjeta-acciones">
                             <button class="btn-editar" onclick="editarContrato('${c.clienteId}','${c.id}')"><i class="fas fa-edit"></i></button>
                             <button class="btn-pago" onclick="agregarPagoRapido('${c.clienteId}','${c.id}')" title="Agregar pago"><i class="fas fa-coins"></i></button>
+                            <button class="btn-calendar" onclick="crearEventoGoogleCalendar('${c.clienteId}','${c.id}')" title="Crear evento en Google Calendar"><i class="fab fa-google"></i> Calendario</button>
+                            <button class="btn-imprimir" onclick="generarVistaImpresion('${c.clienteId}','${c.id}')" title="Imprimir / PDF"><i class="fas fa-print"></i> Imprimir</button>
                             <button class="btn-eliminar" onclick="eliminarContrato('${c.clienteId}','${c.id}')"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
@@ -3585,7 +3511,10 @@
             contenedor.innerHTML = html;
         }
 
-        window.editarContrato = function(clienteId, contratoId) {
+        // ============================================================
+        // FUNCIONES DE CONTRATOS
+        // ============================================================
+        function editarContrato(clienteId, contratoId) {
             const cliente = obtenerCliente(clienteId);
             if (!cliente) {
                 mostrarNotificacion('Cliente no encontrado', 'error');
@@ -3597,28 +3526,6 @@
                 return;
             }
             mostrarFormularioContrato(clienteId, 'Editar Contrato', contrato);
-        };
-
-        function agregarPagoRapido(clienteId, contratoId) {
-            const cliente = obtenerCliente(clienteId);
-            if (!cliente) return;
-            const contrato = cliente.contratos.find(c => c.id === contratoId);
-            if (!contrato) return;
-            const monto = prompt('Ingresa el monto del pago:', '0');
-            if (monto === null) return;
-            const montoNum = parseFloat(monto);
-            if (isNaN(montoNum) || montoNum <= 0) { mostrarNotificacion('Ingresa un monto válido', 'warning'); return; }
-            if (!contrato.pagos) contrato.pagos = [];
-            contrato.pagos.push({
-                monto: montoNum,
-                fecha: obtenerFechaHoraActual(),
-                nota: `Pago registrado por ${formatearMoneda(montoNum)}`
-            });
-            guardarDatos();
-            renderizarContratos();
-            renderizarClientes();
-            renderizarInformes();
-            mostrarNotificacion(`✅ Pago de ${formatearMoneda(montoNum)} registrado`, 'success');
         }
 
         function eliminarContrato(clienteId, contratoId) {
@@ -3634,21 +3541,225 @@
             }
         }
 
-        // ============================================================
-        // FUNCIONES PARA EL CALENDARIO
-        // ============================================================
-        
-        window.abrirContratoDesdeCalendario = function(clienteId, contratoId) {
-            cambiarSeccion('contratos');
-            setTimeout(() => {
-                window.editarContrato(clienteId, contratoId);
-            }, 400);
-        };
+        function agregarPagoRapido(clienteId, contratoId) {
+            const cliente = obtenerCliente(clienteId);
+            if (!cliente) return;
+            const contrato = cliente.contratos.find(c => c.id === contratoId);
+            if (!contrato) return;
+            const monto = prompt('Ingresa el monto del pago:', '0');
+            if (monto === null) return;
+            const montoNum = parseFloat(monto);
+            if (isNaN(montoNum) || montoNum <= 0) {
+                mostrarNotificacion('Ingresa un monto válido', 'warning');
+                return;
+            }
+            if (!contrato.pagos) contrato.pagos = [];
+            contrato.pagos.push({
+                monto: montoNum,
+                fecha: obtenerFechaHoraActual(),
+                nota: `Pago registrado por ${formatearMoneda(montoNum)}`
+            });
+            guardarDatos();
+            renderizarContratos();
+            renderizarClientes();
+            renderizarInformes();
+            mostrarNotificacion(`✅ Pago de ${formatearMoneda(montoNum)} registrado`, 'success');
+        }
 
-        window.editarTareaDesdeCalendario = function(id) {
+        // ============================================================
+        // TAREAS - CRUD (RESUMIDO)
+        // ============================================================
+        function mostrarFormularioTarea(tarea = null) {
+            const esEdicion = tarea !== null;
+            const titulo = esEdicion ? 'Editar Tarea' : 'Nueva Tarea';
+            
+            const opcionesTipo = TIPOS_TAREA.map(t => 
+                `<option value="${t}" ${tarea && tarea.tipo === t ? 'selected' : ''}>${t}</option>`
+            ).join('');
+            
+            let opcionesCliente = ['<option value="">Sin vincular</option>'];
+            clientes.forEach(c => {
+                opcionesCliente.push(`<option value="${c.id}" ${tarea && tarea.clienteId === c.id ? 'selected' : ''}>${c.nombre} (Cliente)</option>`);
+            });
+            prospectos.forEach(p => {
+                if (!p.clienteId) {
+                    opcionesCliente.push(`<option value="pro_${p.id}" ${tarea && tarea.clienteId === 'pro_' + p.id ? 'selected' : ''}>${p.nombre} (Prospecto)</option>`);
+                }
+            });
+            
+            const fechaTarea = tarea ? tarea.fecha : obtenerFechaActual();
+            const estadoChecked = tarea && tarea.completada ? 'checked' : '';
+            
+            const html = `
+                <form id="form-tarea">
+                    <input type="hidden" id="tarea-id" value="${tarea ? tarea.id : ''}">
+                    <div class="form-grupo">
+                        <label>Tipo de tarea *</label>
+                        <select id="tarea-tipo" required>${opcionesTipo}</select>
+                    </div>
+                    <div class="form-grupo">
+                        <label>Cliente / Prospecto vinculado</label>
+                        <select id="tarea-cliente">${opcionesCliente.join('')}</select>
+                    </div>
+                    <div class="form-grupo">
+                        <label>Fecha *</label>
+                        <input type="date" id="tarea-fecha" required value="${fechaTarea}">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Descripción *</label>
+                        <textarea id="tarea-descripcion" required placeholder="Describe la tarea a realizar...">${tarea ? tarea.descripcion : ''}</textarea>
+                    </div>
+                    <div class="form-grupo">
+                        <label>Notas adicionales (opcional)</label>
+                        <textarea id="tarea-notas" placeholder="Detalles adicionales...">${tarea ? tarea.notas : ''}</textarea>
+                    </div>
+                    <div class="form-grupo">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="tarea-completada" ${estadoChecked}>
+                            <span>Marcar como completada</span>
+                        </label>
+                    </div>
+                    <div class="form-acciones">
+                        <button type="button" class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
+                        <button type="submit" class="btn-primario">${esEdicion ? 'Actualizar' : 'Guardar Tarea'}</button>
+                    </div>
+                </form>
+            `;
+            
+            abrirModal(titulo, html);
+            
+            document.getElementById('form-tarea').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const esEdicion = document.getElementById('tarea-id').value !== '';
+                
+                const id = document.getElementById('tarea-id').value;
+                const tipo = document.getElementById('tarea-tipo').value;
+                const clienteId = document.getElementById('tarea-cliente').value || null;
+                const fecha = document.getElementById('tarea-fecha').value;
+                const descripcion = document.getElementById('tarea-descripcion').value.trim();
+                const notas = document.getElementById('tarea-notas').value.trim();
+                const completada = document.getElementById('tarea-completada').checked;
+                
+                if (!tipo || !fecha || !descripcion) {
+                    mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
+                    return;
+                }
+                
+                if (esEdicion) {
+                    const index = tareas.findIndex(t => t.id === id);
+                    if (index !== -1) {
+                        tareas[index] = { 
+                            ...tareas[index], 
+                            tipo, 
+                            clienteId, 
+                            fecha, 
+                            descripcion, 
+                            notas,
+                            completada: completada,
+                            fechaModificacion: obtenerFechaHoraActual()
+                        };
+                        if (completada && !tareas[index].fechaCompletada) {
+                            tareas[index].fechaCompletada = obtenerFechaHoraActual();
+                        } else if (!completada) {
+                            tareas[index].fechaCompletada = null;
+                        }
+                    }
+                } else {
+                    const nuevaTarea = { 
+                        id: generarId(), 
+                        tipo, 
+                        clienteId, 
+                        fecha, 
+                        descripcion, 
+                        notas, 
+                        completada: completada,
+                        fechaCreacion: obtenerFechaHoraActual(),
+                        fechaModificacion: obtenerFechaHoraActual()
+                    };
+                    if (completada) {
+                        nuevaTarea.fechaCompletada = obtenerFechaHoraActual();
+                    }
+                    tareas.push(nuevaTarea);
+                }
+                
+                guardarDatos();
+                cerrarModal();
+                renderizarCalendario();
+                renderizarInformes();
+                mostrarNotificacion(esEdicion ? '✅ Tarea actualizada' : '✅ Tarea creada correctamente', 'success');
+            });
+        }
+
+        function editarTarea(id) {
             const tarea = tareas.find(t => t.id === id);
             if (tarea) mostrarFormularioTarea(tarea);
-        };
+        }
+
+        function eliminarTarea(id) {
+            if (confirm('¿Eliminar esta tarea?')) {
+                tareas = tareas.filter(t => t.id !== id);
+                guardarDatos();
+                renderizarCalendario();
+                renderizarInformes();
+                mostrarNotificacion('✅ Tarea eliminada', 'success');
+            }
+        }
+
+        function alternarCompletarTarea(id) {
+            const tarea = tareas.find(t => t.id === id);
+            if (!tarea) return;
+            
+            tarea.completada = !tarea.completada;
+            if (tarea.completada) {
+                tarea.fechaCompletada = obtenerFechaHoraActual();
+                mostrarNotificacion('✅ Tarea completada', 'success');
+            } else {
+                tarea.fechaCompletada = null;
+                mostrarNotificacion('🔄 Tarea reabierta', 'info');
+            }
+            tarea.fechaModificacion = obtenerFechaHoraActual();
+            
+            guardarDatos();
+            renderizarCalendario();
+            renderizarInformes();
+        }
+
+        // ============================================================
+        // CALENDARIO
+        // ============================================================
+        let fechaActualCal = new Date();
+        let mesActualCal = fechaActualCal.getMonth();
+        let anoActualCal = fechaActualCal.getFullYear();
+
+        document.getElementById('btn-nueva-tarea').addEventListener('click', function() {
+            mostrarFormularioTarea();
+        });
+
+        document.getElementById('btn-mes-anterior').addEventListener('click', function() {
+            mesActualCal--;
+            if (mesActualCal < 0) { mesActualCal = 11; anoActualCal--; }
+            renderizarCalendario();
+        });
+
+        document.getElementById('btn-mes-siguiente').addEventListener('click', function() {
+            mesActualCal++;
+            if (mesActualCal > 11) { mesActualCal = 0; anoActualCal++; }
+            renderizarCalendario();
+        });
+
+        document.getElementById('btn-mes-actual').addEventListener('click', function() {
+            const hoy = new Date();
+            mesActualCal = hoy.getMonth();
+            anoActualCal = hoy.getFullYear();
+            renderizarCalendario();
+        });
+
+        document.getElementById('filtro-tareas-calendario').addEventListener('change', renderizarCalendario);
+        document.getElementById('buscar-calendario').addEventListener('input', renderizarCalendario);
+
+        function fechaLocalToString(ano, mes, dia) {
+            return `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+        }
 
         window.mostrarOpcionesDia = function(fecha) {
             const html = `
@@ -3705,223 +3816,17 @@
             });
         };
 
-        // ============================================================
-        // TAREAS - CRUD COMPLETO Y CORREGIDO
-        // ============================================================
-        
-        // Función para mostrar el formulario de tarea
-        function mostrarFormularioTarea(tarea = null) {
-            const esEdicion = tarea !== null;
-            const titulo = esEdicion ? 'Editar Tarea' : 'Nueva Tarea';
-            
-            const opcionesTipo = TIPOS_TAREA.map(t => 
-                `<option value="${t}" ${tarea && tarea.tipo === t ? 'selected' : ''}>${t}</option>`
-            ).join('');
-            
-            // Opciones para vincular cliente/prospecto
-            let opcionesCliente = ['<option value="">Sin vincular</option>'];
-            
-            // Clientes
-            clientes.forEach(c => {
-                opcionesCliente.push(`<option value="${c.id}" ${tarea && tarea.clienteId === c.id ? 'selected' : ''}>${c.nombre} (Cliente)</option>`);
-            });
-            
-            // Prospectos (solo los que no son clientes aún)
-            prospectos.forEach(p => {
-                if (!p.clienteId) {
-                    opcionesCliente.push(`<option value="pro_${p.id}" ${tarea && tarea.clienteId === 'pro_' + p.id ? 'selected' : ''}>${p.nombre} (Prospecto)</option>`);
-                }
-            });
-            
-            const fechaTarea = tarea ? tarea.fecha : obtenerFechaActual();
-            const estadoChecked = tarea && tarea.completada ? 'checked' : '';
-            
-            const html = `
-                <form id="form-tarea">
-                    <input type="hidden" id="tarea-id" value="${tarea ? tarea.id : ''}">
-                    
-                    <div class="form-grupo">
-                        <label>Tipo de tarea *</label>
-                        <select id="tarea-tipo" required>${opcionesTipo}</select>
-                    </div>
-                    
-                    <div class="form-grupo">
-                        <label>Cliente / Prospecto vinculado</label>
-                        <select id="tarea-cliente">${opcionesCliente.join('')}</select>
-                    </div>
-                    
-                    <div class="form-grupo">
-                        <label>Fecha *</label>
-                        <input type="date" id="tarea-fecha" required value="${fechaTarea}">
-                    </div>
-                    
-                    <div class="form-grupo">
-                        <label>Descripción *</label>
-                        <textarea id="tarea-descripcion" required placeholder="Describe la tarea a realizar...">${tarea ? tarea.descripcion : ''}</textarea>
-                    </div>
-                    
-                    <div class="form-grupo">
-                        <label>Notas adicionales (opcional)</label>
-                        <textarea id="tarea-notas" placeholder="Detalles adicionales...">${tarea ? tarea.notas : ''}</textarea>
-                    </div>
-                    
-                    <div class="form-grupo">
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="tarea-completada" ${estadoChecked}>
-                            <span>Marcar como completada</span>
-                        </label>
-                    </div>
-                    
-                    <div class="form-acciones">
-                        <button type="button" class="btn-secundario" onclick="cerrarModal()">Cancelar</button>
-                        <button type="submit" class="btn-primario">${esEdicion ? 'Actualizar' : 'Guardar Tarea'}</button>
-                    </div>
-                </form>
-            `;
-            
-            abrirModal(titulo, html);
-            
-            document.getElementById('form-tarea').addEventListener('submit', function(e) {
-                e.preventDefault();
-                guardarTarea(esEdicion);
-            });
-        }
-
-        // Función para guardar tarea
-        function guardarTarea(esEdicion) {
-            const id = document.getElementById('tarea-id').value;
-            const tipo = document.getElementById('tarea-tipo').value;
-            const clienteId = document.getElementById('tarea-cliente').value || null;
-            const fecha = document.getElementById('tarea-fecha').value;
-            const descripcion = document.getElementById('tarea-descripcion').value.trim();
-            const notas = document.getElementById('tarea-notas').value.trim();
-            const completada = document.getElementById('tarea-completada').checked;
-            
-            if (!tipo || !fecha || !descripcion) {
-                mostrarNotificacion('Todos los campos marcados con * son obligatorios', 'warning');
-                return;
-            }
-            
-            if (esEdicion) {
-                // Editar tarea existente
-                const index = tareas.findIndex(t => t.id === id);
-                if (index !== -1) {
-                    tareas[index] = { 
-                        ...tareas[index], 
-                        tipo, 
-                        clienteId, 
-                        fecha, 
-                        descripcion, 
-                        notas,
-                        completada: completada,
-                        fechaModificacion: obtenerFechaHoraActual()
-                    };
-                    if (completada && !tareas[index].fechaCompletada) {
-                        tareas[index].fechaCompletada = obtenerFechaHoraActual();
-                    } else if (!completada) {
-                        tareas[index].fechaCompletada = null;
-                    }
-                }
-            } else {
-                // Crear nueva tarea
-                const nuevaTarea = { 
-                    id: generarId(), 
-                    tipo, 
-                    clienteId, 
-                    fecha, 
-                    descripcion, 
-                    notas, 
-                    completada: completada,
-                    fechaCreacion: obtenerFechaHoraActual(),
-                    fechaModificacion: obtenerFechaHoraActual()
-                };
-                if (completada) {
-                    nuevaTarea.fechaCompletada = obtenerFechaHoraActual();
-                }
-                tareas.push(nuevaTarea);
-            }
-            
-            guardarDatos();
-            cerrarModal();
-            renderizarCalendario();
-            renderizarInformes();
-            mostrarNotificacion(esEdicion ? '✅ Tarea actualizada' : '✅ Tarea creada correctamente', 'success');
-        }
-
-        // Función para editar tarea (desde la lista)
-        function editarTarea(id) {
+        window.editarTareaDesdeCalendario = function(id) {
             const tarea = tareas.find(t => t.id === id);
             if (tarea) mostrarFormularioTarea(tarea);
-        }
+        };
 
-        // Función para eliminar tarea
-        function eliminarTarea(id) {
-            if (confirm('¿Eliminar esta tarea?')) {
-                tareas = tareas.filter(t => t.id !== id);
-                guardarDatos();
-                renderizarCalendario();
-                renderizarInformes();
-                mostrarNotificacion('✅ Tarea eliminada', 'success');
-            }
-        }
-
-        // Función para alternar estado completado
-        function alternarCompletarTarea(id) {
-            const tarea = tareas.find(t => t.id === id);
-            if (!tarea) return;
-            
-            tarea.completada = !tarea.completada;
-            if (tarea.completada) {
-                tarea.fechaCompletada = obtenerFechaHoraActual();
-                mostrarNotificacion('✅ Tarea completada', 'success');
-            } else {
-                tarea.fechaCompletada = null;
-                mostrarNotificacion('🔄 Tarea reabierta', 'info');
-            }
-            tarea.fechaModificacion = obtenerFechaHoraActual();
-            
-            guardarDatos();
-            renderizarCalendario();
-            renderizarInformes();
-        }
-
-        // ============================================================
-        // CALENDARIO
-        // ============================================================
-        
-        let fechaActualCal = new Date();
-        let mesActualCal = fechaActualCal.getMonth();
-        let anoActualCal = fechaActualCal.getFullYear();
-
-        document.getElementById('btn-nueva-tarea').addEventListener('click', function() {
-            mostrarFormularioTarea();
-        });
-
-        document.getElementById('btn-mes-anterior').addEventListener('click', function() {
-            mesActualCal--;
-            if (mesActualCal < 0) { mesActualCal = 11; anoActualCal--; }
-            renderizarCalendario();
-        });
-
-        document.getElementById('btn-mes-siguiente').addEventListener('click', function() {
-            mesActualCal++;
-            if (mesActualCal > 11) { mesActualCal = 0; anoActualCal++; }
-            renderizarCalendario();
-        });
-
-        document.getElementById('btn-mes-actual').addEventListener('click', function() {
-            const hoy = new Date();
-            mesActualCal = hoy.getMonth();
-            anoActualCal = hoy.getFullYear();
-            renderizarCalendario();
-        });
-
-        document.getElementById('filtro-tareas-calendario').addEventListener('change', renderizarCalendario);
-        document.getElementById('buscar-calendario').addEventListener('input', renderizarCalendario);
-
-        function fechaLocalToString(ano, mes, dia) {
-            return `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-        }
+        window.abrirContratoDesdeCalendario = function(clienteId, contratoId) {
+            cambiarSeccion('contratos');
+            setTimeout(() => {
+                editarContrato(clienteId, contratoId);
+            }, 400);
+        };
 
         function renderizarCalendario() {
             const grid = document.getElementById('calendario-grid');
@@ -4000,8 +3905,7 @@
                         const nombreCliente = obtenerNombreCliente(t.clienteId);
                         const claseCompletada = t.completada ? 'evento-completada' : 'evento-tarea';
                         const icono = t.completada ? '✅' : '📌';
-                        const titulo = t.completada ? '(Completada) ' : '';
-                        eventosHTML += `<div class="evento ${claseCompletada}" onclick="evento.stopPropagation(); editarTareaDesdeCalendario('${t.id}')" title="${titulo}${t.tipo}: ${t.descripcion} - ${nombreCliente}">${icono} ${t.tipo}</div>`;
+                        eventosHTML += `<div class="evento ${claseCompletada}" onclick="evento.stopPropagation(); editarTareaDesdeCalendario('${t.id}')" title="${t.tipo}: ${t.descripcion} - ${nombreCliente}">${icono} ${t.tipo}</div>`;
                         eventosMostrados++;
                     }
                 });
@@ -4046,11 +3950,8 @@
             const busqueda = document.getElementById('buscar-calendario').value.toLowerCase().trim();
             
             let tareasMostrar = [...tareas];
-            
-            // Ordenar por fecha (más reciente primero)
             tareasMostrar.sort((a, b) => b.fecha.localeCompare(a.fecha));
             
-            // Aplicar filtros
             if (filtro === 'pendientes') {
                 tareasMostrar = tareasMostrar.filter(t => !t.completada);
             } else if (filtro === 'completadas') {
@@ -4089,23 +3990,14 @@
                                 <span class="tarjeta-etiqueta ${claseTipo}">${t.tipo}</span>
                                 <span class="tarjeta-etiqueta ${claseCompletada}">${estadoLabel}</span>
                             </div>
-                            <div class="tarjeta-detalle">
-                                ${t.descripcion}
-                            </div>
-                            <div class="tarjeta-detalle">
-                                📅 ${formatearFecha(t.fecha)}
-                                ${t.clienteId ? `| 👤 ${nombreCliente}` : ''}
-                            </div>
+                            <div class="tarjeta-detalle">${t.descripcion}</div>
+                            <div class="tarjeta-detalle">📅 ${formatearFecha(t.fecha)}${t.clienteId ? `| 👤 ${nombreCliente}` : ''}</div>
                             ${t.notas ? `<div class="tarjeta-detalle"><small>📝 ${t.notas}</small></div>` : ''}
-                            <div class="tarjeta-detalle">
-                                <small>🕐 Creada: ${formatearFechaHora(t.fechaCreacion)}</small>
-                                ${t.fechaCompletada ? ` | ✅ Completada: ${formatearFechaHora(t.fechaCompletada)}` : ''}
-                            </div>
+                            <div class="tarjeta-detalle"><small>🕐 Creada: ${formatearFechaHora(t.fechaCreacion)}</small>
+                            ${t.fechaCompletada ? ` | ✅ Completada: ${formatearFechaHora(t.fechaCompletada)}` : ''}</div>
                         </div>
                         <div class="tarjeta-acciones">
-                            <button class="btn-completar" onclick="alternarCompletarTarea('${t.id}')" title="${t.completada ? 'Reabrir' : 'Completar'}">
-                                <i class="fas ${iconoCompletar}"></i>
-                            </button>
+                            <button class="btn-completar" onclick="alternarCompletarTarea('${t.id}')" title="${t.completada ? 'Reabrir' : 'Completar'}"><i class="fas ${iconoCompletar}"></i></button>
                             <button class="btn-editar" onclick="editarTarea('${t.id}')"><i class="fas fa-edit"></i></button>
                             <button class="btn-eliminar" onclick="eliminarTarea('${t.id}')"><i class="fas fa-trash"></i></button>
                         </div>
@@ -4146,7 +4038,7 @@
         }
 
         // ============================================================
-        // INFORMES (CON TAREAS INCLUIDAS)
+        // INFORMES
         // ============================================================
         document.getElementById('btn-filtrar-informes').addEventListener('click', renderizarInformes);
         document.getElementById('btn-limpiar-informes').addEventListener('click', function() {
@@ -4177,15 +4069,17 @@
             
             let todosContratos = [];
             clientesFiltrados.forEach(cliente => {
-                cliente.contratos.forEach(contrato => {
-                    todosContratos.push({
-                        ...contrato,
-                        clienteNombre: cliente.nombre,
-                        clienteId: cliente.id,
-                        clienteEstado: cliente.estado,
-                        clienteFase: cliente.faseOrigen || 'No especificado'
+                if (cliente.contratos) {
+                    cliente.contratos.forEach(contrato => {
+                        todosContratos.push({
+                            ...contrato,
+                            clienteNombre: cliente.nombre,
+                            clienteId: cliente.id,
+                            clienteEstado: cliente.estado,
+                            clienteFase: cliente.faseOrigen || 'No especificado'
+                        });
                     });
-                });
+                }
             });
             
             if (filtroPaquete !== 'todos') {
@@ -4235,12 +4129,12 @@
             document.getElementById('total-contratos').textContent = totalContratos;
             document.getElementById('total-ingresos').textContent = formatearMoneda(ingresosTotales);
             
-            if (todosContratos.length === 0 && prospectos.length === 0 && tareas.length === 0) {
+            if (todosContratos.length === 0 && prospectos.length === 0) {
                 contenedor.innerHTML = '<p class="mensaje-vacio">No hay datos para mostrar con los filtros seleccionados</p>';
                 return;
             }
             
-            // Desglose completo
+            // Desglose completo (como en V2.8)
             const paquetesVendidos = {};
             todosContratos.filter(c => c.tipo === 'paquete').forEach(c => {
                 const nombre = obtenerNombrePaquete(c.paqueteId);
@@ -4305,11 +4199,9 @@
             const contratosPaquete = todosContratos.filter(c => c.tipo === 'paquete').length;
             const contratosSoloServicio = todosContratos.filter(c => c.tipo === 'solo-servicio').length;
             
-            // Estadísticas de tareas
             const tareasPendientes = tareas.filter(t => !t.completada).length;
             const tareasCompletadas = tareas.filter(t => t.completada).length;
             
-            // Tareas por tipo
             const tareasPorTipo = {};
             tareas.forEach(t => {
                 if (!tareasPorTipo[t.tipo]) {
@@ -4319,7 +4211,6 @@
             });
             
             let html = `
-                <!-- FILA 1: Paquetes vendidos + Servicios individuales -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
                     <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
                         <h4 style="color:var(--color-acento);margin-bottom:12px;">📦 Paquetes vendidos</h4>
@@ -4352,7 +4243,6 @@
                     </div>
                 </div>
                 
-                <!-- FILA 2: Servicios más contratados + Distribución + Resumen financiero -->
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:24px;">
                     <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
                         <h4 style="color:var(--color-acento);margin-bottom:12px;">📊 Servicios más contratados</h4>
@@ -4414,7 +4304,6 @@
                     </div>
                 </div>
                 
-                <!-- FILA 3: Prospectos + Estados contratos + Tareas -->
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:24px;">
                     <div style="background:var(--color-bg-terciario);padding:16px;border-radius:var(--border-radius);">
                         <h4 style="color:var(--color-acento);margin-bottom:12px;">👥 Prospectos por fase</h4>
@@ -4453,7 +4342,7 @@
                         </div>
                         <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--color-borde);">
                             <span>Pendientes</span>
-                            <span style="color:${tareasPendientes > 0 ? 'var(--color-naranja)' : 'var(--color-verde)'};">${tareasPendientes}</span>
+                            <span style:${tareasPendientes > 0 ? 'color:var(--color-naranja);' : 'color:var(--color-verde);'}>${tareasPendientes}</span>
                         </div>
                         <div style="display:flex;justify-content:space-between;padding:4px 0;">
                             <span>Completadas</span>
@@ -4537,16 +4426,207 @@
         document.getElementById('buscar-contrato').addEventListener('input', renderizarContratos);
 
         // ============================================================
+        // FUNCIONES DE FIREBASE (RESUMIDAS)
+        // ============================================================
+        async function guardarEnFirebase() {
+            if (!database) return false;
+            if (sincronizandoFirebase) return false;
+            try {
+                sincronizandoFirebase = true;
+                actualizarEstadoSync('syncing', 'Guardando...');
+                const datos = {
+                    paquetes: paquetes || [],
+                    serviciosAdicionales: serviciosAdicionales || [],
+                    prospectos: prospectos || [],
+                    clientes: clientes || [],
+                    tareas: tareas || [],
+                    ultimaActualizacion: new Date().toISOString(),
+                    version: '2.8.4'
+                };
+                await database.ref('datos').set(datos);
+                actualizarEstadoSync('online', 'Guardado');
+                return true;
+            } catch (error) {
+                console.error('❌ Error guardando en Firebase:', error);
+                actualizarEstadoSync('offline', 'Error');
+                return false;
+            } finally {
+                sincronizandoFirebase = false;
+            }
+        }
+
+        async function cargarDesdeFirebase() {
+            if (!database) return false;
+            try {
+                actualizarEstadoSync('syncing', 'Cargando...');
+                const snapshot = await database.ref('datos').once('value');
+                const datos = snapshot.val();
+                if (datos) {
+                    if (datos.paquetes) paquetes = datos.paquetes;
+                    if (datos.serviciosAdicionales) serviciosAdicionales = datos.serviciosAdicionales;
+                    if (datos.prospectos) prospectos = datos.prospectos;
+                    if (datos.clientes) clientes = datos.clientes;
+                    if (datos.tareas) tareas = datos.tareas;
+                    guardarDatosLocal();
+                    renderizarTodo();
+                    actualizarEstadoSync('online', 'Cargado');
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('❌ Error cargando desde Firebase:', error);
+                actualizarEstadoSync('offline', 'Error');
+                return false;
+            }
+        }
+
+        function escucharCambiosFirebase() {
+            if (!database) return;
+            database.ref('datos').on('value', (snapshot) => {
+                const datos = snapshot.val();
+                if (!datos) return;
+                if (sincronizandoFirebase) return;
+                if (primerCarga) { primerCarga = false; return; }
+                console.log('🔄 Detectado cambio en Firebase');
+                let huboCambios = false;
+                if (datos.paquetes) { paquetes = datos.paquetes; huboCambios = true; }
+                if (datos.serviciosAdicionales) { serviciosAdicionales = datos.serviciosAdicionales; huboCambios = true; }
+                if (datos.prospectos) { prospectos = datos.prospectos; huboCambios = true; }
+                if (datos.clientes) { clientes = datos.clientes; huboCambios = true; }
+                if (datos.tareas) { tareas = datos.tareas; huboCambios = true; }
+                if (huboCambios) {
+                    guardarDatosLocal();
+                    renderizarTodo();
+                    mostrarNotificacion('📥 Datos actualizados desde la nube', 'success');
+                }
+            });
+        }
+
+        async function inicializarFirebase() {
+            if (!database) {
+                actualizarEstadoSync('offline', 'Firebase no disponible');
+                estadoSync.modo = 'local';
+                return false;
+            }
+            try {
+                console.log('🔌 Conectando a Firebase...');
+                actualizarEstadoSync('syncing', 'Conectando...');
+                await database.ref('test').set('testing');
+                await database.ref('test').remove();
+                console.log('✅ Conectado a Firebase');
+                estadoSync.modo = 'firebase';
+                actualizarEstadoSync('online', 'Conectado');
+                await cargarDesdeFirebase();
+                escucharCambiosFirebase();
+                setInterval(async () => {
+                    if (!sincronizandoFirebase && estadoSync.modo === 'firebase') {
+                        await guardarEnFirebase();
+                    }
+                }, 30000);
+                mostrarNotificacion('🔥 Conexión con Firebase establecida', 'success');
+                return true;
+            } catch (error) {
+                console.error('❌ Error conectando a Firebase:', error);
+                estadoSync.modo = 'local';
+                actualizarEstadoSync('offline', 'Modo local');
+                mostrarNotificacion('⚠️ No se pudo conectar a Firebase. Modo local activado.', 'warning');
+                return false;
+            }
+        }
+
+        document.getElementById('btn-sync-firebase').addEventListener('click', async function() {
+            if (!database) {
+                mostrarNotificacion('⚠️ Firebase no está disponible', 'error');
+                return;
+            }
+            if (estadoSync.modo === 'firebase') {
+                await guardarEnFirebase();
+            } else {
+                mostrarNotificacion('⚠️ Modo local activo. Intentando conectar...', 'warning');
+                await inicializarFirebase();
+            }
+        });
+
+        document.getElementById('btn-cargar-firebase').addEventListener('click', async function() {
+            if (!database) {
+                mostrarNotificacion('⚠️ Firebase no está disponible', 'error');
+                return;
+            }
+            if (confirm('¿Cargar datos desde Firebase? (Reemplazará datos locales)')) {
+                await cargarDesdeFirebase();
+            }
+        });
+
+        document.getElementById('btn-exportar-datos').addEventListener('click', function() {
+            try {
+                const datos = {
+                    version: '2.8.4',
+                    fechaExportacion: obtenerFechaActual(),
+                    paquetes: paquetes || [],
+                    serviciosAdicionales: serviciosAdicionales || [],
+                    prospectos: prospectos || [],
+                    clientes: clientes || [],
+                    tareas: tareas || []
+                };
+                const json = JSON.stringify(datos, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `registro_pda_${obtenerFechaActual()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                mostrarNotificacion('✅ Datos exportados correctamente', 'success');
+            } catch (error) {
+                mostrarNotificacion('❌ Error al exportar: ' + error.message, 'error');
+            }
+        });
+
+        document.getElementById('btn-importar-datos').addEventListener('click', function() {
+            document.getElementById('input-importar-datos').click();
+        });
+
+        document.getElementById('input-importar-datos').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const datos = JSON.parse(event.target.result);
+                    if (!datos.paquetes || !datos.serviciosAdicionales || 
+                        !datos.prospectos || !datos.clientes) {
+                        mostrarNotificacion('❌ Formato de archivo incorrecto', 'error');
+                        return;
+                    }
+                    if (!confirm('⚠️ Esto reemplazará TODOS los datos actuales. ¿Continuar?')) {
+                        return;
+                    }
+                    paquetes = datos.paquetes || [];
+                    serviciosAdicionales = datos.serviciosAdicionales || [];
+                    prospectos = datos.prospectos || [];
+                    clientes = datos.clientes || [];
+                    tareas = datos.tareas || [];
+                    guardarDatos();
+                    renderizarTodo();
+                    mostrarNotificacion('✅ Datos importados correctamente', 'success');
+                } catch (error) {
+                    mostrarNotificacion('❌ Error al leer el archivo: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+            this.value = '';
+        });
+
+        // ============================================================
         // INICIALIZACIÓN
         // ============================================================
+        console.log('🚀 Registro PDA v2.8.4 - Con Google Calendar');
+        console.log('📅 Ahora puedes crear eventos en Google Calendar desde cada contrato');
         
-        console.log('🚀 Registro PDA v2.8 con Firebase Sync');
-        console.log('📋 Las tareas ahora se guardan y sincronizan correctamente');
-        
-        // Cargar datos locales
         cargarDatosLocal();
         
-        // Renderizar todo
         actualizarFiltrosInformes();
         renderizarPaquetes();
         renderizarServicios();
@@ -4557,22 +4637,19 @@
         renderizarInformes();
         
         console.log('📊 Datos cargados:');
-        console.log(`📦 Paquetes: ${paquetes.length}`);
-        console.log(`🔧 Servicios: ${serviciosAdicionales.length}`);
-        console.log(`👥 Prospectos: ${prospectos.length}`);
-        console.log(`⭐ Clientes: ${clientes.length}`);
-        console.log(`📌 Tareas: ${tareas.length}`);
+        console.log(`📦 Paquetes: ${paquetes ? paquetes.length : 0}`);
+        console.log(`🔧 Servicios: ${serviciosAdicionales ? serviciosAdicionales.length : 0}`);
+        console.log(`👥 Prospectos: ${prospectos ? prospectos.length : 0}`);
+        console.log(`⭐ Clientes: ${clientes ? clientes.length : 0}`);
+        console.log(`📌 Tareas: ${tareas ? tareas.length : 0}`);
         
-        // Inicializar Firebase
         setTimeout(async () => {
             await inicializarFirebase();
-        }, 1000);
+        }, 1500);
         
-        console.log('🔥 Firebase Sync activado - Los datos se sincronizan automáticamente');
-        console.log('💡 Usa "Sincronizar Nube" para forzar la sincronización');
-        console.log('📋 Las tareas se muestran en: Calendario → Lista de tareas');
-        console.log('📋 Las tareas también aparecen en los Informes');
+        console.log('🔥 Firebase Sync activado');
+        console.log('📅 Botón "Calendario" en cada contrato para crear evento en Google Calendar');
+        console.log('🖨️  Botón "Imprimir" en cada contrato para PDF');
     </script>
 </body>
 </html>
-🔥 Firebase integrado - Sincronización en tiempo real
