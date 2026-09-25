@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro PDA v3.7.1 - Estudio Fotografía</title>
+    <title>Registro PDA v3.7.2 - Estudio Fotografía</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -65,7 +65,6 @@
             transition: background-color var(--transition), color var(--transition);
         }
 
-        /* PANTALLA DE LOGIN */
         .pantalla-login {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: var(--color-bg-primario);
@@ -143,7 +142,6 @@
         .app-container { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
         .app-container.oculto { display: none; }
 
-        /* SIDEBAR */
         .sidebar {
             width: var(--sidebar-width); min-width: var(--sidebar-width);
             background-color: var(--color-sidebar-bg);
@@ -242,7 +240,6 @@
         .sidebar.collapsed .btn-colapsar i { transform: rotate(180deg); }
         .sidebar.collapsed .btn-colapsar span, .sidebar.collapsed .btn-logout span { display: none; }
 
-        /* MAIN */
         .main-content {
             flex: 1; padding: 24px 32px; overflow-y: auto; height: 100vh;
             background-color: var(--color-bg-primario); transition: background-color var(--transition);
@@ -274,7 +271,6 @@
         @keyframes pulse-fast { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.8); } }
         .sync-status .sync-text { color: var(--color-texto-secundario); white-space: nowrap; }
 
-        /* BOTONES */
         .btn-primario, .btn-secundario, .btn-verde, .btn-azul, .btn-naranja, .btn-cian, .btn-morado,
         .btn-imprimir, .btn-calendar, .btn-filtrar, .btn-limpiar, .btn-peligro, .btn-whatsapp, .btn-email {
             border: none; border-radius: var(--border-radius); cursor: pointer;
@@ -325,13 +321,8 @@
         }
         .btn-limpiar:hover { background-color: var(--color-bg-hover); color: var(--color-texto-primario); }
 
-        /* Botones deshabilitados */
-        button:disabled {
-            opacity: 0.4 !important;
-            cursor: not-allowed !important;
-        }
+        button:disabled { opacity: 0.4 !important; cursor: not-allowed !important; }
 
-        /* FILTROS */
         .filtros-container {
             display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
             background-color: var(--color-bg-secundario); padding: 16px 20px;
@@ -352,7 +343,6 @@
         }
         .filtro-grupo input:focus, .filtro-grupo select:focus { outline: none; border-color: var(--color-acento); }
 
-        /* MÉTRICAS */
         .metricas-container {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px; margin-bottom: 24px;
@@ -371,7 +361,6 @@
         .metrica-valor { font-size: 24px; font-weight: 700; color: var(--color-texto-primario); }
         .metrica-etiqueta { font-size: 12px; color: var(--color-texto-secundario); }
 
-        /* MOSAICOS */
         .mosaico-grid {
             background-color: transparent; border: none; padding: 0;
             min-height: 200px;
@@ -446,7 +435,6 @@
             background-color: transparent; border: none; padding: 0; min-height: 200px;
         }
 
-        /* TAREAS */
         #lista-tareas {
             background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
             border-radius: var(--border-radius); padding: 16px; display: block; min-height: 200px;
@@ -476,14 +464,13 @@
         #lista-tareas .tarjeta-acciones .btn-eliminar:hover { color: var(--color-rojo); }
         #lista-tareas .tarjeta-acciones .btn-completar:hover { color: var(--color-verde); }
 
-        /* ETIQUETAS */
         .tarjeta-etiqueta {
             display: inline-block; padding: 2px 10px; border-radius: 12px;
             font-size: 11px; font-weight: 600; white-space: nowrap;
         }
         .etiqueta-interesado { background-color: #4caf50; color: #ffffff; }
-        .etiqueta-cotización, .etiqueta-cotizacion { background-color: #2196f3; color: #ffffff; }
-        .etiqueta-negociación, .etiqueta-negociacion { background-color: #ff9800; color: #ffffff; }
+        .etiqueta-cotizacion { background-color: #2196f3; color: #ffffff; }
+        .etiqueta-negociacion { background-color: #ff9800; color: #ffffff; }
         .etiqueta-contrato { background-color: #9c27b0; color: #ffffff; }
         .etiqueta-frecuente { background-color: #00bcd4; color: #ffffff; }
         .etiqueta-cancelado { background-color: #f44336; color: #ffffff; }
@@ -496,14 +483,13 @@
         .etiqueta-enviar-mensaje { background-color: #2196f3; color: #ffffff; }
         .etiqueta-confirmar { background-color: #ff9800; color: #ffffff; }
         .etiqueta-resolver-dudas { background-color: #9c27b0; color: #ffffff; }
-        .etiqueta-sesión-de-fotos, .etiqueta-sesion-de-fotos { background-color: #e91e63; color: #ffffff; }
+        .etiqueta-sesion-de-fotos { background-color: #e91e63; color: #ffffff; }
         .etiqueta-visita { background-color: #00bcd4; color: #ffffff; }
         .etiqueta-escoger-fotos { background-color: #ffc107; color: #0d0d0d; }
         .etiqueta-recoger-material { background-color: #795548; color: #ffffff; }
         .etiqueta-entrega-de-fotos { background-color: #607d8b; color: #ffffff; }
         .etiqueta-otro { background-color: #757575; color: #ffffff; }
 
-        /* CALENDARIO */
         .calendario-container {
             background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
             border-radius: var(--border-radius); padding: 20px;
@@ -578,7 +564,6 @@
         .leyenda-color-tarea { background-color: rgba(255, 152, 0, 0.3); border-left: 3px solid var(--color-naranja); }
         .leyenda-color-completada { background-color: rgba(76, 175, 80, 0.2); border-left: 3px solid var(--color-verde); }
 
-        /* INFORMES */
         .informes-detalle {
             background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
             border-radius: var(--border-radius); padding: 20px;
@@ -595,7 +580,6 @@
         .informe-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
         .informe-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 24px; }
 
-        /* CONFIGURACIÓN */
         .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
         .config-card {
             background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
@@ -661,7 +645,6 @@
         .config-boton.importar i { background-color: var(--color-morado); }
         .config-boton.peligro i { background-color: var(--color-rojo); }
 
-        /* USUARIOS */
         .usuarios-lista { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
         .usuario-item {
             display: flex; align-items: center; gap: 12px;
@@ -704,7 +687,6 @@
             background-color: var(--color-azul); color: #ffffff;
         }
 
-        /* VERSION */
         .version-card {
             background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
             border-radius: var(--border-radius); padding: 24px; margin-top: 24px;
@@ -778,7 +760,6 @@
             margin-top: 8px; font-style: italic;
         }
 
-        /* HISTORIAL */
         .historial-card {
             background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
             border-radius: var(--border-radius); padding: 24px; margin-top: 24px;
@@ -859,28 +840,20 @@
         .badge-accion.crear { background-color: rgba(76, 175, 80, 0.15); color: var(--color-verde); }
         .badge-accion.editar { background-color: rgba(66, 165, 245, 0.15); color: var(--color-azul); }
         .badge-accion.eliminar { background-color: rgba(239, 83, 80, 0.15); color: var(--color-rojo); }
-        .historial-item-detalle {
-            font-size: 13px; color: var(--color-texto-secundario);
-            line-height: 1.5; word-break: break-word;
-        }
-        .historial-item-detalle strong { color: var(--color-texto-primario); }
+        .historial-item-detalle { font-size: 13px; color: var(--color-texto-secundario); line-height: 1.5; word-break: break-word; }
         .historial-item-meta {
             display: flex; flex-wrap: wrap; gap: 12px;
             font-size: 11.5px; color: var(--color-texto-secundario); margin-top: 2px;
         }
         .historial-item-meta span { display: inline-flex; align-items: center; gap: 4px; }
         .historial-item-meta i { font-size: 10px; }
-        .historial-vacio {
-            text-align: center; padding: 40px 20px;
-            color: var(--color-texto-secundario); font-size: 14px;
-        }
+        .historial-vacio { text-align: center; padding: 40px 20px; color: var(--color-texto-secundario); font-size: 14px; }
         .historial-acciones {
             display: flex; justify-content: space-between;
             align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 12px;
         }
         .historial-acciones-info { font-size: 12px; color: var(--color-texto-secundario); }
 
-        /* MODAL */
         .modal {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
@@ -913,7 +886,6 @@
         .modal-cerrar:hover { color: var(--color-texto-primario); transform: rotate(90deg); }
         .modal-body { padding: 24px; }
 
-        /* FORMULARIOS */
         .form-grupo { margin-bottom: 16px; }
         .form-grupo label {
             display: block; font-size: 13px; color: var(--color-texto-secundario);
@@ -925,9 +897,7 @@
             padding: 10px 14px; border-radius: var(--border-radius);
             font-size: 14px; font-family: inherit;
         }
-        .form-grupo input:focus, .form-grupo select:focus, .form-grupo textarea:focus {
-            outline: none; border-color: var(--color-acento);
-        }
+        .form-grupo input:focus, .form-grupo select:focus, .form-grupo textarea:focus { outline: none; border-color: var(--color-acento); }
         .form-grupo input:disabled { opacity: 0.6; cursor: not-allowed; }
         .form-grupo textarea { resize: vertical; min-height: 80px; }
         .form-grupo .info-cliente {
@@ -958,10 +928,7 @@
         }
         .form-grupo .pago-eliminado { color: var(--color-rojo); font-style: italic; opacity: 0.7; }
         .form-grupo .pago-eliminado .pago-monto { color: var(--color-rojo); text-decoration: line-through; }
-        .form-acciones {
-            display: flex; gap: 12px; margin-top: 20px;
-            justify-content: flex-end; flex-wrap: wrap;
-        }
+        .form-acciones { display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end; flex-wrap: wrap; }
         .form-acciones .btn-primario { min-width: 120px; justify-content: center; }
         .row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .row-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
@@ -976,7 +943,6 @@
         .resumen-financiero .fila:last-child { border-bottom: none; }
         .resumen-financiero .total { font-weight: 700; color: var(--color-acento); }
 
-        /* ADVERTENCIA */
         .advertencia-eliminar {
             background-color: rgba(239, 83, 80, 0.1);
             border: 1px solid var(--color-rojo);
@@ -986,10 +952,7 @@
             display: flex; gap: 12px; align-items: flex-start;
         }
         .advertencia-eliminar i { color: var(--color-rojo); font-size: 20px; flex-shrink: 0; margin-top: 2px; }
-        .advertencia-eliminar .texto {
-            flex: 1; font-size: 13px; line-height: 1.5;
-            color: var(--color-texto-primario);
-        }
+        .advertencia-eliminar .texto { flex: 1; font-size: 13px; line-height: 1.5; color: var(--color-texto-primario); }
         .advertencia-eliminar .texto strong { color: var(--color-rojo); display: block; margin-bottom: 4px; font-size: 14px; }
         .advertencia-eliminar .detalle-entidad {
             background-color: var(--color-bg-primario); border-radius: 6px;
@@ -997,7 +960,6 @@
             color: var(--color-texto-secundario); border: 1px solid var(--color-borde-suave);
         }
 
-        /* DETALLE CONTRATO */
         .detalle-acciones {
             display: flex; flex-wrap: wrap; gap: 8px;
             padding: 12px 16px; margin-bottom: 20px;
@@ -1103,7 +1065,6 @@
             border: 1px solid var(--color-borde-suave);
         }
 
-        /* COMPROBANTE */
         .comprobante-preview {
             background-color: var(--color-bg-primario);
             border: 1px solid var(--color-borde);
@@ -1123,7 +1084,6 @@
             padding: 10px 18px; font-size: 14px;
         }
 
-        /* TABLAS */
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         table thead th {
             text-align: left; padding: 8px 12px;
@@ -1138,7 +1098,6 @@
         }
         table tbody tr:hover { background-color: var(--color-bg-terciario); }
 
-        /* NOTIFICACIONES */
         .notificacion {
             position: fixed; bottom: 20px; right: 20px;
             background: var(--color-acento); color: var(--color-acento-contraste);
@@ -1156,42 +1115,19 @@
         ::-webkit-scrollbar-thumb { background: var(--color-bg-terciario); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--color-bg-hover); }
 
-        /* IMPRESIÓN */
-        #print-doc {
-            max-width: 700px; margin: 0 auto; padding: 15px;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 11px; color: #0d0d0d; line-height: 1.4;
-        }
-        #print-doc h1 {
-            font-size: 16px; margin: 0 0 8px; text-align: center;
-            border-bottom: 2px solid #333; padding-bottom: 6px; color: #0d0d0d;
-        }
-        #print-doc .sec {
-            margin-bottom: 6px; padding: 5px 8px;
-            border: 1px solid #ddd; border-radius: 3px; background: #fafafa;
-        }
-        #print-doc .sec-title {
-            font-weight: 600; font-size: 12px;
-            border-bottom: 1px solid #ddd; padding-bottom: 3px; margin-bottom: 3px;
-        }
-        #print-doc .fila {
-            display: flex; justify-content: space-between;
-            padding: 2px 0; border-bottom: 1px solid #eee;
-        }
+        #print-doc { max-width: 700px; margin: 0 auto; padding: 15px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #0d0d0d; line-height: 1.4; }
+        #print-doc h1 { font-size: 16px; margin: 0 0 8px; text-align: center; border-bottom: 2px solid #333; padding-bottom: 6px; color: #0d0d0d; }
+        #print-doc .sec { margin-bottom: 6px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 3px; background: #fafafa; }
+        #print-doc .sec-title { font-weight: 600; font-size: 12px; border-bottom: 1px solid #ddd; padding-bottom: 3px; margin-bottom: 3px; }
+        #print-doc .fila { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee; }
         #print-doc .fila:last-child { border-bottom: none; }
         #print-doc .fila .lbl { font-weight: 600; color: #333; }
         #print-doc .fila .val { color: #0d0d0d; text-align: right; }
         #print-doc .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
         #print-doc table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 4px; }
-        #print-doc table th {
-            background: #f0f0f0; color: #0d0d0d; border: 1px solid #ccc;
-            padding: 3px 6px; text-align: left; font-size: 10px;
-        }
+        #print-doc table th { background: #f0f0f0; color: #0d0d0d; border: 1px solid #ccc; padding: 3px 6px; text-align: left; font-size: 10px; }
         #print-doc table td { border: 1px solid #ccc; padding: 3px 6px; color: #0d0d0d; font-size: 10px; }
-        #print-doc .pie {
-            text-align: center; border-top: 1px solid #ccc;
-            padding-top: 6px; margin-top: 6px; font-size: 9px; color: #999;
-        }
+        #print-doc .pie { text-align: center; border-top: 1px solid #ccc; padding-top: 6px; margin-top: 6px; font-size: 9px; color: #999; }
         #print-doc .verde { color: #4caf50; font-weight: 600; }
         #print-doc .naranja { color: #ff9800; font-weight: 700; }
         #print-doc .negrita { font-weight: 700; }
@@ -1203,11 +1139,7 @@
             .calendario-grid, .form-acciones, .credito-footer, .pantalla-login,
             .user-box { display: none !important; }
             body { background: white !important; color: black !important; overflow: visible !important; }
-            .main-content {
-                padding: 0 !important; margin: 0 !important;
-                overflow: visible !important; height: auto !important;
-                background: white !important;
-            }
+            .main-content { padding: 0 !important; margin: 0 !important; overflow: visible !important; height: auto !important; background: white !important; }
             .seccion { display: block !important; padding: 0 !important; margin: 0 !important; }
             #impresion-contenedor { display: block !important; padding: 0 !important; margin: 0 !important; background: white !important; }
         }
@@ -1250,7 +1182,6 @@
     </style>
 </head>
 <body>
-    <!-- PANTALLA DE LOGIN -->
     <div class="pantalla-login" id="pantalla-login">
         <div class="login-card">
             <div class="login-logo"><i class="fas fa-camera-retro"></i></div>
@@ -1287,13 +1218,12 @@
                 </div>
             </div>
             <div class="login-footer">
-                v3.7.1 · Software diseñado por <strong>JFR MEDIA</strong><br>
+                v3.7.2 · Software diseñado por <strong>JFR MEDIA</strong><br>
                 Acceso restringido a personal autorizado
             </div>
         </div>
     </div>
 
-    <!-- APLICACIÓN PRINCIPAL -->
     <div class="app-container oculto" id="app-container">
         <nav class="sidebar" id="sidebar">
             <div class="logo"><i class="fas fa-camera"></i><span>Registro PDA</span></div>
@@ -1317,12 +1247,11 @@
             <div class="sidebar-footer">
                 <button class="btn-colapsar" id="btn-colapsar" title="Colapsar menú"><i class="fas fa-chevron-left"></i><span>Colapsar</span></button>
                 <button class="btn-logout" id="btn-logout" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></button>
-                <div class="version">v3.7.1</div>
+                <div class="version">v3.7.2</div>
             </div>
         </nav>
 
         <main class="main-content">
-            <!-- INFORMES -->
             <section id="seccion-informes" class="seccion active">
                 <div class="seccion-header">
                     <h1><i class="fas fa-chart-pie"></i> Informes y Análisis</h1>
@@ -1369,7 +1298,6 @@
                 </div>
             </section>
 
-            <!-- PROSPECTOS -->
             <section id="seccion-prospectos" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-users"></i> Prospectos</h1>
@@ -1380,8 +1308,8 @@
                         <select id="filtro-fase-prospecto">
                             <option value="todas">Todas</option>
                             <option value="Interesado">Interesado</option>
-                            <option value="Cotización">Cotización</option>
-                            <option value="Negociación">Negociación</option>
+                            <option value="Cotizacion">Cotizacion</option>
+                            <option value="Negociacion">Negociacion</option>
                             <option value="Contrato">Contrato</option>
                             <option value="Frecuente">Frecuente</option>
                             <option value="Cancelado">Cancelado</option>
@@ -1393,7 +1321,6 @@
                 <div id="lista-prospectos" class="mosaico-grid"><p class="mensaje-vacio">No hay prospectos registrados</p></div>
             </section>
 
-            <!-- CLIENTES -->
             <section id="seccion-clientes" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-user-check"></i> Clientes</h1>
@@ -1413,7 +1340,6 @@
                 <div id="lista-clientes" class="mosaico-grid"><p class="mensaje-vacio">No hay clientes registrados</p></div>
             </section>
 
-            <!-- CONTRATOS -->
             <section id="seccion-contratos" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-file-contract"></i> Contratos</h1>
@@ -1440,7 +1366,6 @@
                 <div id="lista-contratos" class="mosaico-grid"><p class="mensaje-vacio">No hay contratos registrados</p></div>
             </section>
 
-            <!-- PAQUETES -->
             <section id="seccion-paquetes" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-box"></i> Paquetes</h1>
@@ -1449,7 +1374,6 @@
                 <div id="lista-paquetes" class="mosaico-grid"><p class="mensaje-vacio">No hay paquetes registrados</p></div>
             </section>
 
-            <!-- SERVICIOS -->
             <section id="seccion-servicios" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-tools"></i> Servicios Adicionales</h1>
@@ -1458,7 +1382,6 @@
                 <div id="lista-servicios" class="mosaico-grid"><p class="mensaje-vacio">No hay servicios adicionales registrados</p></div>
             </section>
 
-            <!-- CALENDARIO -->
             <section id="seccion-calendario" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-calendar-alt"></i> Calendario</h1>
@@ -1497,7 +1420,6 @@
                 </div>
             </section>
 
-            <!-- CONFIGURACIÓN -->
             <section id="seccion-configuracion" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-cog"></i> Configuración</h1>
@@ -1594,34 +1516,33 @@
                     </div>
                 </div>
                 <div class="version-card">
-                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v3.7.1</span></h3>
+                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v3.7.2</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">3.7.1</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">3.7.2</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
                     </div>
                     <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v3.7.1)</h4>
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v3.7.2)</h4>
                         <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-bug"></i></div>
+                            <div class="changelog-icono"><i class="fas fa-fire"></i></div>
                             <div class="changelog-contenido">
-                                <div class="changelog-titulo">Corrección del guardado y edición</div>
+                                <div class="changelog-titulo">Firebase reparado</div>
                                 <div class="changelog-desc">
-                                    Se corrigió un bug que impedía guardar nuevos clientes y editar los existentes.
-                                    Ahora el formulario CRUD funciona correctamente para todas las entidades
-                                    (clientes, paquetes, servicios). Se eliminó código duplicado y se
-                                    reorganizó la lógica de listeners para evitar conflictos.
+                                    Se restauró la configuración e inicialización de Firebase que se había perdido.
+                                    Ahora la sincronización en la nube funciona correctamente en GitHub Pages y
+                                    en cualquier servidor HTTP.
                                 </div>
                             </div>
                         </div>
                         <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-receipt"></i></div>
+                            <div class="changelog-icono"><i class="fas fa-plus-circle"></i></div>
                             <div class="changelog-contenido">
-                                <div class="changelog-titulo">Comprobantes de pago con huella única</div>
+                                <div class="changelog-titulo">Cargos extras restaurados</div>
                                 <div class="changelog-desc">
-                                    Cada pago genera una huella de 15 dígitos y un comprobante en imagen
-                                    listo para enviar por WhatsApp o Email.
+                                    Vuelve la sección de cargos extras en el formulario de contrato, con lista
+                                    unificada de movimientos y resumen financiero en vivo.
                                 </div>
                             </div>
                         </div>
@@ -1666,10 +1587,28 @@
     <div id="impresion-contenedor" style="display:none;"></div>
 
     <script>
-                // ============================================================
+        // ============================================================
         // CONFIGURACIÓN
         // ============================================================
-        const firebaseConfig = {
+        var VERSION = '3.7.2';
+        var PIN_ADMIN_INICIAL = '1234';
+        var EMISOR_COMPROBANTE = "Producciones D'Angel Film";
+        var MODO_ZONA_HORARIA = 'local';
+        var CODIGO_PAIS_DEFAULT = '52';
+        var MENSAJE_WHATSAPP_DEFAULT = '';
+
+        var TEMAS_DISPONIBLES = ['dark', 'light', 'otono'];
+        var FASES_DISPONIBLES = ['Interesado', 'Cotizacion', 'Negociacion', 'Contrato', 'Frecuente', 'Cancelado', 'Inactivo'];
+        var ESTADOS_CONTRATO = ['Pendiente', 'Completado', 'Cancelado'];
+        var ESTADOS_CLIENTE = ['Activo', 'Inactivo', 'Cancelado'];
+        var TIPOS_TAREA = ['Llamar', 'Enviar mensaje', 'Confirmar', 'Resolver dudas', 'Sesion de fotos', 'Visita', 'Escoger fotos', 'Recoger material', 'Entrega de fotos', 'Otro'];
+        var MAX_HISTORIAL_MOVIMIENTOS = 2000;
+        var DURACION_SESION_MS = 12 * 60 * 60 * 1000;
+
+        // ============================================================
+        // CONFIGURACIÓN E INICIALIZACIÓN DE FIREBASE
+        // ============================================================
+        var firebaseConfig = {
             apiKey: "AIzaSyAqHelYUMSfuZpOBLb-_0LEKnoxH9yF8Ts",
             authDomain: "crm-pda.firebaseapp.com",
             databaseURL: "https://crm-pda-default-rtdb.firebaseio.com",
@@ -1679,20 +1618,17 @@
             appId: "1:308550111377:web:893128880c21e2de16af30"
         };
 
-        const VERSION = '3.7.1';
-        const PIN_ADMIN_INICIAL = '1234';
-        const EMISOR_COMPROBANTE = "Producciones D'Angel Film";
-        const MODO_ZONA_HORARIA = 'local';
-        const CODIGO_PAIS_DEFAULT = '52';
-        const MENSAJE_WHATSAPP_DEFAULT = '';
-
-        const TEMAS_DISPONIBLES = ['dark', 'light', 'otono'];
-        const FASES_DISPONIBLES = ['Interesado', 'Cotizacion', 'Negociacion', 'Contrato', 'Frecuente', 'Cancelado', 'Inactivo'];
-        const ESTADOS_CONTRATO = ['Pendiente', 'Completado', 'Cancelado'];
-        const ESTADOS_CLIENTE = ['Activo', 'Inactivo', 'Cancelado'];
-        const TIPOS_TAREA = ['Llamar', 'Enviar mensaje', 'Confirmar', 'Resolver dudas', 'Sesion de fotos', 'Visita', 'Escoger fotos', 'Recoger material', 'Entrega de fotos', 'Otro'];
-        const MAX_HISTORIAL_MOVIMIENTOS = 2000;
-        const DURACION_SESION_MS = 12 * 60 * 60 * 1000;
+        var database = null;
+        var firebaseListo = false;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            firebaseListo = true;
+            console.log('✅ Firebase inicializado correctamente');
+        } catch (error) {
+            console.error('❌ Error inicializando Firebase:', error);
+            firebaseListo = false;
+        }
 
         // ============================================================
         // ESTADO GLOBAL
@@ -1705,7 +1641,6 @@
         var historial = [];
         var usuarios = [];
 
-        var database = null;
         var sincronizandoFirebase = false;
         var primerCarga = true;
         var firebaseInicializado = false;
@@ -1727,7 +1662,6 @@
         var esPrimerLoginAdmin = false;
         var historialVerTodos = false;
 
-        // OPCIONES HORA
         var OPCIONES_HORA = '';
         (function() {
             for (var h = 0; h < 24; h++) {
@@ -1748,11 +1682,9 @@
         }
 
         // ============================================================
-        // UTILIDADES BÁSICAS
+        // UTILIDADES
         // ============================================================
-        function generarId() {
-            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-        }
+        function generarId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
 
         function obtenerComponentesFecha(fecha) {
             var ano, mes, dia, hora, minuto;
@@ -1798,9 +1730,7 @@
             return p[2] + '/' + p[1] + '/' + p[0];
         }
 
-        function formatearMoneda(cantidad) {
-            return '$' + (cantidad || 0).toLocaleString('es-MX');
-        }
+        function formatearMoneda(cantidad) { return '$' + (cantidad || 0).toLocaleString('es-MX'); }
 
         function fechaLocalToString(ano, mes, dia) {
             return ano + '-' + String(mes + 1).padStart(2, '0') + '-' + String(dia).padStart(2, '0');
@@ -1822,9 +1752,6 @@
             }, 3500);
         }
 
-        // ============================================================
-        // HUELLA ÚNICA DE PAGO
-        // ============================================================
         function generarHuellaPago() {
             const bytes = new Uint8Array(8);
             crypto.getRandomValues(bytes);
@@ -1832,9 +1759,6 @@
             return hex.substring(0, 15);
         }
 
-        // ============================================================
-        // WHATSAPP
-        // ============================================================
         function normalizarTelefonoWhatsApp(telefono) {
             if (!telefono) return null;
             let limpio = String(telefono).replace(/\D/g, '');
@@ -1847,7 +1771,7 @@
         }
 
         // ============================================================
-        // SISTEMA DE USUARIOS
+        // USUARIOS
         // ============================================================
         async function crearUsuarioAdminInicial() {
             const salt = 'jfr-admin-' + Date.now().toString(36);
@@ -1915,8 +1839,7 @@
         function registrarHistorial(entidad, accion, descripcion, meta) {
             if (!meta) meta = {};
             const evento = {
-                id: generarId(),
-                fecha: obtenerFechaHoraActual(),
+                id: generarId(), fecha: obtenerFechaHoraActual(),
                 usuario: usuarioActual ? usuarioActual.nombre : 'Sistema',
                 usuarioUsername: usuarioActual ? usuarioActual.username : 'system',
                 entidad: entidad, accion: accion, descripcion: descripcion,
@@ -1971,8 +1894,8 @@
         function calcularTotalesContrato(contrato) {
             const pagosValidos = (contrato.pagos || []).filter(function(p) { return !p.eliminado; });
             const cargosValidos = (contrato.cargos || []).filter(function(c) { return !c.eliminado; });
-            const totalPagos = pagosValidos.reduce(function(s, p) { return s + p.monto; }, 0);
-            const totalCargos = cargosValidos.reduce(function(s, c) { return s + c.monto; }, 0);
+            const totalPagos = pagosValidos.reduce(function(s, p) { return s + (p.monto || 0); }, 0);
+            const totalCargos = cargosValidos.reduce(function(s, c) { return s + (c.monto || 0); }, 0);
             const totalAPagar = (contrato.precioFinal || 0) + totalCargos;
             const saldoPendiente = totalAPagar - totalPagos;
             return { pagosValidos: pagosValidos, cargosValidos: cargosValidos, totalPagos: totalPagos, totalCargos: totalCargos, totalAPagar: totalAPagar, saldoPendiente: saldoPendiente };
@@ -2048,7 +1971,6 @@
             modalContent.classList.remove('modal-wide');
         }
 
-        // Listeners del modal - registrados UNA sola vez al inicio
         document.getElementById('modal-cerrar').addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -2059,7 +1981,7 @@
         });
 
         // ============================================================
-        // CONFIRMACIÓN ELIMINACIÓN
+        // CONFIRMACIÓN
         // ============================================================
         function confirmarEliminacion(opciones) {
             const titulo = opciones.titulo || 'Confirmar eliminacion';
@@ -2091,7 +2013,7 @@
         }
 
         // ============================================================
-        // TEMAS
+        // TEMAS Y SIDEBAR
         // ============================================================
         function aplicarTema(tema) {
             if (TEMAS_DISPONIBLES.indexOf(tema) === -1) tema = 'dark';
@@ -2118,7 +2040,7 @@
         }
 
         // ============================================================
-        // RENDERIZADO DE MOSAICOS
+        // RENDERIZADO MOSAICOS
         // ============================================================
         function renderizarMosaicos(config) {
             const contenedor = document.getElementById(config.contenedorId);
@@ -2180,13 +2102,11 @@
 
                 abrirModal(esEdicion ? 'Editar ' + titulo : 'Nuevo ' + titulo, htmlForm);
 
-                // Cancelar
                 document.getElementById('btn-crud-cancelar').addEventListener('click', function(ev) {
                     ev.preventDefault();
                     cerrarModal();
                 });
 
-                // Submit
                 let guardando = false;
                 document.getElementById('form-crud').addEventListener('submit', function(e) {
                     e.preventDefault();
@@ -2331,7 +2251,7 @@
             renderizarMosaicos({
                 contenedorId: 'lista-prospectos', items: f, textoVacio: 'No hay prospectos',
                 renderContenido: function(p) {
-                    const cf = 'etiqueta-' + p.faseActual.toLowerCase().replace('ó', 'o');
+                    const cf = 'etiqueta-' + p.faseActual.toLowerCase().replace('ó', 'o').replace('á', 'a').replace('é', 'e');
                     const ec = p.clienteId !== null;
                     return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + p.nombre + '</div></div>' +
                         '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + p.faseActual + '</span>' +
@@ -2350,7 +2270,7 @@
             });
         }
 
-               function renderizarClientes() {
+        function renderizarClientes() {
             const filtroEstado = document.getElementById('filtro-estado-cliente-lista').value;
             const busqueda = document.getElementById('buscar-cliente').value.toLowerCase().trim();
             let f = clientes.slice();
@@ -2384,7 +2304,7 @@
         }
 
         // ============================================================
-        // CRUDs
+        // CRUDs INSTANCIADOS
         // ============================================================
         const CRUD = {
             paquetes: crearCRUD({
@@ -2471,7 +2391,7 @@
                         const cf = p.faseActual !== faseActual;
                         if (cf) p.historialFases.push({ fase: faseActual, fecha: obtenerFechaActual(), notas: 'Cambio de fase' });
                         Object.assign(p, { nombre: nombre, telefono: telefono, email: email, faseActual: faseActual, notasGenerales: notasGenerales });
-                        registrarHistorial('prospecto', 'editar', cf ? 'Prospecto "' + nombre + '" cambio a fase "' + faseActual + '"' : 'Se edito prospecto: "' + nombre + '"', { id: id, nombre: nombre });
+                        registrarHistorial('prospecto', 'editar', 'Se edito prospecto: "' + nombre + '"', { id: id, nombre: nombre });
                     }
                 } else {
                     const nuevo = { id: generarId(), nombre: nombre, telefono: telefono, email: email, faseActual: faseActual, historialFases: [{ fase: faseActual, fecha: obtenerFechaActual(), notas: 'Registro inicial' }], notasGenerales: notasGenerales, clienteId: null, fechaRegistro: obtenerFechaActual() };
@@ -2537,65 +2457,13 @@
             if (MENSAJE_WHATSAPP_DEFAULT) url += '?text=' + encodeURIComponent(MENSAJE_WHATSAPP_DEFAULT);
             window.open(url, '_blank');
             mostrarNotificacion('Abriendo WhatsApp', 'success');
-        }
-        function compartirComprobanteWhatsApp(clienteId, contratoId, pagoId) {
-            enviarComprobanteWhatsApp(clienteId, contratoId, pagoId);
+            registrarHistorial('sesion', 'editar', 'Se abrio WhatsApp para contactar a "' + cliente.nombre + '"', { id: clienteId, nombre: cliente.nombre });
         }
 
-        function compartirComprobanteEmail(clienteId, contratoId, pagoId) {
-            enviarComprobanteEmail(clienteId, contratoId, pagoId);
-        }
-
-        function enviarComprobanteWhatsApp(clienteId, contratoId, pagoId) {
-            const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
-            if (!datos) { mostrarNotificacion('Datos no encontrados', 'error'); return; }
-            const cliente = datos.cliente, pago = datos.pago, totales = datos.totales;
-            const numero = normalizarTelefonoWhatsApp(cliente.telefono);
-            if (!numero) { mostrarNotificacion('Telefono invalido', 'warning'); return; }
-            descargarComprobante(clienteId, contratoId, pagoId);
-            setTimeout(function() {
-                const mensaje = 'Hola ' + cliente.nombre + ', adjunto el comprobante de tu pago:\n\n' +
-                    'Monto: ' + formatearMoneda(pago.monto) + '\n' +
-                    'Fecha: ' + formatearFechaHora(pago.fecha) + '\n' +
-                    'Codigo: ' + pago.codigo + '\n' +
-                    'Saldo restante: ' + formatearMoneda(totales.saldoPendiente) + '\n\n' +
-                    'Gracias por tu preferencia.\n' + EMISOR_COMPROBANTE;
-                const url = 'https://wa.me/' + numero + '?text=' + encodeURIComponent(mensaje);
-                window.open(url, '_blank');
-                registrarHistorial('pago', 'editar', 'Se envio comprobante por WhatsApp a "' + cliente.nombre + '"', { id: pago.id, nombre: cliente.nombre });
-                mostrarNotificacion('WhatsApp abierto. Adjunta la imagen descargada.', 'info');
-            }, 800);
-        }
-
-        function enviarComprobanteEmail(clienteId, contratoId, pagoId) {
-            const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
-            if (!datos) { mostrarNotificacion('Datos no encontrados', 'error'); return; }
-            const cliente = datos.cliente, pago = datos.pago, contrato = datos.contrato, totales = datos.totales;
-            if (!cliente.email || cliente.email.indexOf('@') === -1) { mostrarNotificacion('Sin email valido', 'warning'); return; }
-            descargarComprobante(clienteId, contratoId, pagoId);
-            setTimeout(function() {
-                const asunto = 'Comprobante de pago - ' + EMISOR_COMPROBANTE;
-                const cuerpo = 'Hola ' + cliente.nombre + ',\n\n' +
-                    'Adjunto el comprobante de tu pago:\n\n' +
-                    'Monto: ' + formatearMoneda(pago.monto) + '\n' +
-                    'Fecha: ' + formatearFechaHora(pago.fecha) + '\n' +
-                    'Codigo de verificacion: ' + pago.codigo + '\n' +
-                    'Saldo restante: ' + formatearMoneda(totales.saldoPendiente) + '\n\n' +
-                    'Festejado: ' + contrato.festejado + '\n\n' +
-                    'Gracias por tu preferencia.\n\n' +
-                    EMISOR_COMPROBANTE + '\n' +
-                    'Firmado por: ' + (usuarioActual ? usuarioActual.nombre : 'Usuario') + '\n\n' +
-                    '(Adjunta la imagen descargada al correo antes de enviarlo)';
-                const url = 'mailto:' + cliente.email + '?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(cuerpo);
-                window.open(url, '_blank');
-                registrarHistorial('pago', 'editar', 'Se envio comprobante por Email a "' + cliente.nombre + '"', { id: pago.id, nombre: cliente.nombre });
-                mostrarNotificacion('Email abierto. Adjunta la imagen descargada.', 'info');
-            }, 800);
-        }
         // ============================================================
         // CONTRATOS
         // ============================================================
-               function mostrarFormularioContrato(clienteId, titulo, contrato) {
+        function mostrarFormularioContrato(clienteId, titulo, contrato) {
             if (!clienteId) clienteId = null;
             if (!titulo) titulo = 'Nuevo Contrato';
             if (!contrato) contrato = null;
@@ -2695,51 +2563,23 @@
 
             abrirModal(titulo, html);
 
-            // ============================================================
-            // ESTADO DEL FORMULARIO
-            // ============================================================
             let pagosArr = contrato && contrato.pagos ? contrato.pagos.slice() : [];
             let cargosArr = contrato && contrato.cargos ? contrato.cargos.slice() : [];
             let pagosRecientes = [];
 
             const el = function(id) { return document.getElementById(id); };
 
-            // ============================================================
-            // RENDERIZAR LISTA UNIFICADA DE MOVIMIENTOS
-            // ============================================================
             function renderizarMovimientos() {
                 const lista = el('movimientos-lista');
                 if (!lista) return;
-
-                // Combinar pagos y cargos en una sola lista con marca de tipo
                 const movimientos = [];
-
                 pagosArr.forEach(function(p, idx) {
-                    movimientos.push({
-                        tipo: 'pago',
-                        index: idx,
-                        item: p,
-                        fecha: p.fecha || '',
-                        esEliminado: p.eliminado === true,
-                        esNota: p.esNotaEliminacion === true
-                    });
+                    movimientos.push({ tipo: 'pago', index: idx, item: p, fecha: p.fecha || '', esEliminado: p.eliminado === true, esNota: p.esNotaEliminacion === true });
                 });
-
                 cargosArr.forEach(function(c, idx) {
-                    movimientos.push({
-                        tipo: 'cargo',
-                        index: idx,
-                        item: c,
-                        fecha: c.fecha || '',
-                        esEliminado: c.eliminado === true,
-                        esNota: c.esNotaEliminacion === true
-                    });
+                    movimientos.push({ tipo: 'cargo', index: idx, item: c, fecha: c.fecha || '', esEliminado: c.eliminado === true, esNota: c.esNotaEliminacion === true });
                 });
-
-                // Ordenar por fecha descendente (más reciente primero)
-                movimientos.sort(function(a, b) {
-                    return (b.fecha || '').localeCompare(a.fecha || '');
-                });
+                movimientos.sort(function(a, b) { return (b.fecha || '').localeCompare(a.fecha || ''); });
 
                 if (movimientos.length === 0) {
                     lista.innerHTML = '<p style="color:var(--color-texto-secundario);font-size:13px;text-align:center;padding:12px;">Sin movimientos registrados</p>';
@@ -2751,13 +2591,12 @@
                     const item = m.item;
                     const claseEliminado = m.esEliminado ? 'pago-eliminado' : '';
                     const textoEliminado = m.esEliminado ? ' (Eliminado)' : '';
-                    const iconoTipo = m.tipo === 'pago' ? 'fa-coins' : 'fa-plus-circle';
                     const colorTipo = m.tipo === 'pago' ? 'var(--color-verde)' : 'var(--color-naranja)';
                     const etiquetaTipo = m.tipo === 'pago' ? 'PAGO' : 'CARGO';
                     const botonEliminar = (!m.esEliminado && !m.esNota)
                         ? '<button type="button" class="btn-eliminar-item" onclick="PDA.eliminarMovimiento(\'' + m.tipo + '\',' + m.index + ')" title="Eliminar"><i class="fas fa-trash"></i></button>'
                         : '';
-                    const codigo = item.codigo ? '<span class="pago-codigo" title="Huella unica"><i class="fas fa-fingerprint"></i> ' + item.codigo + '</span>' : '';
+                    const codigo = item.codigo ? '<span class="pago-codigo"><i class="fas fa-fingerprint"></i> ' + item.codigo + '</span>' : '';
 
                     return '<div class="pago-item ' + claseEliminado + '">' +
                         '<div class="pago-info">' +
@@ -2766,17 +2605,11 @@
                         '<span class="pago-fecha">' + formatearFechaHora(item.fecha) + '</span>' +
                         codigo +
                         (item.nota ? '<span style="font-size:11px;color:var(--color-texto-secundario);width:100%;">' + item.nota + '</span>' : '') +
-                        '</div>' +
-                        botonEliminar +
-                        '</div>';
+                        '</div>' + botonEliminar + '</div>';
                 }).join('');
-
                 actualizarResumen();
             }
 
-            // ============================================================
-            // ACTUALIZAR RESUMEN FINANCIERO
-            // ============================================================
             function actualizarResumen() {
                 const pv = pagosArr.filter(function(p) { return !p.eliminado; });
                 const cv = cargosArr.filter(function(c) { return !c.eliminado; });
@@ -2785,7 +2618,6 @@
                 const tp = pv.reduce(function(s, p) { return s + (p.monto || 0); }, 0);
                 const tap = pf + tc;
                 const sa = tap - tp;
-
                 el('resumen-precio-final').textContent = formatearMoneda(pf);
                 el('resumen-cargos').textContent = formatearMoneda(tc);
                 el('resumen-total').textContent = formatearMoneda(tap);
@@ -2795,15 +2627,11 @@
                 se.style.color = sa === 0 ? 'var(--color-verde)' : 'var(--color-naranja)';
             }
 
-            // ============================================================
-            // ELIMINAR MOVIMIENTO (pago o cargo)
-            // ============================================================
             window.PDA = window.PDA || {};
             window.PDA.eliminarMovimiento = function(tipo, index) {
                 const esPago = tipo === 'pago';
                 const item = esPago ? pagosArr[index] : cargosArr[index];
                 if (!item) return;
-
                 confirmarEliminacion({
                     titulo: esPago ? 'Eliminar pago' : 'Eliminar cargo extra',
                     entidad: esPago ? 'pago' : 'cargo extra',
@@ -2812,27 +2640,15 @@
                     onConfirmar: function() {
                         item.eliminado = true;
                         item.nota = (item.nota || '') + ' | ELIMINADO: ' + obtenerFechaHoraActual();
-
-                        // Agregar nota de eliminación al historial de movimientos
-                        const nota = {
-                            monto: 0,
-                            fecha: obtenerFechaHoraActual(),
-                            nota: (esPago ? 'Pago de ' : 'Cargo de ') + formatearMoneda(item.monto) + ' eliminado',
-                            eliminado: false,
-                            esNotaEliminacion: true
-                        };
+                        const nota = { monto: 0, fecha: obtenerFechaHoraActual(), nota: (esPago ? 'Pago de ' : 'Cargo de ') + formatearMoneda(item.monto) + ' eliminado', eliminado: false, esNotaEliminacion: true };
                         if (esPago) pagosArr.push(nota);
                         else cargosArr.push(nota);
-
                         renderizarMovimientos();
                         mostrarNotificacion('Movimiento eliminado', 'success');
                     }
                 });
             };
 
-            // ============================================================
-            // CALCULAR PRECIOS BASE
-            // ============================================================
             const ts = el('contrato-tipo');
             const sp = el('seccion-paquete');
             const ss = el('seccion-solo-servicio');
@@ -2862,53 +2678,27 @@
                 actualizarResumen();
             }
 
-            // ============================================================
-            // EVENT LISTENERS
-            // ============================================================
-
-            // Cambio de tipo de contrato
             ts.addEventListener('change', function() {
                 if (this.value === 'paquete') {
-                    sp.style.display = '';
-                    ss.style.display = 'none';
-                    ps.required = true;
-                    ssr.required = false;
-                    ssr.value = '';
+                    sp.style.display = ''; ss.style.display = 'none';
+                    ps.required = true; ssr.required = false; ssr.value = '';
                 } else {
-                    sp.style.display = 'none';
-                    ss.style.display = '';
-                    ps.required = false;
-                    ps.value = '';
-                    ssr.required = true;
+                    sp.style.display = 'none'; ss.style.display = '';
+                    ps.required = false; ps.value = ''; ssr.required = true;
                 }
                 calcularPrecios();
             });
-
             ps.addEventListener('change', calcularPrecios);
             ssr.addEventListener('change', calcularPrecios);
-            document.querySelectorAll('.servicio-check').forEach(function(cb) {
-                cb.addEventListener('change', calcularPrecios);
-            });
-
-            // Precio final editable
+            document.querySelectorAll('.servicio-check').forEach(function(cb) { cb.addEventListener('change', calcularPrecios); });
             pfi.addEventListener('input', actualizarResumen);
 
-            // Anticipo
             el('contrato-anticipo').addEventListener('change', function() {
                 const a = parseFloat(this.value) || 0;
                 if (a > 0) {
-                    const ea = pagosArr.some(function(p) {
-                        return p.nota && p.nota.indexOf('Anticipo') !== -1 && !p.eliminado;
-                    });
+                    const ea = pagosArr.some(function(p) { return p.nota && p.nota.indexOf('Anticipo') !== -1 && !p.eliminado; });
                     if (!ea) {
-                        const pagoAnticipo = {
-                            id: generarId(),
-                            monto: a,
-                            fecha: obtenerFechaHoraActual(),
-                            nota: 'Anticipo registrado por ' + formatearMoneda(a),
-                            codigo: generarHuellaPago(),
-                            registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema'
-                        };
+                        const pagoAnticipo = { id: generarId(), monto: a, fecha: obtenerFechaHoraActual(), nota: 'Anticipo registrado por ' + formatearMoneda(a), codigo: generarHuellaPago(), registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema' };
                         pagosArr.push(pagoAnticipo);
                         pagosRecientes.push(pagoAnticipo);
                         renderizarMovimientos();
@@ -2917,19 +2707,11 @@
                 actualizarResumen();
             });
 
-            // Agregar pago
             el('btn-agregar-pago').addEventListener('click', function() {
                 const mi = el('contrato-nuevo-pago');
                 const m = parseFloat(mi.value);
                 if (!m || m <= 0) { mostrarNotificacion('Monto invalido', 'warning'); return; }
-                const nuevoPago = {
-                    id: generarId(),
-                    monto: m,
-                    fecha: obtenerFechaHoraActual(),
-                    nota: 'Pago registrado por ' + formatearMoneda(m),
-                    codigo: generarHuellaPago(),
-                    registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema'
-                };
+                const nuevoPago = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Pago registrado por ' + formatearMoneda(m), codigo: generarHuellaPago(), registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema' };
                 pagosArr.push(nuevoPago);
                 pagosRecientes.push(nuevoPago);
                 renderizarMovimientos();
@@ -2938,21 +2720,14 @@
                 mostrarNotificacion('Pago agregado', 'success');
             });
 
-            // Agregar cargo extra
             el('btn-agregar-cargo').addEventListener('click', function() {
                 const di = el('cargo-descripcion');
                 const mi = el('cargo-monto');
                 const d = di.value.trim();
                 const m = parseFloat(mi.value);
                 if (!m || m <= 0) { mostrarNotificacion('Monto invalido', 'warning'); return; }
-                if (!d) { mostrarNotificacion('Ingresa una descripcion del cargo', 'warning'); return; }
-                const nuevoCargo = {
-                    id: generarId(),
-                    monto: m,
-                    fecha: obtenerFechaHoraActual(),
-                    nota: 'Cargo extra: ' + d + ' - ' + formatearMoneda(m),
-                    registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema'
-                };
+                if (!d) { mostrarNotificacion('Ingresa una descripcion', 'warning'); return; }
+                const nuevoCargo = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Cargo extra: ' + d + ' - ' + formatearMoneda(m), registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema' };
                 cargosArr.push(nuevoCargo);
                 renderizarMovimientos();
                 di.value = '';
@@ -2961,24 +2736,19 @@
                 mostrarNotificacion('Cargo extra agregado', 'success');
             });
 
-            // Restaurar valores de hora si estamos editando
             if (contrato) {
                 if (contrato.horaEvento) el('contrato-hora-evento').value = contrato.horaEvento;
                 if (contrato.horaRecepcion) el('contrato-hora-recepcion').value = contrato.horaRecepcion;
             }
 
-            // Inicializar
             calcularPrecios();
             if (!pfi.value || parseFloat(pfi.value) === 0) pfi.value = parseFloat(pbi.value) || 0;
             renderizarMovimientos();
 
-            // Cancelar
             el('btn-contrato-cancelar').addEventListener('click', function(ev) {
-                ev.preventDefault();
-                cerrarModal();
+                ev.preventDefault(); cerrarModal();
             });
 
-            // Submit
             el('form-contrato').addEventListener('submit', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -2986,7 +2756,7 @@
             });
         }
 
-                       function guardarContrato(ee, contratoOriginal, pagosArr, cargosArr, pagosRecientes) {
+        function guardarContrato(ee, contratoOriginal, pagosArr, cargosArr, pagosRecientes) {
             const el = function(id) { return document.getElementById(id); };
             const ci = el('contrato-id').value;
             let clid = el('contrato-cliente-id') ? el('contrato-cliente-id').value : el('contrato-cliente').value;
@@ -3018,61 +2788,35 @@
             const c = obtenerCliente(clid);
             if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
 
-            // Filtrar movimientos válidos (no eliminados)
             const pagosFinales = pagosArr.filter(function(p) { return !p.eliminado; });
             const cargosFinales = cargosArr.filter(function(c) { return !c.eliminado; });
 
-            // Anticipo (si no está ya registrado)
             if (ant > 0) {
                 const ea = pagosFinales.some(function(p) { return p.nota && p.nota.indexOf('Anticipo') !== -1; });
                 if (!ea) {
-                    const pagoAnticipo = {
-                        id: generarId(),
-                        monto: ant,
-                        fecha: obtenerFechaHoraActual(),
-                        nota: 'Anticipo registrado por ' + formatearMoneda(ant),
-                        codigo: generarHuellaPago(),
-                        registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema'
-                    };
+                    const pagoAnticipo = { id: generarId(), monto: ant, fecha: obtenerFechaHoraActual(), nota: 'Anticipo registrado por ' + formatearMoneda(ant), codigo: generarHuellaPago(), registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema' };
                     pagosFinales.push(pagoAnticipo);
                     if (pagosRecientes) pagosRecientes.push(pagoAnticipo);
                 }
             }
 
             const nc = {
-                id: ci || generarId(),
-                tipo: tipo,
-                festejado: fest,
-                paqueteId: pid,
-                servicioId: sid,
-                serviciosIds: sids,
-                fechaEvento: fe,
-                horaEvento: he || null,
-                direccionEvento: de,
-                horaRecepcion: hr || null,
-                direccionRecepcion: dr,
-                precioBase: pb,
-                precioFinal: pf,
-                descuentoAplicado: pb - pf,
-                anticipo: ant,
-                pagos: pagosFinales,
-                cargos: cargosFinales,
-                notas: not,
-                fechaContrato: obtenerFechaActual(),
-                estado: est
+                id: ci || generarId(), tipo: tipo, festejado: fest, paqueteId: pid, servicioId: sid, serviciosIds: sids,
+                fechaEvento: fe, horaEvento: he || null, direccionEvento: de, horaRecepcion: hr || null, direccionRecepcion: dr,
+                precioBase: pb, precioFinal: pf, descuentoAplicado: pb - pf, anticipo: ant,
+                pagos: pagosFinales, cargos: cargosFinales, notas: not, fechaContrato: obtenerFechaActual(), estado: est
             };
 
             if (ee) {
                 const idx = c.contratos.findIndex(function(x) { return x.id === ci; });
                 if (idx !== -1) c.contratos[idx] = nc;
-                registrarHistorial('contrato', 'editar', 'Se edito contrato de "' + c.nombre + '" - Festejado: "' + fest + '"', { id: ci, nombre: c.nombre });
+                registrarHistorial('contrato', 'editar', 'Se edito contrato de "' + c.nombre + '"', { id: ci, nombre: c.nombre });
             } else {
                 if (!c.contratos) c.contratos = [];
                 c.contratos.push(nc);
-                registrarHistorial('contrato', 'crear', 'Se creo contrato para "' + c.nombre + '" - Festejado: "' + fest + '"', { id: nc.id, nombre: c.nombre });
+                registrarHistorial('contrato', 'crear', 'Se creo contrato para "' + c.nombre + '"', { id: nc.id, nombre: c.nombre });
             }
 
-            // Registrar pagos nuevos en el historial
             if (pagosRecientes) {
                 pagosRecientes.forEach(function(p) {
                     if (p.eliminado) return;
@@ -3087,16 +2831,13 @@
             renderizarInformes();
             mostrarNotificacion('Contrato guardado', 'success');
 
-            // Si hay pagos nuevos, ofrecer enviar comprobante del último
             if (pagosRecientes && pagosRecientes.length > 0) {
                 const ultimoPago = pagosRecientes[pagosRecientes.length - 1];
-                setTimeout(function() {
-                    abrirSelectorComprobante(clid, nc.id, ultimoPago.id);
-                }, 300);
+                setTimeout(function() { abrirSelectorComprobante(clid, nc.id, ultimoPago.id); }, 300);
             }
         }
 
-                function renderizarContratos() {
+        function renderizarContratos() {
             const fe = document.getElementById('filtro-estado-contrato-lista').value;
             const ft = document.getElementById('filtro-tipo-contrato').value;
             const b = document.getElementById('buscar-contrato').value.toLowerCase().trim();
@@ -3208,7 +2949,7 @@
         // ============================================================
         // DETALLE CONTRATO
         // ============================================================
-               function verDetalleContrato(clienteId, contratoId) {
+        function verDetalleContrato(clienteId, contratoId) {
             const cliente = obtenerCliente(clienteId);
             if (!cliente) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
             const contrato = cliente.contratos.find(function(c) { return c.id === contratoId; });
@@ -3219,12 +2960,9 @@
             const tl = contrato.tipo === 'paquete' ? 'Paquete' : 'Solo Servicio';
             const in_ = obtenerNombreItemContrato(contrato);
             const campo = function(l, v) { return '<div class="detalle-campo"><span class="lbl">' + l + '</span><span class="val">' + (v || 'No especificado') + '</span></div>'; };
-
-            // Verificar teléfono y email del cliente
             const tieneTelefono = cliente.telefono && normalizarTelefonoWhatsApp(cliente.telefono);
             const tieneEmail = cliente.email && cliente.email.indexOf('@') !== -1;
 
-            // Generar HTML de la lista de pagos con botones de envío
             let pagosHTML = '';
             if (tot.pagosValidos.length === 0) {
                 pagosHTML = '<div class="detalle-lista-vacia">Sin pagos registrados</div>';
@@ -3234,7 +2972,7 @@
                         '<div class="izq">' +
                         '<span class="fecha">' + formatearFechaHora(p.fecha) + '</span>' +
                         (p.nota ? '<span class="nota">' + p.nota + '</span>' : '') +
-                        (p.codigo ? '<span class="codigo" title="Huella unica"><i class="fas fa-fingerprint"></i> ' + p.codigo + '</span>' : '') +
+                        (p.codigo ? '<span class="codigo"><i class="fas fa-fingerprint"></i> ' + p.codigo + '</span>' : '') +
                         '</div>' +
                         '<div class="der">' +
                         '<span class="monto verde">' + formatearMoneda(p.monto) + '</span>' +
@@ -3242,13 +2980,10 @@
                         '<button class="btn-ver" onclick="verComprobantePago(\'' + clienteId + '\',\'' + contrato.id + '\',\'' + p.id + '\')" title="Ver comprobante"><i class="fas fa-receipt"></i></button>' +
                         '<button class="btn-wa" onclick="compartirComprobanteWhatsApp(\'' + clienteId + '\',\'' + contrato.id + '\',\'' + p.id + '\')" title="Enviar por WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button>' +
                         '<button class="btn-em" onclick="compartirComprobanteEmail(\'' + clienteId + '\',\'' + contrato.id + '\',\'' + p.id + '\')" title="Enviar por Email"' + (!tieneEmail ? ' disabled' : '') + '><i class="fas fa-envelope"></i></button>' +
-                        '</div>' +
-                        '</div>' +
-                        '</div>';
+                        '</div></div></div>';
                 }).join('');
             }
 
-            // HTML de cargos extras
             let cargosHTML = '';
             if (tot.cargosValidos.length > 0) {
                 cargosHTML = '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-plus-circle"></i> Cargos extras (' + tot.cargosValidos.length + ')</div>' +
@@ -3293,8 +3028,9 @@
 
             abrirModal('Detalle del contrato', html, true);
         }
+
         // ============================================================
-        // COMPROBANTE DE PAGO
+        // COMPROBANTES
         // ============================================================
         function obtenerDatosComprobante(clienteId, contratoId, pagoId) {
             const cliente = obtenerCliente(clienteId);
@@ -3397,7 +3133,7 @@
             y = codigoY + codigoH + 20;
 
             ctx.textAlign = 'center'; ctx.fillStyle = '#888'; ctx.font = 'italic 11px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('Este codigo es unico e irrepetible. Conservelo.', W / 2, y);
+            ctx.fillText('Este codigo es unico e irrepetible.', W / 2, y);
             y += 18;
             ctx.fillText('Comprobantes sin este codigo deben considerarse invalidos.', W / 2, y);
 
@@ -3447,16 +3183,138 @@
         function abrirSelectorComprobante(clienteId, contratoId, pagoId) {
             const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
             if (!datos) return;
+            const tieneTel = datos.cliente.telefono && normalizarTelefonoWhatsApp(datos.cliente.telefono);
+            const tieneEm = datos.cliente.email && datos.cliente.email.indexOf('@') !== -1;
             const html = '<div style="text-align:center;padding:10px;">' +
                 '<div style="font-size:36px;color:var(--color-verde);margin-bottom:8px;"><i class="fas fa-check-circle"></i></div>' +
                 '<h3 style="color:var(--color-texto-primario);margin-bottom:6px;">Pago registrado</h3>' +
                 '<p style="color:var(--color-texto-secundario);margin-bottom:6px;">' + formatearMoneda(datos.pago.monto) + ' para <strong>' + datos.cliente.nombre + '</strong></p>' +
                 '<p style="font-family:monospace;font-size:13px;color:var(--color-acento);background:var(--color-bg-terciario);padding:6px 12px;border-radius:6px;display:inline-block;margin-bottom:20px;">' + datos.pago.codigo + '</p>' +
                 '<div style="display:flex;flex-direction:column;gap:10px;max-width:340px;margin:0 auto;">' +
+                (tieneTel ? '<button class="btn-whatsapp" onclick="cerrarModal(); enviarComprobanteWhatsApp(\'' + clienteId + '\',\'' + contratoId + '\',\'' + pagoId + '\')" style="justify-content:center;width:100%;"><i class="fab fa-whatsapp"></i> Enviar por WhatsApp</button>' : '') +
+                (tieneEm ? '<button class="btn-email" onclick="cerrarModal(); enviarComprobanteEmail(\'' + clienteId + '\',\'' + contratoId + '\',\'' + pagoId + '\')" style="justify-content:center;width:100%;"><i class="fas fa-envelope"></i> Enviar por Email</button>' : '') +
                 '<button class="btn-secundario" onclick="cerrarModal(); verComprobantePago(\'' + clienteId + '\',\'' + contratoId + '\',\'' + pagoId + '\')" style="justify-content:center;width:100%;"><i class="fas fa-receipt"></i> Ver comprobante</button>' +
-                '<button class="btn-secundario" onclick="cerrarModal()" style="justify-content:center;width:100%;">Cerrar</button>' +
+                '<button class="btn-secundario" onclick="cerrarModal()" style="justify-content:center;width:100%;">Ahora no</button>' +
                 '</div></div>';
             abrirModal('Enviar comprobante', html);
+        }
+
+        function enviarComprobanteWhatsApp(clienteId, contratoId, pagoId) {
+            const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
+            if (!datos) { mostrarNotificacion('Datos no encontrados', 'error'); return; }
+            const numero = normalizarTelefonoWhatsApp(datos.cliente.telefono);
+            if (!numero) { mostrarNotificacion('Telefono invalido', 'warning'); return; }
+            descargarComprobante(clienteId, contratoId, pagoId);
+            setTimeout(function() {
+                const mensaje = 'Hola ' + datos.cliente.nombre + ', adjunto el comprobante de tu pago:\n\n' +
+                    'Monto: ' + formatearMoneda(datos.pago.monto) + '\n' +
+                    'Fecha: ' + formatearFechaHora(datos.pago.fecha) + '\n' +
+                    'Codigo: ' + datos.pago.codigo + '\n' +
+                    'Saldo restante: ' + formatearMoneda(datos.totales.saldoPendiente) + '\n\n' +
+                    'Gracias por tu preferencia.\n' + EMISOR_COMPROBANTE;
+                window.open('https://wa.me/' + numero + '?text=' + encodeURIComponent(mensaje), '_blank');
+                registrarHistorial('pago', 'editar', 'Se envio comprobante por WhatsApp a "' + datos.cliente.nombre + '"', { id: pagoId, nombre: datos.cliente.nombre });
+                mostrarNotificacion('WhatsApp abierto. Adjunta la imagen.', 'info');
+            }, 800);
+        }
+
+        function enviarComprobanteEmail(clienteId, contratoId, pagoId) {
+            const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
+            if (!datos) { mostrarNotificacion('Datos no encontrados', 'error'); return; }
+            if (!datos.cliente.email || datos.cliente.email.indexOf('@') === -1) { mostrarNotificacion('Sin email valido', 'warning'); return; }
+            descargarComprobante(clienteId, contratoId, pagoId);
+            setTimeout(function() {
+                const asunto = 'Comprobante de pago - ' + EMISOR_COMPROBANTE;
+                const cuerpo = 'Hola ' + datos.cliente.nombre + ',\n\n' +
+                    'Adjunto el comprobante de tu pago:\n\n' +
+                    'Monto: ' + formatearMoneda(datos.pago.monto) + '\n' +
+                    'Fecha: ' + formatearFechaHora(datos.pago.fecha) + '\n' +
+                    'Codigo de verificacion: ' + datos.pago.codigo + '\n' +
+                    'Saldo restante: ' + formatearMoneda(datos.totales.saldoPendiente) + '\n\n' +
+                    'Festejado: ' + datos.contrato.festejado + '\n\n' +
+                    'Gracias por tu preferencia.\n\n' +
+                    EMISOR_COMPROBANTE + '\n' +
+                    'Firmado por: ' + (usuarioActual ? usuarioActual.nombre : 'Usuario') + '\n\n' +
+                    '(Adjunta la imagen descargada al correo antes de enviarlo)';
+                window.open('mailto:' + datos.cliente.email + '?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(cuerpo), '_blank');
+                registrarHistorial('pago', 'editar', 'Se envio comprobante por Email a "' + datos.cliente.nombre + '"', { id: pagoId, nombre: datos.cliente.nombre });
+                mostrarNotificacion('Email abierto. Adjunta la imagen.', 'info');
+            }, 800);
+        }
+
+        function compartirComprobanteWhatsApp(clienteId, contratoId, pagoId) { enviarComprobanteWhatsApp(clienteId, contratoId, pagoId); }
+        function compartirComprobanteEmail(clienteId, contratoId, pagoId) { enviarComprobanteEmail(clienteId, contratoId, pagoId); }
+
+        // ============================================================
+        // GOOGLE CALENDAR
+        // ============================================================
+        function crearEventoGoogleCalendar(clienteId, contratoId) {
+            const c = obtenerCliente(clienteId); if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
+            const co = c.contratos.find(function(x) { return x.id === contratoId; }); if (!co) { mostrarNotificacion('Contrato no encontrado', 'error'); return; }
+            if (!co.fechaEvento) { mostrarNotificacion('Sin fecha de evento', 'warning'); return; }
+            const tit = 'Sesion de fotos: ' + (co.festejado || 'Evento');
+            let fev = co.fechaEvento.replace(/-/g, '');
+            let hev = co.horaEvento ? co.horaEvento.replace(':', '') : '120000';
+            const fi = fev + 'T' + hev;
+            const hi = parseInt(hev.substring(0, 2)); const mi = parseInt(hev.substring(2, 4));
+            let hf = hi + 2; let mf = mi; if (hf >= 24) { hf = 23; mf = 59; }
+            const hfs = String(hf).padStart(2, '0') + String(mf).padStart(2, '0') + '00';
+            const ff = fev + 'T' + hfs;
+            const tot = calcularTotalesContrato(co);
+            let d = 'Cliente: ' + c.nombre + '\nTelefono: ' + (c.telefono || 'N/A') + '\n';
+            if (c.email) d += 'Email: ' + c.email + '\n';
+            d += '\nFestejado: ' + (co.festejado || 'N/A') + '\nPaquete: ' + obtenerNombreItemContrato(co) + '\n';
+            d += '\nEvento: ' + (co.direccionEvento || 'N/A') + '\nRecepcion: ' + (co.direccionRecepcion || 'N/A') + '\n';
+            if (co.horaRecepcion) d += 'Hora recepcion: ' + co.horaRecepcion + ' hrs\n';
+            d += '\nPrecio Final: ' + formatearMoneda(co.precioFinal || 0) + '\n';
+            if (tot.totalCargos > 0) d += 'Cargos: ' + formatearMoneda(tot.totalCargos) + '\n';
+            d += 'Total: ' + formatearMoneda(tot.totalAPagar) + '\n';
+            d += 'Pagado: ' + formatearMoneda(tot.totalPagos) + '\n';
+            d += 'Saldo: ' + formatearMoneda(tot.saldoPendiente) + '\n';
+            if (co.notas) d += '\nNotas:\n' + co.notas + '\n';
+            d += '\nGenerado desde Registro PDA';
+            const p = new URLSearchParams({ action: 'TEMPLATE', text: tit, dates: fi + '/' + ff, details: d, location: co.direccionEvento || co.direccionRecepcion || '' });
+            window.open('https://calendar.google.com/calendar/render?' + p.toString(), '_blank');
+            registrarHistorial('contrato', 'editar', 'Evento enviado a Google Calendar para "' + c.nombre + '"', { id: contratoId, nombre: c.nombre });
+            mostrarNotificacion('Abriendo Google Calendar', 'info');
+        }
+
+        // ============================================================
+        // IMPRESIÓN
+        // ============================================================
+        function generarVistaImpresion(clienteId, contratoId) {
+            const c = obtenerCliente(clienteId); if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
+            const co = c.contratos.find(function(x) { return x.id === contratoId; }); if (!co) { mostrarNotificacion('Contrato no encontrado', 'error'); return; }
+            const tot = calcularTotalesContrato(co);
+            const in_ = obtenerNombreItemContrato(co);
+            const he = co.horaEvento ? ' ' + co.horaEvento + ' hrs' : '';
+            const hr = co.horaRecepcion ? ' ' + co.horaRecepcion + ' hrs' : '';
+            const f = function(l, v) { return '<div class="fila"><span class="lbl">' + l + ':</span><span class="val">' + v + '</span></div>'; };
+            let html = '<div id="print-doc"><h1>CONTRATO DE SERVICIOS</h1>' +
+                '<div class="sec">' + f('Cliente', c.nombre) + f('Telefono', c.telefono || 'N/A') + f('Email', c.email || 'N/A') + '</div>' +
+                '<div class="sec"><div class="grid-2">' + f('Festejado', co.festejado || 'N/A') + f('Tipo', co.tipo === 'paquete' ? 'Paquete' : 'Solo Servicio') + f('Estado', co.estado || 'Pendiente') + f('Fecha Contrato', formatearFecha(co.fechaContrato)) + f('Fecha Evento', formatearFecha(co.fechaEvento) + he) + f('Paquete/Servicio', in_ || 'N/A') + '</div></div>' +
+                '<div class="sec"><div class="grid-2">' + f('Evento Religioso', co.direccionEvento || 'N/A') + f('Recepcion', (co.direccionRecepcion || 'N/A') + hr) + '</div></div>' +
+                '<div class="sec">' + f('Precio Base', formatearMoneda(co.precioBase || 0)) + f('Precio Final', formatearMoneda(co.precioFinal || 0)) +
+                (tot.totalCargos > 0 ? f('Cargos Extras', formatearMoneda(tot.totalCargos)) : '') +
+                f('Total a Pagar', '<span class="negrita">' + formatearMoneda(tot.totalAPagar) + '</span>') +
+                '<div class="fila"><span class="lbl" style="color:#4caf50;">Total Pagado:</span><span class="val verde">' + formatearMoneda(tot.totalPagos) + '</span></div>' +
+                '<div class="fila"><span class="lbl" style="color:' + (tot.saldoPendiente === 0 ? '#4caf50' : '#ff9800') + ';">Saldo Pendiente:</span><span class="val ' + (tot.saldoPendiente === 0 ? 'verde' : 'naranja') + '">' + formatearMoneda(tot.saldoPendiente) + '</span></div>' +
+                '</div>';
+            if (tot.pagosValidos.length > 0) {
+                html += '<div class="sec"><div class="sec-title">Pagos</div><table><thead><tr><th>Fecha</th><th>Codigo</th><th style="text-align:right;">Monto</th><th>Nota</th></tr></thead><tbody>' +
+                    tot.pagosValidos.map(function(p) { return '<tr><td>' + formatearFechaHora(p.fecha) + '</td><td style="font-family:monospace;font-size:9px;">' + (p.codigo || '-') + '</td><td style="text-align:right;font-weight:600;">' + formatearMoneda(p.monto) + '</td><td>' + (p.nota || '') + '</td></tr>'; }).join('') +
+                    '</tbody></table></div>';
+            }
+            if (co.notas) html += '<div class="sec"><div class="sec-title">Notas</div><div style="font-size:11px;color:#555;">' + co.notas + '</div></div>';
+            html += '<div class="pie">Generado: ' + formatearFechaHora(obtenerFechaHoraActual()) + ' | PDA v' + VERSION + ' - JFR Media</div></div>';
+            const cont = document.getElementById('impresion-contenedor');
+            cont.innerHTML = html;
+            cont.style.display = 'block';
+            const ot = document.title;
+            document.title = 'Contrato - ' + c.nombre;
+            window.print();
+            setTimeout(function() { cont.style.display = 'none'; document.title = ot; }, 500);
+            mostrarNotificacion('Enviando a impresion...', 'info');
         }
 
         // ============================================================
@@ -3465,16 +3323,10 @@
         function mostrarFormularioTarea(tarea) {
             const ee = tarea !== null && tarea !== undefined;
             let ot = '';
-            TIPOS_TAREA.forEach(function(t) {
-                ot += '<option value="' + t + '" ' + (tarea && tarea.tipo === t ? 'selected' : '') + '>' + t + '</option>';
-            });
+            TIPOS_TAREA.forEach(function(t) { ot += '<option value="' + t + '" ' + (tarea && tarea.tipo === t ? 'selected' : '') + '>' + t + '</option>'; });
             let oc = '<option value="">Sin vincular</option>';
-            clientes.forEach(function(c) {
-                oc += '<option value="' + c.id + '" ' + (tarea && tarea.clienteId === c.id ? 'selected' : '') + '>' + c.nombre + ' (Cliente)</option>';
-            });
-            prospectos.forEach(function(p) {
-                if (!p.clienteId) oc += '<option value="pro_' + p.id + '" ' + (tarea && tarea.clienteId === 'pro_' + p.id ? 'selected' : '') + '>' + p.nombre + ' (Prospecto)</option>';
-            });
+            clientes.forEach(function(c) { oc += '<option value="' + c.id + '" ' + (tarea && tarea.clienteId === c.id ? 'selected' : '') + '>' + c.nombre + ' (Cliente)</option>'; });
+            prospectos.forEach(function(p) { if (!p.clienteId) oc += '<option value="pro_' + p.id + '" ' + (tarea && tarea.clienteId === 'pro_' + p.id ? 'selected' : '') + '>' + p.nombre + ' (Prospecto)</option>'; });
             const ft = tarea ? tarea.fecha : obtenerFechaActual();
             const ec = tarea && tarea.completada ? 'checked' : '';
             const html = '<form id="form-tarea">' +
@@ -3683,7 +3535,8 @@
         // INFORMES
         // ============================================================
         function actualizarFiltrosInformes() {
-            const fp = document.getElementById('filtro-paquete'); const fs = document.getElementById('filtro-servicio');
+            const fp = document.getElementById('filtro-paquete');
+            const fs = document.getElementById('filtro-servicio');
             if (fp) {
                 const v = fp.value;
                 let html = '<option value="todos">Todos</option>';
@@ -3967,13 +3820,6 @@
             });
         }
 
-        window.abrirEditarUsuario = abrirEditarUsuario;
-        window.resetearPinUsuario = resetearPinUsuario;
-        window.eliminarUsuario = eliminarUsuario;
-
-        // ============================================================
-        // CAMBIO DE PIN PERSONAL
-        // ============================================================
         function abrirCambiarMiPin() {
             if (!usuarioActual) return;
             abrirModal('Cambiar mi PIN',
@@ -4004,13 +3850,11 @@
                 guardarDatos();
                 cerrarModal();
                 mostrarNotificacion('PIN actualizado', 'success');
-        window.compartirComprobanteWhatsApp = compartirComprobanteWhatsApp;
-        window.compartirComprobanteEmail = compartirComprobanteEmail;
             });
         }
 
         // ============================================================
-        // FIREBASE
+        // FIREBASE SYNC
         // ============================================================
         function actualizarEstadoSync(estado, texto) {
             const dot = document.getElementById('sync-dot'); const text = document.getElementById('sync-text');
@@ -4299,7 +4143,6 @@
         // EVENT LISTENERS APP
         // ============================================================
         function conectarEventListenersApp() {
-            // Menú lateral
             document.querySelectorAll('.menu-item').forEach(function(item) {
                 item.addEventListener('click', function() {
                     const seccion = this.dataset.seccion;
@@ -4308,7 +4151,6 @@
                 });
             });
 
-            // Botones principales
             document.getElementById('btn-nuevo-paquete').addEventListener('click', function() { CRUD.paquetes.nuevo(); });
             document.getElementById('btn-nuevo-servicio').addEventListener('click', function() { CRUD.servicios.nuevo(); });
             document.getElementById('btn-nuevo-prospecto').addEventListener('click', function() { mostrarFormularioProspecto(null); });
@@ -4319,13 +4161,11 @@
                 mostrarFormularioContrato(null);
             });
 
-            // Logout
             document.getElementById('btn-logout').addEventListener('click', cerrarSesion);
             document.getElementById('btn-cambiar-usuario').addEventListener('click', cerrarSesion);
             document.getElementById('btn-cambiar-mi-pin').addEventListener('click', abrirCambiarMiPin);
             document.getElementById('btn-nuevo-usuario').addEventListener('click', mostrarFormularioNuevoUsuario);
 
-            // Filtros
             document.getElementById('filtro-fase-prospecto').addEventListener('change', renderizarProspectos);
             document.getElementById('buscar-prospecto').addEventListener('input', renderizarProspectos);
             document.getElementById('filtro-estado-cliente-lista').addEventListener('change', renderizarClientes);
@@ -4351,7 +4191,6 @@
             document.getElementById('btn-mes-siguiente').addEventListener('click', function() { mesActualCal++; if (mesActualCal > 11) { mesActualCal = 0; anoActualCal++; } renderizarCalendario(); });
             document.getElementById('btn-mes-actual').addEventListener('click', function() { const h = new Date(); mesActualCal = h.getMonth(); anoActualCal = h.getFullYear(); renderizarCalendario(); });
 
-            // Firebase
             document.getElementById('btn-sync-firebase').addEventListener('click', async function() {
                 if (!database) { mostrarNotificacion('Firebase no disponible', 'error'); return; }
                 if (estadoSync.modo === 'firebase') { const ok = await guardarEnFirebase(); if (ok) mostrarNotificacion('Sincronizado', 'success'); }
@@ -4362,7 +4201,6 @@
                 if (confirm('Cargar datos desde Firebase?')) { await cargarDesdeFirebase(); }
             });
 
-            // Export/Import
             document.getElementById('btn-exportar-datos').addEventListener('click', function() {
                 try {
                     const json = JSON.stringify({ version: VERSION, fechaExportacion: obtenerFechaActual(), paquetes: paquetes, serviciosAdicionales: serviciosAdicionales, prospectos: prospectos, clientes: clientes, tareas: tareas, historial: historial, usuarios: usuarios }, null, 2);
@@ -4395,7 +4233,6 @@
                 r.readAsText(f); this.value = '';
             });
 
-            // Historial
             document.getElementById('historial-filtro-entidad').addEventListener('change', renderizarHistorial);
             document.getElementById('historial-filtro-accion').addEventListener('change', renderizarHistorial);
             document.getElementById('historial-filtro-usuario').addEventListener('input', renderizarHistorial);
@@ -4413,17 +4250,14 @@
                 renderizarHistorial();
             });
 
-            // Colapsar sidebar
             document.getElementById('btn-colapsar').addEventListener('click', toggleSidebar);
-
-            // Temas
             document.querySelectorAll('.tema-opcion').forEach(function(op) {
                 op.addEventListener('click', function() { aplicarTema(op.dataset.tema); mostrarNotificacion('Tema aplicado', 'success'); });
             });
         }
 
         // ============================================================
-        // LOGIN EVENT LISTENERS
+        // LOGIN LISTENERS
         // ============================================================
         document.getElementById('login-btn-cancelar').addEventListener('click', volverAPasoUsuario);
         document.getElementById('login-btn-ingresar').addEventListener('click', intentarLogin);
@@ -4445,7 +4279,6 @@
                 usuarios = [admin];
                 guardarUsuarios();
             }
-            // Aplicar preferencias de sidebar y tema
             const sg = localStorage.getItem(PREF_SIDEBAR) === '1';
             aplicarSidebarColapsado(sg);
             aplicarTema(temaInicial);
