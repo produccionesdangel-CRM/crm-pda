@@ -2595,7 +2595,7 @@
         // ============================================================
         // CONTRATOS
         // ============================================================
-        function mostrarFormularioContrato(clienteId, titulo, contrato) {
+               function mostrarFormularioContrato(clienteId, titulo, contrato) {
             if (!clienteId) clienteId = null;
             if (!titulo) titulo = 'Nuevo Contrato';
             if (!contrato) contrato = null;
@@ -2646,14 +2646,46 @@
                 '<div id="seccion-solo-servicio" style="' + (tc === 'solo-servicio' ? '' : 'display:none;') + '">' +
                 '<div class="form-grupo"><label>Servicio *</label><select id="contrato-servicio" ' + (tc === 'solo-servicio' ? 'required' : '') + '><option value="">Seleccionar...</option>' + os + '</select></div>' +
                 '</div>' +
-                '<div class="row-2col"><div class="form-grupo"><label>Fecha del evento *</label><input type="date" id="contrato-fecha-evento" required value="' + (contrato ? contrato.fechaEvento : '') + '"></div>' +
-                '<div class="form-grupo"><label>Hora del evento</label><select id="contrato-hora-evento"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div>' +
-                '<div class="form-grupo"><label>Direccion del evento</label><input type="text" id="contrato-direccion-evento" value="' + (contrato ? contrato.direccionEvento : '') + '"></div>' +
-                '<div class="row-2col"><div class="form-grupo"><label>Direccion de la recepcion</label><input type="text" id="contrato-direccion-recepcion" value="' + (contrato ? contrato.direccionRecepcion : '') + '"></div>' +
-                '<div class="form-grupo"><label>Hora de la recepcion</label><select id="contrato-hora-recepcion"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div>' +
+                '<div class="row-2col">' +
+                '<div class="form-grupo"><label>Fecha del evento *</label><input type="date" id="contrato-fecha-evento" required value="' + (contrato ? contrato.fechaEvento : '') + '"></div>' +
+                '<div class="form-grupo"><label>Hora del evento</label><select id="contrato-hora-evento"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div>' +
+                '</div>' +
+                '<div class="form-grupo"><label>Direccion del evento religioso</label><input type="text" id="contrato-direccion-evento" value="' + (contrato ? contrato.direccionEvento : '') + '"></div>' +
+                '<div class="row-2col">' +
+                '<div class="form-grupo"><label>Direccion de la recepcion</label><input type="text" id="contrato-direccion-recepcion" value="' + (contrato ? contrato.direccionRecepcion : '') + '"></div>' +
+                '<div class="form-grupo"><label>Hora de la recepcion</label><select id="contrato-hora-recepcion"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div>' +
+                '</div>' +
+                '<div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;">' +
+                '<h4 style="color:var(--color-acento);margin-bottom:12px;"><i class="fas fa-calculator"></i> Precios</h4>' +
+                '<div class="row-2col">' +
                 '<div class="form-grupo"><label>Precio base (auto)</label><input type="number" id="contrato-precio-base" readonly value="' + (contrato ? contrato.precioBase : '') + '" style="background:var(--color-bg-primario);opacity:0.7;"></div>' +
                 '<div class="form-grupo"><label>Precio final (editable)</label><input type="number" id="contrato-precio-final" min="0" step="100" value="' + (contrato ? contrato.precioFinal : '') + '"></div>' +
-                '<div class="form-grupo"><label>Anticipo</label><input type="number" id="contrato-anticipo" min="0" step="100" value="' + (contrato && contrato.anticipo ? contrato.anticipo : '') + '"></div>' +
+                '</div></div>' +
+                '<div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;">' +
+                '<h4 style="color:var(--color-naranja);margin-bottom:12px;"><i class="fas fa-plus-circle"></i> Cargos Extras</h4>' +
+                '<div class="row-2col">' +
+                '<div class="form-grupo"><label>Descripcion del cargo</label><input type="text" id="cargo-descripcion" placeholder="Ej: Fotos extra, Album adicional, Ajuste especial..."></div>' +
+                '<div class="form-grupo"><label>Monto</label><div style="display:flex;gap:8px;"><input type="number" id="cargo-monto" min="0" step="100" placeholder="0" style="flex:1;"><button type="button" class="btn-cian" id="btn-agregar-cargo" style="white-space:nowrap;"><i class="fas fa-plus"></i> Agregar</button></div></div>' +
+                '</div>' +
+                '<div class="form-grupo"><label>Movimientos del contrato</label>' +
+                '<div id="movimientos-lista" class="pagos-container" style="max-height:280px;overflow-y:auto;"></div></div>' +
+                '</div>' +
+                '<div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;">' +
+                '<h4 style="color:var(--color-verde);margin-bottom:12px;"><i class="fas fa-coins"></i> Pagos</h4>' +
+                '<div class="row-2col">' +
+                '<div class="form-grupo"><label>Anticipo (si aplica)</label><input type="number" id="contrato-anticipo" min="0" step="100" placeholder="0" value="' + (contrato && contrato.anticipo ? contrato.anticipo : '') + '"></div>' +
+                '<div class="form-grupo"><label>Nuevo pago</label><div style="display:flex;gap:8px;"><input type="number" id="contrato-nuevo-pago" min="0" step="100" placeholder="0" style="flex:1;"><button type="button" class="btn-naranja" id="btn-agregar-pago" style="white-space:nowrap;"><i class="fas fa-plus"></i> Agregar</button></div></div>' +
+                '</div>' +
+                '</div>' +
+                '<div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;">' +
+                '<h4 style="color:var(--color-acento);margin-bottom:12px;"><i class="fas fa-chart-line"></i> Resumen Financiero</h4>' +
+                '<div class="resumen-financiero">' +
+                '<div class="fila"><span>Precio final</span><span id="resumen-precio-final">$0</span></div>' +
+                '<div class="fila"><span>Cargos extras</span><span id="resumen-cargos">$0</span></div>' +
+                '<div class="fila" style="font-weight:bold;color:var(--color-texto-primario);"><span>Total a pagar</span><span id="resumen-total">$0</span></div>' +
+                '<div class="fila" style="border-top:2px solid var(--color-borde);margin-top:4px;padding-top:4px;"><span>Total pagado</span><span id="resumen-pagado" style="color:var(--color-verde);">$0</span></div>' +
+                '<div class="fila total"><span>Saldo pendiente</span><span id="resumen-saldo">$0</span></div>' +
+                '</div></div>' +
                 '<div class="form-grupo"><label>Estado *</label><select id="contrato-estado" required>' + ESTADOS_CONTRATO.map(function(e) { return '<option value="' + e + '" ' + (contrato && contrato.estado === e ? 'selected' : '') + '>' + e + '</option>'; }).join('') + '</select></div>' +
                 '<div class="form-grupo"><label>Notas</label><textarea id="contrato-notas">' + (contrato ? contrato.notas : '') + '</textarea></div>' +
                 '<div class="form-acciones">' +
@@ -2663,13 +2695,151 @@
 
             abrirModal(titulo, html);
 
-            const ts = document.getElementById('contrato-tipo');
-            const sp = document.getElementById('seccion-paquete');
-            const ss = document.getElementById('seccion-solo-servicio');
-            const ps = document.getElementById('contrato-paquete');
-            const ssr = document.getElementById('contrato-servicio');
-            const pbi = document.getElementById('contrato-precio-base');
-            const pfi = document.getElementById('contrato-precio-final');
+            // ============================================================
+            // ESTADO DEL FORMULARIO
+            // ============================================================
+            let pagosArr = contrato && contrato.pagos ? contrato.pagos.slice() : [];
+            let cargosArr = contrato && contrato.cargos ? contrato.cargos.slice() : [];
+            let pagosRecientes = [];
+
+            const el = function(id) { return document.getElementById(id); };
+
+            // ============================================================
+            // RENDERIZAR LISTA UNIFICADA DE MOVIMIENTOS
+            // ============================================================
+            function renderizarMovimientos() {
+                const lista = el('movimientos-lista');
+                if (!lista) return;
+
+                // Combinar pagos y cargos en una sola lista con marca de tipo
+                const movimientos = [];
+
+                pagosArr.forEach(function(p, idx) {
+                    movimientos.push({
+                        tipo: 'pago',
+                        index: idx,
+                        item: p,
+                        fecha: p.fecha || '',
+                        esEliminado: p.eliminado === true,
+                        esNota: p.esNotaEliminacion === true
+                    });
+                });
+
+                cargosArr.forEach(function(c, idx) {
+                    movimientos.push({
+                        tipo: 'cargo',
+                        index: idx,
+                        item: c,
+                        fecha: c.fecha || '',
+                        esEliminado: c.eliminado === true,
+                        esNota: c.esNotaEliminacion === true
+                    });
+                });
+
+                // Ordenar por fecha descendente (más reciente primero)
+                movimientos.sort(function(a, b) {
+                    return (b.fecha || '').localeCompare(a.fecha || '');
+                });
+
+                if (movimientos.length === 0) {
+                    lista.innerHTML = '<p style="color:var(--color-texto-secundario);font-size:13px;text-align:center;padding:12px;">Sin movimientos registrados</p>';
+                    actualizarResumen();
+                    return;
+                }
+
+                lista.innerHTML = movimientos.map(function(m) {
+                    const item = m.item;
+                    const claseEliminado = m.esEliminado ? 'pago-eliminado' : '';
+                    const textoEliminado = m.esEliminado ? ' (Eliminado)' : '';
+                    const iconoTipo = m.tipo === 'pago' ? 'fa-coins' : 'fa-plus-circle';
+                    const colorTipo = m.tipo === 'pago' ? 'var(--color-verde)' : 'var(--color-naranja)';
+                    const etiquetaTipo = m.tipo === 'pago' ? 'PAGO' : 'CARGO';
+                    const botonEliminar = (!m.esEliminado && !m.esNota)
+                        ? '<button type="button" class="btn-eliminar-item" onclick="PDA.eliminarMovimiento(\'' + m.tipo + '\',' + m.index + ')" title="Eliminar"><i class="fas fa-trash"></i></button>'
+                        : '';
+                    const codigo = item.codigo ? '<span class="pago-codigo" title="Huella unica"><i class="fas fa-fingerprint"></i> ' + item.codigo + '</span>' : '';
+
+                    return '<div class="pago-item ' + claseEliminado + '">' +
+                        '<div class="pago-info">' +
+                        '<span class="tarjeta-etiqueta" style="background:' + colorTipo + ';color:#fff;font-size:10px;padding:2px 8px;">' + etiquetaTipo + '</span>' +
+                        '<span class="pago-monto" style="' + (m.tipo === 'cargo' ? 'color:var(--color-naranja);' : '') + '">' + formatearMoneda(item.monto) + textoEliminado + '</span>' +
+                        '<span class="pago-fecha">' + formatearFechaHora(item.fecha) + '</span>' +
+                        codigo +
+                        (item.nota ? '<span style="font-size:11px;color:var(--color-texto-secundario);width:100%;">' + item.nota + '</span>' : '') +
+                        '</div>' +
+                        botonEliminar +
+                        '</div>';
+                }).join('');
+
+                actualizarResumen();
+            }
+
+            // ============================================================
+            // ACTUALIZAR RESUMEN FINANCIERO
+            // ============================================================
+            function actualizarResumen() {
+                const pv = pagosArr.filter(function(p) { return !p.eliminado; });
+                const cv = cargosArr.filter(function(c) { return !c.eliminado; });
+                const pf = parseFloat(el('contrato-precio-final').value) || 0;
+                const tc = cv.reduce(function(s, c) { return s + (c.monto || 0); }, 0);
+                const tp = pv.reduce(function(s, p) { return s + (p.monto || 0); }, 0);
+                const tap = pf + tc;
+                const sa = tap - tp;
+
+                el('resumen-precio-final').textContent = formatearMoneda(pf);
+                el('resumen-cargos').textContent = formatearMoneda(tc);
+                el('resumen-total').textContent = formatearMoneda(tap);
+                el('resumen-pagado').textContent = formatearMoneda(tp);
+                const se = el('resumen-saldo');
+                se.textContent = formatearMoneda(sa);
+                se.style.color = sa === 0 ? 'var(--color-verde)' : 'var(--color-naranja)';
+            }
+
+            // ============================================================
+            // ELIMINAR MOVIMIENTO (pago o cargo)
+            // ============================================================
+            window.PDA = window.PDA || {};
+            window.PDA.eliminarMovimiento = function(tipo, index) {
+                const esPago = tipo === 'pago';
+                const item = esPago ? pagosArr[index] : cargosArr[index];
+                if (!item) return;
+
+                confirmarEliminacion({
+                    titulo: esPago ? 'Eliminar pago' : 'Eliminar cargo extra',
+                    entidad: esPago ? 'pago' : 'cargo extra',
+                    nombre: formatearMoneda(item.monto),
+                    detalle: item.nota || '',
+                    onConfirmar: function() {
+                        item.eliminado = true;
+                        item.nota = (item.nota || '') + ' | ELIMINADO: ' + obtenerFechaHoraActual();
+
+                        // Agregar nota de eliminación al historial de movimientos
+                        const nota = {
+                            monto: 0,
+                            fecha: obtenerFechaHoraActual(),
+                            nota: (esPago ? 'Pago de ' : 'Cargo de ') + formatearMoneda(item.monto) + ' eliminado',
+                            eliminado: false,
+                            esNotaEliminacion: true
+                        };
+                        if (esPago) pagosArr.push(nota);
+                        else cargosArr.push(nota);
+
+                        renderizarMovimientos();
+                        mostrarNotificacion('Movimiento eliminado', 'success');
+                    }
+                });
+            };
+
+            // ============================================================
+            // CALCULAR PRECIOS BASE
+            // ============================================================
+            const ts = el('contrato-tipo');
+            const sp = el('seccion-paquete');
+            const ss = el('seccion-solo-servicio');
+            const ps = el('contrato-paquete');
+            const ssr = el('contrato-servicio');
+            const pbi = el('contrato-precio-base');
+            const pfi = el('contrato-precio-final');
 
             function calcularPrecios() {
                 let pb = 0;
@@ -2689,35 +2859,134 @@
                 pbi.value = pb;
                 const pfa = parseFloat(pfi.value);
                 if (!pfa || pfa === 0) pfi.value = pb;
+                actualizarResumen();
             }
 
+            // ============================================================
+            // EVENT LISTENERS
+            // ============================================================
+
+            // Cambio de tipo de contrato
             ts.addEventListener('change', function() {
-                if (this.value === 'paquete') { sp.style.display = ''; ss.style.display = 'none'; ps.required = true; ssr.required = false; ssr.value = ''; }
-                else { sp.style.display = 'none'; ss.style.display = ''; ps.required = false; ps.value = ''; ssr.required = true; }
+                if (this.value === 'paquete') {
+                    sp.style.display = '';
+                    ss.style.display = 'none';
+                    ps.required = true;
+                    ssr.required = false;
+                    ssr.value = '';
+                } else {
+                    sp.style.display = 'none';
+                    ss.style.display = '';
+                    ps.required = false;
+                    ps.value = '';
+                    ssr.required = true;
+                }
                 calcularPrecios();
             });
+
             ps.addEventListener('change', calcularPrecios);
             ssr.addEventListener('change', calcularPrecios);
-            document.querySelectorAll('.servicio-check').forEach(function(cb) { cb.addEventListener('change', calcularPrecios); });
-
-            if (contrato) {
-                if (contrato.horaEvento) document.getElementById('contrato-hora-evento').value = contrato.horaEvento;
-                if (contrato.horaRecepcion) document.getElementById('contrato-hora-recepcion').value = contrato.horaRecepcion;
-            }
-            calcularPrecios();
-
-            document.getElementById('btn-contrato-cancelar').addEventListener('click', function(ev) {
-                ev.preventDefault(); cerrarModal();
+            document.querySelectorAll('.servicio-check').forEach(function(cb) {
+                cb.addEventListener('change', calcularPrecios);
             });
 
-             document.getElementById('form-contrato').addEventListener('submit', function(e) {
+            // Precio final editable
+            pfi.addEventListener('input', actualizarResumen);
+
+            // Anticipo
+            el('contrato-anticipo').addEventListener('change', function() {
+                const a = parseFloat(this.value) || 0;
+                if (a > 0) {
+                    const ea = pagosArr.some(function(p) {
+                        return p.nota && p.nota.indexOf('Anticipo') !== -1 && !p.eliminado;
+                    });
+                    if (!ea) {
+                        const pagoAnticipo = {
+                            id: generarId(),
+                            monto: a,
+                            fecha: obtenerFechaHoraActual(),
+                            nota: 'Anticipo registrado por ' + formatearMoneda(a),
+                            codigo: generarHuellaPago(),
+                            registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema'
+                        };
+                        pagosArr.push(pagoAnticipo);
+                        pagosRecientes.push(pagoAnticipo);
+                        renderizarMovimientos();
+                    }
+                }
+                actualizarResumen();
+            });
+
+            // Agregar pago
+            el('btn-agregar-pago').addEventListener('click', function() {
+                const mi = el('contrato-nuevo-pago');
+                const m = parseFloat(mi.value);
+                if (!m || m <= 0) { mostrarNotificacion('Monto invalido', 'warning'); return; }
+                const nuevoPago = {
+                    id: generarId(),
+                    monto: m,
+                    fecha: obtenerFechaHoraActual(),
+                    nota: 'Pago registrado por ' + formatearMoneda(m),
+                    codigo: generarHuellaPago(),
+                    registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema'
+                };
+                pagosArr.push(nuevoPago);
+                pagosRecientes.push(nuevoPago);
+                renderizarMovimientos();
+                mi.value = '';
+                mi.focus();
+                mostrarNotificacion('Pago agregado', 'success');
+            });
+
+            // Agregar cargo extra
+            el('btn-agregar-cargo').addEventListener('click', function() {
+                const di = el('cargo-descripcion');
+                const mi = el('cargo-monto');
+                const d = di.value.trim();
+                const m = parseFloat(mi.value);
+                if (!m || m <= 0) { mostrarNotificacion('Monto invalido', 'warning'); return; }
+                if (!d) { mostrarNotificacion('Ingresa una descripcion del cargo', 'warning'); return; }
+                const nuevoCargo = {
+                    id: generarId(),
+                    monto: m,
+                    fecha: obtenerFechaHoraActual(),
+                    nota: 'Cargo extra: ' + d + ' - ' + formatearMoneda(m),
+                    registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema'
+                };
+                cargosArr.push(nuevoCargo);
+                renderizarMovimientos();
+                di.value = '';
+                mi.value = '';
+                di.focus();
+                mostrarNotificacion('Cargo extra agregado', 'success');
+            });
+
+            // Restaurar valores de hora si estamos editando
+            if (contrato) {
+                if (contrato.horaEvento) el('contrato-hora-evento').value = contrato.horaEvento;
+                if (contrato.horaRecepcion) el('contrato-hora-recepcion').value = contrato.horaRecepcion;
+            }
+
+            // Inicializar
+            calcularPrecios();
+            if (!pfi.value || parseFloat(pfi.value) === 0) pfi.value = parseFloat(pbi.value) || 0;
+            renderizarMovimientos();
+
+            // Cancelar
+            el('btn-contrato-cancelar').addEventListener('click', function(ev) {
+                ev.preventDefault();
+                cerrarModal();
+            });
+
+            // Submit
+            el('form-contrato').addEventListener('submit', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                guardarContrato(ee, contrato);
+                guardarContrato(ee, contrato, pagosArr, cargosArr, pagosRecientes);
             });
         }
 
-                function guardarContrato(ee, contratoOriginal) {
+                       function guardarContrato(ee, contratoOriginal, pagosArr, cargosArr, pagosRecientes) {
             const el = function(id) { return document.getElementById(id); };
             const ci = el('contrato-id').value;
             let clid = el('contrato-cliente-id') ? el('contrato-cliente-id').value : el('contrato-cliente').value;
@@ -2749,13 +3018,13 @@
             const c = obtenerCliente(clid);
             if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
 
-            // Usar el contrato original si estamos editando, si no, empezar vacío
-            let pagos = contratoOriginal ? (contratoOriginal.pagos || []).slice() : [];
-            let cargos = contratoOriginal ? (contratoOriginal.cargos || []).slice() : [];
-            let pagosRecientes = [];
+            // Filtrar movimientos válidos (no eliminados)
+            const pagosFinales = pagosArr.filter(function(p) { return !p.eliminado; });
+            const cargosFinales = cargosArr.filter(function(c) { return !c.eliminado; });
 
+            // Anticipo (si no está ya registrado)
             if (ant > 0) {
-                const ea = pagos.some(function(p) { return p.nota && p.nota.indexOf('Anticipo') !== -1 && !p.eliminado; });
+                const ea = pagosFinales.some(function(p) { return p.nota && p.nota.indexOf('Anticipo') !== -1; });
                 if (!ea) {
                     const pagoAnticipo = {
                         id: generarId(),
@@ -2765,8 +3034,8 @@
                         codigo: generarHuellaPago(),
                         registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema'
                     };
-                    pagos.push(pagoAnticipo);
-                    pagosRecientes.push(pagoAnticipo);
+                    pagosFinales.push(pagoAnticipo);
+                    if (pagosRecientes) pagosRecientes.push(pagoAnticipo);
                 }
             }
 
@@ -2786,8 +3055,8 @@
                 precioFinal: pf,
                 descuentoAplicado: pb - pf,
                 anticipo: ant,
-                pagos: pagos,
-                cargos: cargos,
+                pagos: pagosFinales,
+                cargos: cargosFinales,
                 notas: not,
                 fechaContrato: obtenerFechaActual(),
                 estado: est
@@ -2796,16 +3065,20 @@
             if (ee) {
                 const idx = c.contratos.findIndex(function(x) { return x.id === ci; });
                 if (idx !== -1) c.contratos[idx] = nc;
-                registrarHistorial('contrato', 'editar', 'Se edito contrato de "' + c.nombre + '"', { id: ci, nombre: c.nombre });
+                registrarHistorial('contrato', 'editar', 'Se edito contrato de "' + c.nombre + '" - Festejado: "' + fest + '"', { id: ci, nombre: c.nombre });
             } else {
                 if (!c.contratos) c.contratos = [];
                 c.contratos.push(nc);
-                registrarHistorial('contrato', 'crear', 'Se creo contrato para "' + c.nombre + '"', { id: nc.id, nombre: c.nombre });
+                registrarHistorial('contrato', 'crear', 'Se creo contrato para "' + c.nombre + '" - Festejado: "' + fest + '"', { id: nc.id, nombre: c.nombre });
             }
 
-            pagosRecientes.forEach(function(p) {
-                registrarHistorial('pago', 'crear', 'Pago de ' + formatearMoneda(p.monto) + ' para "' + c.nombre + '" - Codigo: ' + p.codigo, { id: p.id, nombre: c.nombre });
-            });
+            // Registrar pagos nuevos en el historial
+            if (pagosRecientes) {
+                pagosRecientes.forEach(function(p) {
+                    if (p.eliminado) return;
+                    registrarHistorial('pago', 'crear', 'Pago de ' + formatearMoneda(p.monto) + ' para "' + c.nombre + '" - Codigo: ' + p.codigo, { id: p.id, nombre: c.nombre });
+                });
+            }
 
             guardarDatos();
             cerrarModal();
@@ -2814,7 +3087,8 @@
             renderizarInformes();
             mostrarNotificacion('Contrato guardado', 'success');
 
-            if (pagosRecientes.length > 0) {
+            // Si hay pagos nuevos, ofrecer enviar comprobante del último
+            if (pagosRecientes && pagosRecientes.length > 0) {
                 const ultimoPago = pagosRecientes[pagosRecientes.length - 1];
                 setTimeout(function() {
                     abrirSelectorComprobante(clid, nc.id, ultimoPago.id);
