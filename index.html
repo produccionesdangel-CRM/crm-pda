@@ -1145,43 +1145,595 @@
         }
 
         @media (max-width: 768px) {
-            .sidebar { width: 60px; min-width: 60px; }
-            .sidebar.collapsed { width: 60px; min-width: 60px; }
-            .logo span, .menu-item span, .sidebar-footer .version, .user-info { display: none; }
-            .menu-item { justify-content: center; padding: 14px; }
-            .menu-item i { font-size: 20px; width: auto; }
-            .user-box { justify-content: center; padding: 12px 8px; }
-            .main-content { padding: 16px; }
-            .seccion-header h1 { font-size: 20px; }
-            .metricas-container { grid-template-columns: 1fr 1fr; }
-            .filtros-container { flex-direction: column; align-items: stretch; }
-            .filtro-grupo { min-width: auto; }
-            .filtro-grupo input, .filtro-grupo select { min-width: auto; }
-            .mosaico-grid { grid-template-columns: 1fr; }
-            .modal-content { width: 95%; margin: 10px; }
-            .row-2col, .row-3col { grid-template-columns: 1fr; }
-            .calendario-grid .dia { min-height: 60px; font-size: 12px; }
-            .calendario-grid .dia .evento { font-size: 8px; }
-            .calendario-grid .dia .numero { font-size: 11px; }
-            .informe-grid-2, .informe-grid-3 { grid-template-columns: 1fr; }
-            .temas-grid { grid-template-columns: 1fr; }
-            .detalle-acciones button { flex: 1 1 auto; justify-content: center; }
-            .detalle-acciones .spacer { display: none; }
-            .login-usuarios { grid-template-columns: 1fr; }
-            .login-card { padding: 28px 20px; }
-            .comprobante-acciones button { flex: 1 1 100%; }
+                   /* ============================================ */
+        /* RESPONSIVE MÓVIL - MEJORADO                   */
+        /* ============================================ */
+
+        /* Tablet y móvil grande */
+        @media (max-width: 900px) {
+            .config-grid { grid-template-columns: 1fr; }
+            .historial-filtros { flex-direction: column; align-items: stretch; }
+            .historial-filtros .filtro-grupo { min-width: auto; }
+            .historial-filtros .filtro-grupo input,
+            .historial-filtros .filtro-grupo select { min-width: auto; }
         }
+
+        /* Móvil (tablet pequeña, celulares landscape) */
+        @media (max-width: 768px) {
+
+            /* ============================================ */
+            /* SIDEBAR COMO DRAWER                          */
+            /* ============================================ */
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 280px;
+                min-width: 280px;
+                height: 100vh;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 999;
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+            }
+            .sidebar.mobile-abierto {
+                transform: translateX(0);
+            }
+            .sidebar.collapsed {
+                width: 280px;
+                min-width: 280px;
+                transform: translateX(-100%);
+            }
+            .sidebar.collapsed.mobile-abierto {
+                transform: translateX(0);
+            }
+            /* El logo y menú se ven completos en móvil */
+            .sidebar .logo span,
+            .sidebar .menu-item span,
+            .sidebar .user-info,
+            .sidebar .sidebar-footer .version {
+                display: block !important;
+                opacity: 1 !important;
+                width: auto !important;
+            }
+            .sidebar .logo { padding: 24px 20px; justify-content: flex-start; }
+            .sidebar .menu-item {
+                justify-content: flex-start;
+                padding: 14px 18px;
+                gap: 14px;
+                font-size: 15px;
+            }
+            .sidebar .menu-item i { font-size: 20px; width: 24px; }
+            .sidebar .user-box { padding: 12px 16px; justify-content: flex-start; }
+            .sidebar .sidebar-footer { padding: 16px 20px; }
+
+            /* Overlay oscuro cuando el sidebar está abierto */
+            .mobile-overlay {
+                display: none;
+                position: fixed;
+                top: 0; left: 0;
+                width: 100vw; height: 100vh;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .mobile-overlay.visible {
+                display: block;
+                opacity: 1;
+            }
+
+            /* Botón hamburguesa flotante */
+            .btn-mobile-menu {
+                display: flex !important;
+                position: fixed;
+                top: 16px;
+                left: 16px;
+                width: 48px;
+                height: 48px;
+                background-color: var(--color-acento);
+                color: var(--color-acento-contraste);
+                border: none;
+                border-radius: 50%;
+                cursor: pointer;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                z-index: 997;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                transition: transform 0.2s ease;
+            }
+            .btn-mobile-menu:active { transform: scale(0.92); }
+            .btn-mobile-menu.abierto { background-color: var(--color-rojo); }
+
+            /* ============================================ */
+            /* CONTENIDO PRINCIPAL                          */
+            /* ============================================ */
+            .main-content {
+                padding: 76px 16px 24px 16px;
+                width: 100vw;
+            }
+
+            /* Header de sección */
+            .seccion-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+            }
+            .seccion-header h1 {
+                font-size: 22px;
+                text-align: left;
+            }
+            .header-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            .header-actions .btn-primario,
+            .header-actions .btn-secundario,
+            .header-actions .btn-verde,
+            .header-actions .btn-azul {
+                flex: 1 1 auto;
+                justify-content: center;
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            .sync-status {
+                width: 100%;
+                justify-content: center;
+                padding: 8px 12px;
+            }
+
+            /* ============================================ */
+            /* LOGIN EN MÓVIL                               */
+            /* ============================================ */
+            .login-card {
+                padding: 28px 20px;
+                max-width: 100%;
+                margin: 12px;
+                border-radius: 12px;
+            }
+            .login-logo { font-size: 40px; margin-bottom: 12px; }
+            .login-titulo { font-size: 22px; }
+            .login-subtitulo { font-size: 13px; margin-bottom: 24px; }
+            .login-usuarios {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .login-usuario {
+                padding: 18px 16px;
+                flex-direction: row;
+                gap: 14px;
+                justify-content: flex-start;
+            }
+            .login-usuario .avatar {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+            .login-usuario .nombre { font-size: 16px; text-align: left; }
+            .login-usuario .rol { font-size: 11px; }
+            .login-pin-input {
+                font-size: 26px;
+                padding: 16px;
+                letter-spacing: 12px;
+            }
+            .login-botones { gap: 12px; }
+            .login-botones button {
+                padding: 14px 20px;
+                font-size: 15px;
+            }
+
+            /* ============================================ */
+            /* FILTROS                                      */
+            /* ============================================ */
+            .filtros-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                padding: 16px;
+                margin-bottom: 16px;
+            }
+            .filtro-grupo { min-width: auto; width: 100%; }
+            .filtro-grupo input,
+            .filtro-grupo select {
+                min-width: auto;
+                width: 100%;
+                padding: 12px 14px;
+                font-size: 15px;
+            }
+            .filtro-grupo label { font-size: 12px; }
+            .filtros-container .btn-filtrar,
+            .filtros-container .btn-limpiar {
+                width: 100%;
+                justify-content: center;
+                padding: 14px 20px;
+                font-size: 15px;
+            }
+
+            /* ============================================ */
+            /* MÉTRICAS                                     */
+            /* ============================================ */
+            .metricas-container {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                margin-bottom: 16px;
+            }
+            .metrica-card {
+                padding: 12px 14px;
+                gap: 10px;
+                flex-direction: column;
+                text-align: center;
+            }
+            .metrica-icono {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            .metrica-valor { font-size: 20px; }
+            .metrica-etiqueta { font-size: 11px; }
+
+            /* ============================================ */
+            /* MOSAICOS                                     */
+            /* ============================================ */
+            .mosaico-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .mosaico-card {
+                padding: 14px;
+                border-radius: 12px;
+            }
+            .mosaico-titulo { font-size: 16px; }
+            .mosaico-detalle { font-size: 13px; }
+            .mosaico-footer { gap: 6px; padding-top: 10px; }
+            .mosaico-footer button {
+                padding: 10px 12px;
+                font-size: 16px;
+                min-width: 44px;
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .mosaico-summary {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            .mosaico-summary .monto { font-size: 15px; }
+
+            /* ============================================ */
+            /* MODAL FULLSCREEN EN MÓVIL                    */
+            /* ============================================ */
+            .modal { padding: 0; }
+            .modal-content {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                max-height: 100vh;
+                margin: 0;
+                border-radius: 0;
+                border: none;
+            }
+            .modal-content.modal-wide { max-width: 100%; }
+            .modal-header {
+                padding: 14px 16px;
+                position: sticky;
+                top: 0;
+                z-index: 20;
+            }
+            .modal-header h2 { font-size: 18px; }
+            .modal-cerrar { font-size: 32px; padding: 0 12px; }
+            .modal-body { padding: 16px; }
+
+            /* ============================================ */
+            /* FORMULARIOS                                  */
+            /* ============================================ */
+            .row-2col,
+            .row-3col {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .form-grupo { margin-bottom: 14px; }
+            .form-grupo label { font-size: 13px; }
+            .form-grupo input,
+            .form-grupo select,
+            .form-grupo textarea {
+                padding: 12px 14px;
+                font-size: 15px;
+            }
+            .form-acciones {
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 24px;
+            }
+            .form-acciones button {
+                width: 100%;
+                justify-content: center;
+                padding: 14px 20px;
+                font-size: 15px;
+            }
+
+            /* ============================================ */
+            /* DETALLE DE CONTRATO                          */
+            /* ============================================ */
+            .detalle-acciones {
+                padding: 12px;
+                gap: 8px;
+            }
+            .detalle-acciones button {
+                flex: 1 1 calc(50% - 8px);
+                justify-content: center;
+                padding: 12px 14px;
+                font-size: 13px;
+            }
+            .detalle-acciones .spacer { display: none; }
+            .detalle-cliente { font-size: 20px; }
+            .detalle-festejado { font-size: 14px; }
+            .detalle-grid { grid-template-columns: 1fr; gap: 10px; }
+            .detalle-resumen-financiero {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .detalle-financiero-card { padding: 10px; }
+            .detalle-financiero-card .val { font-size: 16px; }
+            .detalle-lista-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                padding: 12px;
+            }
+            .detalle-lista-item .der {
+                align-items: stretch;
+                flex-direction: row;
+                justify-content: space-between;
+                gap: 8px;
+            }
+            .detalle-lista-item .acciones-mini button {
+                padding: 8px 12px;
+                font-size: 14px;
+                min-width: 40px;
+                min-height: 40px;
+            }
+
+            /* ============================================ */
+            /* CALENDARIO                                   */
+            /* ============================================ */
+            .calendario-container {
+                padding: 12px;
+                overflow-x: auto;
+            }
+            .calendario-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            .calendario-header h2 { font-size: 18px; text-align: center; }
+            .calendario-nav {
+                justify-content: center;
+            }
+            .calendario-nav button {
+                padding: 10px 16px;
+                font-size: 15px;
+                min-width: 48px;
+                min-height: 44px;
+            }
+            .calendario-grid {
+                min-width: 480px;
+                gap: 3px;
+            }
+            .calendario-grid .dia-nombre {
+                padding: 8px 4px;
+                font-size: 11px;
+            }
+            .calendario-grid .dia {
+                min-height: 70px;
+                padding: 5px;
+            }
+            .calendario-grid .dia .numero { font-size: 12px; }
+            .calendario-grid .dia .evento {
+                font-size: 9px;
+                padding: 2px 4px;
+            }
+            .calendario-grid .dia .evento-mas { font-size: 9px; }
+            .leyenda-calendario {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            /* ============================================ */
+            /* TAREAS                                       */
+            /* ============================================ */
+            #lista-tareas { padding: 12px; }
+            #lista-tareas .tarjeta-registro {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 14px;
+                gap: 12px;
+            }
+            #lista-tareas .tarjeta-acciones {
+                justify-content: flex-end;
+                padding-top: 10px;
+                border-top: 1px solid var(--color-borde-suave);
+                gap: 6px;
+            }
+            #lista-tareas .tarjeta-acciones button {
+                padding: 10px 12px;
+                font-size: 16px;
+                min-width: 44px;
+                min-height: 44px;
+            }
+
+            /* ============================================ */
+            /* INFORMES                                     */
+            /* ============================================ */
+            .informe-grid-2,
+            .informe-grid-3 {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                margin-bottom: 16px;
+            }
+            .informe-bloque { padding: 14px; }
+            .informes-detalle { padding: 16px; }
+
+            /* ============================================ */
+            /* CONFIGURACIÓN                                */
+            /* ============================================ */
+            .config-card { padding: 20px; }
+            .config-card h3 { font-size: 16px; }
+            .config-boton {
+                padding: 14px 16px;
+                font-size: 15px;
+            }
+            .config-boton i { width: 36px; height: 36px; font-size: 15px; }
+            .temas-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 8px;
+            }
+            .tema-opcion { padding: 8px; }
+            .tema-preview { height: 36px; }
+            .tema-nombre { font-size: 11px; }
+
+            /* Historial de actividad */
+            .historial-card { padding: 20px; }
+            .historial-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .historial-stat { padding: 10px 12px; }
+            .historial-stat .val { font-size: 18px; }
+            .historial-filtros {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                padding: 12px;
+            }
+            .historial-filtros .filtro-grupo { min-width: auto; width: 100%; }
+            .historial-filtros .filtro-grupo input,
+            .historial-filtros .filtro-grupo select {
+                min-width: auto;
+                width: 100%;
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+            .historial-filtros .btn-limpiar {
+                width: 100%;
+                justify-content: center;
+                padding: 12px;
+            }
+            .historial-lista { max-height: none; }
+            .historial-item { padding: 12px; }
+            .historial-item-meta { flex-direction: column; gap: 4px; }
+
+            /* Usuarios */
+            .usuario-item {
+                flex-wrap: wrap;
+                padding: 14px;
+            }
+            .usuario-item .acciones {
+                width: 100%;
+                justify-content: flex-end;
+                padding-top: 10px;
+                border-top: 1px solid var(--color-borde-suave);
+                gap: 6px;
+            }
+            .usuario-item .acciones button {
+                padding: 10px 12px;
+                font-size: 16px;
+                min-width: 44px;
+                min-height: 44px;
+            }
+
+            /* ============================================ */
+            /* TABLAS                                       */
+            /* ============================================ */
+            table {
+                font-size: 12px;
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            table thead th,
+            table tbody td {
+                padding: 8px 10px;
+            }
+
+            /* ============================================ */
+            /* COMPROBANTE                                  */
+            /* ============================================ */
+            .comprobante-preview { padding: 12px; }
+            .comprobante-acciones {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .comprobante-acciones button {
+                width: 100%;
+                justify-content: center;
+                padding: 14px 16px;
+            }
+
+            /* ============================================ */
+            /* CRÉDITO                                      */
+            /* ============================================ */
+            .credito-footer { padding: 20px 16px; }
+            .credito-footer .credito-marca { font-size: 20px; }
+            .credito-footer .credito-marca i { font-size: 18px; }
+
+            /* ============================================ */
+            /* NOTIFICACIONES                               */
+            /* ============================================ */
+            .notificacion {
+                left: 16px;
+                right: 16px;
+                bottom: 16px;
+                max-width: none;
+                text-align: center;
+            }
+        }
+
+        /* Móvil muy pequeño (iPhone SE, etc.) */
         @media (max-width: 480px) {
+            .main-content { padding: 76px 12px 20px 12px; }
+
             .metricas-container { grid-template-columns: 1fr; }
-            .seccion-header { flex-direction: column; align-items: stretch; }
-            .form-acciones { flex-direction: column; }
-            .form-acciones button { width: 100%; justify-content: center; }
-            .mosaico-grid { grid-template-columns: 1fr; }
-            .detalle-grid { grid-template-columns: 1fr; }
+            .seccion-header h1 { font-size: 20px; }
+
+            .mosaico-footer button {
+                padding: 8px 10px;
+                font-size: 15px;
+            }
+
+            .detalle-resumen-financiero { grid-template-columns: 1fr; }
+
+            .detalle-acciones button {
+                flex: 1 1 100%;
+            }
+
+            .temas-grid { grid-template-columns: 1fr; }
+
+            .login-card { padding: 24px 16px; }
+            .login-logo { font-size: 36px; }
+            .login-titulo { font-size: 20px; }
+
+            .calendario-grid { min-width: 420px; }
+            .calendario-grid .dia { min-height: 60px; padding: 4px; }
+            .calendario-grid .dia .numero { font-size: 11px; }
+            .calendario-grid .dia .evento { font-size: 8px; }
+
+            .historial-stats { grid-template-columns: 1fr; }
+        }
+
+        /* Desktop: ocultar elementos móviles */
+        @media (min-width: 769px) {
+            .btn-mobile-menu { display: none !important; }
+            .mobile-overlay { display: none !important; }
         }
     </style>
 </head>
 <body>
+    <!-- Botón menú móvil -->
+    <button class="btn-mobile-menu" id="btn-mobile-menu" aria-label="Menú">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="mobile-overlay" id="mobile-overlay"></div>
     <div class="pantalla-login" id="pantalla-login">
         <div class="login-card">
             <div class="login-logo"><i class="fas fa-camera-retro"></i></div>
@@ -2037,6 +2589,36 @@
             if (!s) return;
             const c = s.classList.toggle('collapsed');
             localStorage.setItem(PREF_SIDEBAR, c ? '1' : '0');
+        }
+        function toggleSidebarMovil() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            const btn = document.getElementById('btn-mobile-menu');
+            if (!sidebar || !overlay || !btn) return;
+
+            const estaAbierto = sidebar.classList.contains('mobile-abierto');
+            if (estaAbierto) {
+                sidebar.classList.remove('mobile-abierto');
+                overlay.classList.remove('visible');
+                btn.classList.remove('abierto');
+                btn.innerHTML = '<i class="fas fa-bars"></i>';
+            } else {
+                sidebar.classList.add('mobile-abierto');
+                overlay.classList.add('visible');
+                btn.classList.add('abierto');
+                btn.innerHTML = '<i class="fas fa-times"></i>';
+            }
+        }
+
+        function cerrarSidebarMovil() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            const btn = document.getElementById('btn-mobile-menu');
+            if (!sidebar || !overlay || !btn) return;
+            sidebar.classList.remove('mobile-abierto');
+            overlay.classList.remove('visible');
+            btn.classList.remove('abierto');
+            btn.innerHTML = '<i class="fas fa-bars"></i>';
         }
 
         // ============================================================
@@ -4138,7 +4720,23 @@
             renderizarTodo();
             setTimeout(function() { inicializarFirebase(); }, 1000);
         }
-
+            // Menú móvil
+            const btnMobileMenu = document.getElementById('btn-mobile-menu');
+            const mobileOverlay = document.getElementById('mobile-overlay');
+            if (btnMobileMenu) {
+                btnMobileMenu.addEventListener('click', toggleSidebarMovil);
+            }
+            if (mobileOverlay) {
+                mobileOverlay.addEventListener('click', cerrarSidebarMovil);
+            }
+            // Cerrar el menú al seleccionar una opción
+            document.querySelectorAll('.menu-item').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        cerrarSidebarMovil();
+                    }
+                });
+            });
         // ============================================================
         // EVENT LISTENERS APP
         // ============================================================
