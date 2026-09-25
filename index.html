@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro PDA v3.5 - Estudio Fotografía</title>
+    <title>Registro PDA v3.6 - Estudio Fotografía</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -28,6 +28,7 @@
             --color-verde: #4caf50; --color-rojo: #ef5350; --color-amarillo: #ffc107;
             --color-azul: #42a5f5; --color-naranja: #ff9800; --color-morado: #9c27b0;
             --color-cian: #00bcd4; --color-rosa: #e91e63;
+            --color-whatsapp: #25D366;
             --color-sidebar-bg: #0a0a0a; --color-sidebar-texto: #a8a8a8;
             --color-sidebar-texto-hover: #ffffff;
             --color-sidebar-hover: rgba(255,255,255,0.08);
@@ -47,6 +48,7 @@
             --color-verde: #2e7d32; --color-rojo: #c62828; --color-amarillo: #f9a825;
             --color-azul: #1565c0; --color-naranja: #ef6c00; --color-morado: #6a1b9a;
             --color-cian: #00838f; --color-rosa: #c2185b;
+            --color-whatsapp: #128C7E;
             --color-sidebar-bg: #ffffff; --color-sidebar-texto: #555555;
             --color-sidebar-texto-hover: #1a1a1a;
             --color-sidebar-hover: rgba(0,0,0,0.05);
@@ -66,6 +68,7 @@
             --color-verde: #6b7d3f; --color-rojo: #a34433; --color-amarillo: #d99b2c;
             --color-azul: #5a7a8c; --color-naranja: #c76f2d; --color-morado: #7a5a75;
             --color-cian: #6d8f8f; --color-rosa: #a85964;
+            --color-whatsapp: #128C7E;
             --color-sidebar-bg: #4a3f2e; --color-sidebar-texto: #d8cbb3;
             --color-sidebar-texto-hover: #fdf5e6;
             --color-sidebar-hover: rgba(217, 155, 44, 0.15);
@@ -373,7 +376,7 @@
         /* BOTONES */
         .btn-primario, .btn-secundario, .btn-verde, .btn-azul, .btn-naranja,
         .btn-cian, .btn-morado, .btn-imprimir, .btn-calendar, .btn-filtrar,
-        .btn-limpiar, .btn-peligro {
+        .btn-limpiar, .btn-peligro, .btn-whatsapp {
             border: none; border-radius: var(--border-radius);
             cursor: pointer; transition: all 0.2s ease;
             display: inline-flex; align-items: center; gap: 6px;
@@ -409,6 +412,8 @@
         .btn-calendar:hover { filter: brightness(1.1); }
         .btn-peligro { background-color: var(--color-rojo); color: #ffffff; padding: 8px 16px; font-size: 13px; }
         .btn-peligro:hover { filter: brightness(1.1); }
+        .btn-whatsapp { background-color: var(--color-whatsapp); color: #ffffff; padding: 8px 16px; font-size: 13px; }
+        .btn-whatsapp:hover { filter: brightness(1.1); }
         .btn-eliminar-item {
             background: none; border: none; color: var(--color-rojo);
             cursor: pointer; padding: 2px 8px; border-radius: var(--border-radius);
@@ -523,6 +528,7 @@
         .mosaico-footer .btn-completar:hover { color: var(--color-verde); }
         .mosaico-footer .btn-imprimir:hover { color: #1a237e; }
         .mosaico-footer .btn-calendar:hover { color: #4285f4; }
+        .mosaico-footer .btn-whatsapp:hover { color: var(--color-whatsapp); }
 
         .mosaico-summary {
             display: flex; justify-content: space-between; align-items: center;
@@ -1503,7 +1509,6 @@
                 </div>
             </div>
 
-            <!-- Paso 3: Configurar PIN inicial (admin primera vez) -->
             <div class="login-paso" id="login-paso-nuevo-pin">
                 <h3>Configura tu PIN</h3>
                 <div class="login-info visible">
@@ -1523,7 +1528,7 @@
             </div>
 
             <div class="login-footer">
-                v3.5 · Software diseñado por <strong>JFR MEDIA</strong><br>
+                v3.6 · Software diseñado por <strong>JFR MEDIA</strong><br>
                 Acceso restringido a personal autorizado
             </div>
         </div>
@@ -1562,7 +1567,7 @@
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Cerrar sesión</span>
                 </button>
-                <div class="version">v3.5</div>
+                <div class="version">v3.6</div>
             </div>
         </nav>
 
@@ -1811,10 +1816,10 @@
                     </div>
                 </div>
 
-                <!-- GESTIÓN DE USUARIOS (solo admin) -->
+                <!-- GESTIÓN DE USUARIOS -->
                 <div class="config-card" id="card-gestion-usuarios" style="margin-bottom:24px; display:none;">
                     <h3><i class="fas fa-users-cog"></i> Gestión de usuarios</h3>
-                    <p class="config-descripcion">Como administrador puedes agregar nuevos usuarios con permisos de operador. Los operadores pueden trabajar con toda la información pero no gestionan usuarios.</p>
+                    <p class="config-descripcion">Como administrador puedes agregar nuevos usuarios con permisos de operador.</p>
                     <div class="config-acciones" style="margin-bottom:12px;">
                         <button class="config-boton sync" id="btn-nuevo-usuario">
                             <i class="fas fa-user-plus"></i>
@@ -1827,7 +1832,7 @@
                 <!-- HISTORIAL -->
                 <div class="historial-card">
                     <h3><i class="fas fa-history"></i> Historial de actividad</h3>
-                    <p class="config-descripcion">Consulta todos los movimientos. Cada evento registra al usuario que lo realizó.</p>
+                    <p class="config-descripcion">Consulta todos los movimientos. Cada evento registra al usuario que lo realizó y su hora local.</p>
                     <div class="historial-stats" id="historial-stats"></div>
                     <div class="historial-filtros">
                         <div class="filtro-grupo">
@@ -1872,73 +1877,55 @@
 
                 <!-- INFO VERSIÓN -->
                 <div class="version-card">
-                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v3.5</span></h3>
+                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v3.6</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">3.5</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">3.6</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
                     </div>
                     <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v3.5)</h4>
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v3.6)</h4>
                         <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-user-shield"></i></div>
+                            <div class="changelog-icono"><i class="fas fa-clock"></i></div>
                             <div class="changelog-contenido">
-                                <div class="changelog-titulo">Usuario administrador con PIN configurable</div>
+                                <div class="changelog-titulo">Hora local correcta en historial</div>
                                 <div class="changelog-desc">
-                                    Al primer inicio, el administrador configura su PIN personal (no puede usar el 1234 por defecto).
-                                    Después puede cambiarlo desde Configuración verificando el PIN anterior.
+                                    Se corrigió el registro de fecha y hora en el historial. Ahora se guarda con la
+                                    hora local del sistema (GMT-6 para México) en lugar de UTC. Los movimientos
+                                    muestran la hora exacta en que se realizaron.
                                 </div>
                             </div>
                         </div>
                         <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-users-cog"></i></div>
+                            <div class="changelog-icono"><i class="fab fa-whatsapp"></i></div>
                             <div class="changelog-contenido">
-                                <div class="changelog-titulo">Gestión de usuarios desde la interfaz</div>
+                                <div class="changelog-titulo">Botón de WhatsApp en contratos</div>
                                 <div class="changelog-desc">
-                                    El administrador puede crear, editar y eliminar usuarios con permisos de operador
-                                    desde la sección Configuración. Los operadores no pueden gestionar usuarios.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-key"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Cambio de PIN con verificación</div>
-                                <div class="changelog-desc">
-                                    Cualquier usuario puede cambiar su PIN desde "Mi cuenta" ingresando
-                                    primero su PIN actual y luego el nuevo (con confirmación).
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-mobile-screen-button"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Sin configuración por consola</div>
-                                <div class="changelog-desc">
-                                    Ya no es necesario abrir la consola del navegador para generar hashes.
-                                    Todo el sistema de usuarios funciona 100% desde la interfaz.
+                                    En la vista de detalle de cada contrato ahora hay un botón verde de WhatsApp
+                                    que abre directamente el chat con el número del cliente registrado. Funciona
+                                    con WhatsApp Web, Desktop y móvil automáticamente.
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="changelog-section">
-                        <h4><i class="fas fa-history"></i> Novedades anteriores (v3.4 / v3.3 / v3.2)</h4>
+                        <h4><i class="fas fa-history"></i> Novedades anteriores (v3.5 / v3.4 / v3.3)</h4>
                         <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-user-lock"></i></div>
-                            <div class="changelog-contenido"><div class="changelog-titulo">Login local con PIN + Bloqueo optimista</div><div class="changelog-desc">Sesión por usuario + detección de conflictos entre usuarios.</div></div>
+                            <div class="changelog-icono"><i class="fas fa-user-shield"></i></div>
+                            <div class="changelog-contenido"><div class="changelog-titulo">Admin con PIN + gestión de usuarios</div><div class="changelog-desc">Admin inicial, operadores, reset de PIN.</div></div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-code-compare"></i></div>
+                            <div class="changelog-contenido"><div class="changelog-titulo">Bloqueo optimista</div><div class="changelog-desc">Detección de conflictos entre usuarios.</div></div>
                         </div>
                         <div class="changelog-item">
                             <div class="changelog-icono"><i class="fas fa-history"></i></div>
-                            <div class="changelog-contenido"><div class="changelog-titulo">Historial de actividad completo</div><div class="changelog-desc">Registro con filtros por entidad, acción y usuario.</div></div>
+                            <div class="changelog-contenido"><div class="changelog-titulo">Historial con filtros</div><div class="changelog-desc">Registro completo de movimientos.</div></div>
                         </div>
                         <div class="changelog-item">
                             <div class="changelog-icono"><i class="fas fa-eye"></i></div>
                             <div class="changelog-contenido"><div class="changelog-titulo">Vista de solo lectura de contratos</div><div class="changelog-desc">Consulta detallada sin entrar a edición.</div></div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-leaf"></i></div>
-                            <div class="changelog-contenido"><div class="changelog-titulo">Tema Otoño + Configuración</div><div class="changelog-desc">Tercer tema visual y sección centralizada.</div></div>
                         </div>
                     </div>
                     <div class="changelog-section">
@@ -1955,9 +1942,9 @@
                             <div class="funcionalidad-item"><i class="fas fa-tasks"></i> Tareas con recordatorios</div>
                             <div class="funcionalidad-item"><i class="fas fa-chart-pie"></i> Informes detallados</div>
                             <div class="funcionalidad-item"><i class="fab fa-google"></i> Google Calendar</div>
+                            <div class="funcionalidad-item"><i class="fab fa-whatsapp"></i> WhatsApp directo</div>
                             <div class="funcionalidad-item"><i class="fas fa-print"></i> Impresión de contratos</div>
                             <div class="funcionalidad-item"><i class="fas fa-cloud"></i> Sincronización Firebase</div>
-                            <div class="funcionalidad-item"><i class="fas fa-code-compare"></i> Bloqueo optimista</div>
                             <div class="funcionalidad-item"><i class="fas fa-history"></i> Historial de actividad</div>
                             <div class="funcionalidad-item"><i class="fas fa-shield-alt"></i> Confirmación al eliminar</div>
                         </div>
@@ -1999,8 +1986,26 @@
             appId: "1:308550111377:web:893128880c21e2de16af30"
         };
 
-        const VERSION = '3.5';
-        const PIN_ADMIN_INICIAL = '1234'; // PIN inicial del admin. En el primer login se le obliga a cambiarlo.
+        const VERSION = '3.6';
+        const PIN_ADMIN_INICIAL = '1234';
+
+        // ============================================================
+        // CONFIGURACIÓN DE ZONA HORARIA
+        // ============================================================
+        // Opciones:
+        //   'local' → usa la hora local del dispositivo del usuario (recomendado)
+        //   'gmt-6' → fuerza hora de México Centro (GMT-6) sin importar dónde esté el usuario
+        const MODO_ZONA_HORARIA = 'local';
+
+        // ============================================================
+        // CONFIGURACIÓN DE WHATSAPP
+        // ============================================================
+        // Código de país por defecto para números sin código internacional.
+        // México: '52' · España: '34' · USA: '1' · Argentina: '54'
+        const CODIGO_PAIS_DEFAULT = '52';
+
+        // Mensaje pre-rellenado al abrir WhatsApp. Deja vacío ('') para no pre-rellenar.
+        const MENSAJE_WHATSAPP_DEFAULT = '';
 
         const TEMAS_DISPONIBLES = ['dark', 'light', 'otono'];
         const FASES_DISPONIBLES = ['Interesado', 'Cotización', 'Negociación', 'Contrato', 'Frecuente', 'Cancelado', 'Inactivo'];
@@ -2008,7 +2013,7 @@
         const ESTADOS_CLIENTE = ['Activo', 'Inactivo', 'Cancelado'];
         const TIPOS_TAREA = ['Llamar', 'Enviar mensaje', 'Confirmar', 'Resolver dudas', 'Sesión de fotos', 'Visita', 'Escoger fotos', 'Recoger material', 'Entrega de fotos', 'Otro'];
         const MAX_HISTORIAL_MOVIMIENTOS = 2000;
-        const DURACION_SESION_MS = 12 * 60 * 60 * 1000; // 12h
+        const DURACION_SESION_MS = 12 * 60 * 60 * 1000;
 
         // ============================================================
         // ESTADO GLOBAL
@@ -2019,7 +2024,7 @@
         let clientes = [];
         let tareas = [];
         let historial = [];
-        let usuarios = [];       // Array de usuarios del sistema
+        let usuarios = [];
 
         let database = null;
         let sincronizandoFirebase = false;
@@ -2064,20 +2069,6 @@
         // ============================================================
         // SISTEMA DE USUARIOS
         // ============================================================
-        /**
-         * Estructura de usuario:
-         * {
-         *   username: string  - id único
-         *   nombre: string    - nombre visible
-         *   rol: string       - 'Administrador' | 'Operador'
-         *   admin: boolean    - permisos elevados
-         *   salt: string      - salt único
-         *   pinHash: string   - hash SHA-256 del PIN
-         *   requiereCambio: bool - si debe cambiar PIN en próximo login (solo admin inicial)
-         *   fechaCreacion: string
-         * }
-         */
-
         async function crearUsuarioAdminInicial() {
             const salt = 'jfr-admin-' + Date.now().toString(36);
             const pinHash = await generarHashPin(PIN_ADMIN_INICIAL, salt);
@@ -2086,9 +2077,8 @@
                 nombre: 'Administrador',
                 rol: 'Administrador',
                 admin: true,
-                salt,
-                pinHash,
-                requiereCambio: true, // Obligar a cambiar el PIN en el primer login
+                salt, pinHash,
+                requiereCambio: true,
                 fechaCreacion: new Date().toISOString().split('T')[0]
             };
         }
@@ -2096,40 +2086,27 @@
         async function inicializarUsuariosSiEsNecesario() {
             try {
                 const guardados = JSON.parse(localStorage.getItem('usuarios')) || [];
-                if (guardados.length > 0) {
-                    usuarios = guardados;
-                    return;
-                }
-                // Primera vez: crear admin inicial
+                if (guardados.length > 0) { usuarios = guardados; return; }
                 const admin = await crearUsuarioAdminInicial();
                 usuarios = [admin];
                 localStorage.setItem('usuarios', JSON.stringify(usuarios));
                 console.log('✅ Usuario admin inicial creado. PIN inicial:', PIN_ADMIN_INICIAL);
-            } catch (e) {
-                console.error('Error inicializando usuarios:', e);
-                usuarios = [];
-            }
+            } catch (e) { console.error('Error usuarios:', e); usuarios = []; }
         }
 
         function guardarUsuarios() {
-            try {
-                localStorage.setItem('usuarios', JSON.stringify(usuarios));
-            } catch (e) { console.warn('No se pudo guardar usuarios', e); }
+            try { localStorage.setItem('usuarios', JSON.stringify(usuarios)); } catch (e) {}
         }
 
-        function encontrarUsuario(username) {
-            return usuarios.find(u => u.username === username);
-        }
+        function encontrarUsuario(username) { return usuarios.find(u => u.username === username); }
 
         // ============================================================
         // SESIÓN
         // ============================================================
         function guardarSesion(usuario) {
             const sesion = {
-                username: usuario.username,
-                nombre: usuario.nombre,
-                rol: usuario.rol,
-                admin: usuario.admin,
+                username: usuario.username, nombre: usuario.nombre,
+                rol: usuario.rol, admin: usuario.admin,
                 expira: Date.now() + DURACION_SESION_MS
             };
             try { localStorage.setItem(PREF_SESION, JSON.stringify(sesion)); } catch (e) {}
@@ -2141,8 +2118,7 @@
                 if (!raw) return null;
                 const sesion = JSON.parse(raw);
                 if (!sesion || !sesion.expira || Date.now() > sesion.expira) {
-                    localStorage.removeItem(PREF_SESION);
-                    return null;
+                    localStorage.removeItem(PREF_SESION); return null;
                 }
                 return sesion;
             } catch (e) { return null; }
@@ -2182,7 +2158,6 @@
                     <div class="rol">${u.rol}</div>
                 </div>
             `).join('');
-
             contenedor.querySelectorAll('.login-usuario').forEach(el => {
                 el.addEventListener('click', () => {
                     const usuario = encontrarUsuario(el.dataset.username);
@@ -2194,13 +2169,7 @@
         function irAPasoPin(usuario) {
             usuarioPendienteLogin = usuario;
             esPrimerLoginAdmin = false;
-
-            // Si el admin requiere cambio de PIN, saltar a ese paso
-            if (usuario.requiereCambio) {
-                irAPasoNuevoPin(usuario, true);
-                return;
-            }
-
+            if (usuario.requiereCambio) { irAPasoNuevoPin(usuario, true); return; }
             document.getElementById('login-paso-usuario').classList.remove('activo');
             document.getElementById('login-paso-nuevo-pin').classList.remove('activo');
             document.getElementById('login-paso-pin').classList.add('activo');
@@ -2243,21 +2212,10 @@
             const pin = document.getElementById('login-pin-input').value.trim();
             const errorEl = document.getElementById('login-error');
             errorEl.classList.remove('visible');
-
-            if (!pin) {
-                errorEl.textContent = 'Ingresa tu PIN.';
-                errorEl.classList.add('visible');
-                return;
-            }
-
+            if (!pin) { errorEl.textContent = 'Ingresa tu PIN.'; errorEl.classList.add('visible'); return; }
             const hashIngresado = await generarHashPin(pin, usuarioPendienteLogin.salt);
             if (hashIngresado === usuarioPendienteLogin.pinHash) {
-                usuarioActual = {
-                    username: usuarioPendienteLogin.username,
-                    nombre: usuarioPendienteLogin.nombre,
-                    rol: usuarioPendienteLogin.rol,
-                    admin: usuarioPendienteLogin.admin
-                };
+                usuarioActual = { username: usuarioPendienteLogin.username, nombre: usuarioPendienteLogin.nombre, rol: usuarioPendienteLogin.rol, admin: usuarioPendienteLogin.admin };
                 guardarSesion(usuarioActual);
                 registrarHistorial('sesion', 'login', `El usuario "${usuarioActual.nombre}" inició sesión`, { nombre: usuarioActual.nombre });
                 guardarDatosLocal();
@@ -2276,49 +2234,19 @@
             const pin2 = document.getElementById('login-pin-nuevo-confirmar').value.trim();
             const errorEl = document.getElementById('login-error-nuevo-pin');
             errorEl.classList.remove('visible');
-
-            if (!pin1 || pin1.length < 4 || pin1.length > 6) {
-                errorEl.textContent = 'El PIN debe tener entre 4 y 6 dígitos.';
-                errorEl.classList.add('visible'); return;
-            }
-            if (!/^\d+$/.test(pin1)) {
-                errorEl.textContent = 'El PIN solo puede contener números.';
-                errorEl.classList.add('visible'); return;
-            }
-            if (pin1 !== pin2) {
-                errorEl.textContent = 'Los PINs no coinciden.';
-                errorEl.classList.add('visible'); return;
-            }
-            if (pin1 === PIN_ADMIN_INICIAL && esPrimerLoginAdmin) {
-                errorEl.textContent = 'No puedes usar el PIN por defecto 1234. Elige otro.';
-                errorEl.classList.add('visible'); return;
-            }
-            // Verificar que no esté en uso por otro usuario
+            if (!pin1 || pin1.length < 4 || pin1.length > 6) { errorEl.textContent = 'El PIN debe tener 4 a 6 dígitos.'; errorEl.classList.add('visible'); return; }
+            if (!/^\d+$/.test(pin1)) { errorEl.textContent = 'El PIN solo puede contener números.'; errorEl.classList.add('visible'); return; }
+            if (pin1 !== pin2) { errorEl.textContent = 'Los PINs no coinciden.'; errorEl.classList.add('visible'); return; }
+            if (pin1 === PIN_ADMIN_INICIAL && esPrimerLoginAdmin) { errorEl.textContent = 'No puedes usar el PIN por defecto 1234. Elige otro.'; errorEl.classList.add('visible'); return; }
             for (const u of usuarios) {
                 if (u.username === usuarioPendienteLogin.username) continue;
                 const h = await generarHashPin(pin1, u.salt);
-                if (h === u.pinHash) {
-                    errorEl.textContent = 'Este PIN ya está en uso por otro usuario. Elige otro.';
-                    errorEl.classList.add('visible'); return;
-                }
+                if (h === u.pinHash) { errorEl.textContent = 'Este PIN ya está en uso. Elige otro.'; errorEl.classList.add('visible'); return; }
             }
-
-            // Actualizar usuario
             const nuevoHash = await generarHashPin(pin1, usuarioPendienteLogin.salt);
             const idx = usuarios.findIndex(u => u.username === usuarioPendienteLogin.username);
-            if (idx !== -1) {
-                usuarios[idx].pinHash = nuevoHash;
-                usuarios[idx].requiereCambio = false;
-                guardarUsuarios();
-            }
-
-            // Login automático
-            usuarioActual = {
-                username: usuarioPendienteLogin.username,
-                nombre: usuarioPendienteLogin.nombre,
-                rol: usuarioPendienteLogin.rol,
-                admin: usuarioPendienteLogin.admin
-            };
+            if (idx !== -1) { usuarios[idx].pinHash = nuevoHash; usuarios[idx].requiereCambio = false; guardarUsuarios(); }
+            usuarioActual = { username: usuarioPendienteLogin.username, nombre: usuarioPendienteLogin.nombre, rol: usuarioPendienteLogin.rol, admin: usuarioPendienteLogin.admin };
             guardarSesion(usuarioActual);
             registrarHistorial('usuario', 'editar', `Se configuró el PIN inicial del usuario "${usuarioActual.nombre}"`, { nombre: usuarioActual.nombre });
             registrarHistorial('sesion', 'login', `El usuario "${usuarioActual.nombre}" inició sesión`, { nombre: usuarioActual.nombre });
@@ -2336,28 +2264,95 @@
         } catch (error) { console.error('❌ Error Firebase:', error); }
 
         // ============================================================
-        // UTILIDADES
+        // UTILIDADES DE FECHA Y HORA (CORREGIDAS - ZONA HORARIA LOCAL)
         // ============================================================
-        const generarId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-        const obtenerFechaActual = () => new Date().toISOString().split('T')[0];
-        const obtenerFechaHoraActual = () => new Date().toISOString().replace('T', ' ').substr(0, 16);
-
-        function formatearFecha(fecha) {
-            if (!fecha) return 'No especificada';
-            const partes = fecha.split('-');
-            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        /**
+         * Devuelve la fecha y hora actual en formato "YYYY-MM-DD HH:MM"
+         * respetando la zona horaria configurada.
+         *
+         * Antes usábamos toISOString() que devuelve UTC, lo que provocaba
+         * un desfase de +6h en México. Ahora usamos los getters locales.
+         */
+        function obtenerFechaHoraActual() {
+            return formatearFechaHoraLocal(new Date());
         }
+
+        function obtenerFechaActual() {
+            const ahora = new Date();
+            return formatearFechaLocal(ahora);
+        }
+
+        /**
+         * Formatea un objeto Date en "YYYY-MM-DD HH:MM" usando hora local o GMT-6.
+         */
+        function formatearFechaHoraLocal(fecha) {
+            const partes = obtenerComponentesFecha(fecha);
+            return `${partes.ano}-${partes.mes}-${partes.dia} ${partes.hora}:${partes.minuto}`;
+        }
+
+        function formatearFechaLocal(fecha) {
+            const partes = obtenerComponentesFecha(fecha);
+            return `${partes.ano}-${partes.mes}-${partes.dia}`;
+        }
+
+        /**
+         * Devuelve los componentes de la fecha.
+         * - Si MODO_ZONA_HORARIA === 'local', usa los getters locales del navegador.
+         * - Si MODO_ZONA_HORARIA === 'gmt-6', fuerza la zona México Centro (UTC-6).
+         */
+        function obtenerComponentesFecha(fecha) {
+            let ano, mes, dia, hora, minuto;
+
+            if (MODO_ZONA_HORARIA === 'gmt-6') {
+                // Convertir a UTC-6 manualmente
+                const utc = fecha.getTime() + (fecha.getTimezoneOffset() * 60000);
+                const gmt6 = new Date(utc - (6 * 3600000));
+                ano = gmt6.getFullYear();
+                mes = gmt6.getMonth() + 1;
+                dia = gmt6.getDate();
+                hora = gmt6.getHours();
+                minuto = gmt6.getMinutes();
+            } else {
+                // Modo local: usar getters locales (respeta la zona del dispositivo)
+                ano = fecha.getFullYear();
+                mes = fecha.getMonth() + 1;
+                dia = fecha.getDate();
+                hora = fecha.getHours();
+                minuto = fecha.getMinutes();
+            }
+
+            return {
+                ano: String(ano),
+                mes: String(mes).padStart(2, '0'),
+                dia: String(dia).padStart(2, '0'),
+                hora: String(hora).padStart(2, '0'),
+                minuto: String(minuto).padStart(2, '0')
+            };
+        }
+
+        /**
+         * Convierte un "YYYY-MM-DD HH:MM" guardado a formato legible "DD/MM/YYYY HH:MM".
+         */
         function formatearFechaHora(fechaHora) {
             if (!fechaHora) return 'No especificada';
             const partes = fechaHora.split(' ');
             if (partes.length === 2) return formatearFecha(partes[0]) + ' ' + partes[1];
             return formatearFecha(fechaHora);
         }
+
+        function formatearFecha(fecha) {
+            if (!fecha) return 'No especificada';
+            const partes = fecha.split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
         const formatearMoneda = (cantidad) => '$' + (cantidad || 0).toLocaleString('es-MX');
 
         function fechaLocalToString(ano, mes, dia) {
             return `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
         }
+
+        const generarId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 
         function mostrarNotificacion(mensaje, tipo = 'info') {
             const colores = { info: 'var(--color-azul)', success: 'var(--color-verde)', warning: 'var(--color-naranja)', error: 'var(--color-rojo)' };
@@ -2369,6 +2364,73 @@
             n.innerHTML = `<i class="fas ${iconos[tipo] || iconos.info}"></i> ${mensaje}`;
             document.body.appendChild(n);
             setTimeout(() => { n.style.animation = 'slideOut 0.3s ease'; setTimeout(() => n.remove(), 300); }, 3500);
+        }
+
+        // ============================================================
+        // WHATSAPP - UTILIDADES
+        // ============================================================
+        /**
+         * Limpia un número de teléfono y lo convierte al formato internacional
+         * requerido por WhatsApp (wa.me).
+         *
+         * Reglas:
+         * - Elimina espacios, guiones, paréntesis, puntos y signos "+"
+         * - Si el número tiene 10 dígitos, asume que es de México (52) y lo agrega
+         * - Si ya empieza con 52 (12 dígitos), lo deja igual
+         * - Si el número tiene extensión u otros formatos raros, lo rechaza
+         *
+         * @returns {string|null} Número limpio o null si es inválido
+         */
+        function normalizarTelefonoWhatsApp(telefono) {
+            if (!telefono) return null;
+            // Quitar todo lo que no sea dígito
+            let limpio = String(telefono).replace(/\D/g, '');
+            if (!limpio) return null;
+
+            // Si ya tiene código de país de México (12 dígitos empezando con 52)
+            if (limpio.length === 12 && limpio.startsWith('52')) return limpio;
+
+            // Si tiene 10 dígitos, asumir México
+            if (limpio.length === 10) return CODIGO_PAIS_DEFAULT + limpio;
+
+            // Si tiene 11 dígitos y empieza con 1 (USA sin código), es raro pero se acepta
+            if (limpio.length === 11 && limpio.startsWith('1')) return limpio;
+
+            // Si tiene más de 12 dígitos, probablemente tenga extensión u otro formato raro
+            if (limpio.length > 13) return null;
+
+            // Otros casos: devolver tal cual (el usuario decidirá si funciona)
+            return limpio;
+        }
+
+        /**
+         * Abre WhatsApp con el número del cliente.
+         */
+        function enviarWhatsAppCliente(clienteId) {
+            const cliente = obtenerCliente(clienteId);
+            if (!cliente) { mostrarNotificacion('❌ Cliente no encontrado', 'error'); return; }
+            if (!cliente.telefono) { mostrarNotificacion('⚠️ El cliente no tiene teléfono registrado', 'warning'); return; }
+
+            const numero = normalizarTelefonoWhatsApp(cliente.telefono);
+            if (!numero) {
+                mostrarNotificacion('⚠️ El teléfono del cliente no tiene un formato válido', 'warning');
+                return;
+            }
+
+            // Construir URL de wa.me
+            let url = `https://wa.me/${numero}`;
+            if (MENSAJE_WHATSAPP_DEFAULT) {
+                url += `?text=${encodeURIComponent(MENSAJE_WHATSAPP_DEFAULT)}`;
+            }
+
+            window.open(url, '_blank');
+            mostrarNotificacion('💬 Abriendo WhatsApp...', 'success');
+
+            // Registrar en el historial
+            registrarHistorial('sesion', 'editar',
+                `Se abrió WhatsApp para contactar a "${cliente.nombre}" (${cliente.telefono})`,
+                { id: clienteId, nombre: cliente.nombre }
+            );
         }
 
         // ============================================================
@@ -2553,7 +2615,6 @@
             avatarEl.classList.toggle('admin', usuarioActual.admin);
             document.getElementById('user-nombre').textContent = usuarioActual.nombre;
             document.getElementById('user-rol').textContent = usuarioActual.rol;
-            // Mostrar/ocultar gestión de usuarios
             const card = document.getElementById('card-gestion-usuarios');
             if (card) card.style.display = usuarioActual.admin ? 'block' : 'none';
         }
@@ -2742,7 +2803,7 @@
                         <div class="mosaico-detalle"><div><i class="fas fa-phone"></i> ${c.telefono}</div>${c.email ? `<div><i class="fas fa-envelope"></i> ${c.email}</div>` : ''}<div><small>Registrado: ${formatearFecha(c.fechaRegistro)}</small></div></div>
                         <div class="mosaico-summary"><span><i class="fas fa-file-contract"></i> ${tc} contrato${tc === 1 ? '' : 's'}</span>${uc ? `<span class="monto">${uc}</span>` : ''}</div>`;
                 },
-                renderAcciones: c => `<button class="btn-editar" onclick="CRUD.clientes.editar('${c.id}')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-convertir" onclick="mostrarFormularioContrato('${c.id}')" title="Agregar contrato"><i class="fas fa-file-contract"></i></button><button class="btn-eliminar" onclick="eliminarCliente('${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>`
+                renderAcciones: c => `<button class="btn-editar" onclick="CRUD.clientes.editar('${c.id}')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-convertir" onclick="mostrarFormularioContrato('${c.id}')" title="Agregar contrato"><i class="fas fa-file-contract"></i></button><button class="btn-whatsapp" onclick="enviarWhatsAppCliente('${c.id}')" title="Enviar WhatsApp"><i class="fab fa-whatsapp"></i></button><button class="btn-eliminar" onclick="eliminarCliente('${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>`
             });
         }
 
@@ -2878,9 +2939,10 @@
         window.eliminarProspecto = eliminarProspecto;
         window.convertirProspecto = convertirProspecto;
         window.eliminarCliente = eliminarCliente;
+        window.enviarWhatsAppCliente = enviarWhatsAppCliente;
 
         // ============================================================
-        // DETALLE CONTRATO
+        // DETALLE CONTRATO (con botón WhatsApp)
         // ============================================================
         function verDetalleContrato(clienteId, contratoId) {
             const cliente = obtenerCliente(clienteId);
@@ -2895,10 +2957,15 @@
             const in_ = obtenerNombreItemContrato(contrato);
             const campo = (l, v) => `<div class="detalle-campo"><span class="lbl">${l}</span><span class="val">${v || 'No especificado'}</span></div>`;
 
+            const tieneTelefono = cliente.telefono && cliente.telefono.trim().length > 0;
+            const numeroNormalizado = tieneTelefono ? normalizarTelefonoWhatsApp(cliente.telefono) : null;
+            const whatsappDeshabilitado = !tieneTelefono || !numeroNormalizado;
+
             const html = `
                 <div class="detalle-acciones">
                     <button class="btn-primario" onclick="editarContrato('${clienteId}','${contrato.id}')"><i class="fas fa-edit"></i> Editar</button>
                     <button class="btn-naranja" onclick="cerrarModal(); agregarPagoRapido('${clienteId}','${contrato.id}')"><i class="fas fa-coins"></i> Agregar pago</button>
+                    <button class="btn-whatsapp" onclick="enviarWhatsAppCliente('${clienteId}')" ${whatsappDeshabilitado ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''} title="${whatsappDeshabilitado ? 'Sin teléfono válido registrado' : 'Enviar WhatsApp al cliente'}"><i class="fab fa-whatsapp"></i> WhatsApp</button>
                     <button class="btn-calendar" onclick="crearEventoGoogleCalendar('${clienteId}','${contrato.id}')"><i class="fab fa-google"></i> Google Calendar</button>
                     <button class="btn-imprimir" onclick="generarVistaImpresion('${clienteId}','${contrato.id}')"><i class="fas fa-print"></i> Imprimir</button>
                     <span class="spacer"></span>
@@ -3097,7 +3164,6 @@
             ssr.addEventListener('change', calcularPrecios);
             scc.forEach(cb => cb.addEventListener('change', calcularPrecios));
             pfi.addEventListener('input', actualizarResumen);
-
             el('contrato-anticipo')?.addEventListener('change', function() {
                 const a = parseFloat(this.value) || 0;
                 if (a > 0) {
@@ -3207,7 +3273,18 @@
                         <div class="mosaico-detalle"><div><strong>Base:</strong> ${formatearMoneda(c.precioBase)}</div><div><strong>Final:</strong> ${formatearMoneda(c.precioFinal)}${c.cargos && c.cargos.length > 0 ? ` <small>+ ${formatearMoneda(totalCargos)}</small>` : ''}</div></div>
                         <div class="mosaico-summary"><span><i class="fas fa-coins"></i> ${formatearMoneda(totalPagos)}</span><span class="${saldoPendiente === 0 ? 'saldo-ok' : 'saldo-pendiente'} monto">${saldoPendiente === 0 ? '✓ Liquidado' : formatearMoneda(saldoPendiente)}</span></div>`;
                 },
-                renderAcciones: c => `<button class="btn-editar" onclick="editarContrato('${c.clienteId}','${c.id}')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-pago" onclick="agregarPagoRapido('${c.clienteId}','${c.id}')" title="Pago"><i class="fas fa-coins"></i></button><button class="btn-calendar" onclick="crearEventoGoogleCalendar('${c.clienteId}','${c.id}')" title="Calendar"><i class="fab fa-google"></i></button><button class="btn-imprimir" onclick="generarVistaImpresion('${c.clienteId}','${c.id}')" title="Imprimir"><i class="fas fa-print"></i></button><button class="btn-eliminar" onclick="eliminarContrato('${c.clienteId}','${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>`
+                renderAcciones: c => {
+                    const tieneTelefono = (() => {
+                        const cl = obtenerCliente(c.clienteId);
+                        return cl && cl.telefono && normalizarTelefonoWhatsApp(cl.telefono);
+                    })();
+                    return `<button class="btn-editar" onclick="editarContrato('${c.clienteId}','${c.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+                        <button class="btn-pago" onclick="agregarPagoRapido('${c.clienteId}','${c.id}')" title="Pago"><i class="fas fa-coins"></i></button>
+                        <button class="btn-whatsapp" onclick="enviarWhatsAppCliente('${c.clienteId}')" title="WhatsApp" ${!tieneTelefono ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}><i class="fab fa-whatsapp"></i></button>
+                        <button class="btn-calendar" onclick="crearEventoGoogleCalendar('${c.clienteId}','${c.id}')" title="Calendar"><i class="fab fa-google"></i></button>
+                        <button class="btn-imprimir" onclick="generarVistaImpresion('${c.clienteId}','${c.id}')" title="Imprimir"><i class="fas fa-print"></i></button>
+                        <button class="btn-eliminar" onclick="eliminarContrato('${c.clienteId}','${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>`;
+                }
             });
         }
 
@@ -3846,8 +3923,7 @@
                 actualizarEstadoSync('syncing', 'Guardando...');
                 const ahora = new Date().toISOString();
                 await database.ref('datos').set({
-                    paquetes, serviciosAdicionales, prospectos, clientes, tareas, historial,
-                    usuarios, // Sincronizamos también la lista de usuarios
+                    paquetes, serviciosAdicionales, prospectos, clientes, tareas, historial, usuarios,
                     ultimaActualizacion: ahora,
                     ultimoUsuario: usuarioActual.nombre,
                     version: VERSION
@@ -3858,7 +3934,7 @@
                 actualizarEstadoSync('online', 'Guardado');
                 return true;
             } catch (error) {
-                console.error('❌ Error guardando en Firebase:', error);
+                console.error('❌ Error Firebase:', error);
                 actualizarEstadoSync('offline', 'Error');
                 return false;
             } finally { sincronizandoFirebase = false; }
@@ -3896,7 +3972,6 @@
                     if (datos.tareas) tareas = datos.tareas;
                     if (datos.historial) historial = datos.historial;
                     if (datos.usuarios && datos.usuarios.length > 0) {
-                        // Fusionar usuarios: respetar los locales + agregar nuevos remotos
                         const locales = usuarios;
                         const remotos = datos.usuarios;
                         const fusionados = [...remotos];
@@ -4095,7 +4170,6 @@
                         paquetes = d.paquetes || []; serviciosAdicionales = d.serviciosAdicionales || [];
                         prospectos = d.prospectos || []; clientes = d.clientes || [];
                         tareas = d.tareas || []; historial = d.historial || [];
-                        // NO sobreescribir usuarios locales por seguridad (evita perder el admin)
                         if (d.usuarios && d.usuarios.length > 0) {
                             const fusionados = [...d.usuarios];
                             usuarios.forEach(lu => { if (!fusionados.some(ru => ru.username === lu.username)) fusionados.push(lu); });
@@ -4164,27 +4238,23 @@
         // BOOT
         // ============================================================
         console.log(`🚀 Registro PDA v${VERSION} · JFR Media`);
+        console.log('🕐 Zona horaria:', MODO_ZONA_HORARIA === 'local' ? 'Local del sistema' : 'GMT-6 (México Centro)');
+        console.log('💬 WhatsApp: disponible para clientes con teléfono');
 
         const temaInicial = localStorage.getItem(PREF_TEMA) || 'dark';
         document.documentElement.setAttribute('data-theme', temaInicial);
 
         (async function boot() {
-            // Inicializar usuarios (crea admin si es primera vez)
             await inicializarUsuariosSiEsNecesario();
-            // Cargar datos locales para tener usuarios disponibles
             cargarDatosLocal();
-            // Si no hay usuarios en localStorage (fue borrado), volver a crear admin
             if (usuarios.length === 0) {
                 const admin = await crearUsuarioAdminInicial();
                 usuarios = [admin];
                 guardarUsuarios();
             }
-
             conectarLoginEventListeners();
-
             const sesion = cargarSesion();
             if (sesion) {
-                // Verificar que el usuario de la sesión aún existe
                 const u = encontrarUsuario(sesion.username);
                 if (u) {
                     usuarioActual = { username: u.username, nombre: u.nombre, rol: u.rol, admin: u.admin };
