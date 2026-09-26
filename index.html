@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro PDA v3.7.2 - Estudio Fotografía</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Registro PDA v3.7.3 - Estudio Fotografía</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -63,8 +63,11 @@
             background-color: var(--color-bg-primario); color: var(--color-texto-primario);
             overflow: hidden;
             transition: background-color var(--transition), color var(--transition);
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
+        /* PANTALLA DE LOGIN */
         .pantalla-login {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: var(--color-bg-primario);
@@ -142,6 +145,7 @@
         .app-container { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
         .app-container.oculto { display: none; }
 
+        /* SIDEBAR */
         .sidebar {
             width: var(--sidebar-width); min-width: var(--sidebar-width);
             background-color: var(--color-sidebar-bg);
@@ -1137,19 +1141,25 @@
             .seccion-header, .mosaico-footer, .modal, .notificacion,
             .calendario-container, .leyenda-calendario, .calendario-nav,
             .calendario-grid, .form-acciones, .credito-footer, .pantalla-login,
-            .user-box { display: none !important; }
+            .user-box, .btn-toggle-filtros { display: none !important; }
             body { background: white !important; color: black !important; overflow: visible !important; }
             .main-content { padding: 0 !important; margin: 0 !important; overflow: visible !important; height: auto !important; background: white !important; }
             .seccion { display: block !important; padding: 0 !important; margin: 0 !important; }
             #impresion-contenedor { display: block !important; padding: 0 !important; margin: 0 !important; background: white !important; }
         }
 
-        @media (max-width: 768px) {
-                   /* ============================================ */
-        /* RESPONSIVE MÓVIL - MEJORADO                   */
         /* ============================================ */
+        /* DESKTOP: OCULTAR ELEMENTOS MÓVILES            */
+        /* ============================================ */
+        @media (min-width: 769px) {
+            .btn-mobile-menu { display: none !important; }
+            .mobile-overlay { display: none !important; }
+            .btn-toggle-filtros { display: none !important; }
+        }
 
-        /* Tablet y móvil grande */
+        /* ============================================ */
+        /* TABLET (900px)                                */
+        /* ============================================ */
         @media (max-width: 900px) {
             .config-grid { grid-template-columns: 1fr; }
             .historial-filtros { flex-direction: column; align-items: stretch; }
@@ -1158,36 +1168,24 @@
             .historial-filtros .filtro-grupo select { min-width: auto; }
         }
 
-        /* Móvil (tablet pequeña, celulares landscape) */
+        /* ============================================ */
+        /* MÓVIL (768px)                                 */
+        /* ============================================ */
         @media (max-width: 768px) {
 
-            /* ============================================ */
-            /* SIDEBAR COMO DRAWER                          */
-            /* ============================================ */
+            /* SIDEBAR COMO DRAWER */
             .sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 280px;
-                min-width: 280px;
+                position: fixed; top: 0; left: 0;
+                width: 280px; min-width: 280px;
                 height: 100vh;
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
                 z-index: 999;
                 box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
             }
-            .sidebar.mobile-abierto {
-                transform: translateX(0);
-            }
-            .sidebar.collapsed {
-                width: 280px;
-                min-width: 280px;
-                transform: translateX(-100%);
-            }
-            .sidebar.collapsed.mobile-abierto {
-                transform: translateX(0);
-            }
-            /* El logo y menú se ven completos en móvil */
+            .sidebar.mobile-abierto { transform: translateX(0); }
+            .sidebar.collapsed { width: 280px; min-width: 280px; transform: translateX(-100%); }
+            .sidebar.collapsed.mobile-abierto { transform: translateX(0); }
             .sidebar .logo span,
             .sidebar .menu-item span,
             .sidebar .user-info,
@@ -1205,25 +1203,33 @@
             }
             .sidebar .menu-item i { font-size: 20px; width: 24px; }
             .sidebar .user-box { padding: 12px 16px; justify-content: flex-start; }
-            .sidebar .sidebar-footer { padding: 16px 20px; }
+                        .sidebar .sidebar-footer {
+                padding: 16px 20px calc(32px + env(safe-area-inset-bottom, 20px)) 20px;
+                margin-top: auto;
+                flex-shrink: 0;
+            }
+            .sidebar .sidebar-footer .version {
+                padding-bottom: 4px;
+                font-size: 12px;
+                color: var(--color-sidebar-texto);
+                opacity: 0.8;
+            }
+            /* Ocultar botón colapsar en móvil (solo se usa en escritorio) */
+            .sidebar .btn-colapsar {
+                display: none !important;
+            }
 
-            /* Overlay oscuro cuando el sidebar está abierto */
             .mobile-overlay {
                 display: none;
-                position: fixed;
-                top: 0; left: 0;
+                position: fixed; top: 0; left: 0;
                 width: 100vw; height: 100vh;
                 background: rgba(0, 0, 0, 0.5);
                 z-index: 998;
                 opacity: 0;
                 transition: opacity 0.3s ease;
             }
-            .mobile-overlay.visible {
-                display: block;
-                opacity: 1;
-            }
+            .mobile-overlay.visible { display: block; opacity: 1; }
 
-            /* Botón hamburguesa flotante */
             .btn-mobile-menu {
                 display: flex !important;
                 position: fixed;
@@ -1246,11 +1252,10 @@
             .btn-mobile-menu:active { transform: scale(0.92); }
             .btn-mobile-menu.abierto { background-color: var(--color-rojo); }
 
-            /* ============================================ */
-            /* CONTENIDO PRINCIPAL                          */
-            /* ============================================ */
+            /* CONTENIDO PRINCIPAL con safe area */
             .main-content {
-                padding: 76px 16px 24px 16px;
+                padding: 76px 16px 140px 16px;
+                padding-bottom: max(140px, calc(100px + env(safe-area-inset-bottom, 40px))) !important;
                 width: 100vw;
             }
 
@@ -1262,14 +1267,8 @@
                 margin-bottom: 16px;
                 padding-bottom: 12px;
             }
-            .seccion-header h1 {
-                font-size: 22px;
-                text-align: left;
-            }
-            .header-actions {
-                width: 100%;
-                flex-wrap: wrap;
-            }
+            .seccion-header h1 { font-size: 22px; text-align: left; }
+            .header-actions { width: 100%; flex-wrap: wrap; }
             .header-actions .btn-primario,
             .header-actions .btn-secundario,
             .header-actions .btn-verde,
@@ -1279,65 +1278,78 @@
                 padding: 12px 16px;
                 font-size: 14px;
             }
-            .sync-status {
-                width: 100%;
-                justify-content: center;
-                padding: 8px 12px;
-            }
+            .sync-status { width: 100%; justify-content: center; padding: 8px 12px; }
 
-            /* ============================================ */
-            /* LOGIN EN MÓVIL                               */
-            /* ============================================ */
-            .login-card {
-                padding: 28px 20px;
-                max-width: 100%;
-                margin: 12px;
-                border-radius: 12px;
-            }
+            /* LOGIN EN MÓVIL */
+            .login-card { padding: 28px 20px; max-width: 100%; margin: 12px; border-radius: 12px; }
             .login-logo { font-size: 40px; margin-bottom: 12px; }
             .login-titulo { font-size: 22px; }
             .login-subtitulo { font-size: 13px; margin-bottom: 24px; }
-            .login-usuarios {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
+            .login-usuarios { grid-template-columns: 1fr; gap: 12px; }
             .login-usuario {
                 padding: 18px 16px;
                 flex-direction: row;
                 gap: 14px;
                 justify-content: flex-start;
             }
-            .login-usuario .avatar {
-                width: 48px;
-                height: 48px;
-                font-size: 20px;
-            }
+            .login-usuario .avatar { width: 48px; height: 48px; font-size: 20px; }
             .login-usuario .nombre { font-size: 16px; text-align: left; }
             .login-usuario .rol { font-size: 11px; }
-            .login-pin-input {
-                font-size: 26px;
-                padding: 16px;
-                letter-spacing: 12px;
-            }
+            .login-pin-input { font-size: 26px; padding: 16px; letter-spacing: 12px; }
             .login-botones { gap: 12px; }
-            .login-botones button {
-                padding: 14px 20px;
-                font-size: 15px;
-            }
+            .login-botones button { padding: 14px 20px; font-size: 15px; }
 
-            /* ============================================ */
-            /* FILTROS                                      */
-            /* ============================================ */
-            .filtros-container {
+            /* FILTROS COLAPSABLES */
+            .btn-toggle-filtros {
+                display: flex !important;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                padding: 14px 18px;
+                background-color: var(--color-bg-secundario);
+                border: 1px solid var(--color-borde);
+                border-radius: var(--border-radius);
+                color: var(--color-texto-primario);
+                font-size: 15px;
+                font-weight: 600;
+                cursor: pointer;
+                margin-bottom: 12px;
+                transition: all 0.2s ease;
+            }
+            .btn-toggle-filtros:active {
+                background-color: var(--color-bg-hover);
+                border-color: var(--color-acento);
+            }
+            .btn-toggle-filtros .btn-toggle-filtros-icono {
+                font-size: 18px;
+                color: var(--color-acento);
+                transition: transform 0.3s ease;
+            }
+            .btn-toggle-filtros.abierto .btn-toggle-filtros-icono { transform: rotate(180deg); }
+            .btn-toggle-filtros .btn-toggle-filtros-badge {
+                background-color: var(--color-acento);
+                color: var(--color-acento-contraste);
+                border-radius: 12px;
+                padding: 2px 8px;
+                font-size: 11px;
+                font-weight: 700;
+                margin-left: 8px;
+                display: none;
+            }
+            .btn-toggle-filtros.tiene-filtros .btn-toggle-filtros-badge { display: inline-block; }
+
+            .filtros-container { display: none; }
+            .filtros-container.mobile-visible {
+                display: flex;
                 flex-direction: column;
                 align-items: stretch;
                 gap: 12px;
                 padding: 16px;
                 margin-bottom: 16px;
+                margin-top: -4px;
             }
             .filtro-grupo { min-width: auto; width: 100%; }
-            .filtro-grupo input,
-            .filtro-grupo select {
+            .filtro-grupo input, .filtro-grupo select {
                 min-width: auto;
                 width: 100%;
                 padding: 12px 14px;
@@ -1352,39 +1364,26 @@
                 font-size: 15px;
             }
 
-            /* ============================================ */
-            /* MÉTRICAS                                     */
-            /* ============================================ */
+            /* MÉTRICAS - 2 COLUMNAS */
             .metricas-container {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 8px;
                 margin-bottom: 16px;
             }
             .metrica-card {
-                padding: 12px 14px;
-                gap: 10px;
+                padding: 10px 12px;
+                gap: 8px;
                 flex-direction: column;
                 text-align: center;
+                min-width: 0;
             }
-            .metrica-icono {
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
-            }
-            .metrica-valor { font-size: 20px; }
-            .metrica-etiqueta { font-size: 11px; }
+            .metrica-icono { width: 36px; height: 36px; font-size: 16px; }
+            .metrica-valor { font-size: 18px; line-height: 1.2; }
+            .metrica-etiqueta { font-size: 10px; line-height: 1.2; }
 
-            /* ============================================ */
-            /* MOSAICOS                                     */
-            /* ============================================ */
-            .mosaico-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-            .mosaico-card {
-                padding: 14px;
-                border-radius: 12px;
-            }
+            /* MOSAICOS */
+            .mosaico-grid { grid-template-columns: 1fr; gap: 12px; }
+            .mosaico-card { padding: 14px; border-radius: 12px; }
             .mosaico-titulo { font-size: 16px; }
             .mosaico-detalle { font-size: 13px; }
             .mosaico-footer { gap: 6px; padding-top: 10px; }
@@ -1397,15 +1396,10 @@
                 align-items: center;
                 justify-content: center;
             }
-            .mosaico-summary {
-                padding: 8px 12px;
-                font-size: 13px;
-            }
+            .mosaico-summary { padding: 8px 12px; font-size: 13px; }
             .mosaico-summary .monto { font-size: 15px; }
 
-            /* ============================================ */
-            /* MODAL FULLSCREEN EN MÓVIL                    */
-            /* ============================================ */
+            /* MODAL FULLSCREEN */
             .modal { padding: 0; }
             .modal-content {
                 width: 100%;
@@ -1417,29 +1411,16 @@
                 border: none;
             }
             .modal-content.modal-wide { max-width: 100%; }
-            .modal-header {
-                padding: 14px 16px;
-                position: sticky;
-                top: 0;
-                z-index: 20;
-            }
+            .modal-header { padding: 14px 16px; position: sticky; top: 0; z-index: 20; }
             .modal-header h2 { font-size: 18px; }
             .modal-cerrar { font-size: 32px; padding: 0 12px; }
-            .modal-body { padding: 16px; }
+            .modal-body { padding: 16px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
 
-            /* ============================================ */
-            /* FORMULARIOS                                  */
-            /* ============================================ */
-            .row-2col,
-            .row-3col {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
+            /* FORMULARIOS */
+            .row-2col, .row-3col { grid-template-columns: 1fr; gap: 12px; }
             .form-grupo { margin-bottom: 14px; }
             .form-grupo label { font-size: 13px; }
-            .form-grupo input,
-            .form-grupo select,
-            .form-grupo textarea {
+            .form-grupo input, .form-grupo select, .form-grupo textarea {
                 padding: 12px 14px;
                 font-size: 15px;
             }
@@ -1455,13 +1436,8 @@
                 font-size: 15px;
             }
 
-            /* ============================================ */
-            /* DETALLE DE CONTRATO                          */
-            /* ============================================ */
-            .detalle-acciones {
-                padding: 12px;
-                gap: 8px;
-            }
+            /* DETALLE CONTRATO */
+            .detalle-acciones { padding: 12px; gap: 8px; }
             .detalle-acciones button {
                 flex: 1 1 calc(50% - 8px);
                 justify-content: center;
@@ -1472,10 +1448,7 @@
             .detalle-cliente { font-size: 20px; }
             .detalle-festejado { font-size: 14px; }
             .detalle-grid { grid-template-columns: 1fr; gap: 10px; }
-            .detalle-resumen-financiero {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
+            .detalle-resumen-financiero { grid-template-columns: 1fr 1fr; gap: 10px; }
             .detalle-financiero-card { padding: 10px; }
             .detalle-financiero-card .val { font-size: 16px; }
             .detalle-lista-item {
@@ -1497,54 +1470,26 @@
                 min-height: 40px;
             }
 
-            /* ============================================ */
-            /* CALENDARIO                                   */
-            /* ============================================ */
-            .calendario-container {
-                padding: 12px;
-                overflow-x: auto;
-            }
-            .calendario-header {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-            }
+            /* CALENDARIO */
+            .calendario-container { padding: 12px; overflow-x: auto; }
+            .calendario-header { flex-direction: column; align-items: stretch; gap: 12px; }
             .calendario-header h2 { font-size: 18px; text-align: center; }
-            .calendario-nav {
-                justify-content: center;
-            }
+            .calendario-nav { justify-content: center; }
             .calendario-nav button {
                 padding: 10px 16px;
                 font-size: 15px;
                 min-width: 48px;
                 min-height: 44px;
             }
-            .calendario-grid {
-                min-width: 480px;
-                gap: 3px;
-            }
-            .calendario-grid .dia-nombre {
-                padding: 8px 4px;
-                font-size: 11px;
-            }
-            .calendario-grid .dia {
-                min-height: 70px;
-                padding: 5px;
-            }
+            .calendario-grid { min-width: 480px; gap: 3px; }
+            .calendario-grid .dia-nombre { padding: 8px 4px; font-size: 11px; }
+            .calendario-grid .dia { min-height: 70px; padding: 5px; }
             .calendario-grid .dia .numero { font-size: 12px; }
-            .calendario-grid .dia .evento {
-                font-size: 9px;
-                padding: 2px 4px;
-            }
+            .calendario-grid .dia .evento { font-size: 9px; padding: 2px 4px; }
             .calendario-grid .dia .evento-mas { font-size: 9px; }
-            .leyenda-calendario {
-                flex-direction: column;
-                gap: 8px;
-            }
+            .leyenda-calendario { flex-direction: column; gap: 8px; }
 
-            /* ============================================ */
-            /* TAREAS                                       */
-            /* ============================================ */
+            /* TAREAS */
             #lista-tareas { padding: 12px; }
             #lista-tareas .tarjeta-registro {
                 flex-direction: column;
@@ -1565,11 +1510,8 @@
                 min-height: 44px;
             }
 
-            /* ============================================ */
-            /* INFORMES                                     */
-            /* ============================================ */
-            .informe-grid-2,
-            .informe-grid-3 {
+            /* INFORMES */
+            .informe-grid-2, .informe-grid-3 {
                 grid-template-columns: 1fr;
                 gap: 16px;
                 margin-bottom: 16px;
@@ -1577,25 +1519,17 @@
             .informe-bloque { padding: 14px; }
             .informes-detalle { padding: 16px; }
 
-            /* ============================================ */
-            /* CONFIGURACIÓN                                */
-            /* ============================================ */
+            /* CONFIGURACIÓN */
             .config-card { padding: 20px; }
             .config-card h3 { font-size: 16px; }
-            .config-boton {
-                padding: 14px 16px;
-                font-size: 15px;
-            }
+            .config-boton { padding: 14px 16px; font-size: 15px; }
             .config-boton i { width: 36px; height: 36px; font-size: 15px; }
-            .temas-grid {
-                grid-template-columns: 1fr 1fr 1fr;
-                gap: 8px;
-            }
+            .temas-grid { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
             .tema-opcion { padding: 8px; }
             .tema-preview { height: 36px; }
             .tema-nombre { font-size: 11px; }
 
-            /* Historial de actividad */
+            /* HISTORIAL */
             .historial-card { padding: 20px; }
             .historial-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
             .historial-stat { padding: 10px 12px; }
@@ -1614,20 +1548,13 @@
                 padding: 10px 12px;
                 font-size: 14px;
             }
-            .historial-filtros .btn-limpiar {
-                width: 100%;
-                justify-content: center;
-                padding: 12px;
-            }
+            .historial-filtros .btn-limpiar { width: 100%; justify-content: center; padding: 12px; }
             .historial-lista { max-height: none; }
             .historial-item { padding: 12px; }
             .historial-item-meta { flex-direction: column; gap: 4px; }
 
-            /* Usuarios */
-            .usuario-item {
-                flex-wrap: wrap;
-                padding: 14px;
-            }
+            /* USUARIOS */
+            .usuario-item { flex-wrap: wrap; padding: 14px; }
             .usuario-item .acciones {
                 width: 100%;
                 justify-content: flex-end;
@@ -1642,89 +1569,55 @@
                 min-height: 44px;
             }
 
-            /* ============================================ */
-            /* TABLAS                                       */
-            /* ============================================ */
+            /* TABLAS */
             table {
                 font-size: 12px;
                 display: block;
                 overflow-x: auto;
                 white-space: nowrap;
             }
-            table thead th,
-            table tbody td {
-                padding: 8px 10px;
-            }
+            table thead th, table tbody td { padding: 8px 10px; }
 
-            /* ============================================ */
-            /* COMPROBANTE                                  */
-            /* ============================================ */
+            /* COMPROBANTE */
             .comprobante-preview { padding: 12px; }
-            .comprobante-acciones {
-                flex-direction: column;
-                gap: 10px;
-            }
+            .comprobante-acciones { flex-direction: column; gap: 10px; }
             .comprobante-acciones button {
                 width: 100%;
                 justify-content: center;
                 padding: 14px 16px;
             }
 
-            /* ============================================ */
-            /* CRÉDITO                                      */
-            /* ============================================ */
+            /* CRÉDITO */
             .credito-footer { padding: 20px 16px; }
             .credito-footer .credito-marca { font-size: 20px; }
             .credito-footer .credito-marca i { font-size: 18px; }
 
-            /* ============================================ */
-            /* NOTIFICACIONES                               */
-            /* ============================================ */
+            /* NOTIFICACIONES */
             .notificacion {
                 left: 16px;
                 right: 16px;
-                bottom: 16px;
+                bottom: calc(16px + env(safe-area-inset-bottom, 0px));
                 max-width: none;
                 text-align: center;
             }
         }
 
-        /* Móvil muy pequeño (iPhone SE, etc.) */
+        /* Móvil muy pequeño */
         @media (max-width: 480px) {
-            .main-content { padding: 76px 12px 20px 12px; }
-
-            .metricas-container { grid-template-columns: 1fr; }
+            .main-content { padding: 76px 12px 140px 12px; padding-bottom: max(140px, calc(100px + env(safe-area-inset-bottom, 40px))) !important; }
             .seccion-header h1 { font-size: 20px; }
-
-            .mosaico-footer button {
-                padding: 8px 10px;
-                font-size: 15px;
-            }
-
+            .mosaico-footer button { padding: 8px 10px; font-size: 15px; }
             .detalle-resumen-financiero { grid-template-columns: 1fr; }
-
-            .detalle-acciones button {
-                flex: 1 1 100%;
-            }
-
+            .detalle-acciones button { flex: 1 1 100%; }
             .temas-grid { grid-template-columns: 1fr; }
-
             .login-card { padding: 24px 16px; }
             .login-logo { font-size: 36px; }
             .login-titulo { font-size: 20px; }
-
             .calendario-grid { min-width: 420px; }
             .calendario-grid .dia { min-height: 60px; padding: 4px; }
             .calendario-grid .dia .numero { font-size: 11px; }
             .calendario-grid .dia .evento { font-size: 8px; }
-
             .historial-stats { grid-template-columns: 1fr; }
-        }
-
-        /* Desktop: ocultar elementos móviles */
-        @media (min-width: 769px) {
-            .btn-mobile-menu { display: none !important; }
-            .mobile-overlay { display: none !important; }
         }
     </style>
 </head>
@@ -1734,6 +1627,8 @@
         <i class="fas fa-bars"></i>
     </button>
     <div class="mobile-overlay" id="mobile-overlay"></div>
+
+    <!-- PANTALLA DE LOGIN -->
     <div class="pantalla-login" id="pantalla-login">
         <div class="login-card">
             <div class="login-logo"><i class="fas fa-camera-retro"></i></div>
@@ -1770,12 +1665,13 @@
                 </div>
             </div>
             <div class="login-footer">
-                v3.7.2 · Software diseñado por <strong>JFR MEDIA</strong><br>
+                v3.7.3 · Software diseñado por <strong>JFR MEDIA</strong><br>
                 Acceso restringido a personal autorizado
             </div>
         </div>
     </div>
 
+    <!-- APLICACIÓN PRINCIPAL -->
     <div class="app-container oculto" id="app-container">
         <nav class="sidebar" id="sidebar">
             <div class="logo"><i class="fas fa-camera"></i><span>Registro PDA</span></div>
@@ -1799,11 +1695,12 @@
             <div class="sidebar-footer">
                 <button class="btn-colapsar" id="btn-colapsar" title="Colapsar menú"><i class="fas fa-chevron-left"></i><span>Colapsar</span></button>
                 <button class="btn-logout" id="btn-logout" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></button>
-                <div class="version">v3.7.2</div>
+                <div class="version">v3.7.3</div>
             </div>
         </nav>
 
         <main class="main-content">
+            <!-- INFORMES -->
             <section id="seccion-informes" class="seccion active">
                 <div class="seccion-header">
                     <h1><i class="fas fa-chart-pie"></i> Informes y Análisis</h1>
@@ -1814,7 +1711,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="filtros-container">
+                <button type="button" class="btn-toggle-filtros" data-target="filtros-informes">
+                    <span><i class="fas fa-filter"></i> Filtros <span class="btn-toggle-filtros-badge">activos</span></span>
+                    <i class="fas fa-chevron-down btn-toggle-filtros-icono"></i>
+                </button>
+                <div class="filtros-container" id="filtros-informes">
                     <div class="filtro-grupo"><label>Fecha desde</label><input type="date" id="filtro-fecha-inicio"></div>
                     <div class="filtro-grupo"><label>Fecha hasta</label><input type="date" id="filtro-fecha-fin"></div>
                     <div class="filtro-grupo"><label>Estado cliente</label>
@@ -1839,10 +1740,34 @@
                     <button class="btn-limpiar" id="btn-limpiar-informes"><i class="fas fa-undo"></i> Limpiar</button>
                 </div>
                 <div class="metricas-container">
-                    <div class="metrica-card"><div class="metrica-icono"><i class="fas fa-users"></i></div><div class="metrica-info"><span class="metrica-valor" id="total-prospectos">0</span><span class="metrica-etiqueta">Prospectos</span></div></div>
-                    <div class="metrica-card"><div class="metrica-icono"><i class="fas fa-user-check"></i></div><div class="metrica-info"><span class="metrica-valor" id="total-clientes">0</span><span class="metrica-etiqueta">Clientes</span></div></div>
-                    <div class="metrica-card"><div class="metrica-icono"><i class="fas fa-file-contract"></i></div><div class="metrica-info"><span class="metrica-valor" id="total-contratos">0</span><span class="metrica-etiqueta">Contratos</span></div></div>
-                    <div class="metrica-card"><div class="metrica-icono"><i class="fas fa-dollar-sign"></i></div><div class="metrica-info"><span class="metrica-valor" id="total-ingresos">$0</span><span class="metrica-etiqueta">Ingresos totales</span></div></div>
+                    <div class="metrica-card">
+                        <div class="metrica-icono"><i class="fas fa-users"></i></div>
+                        <div class="metrica-info">
+                            <span class="metrica-valor" id="total-prospectos">0</span>
+                            <span class="metrica-etiqueta">Prospectos</span>
+                        </div>
+                    </div>
+                    <div class="metrica-card">
+                        <div class="metrica-icono"><i class="fas fa-user-check"></i></div>
+                        <div class="metrica-info">
+                            <span class="metrica-valor" id="total-clientes">0</span>
+                            <span class="metrica-etiqueta">Clientes</span>
+                        </div>
+                    </div>
+                    <div class="metrica-card">
+                        <div class="metrica-icono"><i class="fas fa-file-contract"></i></div>
+                        <div class="metrica-info">
+                            <span class="metrica-valor" id="total-contratos">0</span>
+                            <span class="metrica-etiqueta">Contratos</span>
+                        </div>
+                    </div>
+                    <div class="metrica-card">
+                        <div class="metrica-icono"><i class="fas fa-dollar-sign"></i></div>
+                        <div class="metrica-info">
+                            <span class="metrica-valor" id="total-ingresos">$0</span>
+                            <span class="metrica-etiqueta">Ingresos totales</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="informes-detalle">
                     <h3><i class="fas fa-chart-bar"></i> Desglose detallado</h3>
@@ -1850,18 +1775,23 @@
                 </div>
             </section>
 
+            <!-- PROSPECTOS -->
             <section id="seccion-prospectos" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-users"></i> Prospectos</h1>
                     <button class="btn-primario" id="btn-nuevo-prospecto"><i class="fas fa-plus"></i> Nuevo Prospecto</button>
                 </div>
-                <div class="filtros-container">
+                <button type="button" class="btn-toggle-filtros" data-target="filtros-prospectos">
+                    <span><i class="fas fa-filter"></i> Filtros <span class="btn-toggle-filtros-badge">activos</span></span>
+                    <i class="fas fa-chevron-down btn-toggle-filtros-icono"></i>
+                </button>
+                <div class="filtros-container" id="filtros-prospectos">
                     <div class="filtro-grupo"><label>Filtrar por fase</label>
                         <select id="filtro-fase-prospecto">
                             <option value="todas">Todas</option>
                             <option value="Interesado">Interesado</option>
-                            <option value="Cotizacion">Cotizacion</option>
-                            <option value="Negociacion">Negociacion</option>
+                            <option value="Cotización">Cotización</option>
+                            <option value="Negociación">Negociación</option>
                             <option value="Contrato">Contrato</option>
                             <option value="Frecuente">Frecuente</option>
                             <option value="Cancelado">Cancelado</option>
@@ -1873,12 +1803,17 @@
                 <div id="lista-prospectos" class="mosaico-grid"><p class="mensaje-vacio">No hay prospectos registrados</p></div>
             </section>
 
+            <!-- CLIENTES -->
             <section id="seccion-clientes" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-user-check"></i> Clientes</h1>
                     <button class="btn-primario" id="btn-nuevo-cliente"><i class="fas fa-plus"></i> Nuevo Cliente</button>
                 </div>
-                <div class="filtros-container">
+                <button type="button" class="btn-toggle-filtros" data-target="filtros-clientes">
+                    <span><i class="fas fa-filter"></i> Filtros <span class="btn-toggle-filtros-badge">activos</span></span>
+                    <i class="fas fa-chevron-down btn-toggle-filtros-icono"></i>
+                </button>
+                <div class="filtros-container" id="filtros-clientes">
                     <div class="filtro-grupo"><label>Estado</label>
                         <select id="filtro-estado-cliente-lista">
                             <option value="todos">Todos</option>
@@ -1892,12 +1827,17 @@
                 <div id="lista-clientes" class="mosaico-grid"><p class="mensaje-vacio">No hay clientes registrados</p></div>
             </section>
 
+            <!-- CONTRATOS -->
             <section id="seccion-contratos" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-file-contract"></i> Contratos</h1>
                     <button class="btn-primario" id="btn-nuevo-contrato"><i class="fas fa-plus"></i> Nuevo Contrato</button>
                 </div>
-                <div class="filtros-container">
+                <button type="button" class="btn-toggle-filtros" data-target="filtros-contratos">
+                    <span><i class="fas fa-filter"></i> Filtros <span class="btn-toggle-filtros-badge">activos</span></span>
+                    <i class="fas fa-chevron-down btn-toggle-filtros-icono"></i>
+                </button>
+                <div class="filtros-container" id="filtros-contratos">
                     <div class="filtro-grupo"><label>Estado</label>
                         <select id="filtro-estado-contrato-lista">
                             <option value="todos">Todos</option>
@@ -1918,6 +1858,7 @@
                 <div id="lista-contratos" class="mosaico-grid"><p class="mensaje-vacio">No hay contratos registrados</p></div>
             </section>
 
+            <!-- PAQUETES -->
             <section id="seccion-paquetes" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-box"></i> Paquetes</h1>
@@ -1926,6 +1867,7 @@
                 <div id="lista-paquetes" class="mosaico-grid"><p class="mensaje-vacio">No hay paquetes registrados</p></div>
             </section>
 
+            <!-- SERVICIOS -->
             <section id="seccion-servicios" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-tools"></i> Servicios Adicionales</h1>
@@ -1934,12 +1876,17 @@
                 <div id="lista-servicios" class="mosaico-grid"><p class="mensaje-vacio">No hay servicios adicionales registrados</p></div>
             </section>
 
+            <!-- CALENDARIO -->
             <section id="seccion-calendario" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-calendar-alt"></i> Calendario</h1>
                     <button class="btn-primario" id="btn-nueva-tarea"><i class="fas fa-plus"></i> Nueva Tarea</button>
                 </div>
-                <div class="filtros-container">
+                <button type="button" class="btn-toggle-filtros" data-target="filtros-calendario">
+                    <span><i class="fas fa-filter"></i> Filtros <span class="btn-toggle-filtros-badge">activos</span></span>
+                    <i class="fas fa-chevron-down btn-toggle-filtros-icono"></i>
+                </button>
+                <div class="filtros-container" id="filtros-calendario">
                     <div class="filtro-grupo"><label>Filtrar tareas</label>
                         <select id="filtro-tareas-calendario">
                             <option value="todas">Todas</option>
@@ -1972,14 +1919,16 @@
                 </div>
             </section>
 
+            <!-- CONFIGURACIÓN -->
             <section id="seccion-configuracion" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-cog"></i> Configuración</h1>
                 </div>
+
                 <div class="config-grid">
                     <div class="config-card">
                         <h3><i class="fas fa-palette"></i> Tema de la aplicación</h3>
-                        <p class="config-descripcion">Elige el tema visual que prefieras.</p>
+                        <p class="config-descripcion">Elige el tema visual que prefieras. Tu elección se guarda automáticamente.</p>
                         <div class="temas-grid">
                             <div class="tema-opcion" data-tema="dark">
                                 <div class="tema-preview preview-oscuro"><div class="tema-preview-sidebar"></div><div class="tema-preview-main"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div></div>
@@ -2007,25 +1956,28 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="config-card" style="margin-bottom:24px;">
                     <h3><i class="fas fa-user-cog"></i> Mi cuenta</h3>
-                    <p class="config-descripcion">Administra tu cuenta personal.</p>
+                    <p class="config-descripcion">Administra tu cuenta personal. Puedes cambiar tu PIN de acceso.</p>
                     <div class="config-acciones">
                         <button class="config-boton" id="btn-cambiar-mi-pin" style="border-color:var(--color-acento);"><i class="fas fa-key" style="background-color:var(--color-acento);"></i><div class="info"><div class="titulo">Cambiar mi PIN</div><div class="subtitulo">Requiere verificar el PIN actual</div></div></button>
                         <button class="config-boton peligro" id="btn-cambiar-usuario"><i class="fas fa-user-friends"></i><div class="info"><div class="titulo">Cambiar de usuario</div><div class="subtitulo">Cierra sesión y permite elegir otro usuario</div></div></button>
                     </div>
                 </div>
+
                 <div class="config-card" id="card-gestion-usuarios" style="margin-bottom:24px; display:none;">
                     <h3><i class="fas fa-users-cog"></i> Gestión de usuarios</h3>
-                    <p class="config-descripcion">Como administrador puedes agregar nuevos usuarios.</p>
+                    <p class="config-descripcion">Como administrador puedes agregar nuevos usuarios con permisos de operador.</p>
                     <div class="config-acciones" style="margin-bottom:12px;">
                         <button class="config-boton sync" id="btn-nuevo-usuario"><i class="fas fa-user-plus"></i><div class="info"><div class="titulo">Agregar nuevo usuario</div><div class="subtitulo">Crear un usuario con permisos de operador</div></div></button>
                     </div>
                     <div class="usuarios-lista" id="usuarios-lista"></div>
                 </div>
+
                 <div class="historial-card">
                     <h3><i class="fas fa-history"></i> Historial de actividad</h3>
-                    <p class="config-descripcion">Consulta todos los movimientos.</p>
+                    <p class="config-descripcion">Consulta todos los movimientos. Cada evento registra al usuario que lo realizó.</p>
                     <div class="historial-stats" id="historial-stats"></div>
                     <div class="historial-filtros">
                         <div class="filtro-grupo">
@@ -2056,8 +2008,6 @@
                             </select>
                         </div>
                         <div class="filtro-grupo"><label>Usuario</label><input type="text" id="historial-filtro-usuario" placeholder="Nombre..."></div>
-                        <div class="filtro-grupo"><label>Desde</label><input type="date" id="historial-filtro-fecha-inicio"></div>
-                        <div class="filtro-grupo"><label>Hasta</label><input type="date" id="historial-filtro-fecha-fin"></div>
                         <div class="filtro-grupo"><label>Buscar</label><input type="text" id="historial-filtro-buscar" placeholder="Texto libre..."></div>
                         <button class="btn-limpiar" id="historial-limpiar-filtros"><i class="fas fa-undo"></i> Limpiar</button>
                     </div>
@@ -2067,34 +2017,35 @@
                         <button class="btn-secundario" id="historial-toggle-ver-todos"><i class="fas fa-list"></i> Ver todos los movimientos</button>
                     </div>
                 </div>
+
                 <div class="version-card">
-                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v3.7.2</span></h3>
+                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v3.7.3</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">3.7.2</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">3.7.3</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
                     </div>
                     <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v3.7.2)</h4>
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v3.7.3)</h4>
                         <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-fire"></i></div>
+                            <div class="changelog-icono"><i class="fas fa-mobile-alt"></i></div>
                             <div class="changelog-contenido">
-                                <div class="changelog-titulo">Firebase reparado</div>
+                                <div class="changelog-titulo">Diseño móvil optimizado</div>
                                 <div class="changelog-desc">
-                                    Se restauró la configuración e inicialización de Firebase que se había perdido.
-                                    Ahora la sincronización en la nube funciona correctamente en GitHub Pages y
-                                    en cualquier servidor HTTP.
+                                    Se mejoró la experiencia en celulares: filtros colapsables para ahorrar espacio,
+                                    métricas en 2 columnas, sidebar tipo drawer con botón hamburguesa,
+                                    modales a pantalla completa y botones táctiles más grandes.
                                 </div>
                             </div>
                         </div>
                         <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-plus-circle"></i></div>
+                            <div class="changelog-icono"><i class="fas fa-shield-alt"></i></div>
                             <div class="changelog-contenido">
-                                <div class="changelog-titulo">Cargos extras restaurados</div>
+                                <div class="changelog-titulo">Safe area en móvil</div>
                                 <div class="changelog-desc">
-                                    Vuelve la sección de cargos extras en el formulario de contrato, con lista
-                                    unificada de movimientos y resumen financiero en vivo.
+                                    El contenido ya no queda tapado por la barra de navegación del celular.
+                                    Se respeta la zona segura inferior en iPhone y Android con gestos.
                                 </div>
                             </div>
                         </div>
@@ -2117,6 +2068,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="credito-footer">
                     <div class="credito-titulo">Diseñado y desarrollado por</div>
                     <div class="credito-marca"><i class="fas fa-camera-retro"></i> JFR MEDIA <i class="fas fa-camera-retro"></i></div>
@@ -2142,7 +2094,7 @@
         // ============================================================
         // CONFIGURACIÓN
         // ============================================================
-        var VERSION = '3.7.2';
+        var VERSION = '3.7.3';
         var PIN_ADMIN_INICIAL = '1234';
         var EMISOR_COMPROBANTE = "Producciones D'Angel Film";
         var MODO_ZONA_HORARIA = 'local';
@@ -2150,10 +2102,10 @@
         var MENSAJE_WHATSAPP_DEFAULT = '';
 
         var TEMAS_DISPONIBLES = ['dark', 'light', 'otono'];
-        var FASES_DISPONIBLES = ['Interesado', 'Cotizacion', 'Negociacion', 'Contrato', 'Frecuente', 'Cancelado', 'Inactivo'];
+        var FASES_DISPONIBLES = ['Interesado', 'Cotización', 'Negociación', 'Contrato', 'Frecuente', 'Cancelado', 'Inactivo'];
         var ESTADOS_CONTRATO = ['Pendiente', 'Completado', 'Cancelado'];
         var ESTADOS_CLIENTE = ['Activo', 'Inactivo', 'Cancelado'];
-        var TIPOS_TAREA = ['Llamar', 'Enviar mensaje', 'Confirmar', 'Resolver dudas', 'Sesion de fotos', 'Visita', 'Escoger fotos', 'Recoger material', 'Entrega de fotos', 'Otro'];
+        var TIPOS_TAREA = ['Llamar', 'Enviar mensaje', 'Confirmar', 'Resolver dudas', 'Sesión de fotos', 'Visita', 'Escoger fotos', 'Recoger material', 'Entrega de fotos', 'Otro'];
         var MAX_HISTORIAL_MOVIMIENTOS = 2000;
         var DURACION_SESION_MS = 12 * 60 * 60 * 1000;
 
@@ -2380,7 +2332,7 @@
         function cerrarSesion() {
             const usuarioAnterior = usuarioActual ? usuarioActual.nombre : 'Desconocido';
             localStorage.removeItem(PREF_SESION);
-            registrarHistorial('sesion', 'logout', 'El usuario "' + usuarioAnterior + '" cerro sesion', { nombre: usuarioAnterior });
+            registrarHistorial('sesion', 'logout', 'El usuario "' + usuarioAnterior + '" cerró sesión', { nombre: usuarioAnterior });
             guardarDatosLocal();
             window.location.reload();
         }
@@ -2536,7 +2488,7 @@
         // CONFIRMACIÓN
         // ============================================================
         function confirmarEliminacion(opciones) {
-            const titulo = opciones.titulo || 'Confirmar eliminacion';
+            const titulo = opciones.titulo || 'Confirmar eliminación';
             const entidad = opciones.entidad || 'registro';
             const nombre = opciones.nombre || '';
             const detalle = opciones.detalle || '';
@@ -2550,12 +2502,12 @@
             }
             const html = '<div class="advertencia-eliminar">' +
                 '<i class="fas fa-exclamation-triangle"></i>' +
-                '<div class="texto"><strong>Esta accion es permanente e irreversible</strong>' +
-                'El ' + entidad + ' sera eliminado de forma definitiva.' + detalleHTML +
+                '<div class="texto"><strong>Esta acción es permanente e irreversible</strong>' +
+                'El ' + entidad + ' será eliminado de forma definitiva.' + detalleHTML +
                 '</div></div>' +
                 '<div class="form-acciones">' +
                 '<button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button>' +
-                '<button type="button" class="btn-peligro" id="btn-confirmar-eliminar"><i class="fas fa-trash"></i> Si, eliminar</button>' +
+                '<button type="button" class="btn-peligro" id="btn-confirmar-eliminar"><i class="fas fa-trash"></i> Sí, eliminar</button>' +
                 '</div>';
             abrirModal(titulo, html);
             document.getElementById('btn-confirmar-eliminar').addEventListener('click', function() {
@@ -2590,6 +2542,7 @@
             const c = s.classList.toggle('collapsed');
             localStorage.setItem(PREF_SIDEBAR, c ? '1' : '0');
         }
+
         function toggleSidebarMovil() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
@@ -2622,7 +2575,7 @@
         }
 
         // ============================================================
-        // RENDERIZADO MOSAICOS
+        // RENDERIZADO DE MOSAICOS
         // ============================================================
         function renderizarMosaicos(config) {
             const contenedor = document.getElementById(config.contenedorId);
@@ -2635,11 +2588,15 @@
             contenedor.innerHTML = f.map(function(item) {
                 const clickAttr = config.onCardClick ? 'onclick="' + config.onCardClick(item) + '"' : '';
                 const clickClass = config.onCardClick ? 'clickeable' : '';
-                return '<div class="mosaico-card ' + clickClass + '" ' + clickAttr + '>' +
+                return '<div class="mosaico-card ' + clickClass + '" ' + attrClick(config, item, clickAttr) + '>' +
                     config.renderContenido(item) +
                     (config.renderAcciones ? '<div class="mosaico-footer" onclick="event.stopPropagation()">' + config.renderAcciones(item) + '</div>' : '') +
                     '</div>';
             }).join('');
+        }
+
+        function attrClick(config, item, clickAttr) {
+            return clickAttr;
         }
 
         // ============================================================
@@ -2721,14 +2678,14 @@
                                 const ant = lista[idx];
                                 lista[idx] = Object.assign({}, ant, datos);
                                 registrarHistorial(entidadHistorial, 'editar',
-                                    'Se edito ' + titulo.toLowerCase() + ': "' + (datos.nombre || ant.nombre || 'sin nombre') + '"',
+                                    'Se editó ' + titulo.toLowerCase() + ': "' + (datos.nombre || ant.nombre || 'sin nombre') + '"',
                                     { id: id, nombre: datos.nombre || ant.nombre });
                             }
                         } else {
                             const nuevo = Object.assign({ id: generarId() }, datos, { fechaRegistro: obtenerFechaActual() });
                             lista.push(nuevo);
                             registrarHistorial(entidadHistorial, 'crear',
-                                'Se creo ' + titulo.toLowerCase() + ': "' + (nuevo.nombre || 'sin nombre') + '"',
+                                'Se creó ' + titulo.toLowerCase() + ': "' + (nuevo.nombre || 'sin nombre') + '"',
                                 { id: nuevo.id, nombre: nuevo.nombre });
                         }
 
@@ -2768,7 +2725,7 @@
                         onConfirmar: function() {
                             window[coleccion] = lista.filter(function(x) { return x.id !== id; });
                             registrarHistorial(entidadHistorial, 'eliminar',
-                                'Se elimino ' + titulo.toLowerCase() + ': "' + (item.nombre || 'sin nombre') + '"',
+                                'Se eliminó ' + titulo.toLowerCase() + ': "' + (item.nombre || 'sin nombre') + '"',
                                 { id: id, nombre: item.nombre });
                             guardarDatos();
                             renderizar();
@@ -2893,7 +2850,7 @@
                 coleccion: 'paquetes', titulo: 'Paquete', entidadHistorial: 'paquete',
                 campos: [
                     { name: 'nombre', label: 'Nombre *', required: true },
-                    { name: 'descripcion', label: 'Descripcion *', type: 'textarea', required: true },
+                    { name: 'descripcion', label: 'Descripción *', type: 'textarea', required: true },
                     { name: 'precio', label: 'Precio *', type: 'number', required: true, min: 0 },
                     { name: 'descuento', label: 'Descuento (pesos)', type: 'number', default: 0, min: 0 },
                     { name: 'vigencia', label: 'Vigencia *', type: 'date', required: true }
@@ -2904,7 +2861,7 @@
                 coleccion: 'serviciosAdicionales', titulo: 'Servicio', entidadHistorial: 'servicio',
                 campos: [
                     { name: 'nombre', label: 'Nombre *', required: true },
-                    { name: 'descripcion', label: 'Descripcion *', type: 'textarea', required: true },
+                    { name: 'descripcion', label: 'Descripción *', type: 'textarea', required: true },
                     { name: 'precio', label: 'Precio *', type: 'number', required: true, min: 0 },
                     { name: 'descuento', label: 'Descuento (pesos)', type: 'number', default: 0, min: 0 },
                     { name: 'vigencia', label: 'Vigencia *', type: 'date', required: true }
@@ -2915,7 +2872,7 @@
                 coleccion: 'clientes', titulo: 'Cliente', entidadHistorial: 'cliente',
                 campos: [
                     { name: 'nombre', label: 'Nombre *', required: true },
-                    { name: 'telefono', label: 'Telefono *', required: true },
+                    { name: 'telefono', label: 'Teléfono *', required: true },
                     { name: 'email', label: 'Email (opcional)', type: 'email' },
                     { name: 'estado', label: 'Estado *', type: 'select', options: ESTADOS_CLIENTE, required: true },
                     { name: 'notasGenerales', label: 'Notas (opcional)', type: 'textarea' }
@@ -2942,7 +2899,7 @@
             const html = '<form id="form-prospecto">' +
                 '<input type="hidden" id="prospecto-id" value="' + (prospecto ? prospecto.id : '') + '">' +
                 '<div class="form-grupo"><label>Nombre *</label><input type="text" id="prospecto-nombre" required value="' + (prospecto ? prospecto.nombre : '') + '"></div>' +
-                '<div class="form-grupo"><label>Telefono (opcional)</label><input type="text" id="prospecto-telefono" value="' + (prospecto ? prospecto.telefono : '') + '"></div>' +
+                '<div class="form-grupo"><label>Teléfono (opcional)</label><input type="text" id="prospecto-telefono" value="' + (prospecto ? prospecto.telefono : '') + '"></div>' +
                 '<div class="form-grupo"><label>Email (opcional)</label><input type="email" id="prospecto-email" value="' + (prospecto ? prospecto.email : '') + '"></div>' +
                 '<div class="form-grupo"><label>Fase *</label><select id="prospecto-fase" required>' + opf + '</select></div>' +
                 '<div class="form-grupo"><label>Notas (opcional)</label><textarea id="prospecto-notas">' + (prospecto ? prospecto.notasGenerales : '') + '</textarea></div>' +
@@ -2973,12 +2930,12 @@
                         const cf = p.faseActual !== faseActual;
                         if (cf) p.historialFases.push({ fase: faseActual, fecha: obtenerFechaActual(), notas: 'Cambio de fase' });
                         Object.assign(p, { nombre: nombre, telefono: telefono, email: email, faseActual: faseActual, notasGenerales: notasGenerales });
-                        registrarHistorial('prospecto', 'editar', 'Se edito prospecto: "' + nombre + '"', { id: id, nombre: nombre });
+                        registrarHistorial('prospecto', 'editar', 'Se editó prospecto: "' + nombre + '"', { id: id, nombre: nombre });
                     }
                 } else {
                     const nuevo = { id: generarId(), nombre: nombre, telefono: telefono, email: email, faseActual: faseActual, historialFases: [{ fase: faseActual, fecha: obtenerFechaActual(), notas: 'Registro inicial' }], notasGenerales: notasGenerales, clienteId: null, fechaRegistro: obtenerFechaActual() };
                     prospectos.push(nuevo);
-                    registrarHistorial('prospecto', 'crear', 'Se creo prospecto: "' + nombre + '"', { id: nuevo.id, nombre: nombre });
+                    registrarHistorial('prospecto', 'crear', 'Se creó prospecto: "' + nombre + '"', { id: nuevo.id, nombre: nombre });
                 }
                 guardarDatos(); cerrarModal(); renderizarProspectos();
                 mostrarNotificacion('Prospecto guardado', 'success');
@@ -2993,7 +2950,7 @@
                 titulo: 'Eliminar prospecto', entidad: 'prospecto', nombre: p.nombre,
                 onConfirmar: function() {
                     prospectos = prospectos.filter(function(x) { return x.id !== id; });
-                    registrarHistorial('prospecto', 'eliminar', 'Se elimino prospecto: "' + p.nombre + '"', { id: id, nombre: p.nombre });
+                    registrarHistorial('prospecto', 'eliminar', 'Se eliminó prospecto: "' + p.nombre + '"', { id: id, nombre: p.nombre });
                     guardarDatos(); renderizarProspectos();
                     mostrarNotificacion('Prospecto eliminado', 'success');
                 }
@@ -3018,11 +2975,11 @@
             const nc = c.contratos ? c.contratos.length : 0;
             confirmarEliminacion({
                 titulo: 'Eliminar cliente', entidad: 'cliente', nombre: c.nombre,
-                detalle: 'Telefono: ' + c.telefono + ' - ' + nc + ' contratos',
+                detalle: 'Teléfono: ' + c.telefono + ' - ' + nc + ' contratos',
                 onConfirmar: function() {
                     clientes = clientes.filter(function(x) { return x.id !== id; });
                     prospectos.forEach(function(p) { if (p && p.clienteId === id) p.clienteId = null; });
-                    registrarHistorial('cliente', 'eliminar', 'Se elimino cliente: "' + c.nombre + '"', { id: id, nombre: c.nombre });
+                    registrarHistorial('cliente', 'eliminar', 'Se eliminó cliente: "' + c.nombre + '"', { id: id, nombre: c.nombre });
                     guardarDatos(); renderizarClientes(); renderizarProspectos(); renderizarContratos(); renderizarInformes();
                     mostrarNotificacion('Cliente eliminado', 'success');
                 }
@@ -3032,14 +2989,14 @@
         function enviarWhatsAppCliente(clienteId) {
             const cliente = obtenerCliente(clienteId);
             if (!cliente) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
-            if (!cliente.telefono) { mostrarNotificacion('Sin telefono registrado', 'warning'); return; }
+            if (!cliente.telefono) { mostrarNotificacion('Sin teléfono registrado', 'warning'); return; }
             const numero = normalizarTelefonoWhatsApp(cliente.telefono);
-            if (!numero) { mostrarNotificacion('Telefono invalido', 'warning'); return; }
+            if (!numero) { mostrarNotificacion('Teléfono inválido', 'warning'); return; }
             let url = 'https://wa.me/' + numero;
             if (MENSAJE_WHATSAPP_DEFAULT) url += '?text=' + encodeURIComponent(MENSAJE_WHATSAPP_DEFAULT);
             window.open(url, '_blank');
             mostrarNotificacion('Abriendo WhatsApp', 'success');
-            registrarHistorial('sesion', 'editar', 'Se abrio WhatsApp para contactar a "' + cliente.nombre + '"', { id: clienteId, nombre: cliente.nombre });
+            registrarHistorial('sesion', 'editar', 'Se abrió WhatsApp para contactar a "' + cliente.nombre + '"', { id: clienteId, nombre: cliente.nombre });
         }
 
         // ============================================================
@@ -3100,10 +3057,10 @@
                 '<div class="form-grupo"><label>Fecha del evento *</label><input type="date" id="contrato-fecha-evento" required value="' + (contrato ? contrato.fechaEvento : '') + '"></div>' +
                 '<div class="form-grupo"><label>Hora del evento</label><select id="contrato-hora-evento"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div>' +
                 '</div>' +
-                '<div class="form-grupo"><label>Direccion del evento religioso</label><input type="text" id="contrato-direccion-evento" value="' + (contrato ? contrato.direccionEvento : '') + '"></div>' +
+                '<div class="form-grupo"><label>Dirección del evento religioso</label><input type="text" id="contrato-direccion-evento" value="' + (contrato ? contrato.direccionEvento : '') + '"></div>' +
                 '<div class="row-2col">' +
-                '<div class="form-grupo"><label>Direccion de la recepcion</label><input type="text" id="contrato-direccion-recepcion" value="' + (contrato ? contrato.direccionRecepcion : '') + '"></div>' +
-                '<div class="form-grupo"><label>Hora de la recepcion</label><select id="contrato-hora-recepcion"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div>' +
+                '<div class="form-grupo"><label>Dirección de la recepción</label><input type="text" id="contrato-direccion-recepcion" value="' + (contrato ? contrato.direccionRecepcion : '') + '"></div>' +
+                '<div class="form-grupo"><label>Hora de la recepción</label><select id="contrato-hora-recepcion"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div>' +
                 '</div>' +
                 '<div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;">' +
                 '<h4 style="color:var(--color-acento);margin-bottom:12px;"><i class="fas fa-calculator"></i> Precios</h4>' +
@@ -3114,7 +3071,7 @@
                 '<div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;">' +
                 '<h4 style="color:var(--color-naranja);margin-bottom:12px;"><i class="fas fa-plus-circle"></i> Cargos Extras</h4>' +
                 '<div class="row-2col">' +
-                '<div class="form-grupo"><label>Descripcion del cargo</label><input type="text" id="cargo-descripcion" placeholder="Ej: Fotos extra, Album adicional, Ajuste especial..."></div>' +
+                '<div class="form-grupo"><label>Descripción del cargo</label><input type="text" id="cargo-descripcion" placeholder="Ej: Fotos extra, Álbum adicional..."></div>' +
                 '<div class="form-grupo"><label>Monto</label><div style="display:flex;gap:8px;"><input type="number" id="cargo-monto" min="0" step="100" placeholder="0" style="flex:1;"><button type="button" class="btn-cian" id="btn-agregar-cargo" style="white-space:nowrap;"><i class="fas fa-plus"></i> Agregar</button></div></div>' +
                 '</div>' +
                 '<div class="form-grupo"><label>Movimientos del contrato</label>' +
@@ -3292,7 +3249,7 @@
             el('btn-agregar-pago').addEventListener('click', function() {
                 const mi = el('contrato-nuevo-pago');
                 const m = parseFloat(mi.value);
-                if (!m || m <= 0) { mostrarNotificacion('Monto invalido', 'warning'); return; }
+                if (!m || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
                 const nuevoPago = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Pago registrado por ' + formatearMoneda(m), codigo: generarHuellaPago(), registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema' };
                 pagosArr.push(nuevoPago);
                 pagosRecientes.push(nuevoPago);
@@ -3307,8 +3264,8 @@
                 const mi = el('cargo-monto');
                 const d = di.value.trim();
                 const m = parseFloat(mi.value);
-                if (!m || m <= 0) { mostrarNotificacion('Monto invalido', 'warning'); return; }
-                if (!d) { mostrarNotificacion('Ingresa una descripcion', 'warning'); return; }
+                if (!m || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
+                if (!d) { mostrarNotificacion('Ingresa una descripción', 'warning'); return; }
                 const nuevoCargo = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Cargo extra: ' + d + ' - ' + formatearMoneda(m), registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema' };
                 cargosArr.push(nuevoCargo);
                 renderizarMovimientos();
@@ -3392,17 +3349,17 @@
             if (ee) {
                 const idx = c.contratos.findIndex(function(x) { return x.id === ci; });
                 if (idx !== -1) c.contratos[idx] = nc;
-                registrarHistorial('contrato', 'editar', 'Se edito contrato de "' + c.nombre + '"', { id: ci, nombre: c.nombre });
+                registrarHistorial('contrato', 'editar', 'Se editó contrato de "' + c.nombre + '"', { id: ci, nombre: c.nombre });
             } else {
                 if (!c.contratos) c.contratos = [];
                 c.contratos.push(nc);
-                registrarHistorial('contrato', 'crear', 'Se creo contrato para "' + c.nombre + '"', { id: nc.id, nombre: c.nombre });
+                registrarHistorial('contrato', 'crear', 'Se creó contrato para "' + c.nombre + '"', { id: nc.id, nombre: c.nombre });
             }
 
             if (pagosRecientes) {
                 pagosRecientes.forEach(function(p) {
                     if (p.eliminado) return;
-                    registrarHistorial('pago', 'crear', 'Pago de ' + formatearMoneda(p.monto) + ' para "' + c.nombre + '" - Codigo: ' + p.codigo, { id: p.id, nombre: c.nombre });
+                    registrarHistorial('pago', 'crear', 'Pago de ' + formatearMoneda(p.monto) + ' para "' + c.nombre + '" - Código: ' + p.codigo, { id: p.id, nombre: c.nombre });
                 });
             }
 
@@ -3490,7 +3447,7 @@
                 detalle: 'Festejado: ' + co.festejado,
                 onConfirmar: function() {
                     c.contratos = c.contratos.filter(function(x) { return x.id !== contratoId; });
-                    registrarHistorial('contrato', 'eliminar', 'Se elimino contrato de "' + c.nombre + '"', { id: contratoId, nombre: c.nombre });
+                    registrarHistorial('contrato', 'eliminar', 'Se eliminó contrato de "' + c.nombre + '"', { id: contratoId, nombre: c.nombre });
                     guardarDatos(); renderizarContratos(); renderizarClientes(); renderizarInformes();
                     mostrarNotificacion('Contrato eliminado', 'success');
                 }
@@ -3514,11 +3471,11 @@
                 e.stopPropagation();
                 const m = parseFloat(document.getElementById('pago-rapido-monto').value);
                 const n = document.getElementById('pago-rapido-nota').value.trim();
-                if (isNaN(m) || m <= 0) { mostrarNotificacion('Monto invalido', 'warning'); return; }
+                if (isNaN(m) || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
                 if (!co.pagos) co.pagos = [];
                 const nuevoPago = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: n ? 'Pago: ' + n + ' - ' + formatearMoneda(m) : 'Pago de ' + formatearMoneda(m), codigo: generarHuellaPago(), registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema' };
                 co.pagos.push(nuevoPago);
-                registrarHistorial('pago', 'crear', 'Pago de ' + formatearMoneda(m) + ' para "' + c.nombre + '" - Codigo: ' + nuevoPago.codigo, { id: nuevoPago.id, nombre: c.nombre });
+                registrarHistorial('pago', 'crear', 'Pago de ' + formatearMoneda(m) + ' para "' + c.nombre + '" - Código: ' + nuevoPago.codigo, { id: nuevoPago.id, nombre: c.nombre });
                 guardarDatos();
                 cerrarModal();
                 renderizarContratos();
@@ -3589,11 +3546,11 @@
                 '<div class="detalle-festejado">Festejado: <strong>' + (contrato.festejado || 'No especificado') + '</strong></div>' +
                 '</div>' +
                 '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-user"></i> Datos del cliente</div>' +
-                '<div class="detalle-grid">' + campo('Nombre', cliente.nombre) + campo('Telefono', cliente.telefono) + campo('Email', cliente.email) + campo('Estado', cliente.estado) + '</div></div>' +
-                '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-calendar-alt"></i> Informacion del evento</div>' +
-                '<div class="detalle-grid">' + campo('Festejado', contrato.festejado) + campo('Tipo', tl) + campo('Fecha', formatearFecha(contrato.fechaEvento)) + campo('Hora', contrato.horaEvento ? contrato.horaEvento + ' hrs' : 'Sin especificar') + campo('Direccion evento', contrato.direccionEvento) + campo('Direccion recepcion', contrato.direccionRecepcion) + campo('Hora recepcion', contrato.horaRecepcion ? contrato.horaRecepcion + ' hrs' : 'Sin especificar') + campo('Fecha contrato', formatearFecha(contrato.fechaContrato)) + '</div></div>' +
+                '<div class="detalle-grid">' + campo('Nombre', cliente.nombre) + campo('Teléfono', cliente.telefono) + campo('Email', cliente.email) + campo('Estado', cliente.estado) + '</div></div>' +
+                '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-calendar-alt"></i> Información del evento</div>' +
+                '<div class="detalle-grid">' + campo('Festejado', contrato.festejado) + campo('Tipo', tl) + campo('Fecha', formatearFecha(contrato.fechaEvento)) + campo('Hora', contrato.horaEvento ? contrato.horaEvento + ' hrs' : 'Sin especificar') + campo('Dirección evento', contrato.direccionEvento) + campo('Dirección recepción', contrato.direccionRecepcion) + campo('Hora recepción', contrato.horaRecepcion ? contrato.horaRecepcion + ' hrs' : 'Sin especificar') + campo('Fecha contrato', formatearFecha(contrato.fechaContrato)) + '</div></div>' +
                 '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-box"></i> Paquete / Servicio</div>' +
-                '<div class="detalle-grid"><div class="detalle-campo" style="grid-column:1/-1;"><span class="lbl">Descripcion</span><span class="val">' + (in_ || 'No especificado') + '</span></div></div></div>' +
+                '<div class="detalle-grid"><div class="detalle-campo" style="grid-column:1/-1;"><span class="lbl">Descripción</span><span class="val">' + (in_ || 'No especificado') + '</span></div></div></div>' +
                 '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-chart-line"></i> Resumen financiero</div>' +
                 '<div class="detalle-resumen-financiero">' +
                 '<div class="detalle-financiero-card"><div class="lbl">Precio base</div><div class="val">' + formatearMoneda(contrato.precioBase) + '</div></div>' +
@@ -3644,7 +3601,7 @@
             ctx.fillStyle = '#c9a84c'; ctx.font = '500 15px "Segoe UI", Arial, sans-serif';
             ctx.fillText('COMPROBANTE DE PAGO', W / 2, 90);
             ctx.fillStyle = '#a8a8a8'; ctx.font = '400 12px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('Estudio Fotografico', W / 2, 112);
+            ctx.fillText('Estudio Fotográfico', W / 2, 112);
 
             let y = 190;
             ctx.fillStyle = '#666'; ctx.font = '500 13px "Segoe UI", Arial, sans-serif'; ctx.textAlign = 'center';
@@ -3670,7 +3627,7 @@
             ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 14px "Segoe UI", Arial, sans-serif'; ctx.textAlign = 'left';
             ctx.fillText('DATOS DEL CONTRATANTE', marginX, y); y += 30;
             fila('Contratante', cliente.nombre || 'Sin nombre', y); y += 60;
-            if (cliente.telefono) { fila('Telefono', cliente.telefono, y); y += 60; }
+            if (cliente.telefono) { fila('Teléfono', cliente.telefono, y); y += 60; }
 
             ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 14px "Segoe UI", Arial, sans-serif';
             ctx.fillText('DATOS DEL EVENTO', marginX, y); y += 30;
@@ -3708,16 +3665,16 @@
             ctx.fillStyle = '#1a1a1a'; ctx.strokeStyle = '#c9a84c'; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.rect(marginX, codigoY, W - 120, codigoH); ctx.fill(); ctx.stroke();
             ctx.textAlign = 'center'; ctx.fillStyle = '#c9a84c'; ctx.font = 'bold 12px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('CODIGO UNICO DE VERIFICACION', W / 2, codigoY + 28);
+            ctx.fillText('CÓDIGO ÚNICO DE VERIFICACIÓN', W / 2, codigoY + 28);
             ctx.fillStyle = '#ffffff'; ctx.font = 'bold 30px "Courier New", monospace';
             ctx.fillText((pago.codigo || 'SIN-CODIGO').toUpperCase(), W / 2, codigoY + 65);
 
             y = codigoY + codigoH + 20;
 
             ctx.textAlign = 'center'; ctx.fillStyle = '#888'; ctx.font = 'italic 11px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('Este codigo es unico e irrepetible.', W / 2, y);
+            ctx.fillText('Este código es único e irrepetible.', W / 2, y);
             y += 18;
-            ctx.fillText('Comprobantes sin este codigo deben considerarse invalidos.', W / 2, y);
+            ctx.fillText('Comprobantes sin este código deben considerarse inválidos.', W / 2, y);
 
             y += 40;
             const lineaFirmaY = y + 40;
@@ -3785,17 +3742,17 @@
             const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
             if (!datos) { mostrarNotificacion('Datos no encontrados', 'error'); return; }
             const numero = normalizarTelefonoWhatsApp(datos.cliente.telefono);
-            if (!numero) { mostrarNotificacion('Telefono invalido', 'warning'); return; }
+            if (!numero) { mostrarNotificacion('Teléfono inválido', 'warning'); return; }
             descargarComprobante(clienteId, contratoId, pagoId);
             setTimeout(function() {
                 const mensaje = 'Hola ' + datos.cliente.nombre + ', adjunto el comprobante de tu pago:\n\n' +
                     'Monto: ' + formatearMoneda(datos.pago.monto) + '\n' +
                     'Fecha: ' + formatearFechaHora(datos.pago.fecha) + '\n' +
-                    'Codigo: ' + datos.pago.codigo + '\n' +
+                    'Código: ' + datos.pago.codigo + '\n' +
                     'Saldo restante: ' + formatearMoneda(datos.totales.saldoPendiente) + '\n\n' +
                     'Gracias por tu preferencia.\n' + EMISOR_COMPROBANTE;
                 window.open('https://wa.me/' + numero + '?text=' + encodeURIComponent(mensaje), '_blank');
-                registrarHistorial('pago', 'editar', 'Se envio comprobante por WhatsApp a "' + datos.cliente.nombre + '"', { id: pagoId, nombre: datos.cliente.nombre });
+                registrarHistorial('pago', 'editar', 'Se envió comprobante por WhatsApp a "' + datos.cliente.nombre + '"', { id: pagoId, nombre: datos.cliente.nombre });
                 mostrarNotificacion('WhatsApp abierto. Adjunta la imagen.', 'info');
             }, 800);
         }
@@ -3803,7 +3760,7 @@
         function enviarComprobanteEmail(clienteId, contratoId, pagoId) {
             const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
             if (!datos) { mostrarNotificacion('Datos no encontrados', 'error'); return; }
-            if (!datos.cliente.email || datos.cliente.email.indexOf('@') === -1) { mostrarNotificacion('Sin email valido', 'warning'); return; }
+            if (!datos.cliente.email || datos.cliente.email.indexOf('@') === -1) { mostrarNotificacion('Sin email válido', 'warning'); return; }
             descargarComprobante(clienteId, contratoId, pagoId);
             setTimeout(function() {
                 const asunto = 'Comprobante de pago - ' + EMISOR_COMPROBANTE;
@@ -3811,7 +3768,7 @@
                     'Adjunto el comprobante de tu pago:\n\n' +
                     'Monto: ' + formatearMoneda(datos.pago.monto) + '\n' +
                     'Fecha: ' + formatearFechaHora(datos.pago.fecha) + '\n' +
-                    'Codigo de verificacion: ' + datos.pago.codigo + '\n' +
+                    'Código de verificación: ' + datos.pago.codigo + '\n' +
                     'Saldo restante: ' + formatearMoneda(datos.totales.saldoPendiente) + '\n\n' +
                     'Festejado: ' + datos.contrato.festejado + '\n\n' +
                     'Gracias por tu preferencia.\n\n' +
@@ -3819,7 +3776,7 @@
                     'Firmado por: ' + (usuarioActual ? usuarioActual.nombre : 'Usuario') + '\n\n' +
                     '(Adjunta la imagen descargada al correo antes de enviarlo)';
                 window.open('mailto:' + datos.cliente.email + '?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(cuerpo), '_blank');
-                registrarHistorial('pago', 'editar', 'Se envio comprobante por Email a "' + datos.cliente.nombre + '"', { id: pagoId, nombre: datos.cliente.nombre });
+                registrarHistorial('pago', 'editar', 'Se envió comprobante por Email a "' + datos.cliente.nombre + '"', { id: pagoId, nombre: datos.cliente.nombre });
                 mostrarNotificacion('Email abierto. Adjunta la imagen.', 'info');
             }, 800);
         }
@@ -3834,7 +3791,7 @@
             const c = obtenerCliente(clienteId); if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
             const co = c.contratos.find(function(x) { return x.id === contratoId; }); if (!co) { mostrarNotificacion('Contrato no encontrado', 'error'); return; }
             if (!co.fechaEvento) { mostrarNotificacion('Sin fecha de evento', 'warning'); return; }
-            const tit = 'Sesion de fotos: ' + (co.festejado || 'Evento');
+            const tit = 'Sesión de fotos: ' + (co.festejado || 'Evento');
             let fev = co.fechaEvento.replace(/-/g, '');
             let hev = co.horaEvento ? co.horaEvento.replace(':', '') : '120000';
             const fi = fev + 'T' + hev;
@@ -3843,11 +3800,11 @@
             const hfs = String(hf).padStart(2, '0') + String(mf).padStart(2, '0') + '00';
             const ff = fev + 'T' + hfs;
             const tot = calcularTotalesContrato(co);
-            let d = 'Cliente: ' + c.nombre + '\nTelefono: ' + (c.telefono || 'N/A') + '\n';
+            let d = 'Cliente: ' + c.nombre + '\nTeléfono: ' + (c.telefono || 'N/A') + '\n';
             if (c.email) d += 'Email: ' + c.email + '\n';
             d += '\nFestejado: ' + (co.festejado || 'N/A') + '\nPaquete: ' + obtenerNombreItemContrato(co) + '\n';
-            d += '\nEvento: ' + (co.direccionEvento || 'N/A') + '\nRecepcion: ' + (co.direccionRecepcion || 'N/A') + '\n';
-            if (co.horaRecepcion) d += 'Hora recepcion: ' + co.horaRecepcion + ' hrs\n';
+            d += '\nEvento: ' + (co.direccionEvento || 'N/A') + '\nRecepción: ' + (co.direccionRecepcion || 'N/A') + '\n';
+            if (co.horaRecepcion) d += 'Hora recepción: ' + co.horaRecepcion + ' hrs\n';
             d += '\nPrecio Final: ' + formatearMoneda(co.precioFinal || 0) + '\n';
             if (tot.totalCargos > 0) d += 'Cargos: ' + formatearMoneda(tot.totalCargos) + '\n';
             d += 'Total: ' + formatearMoneda(tot.totalAPagar) + '\n';
@@ -3873,9 +3830,9 @@
             const hr = co.horaRecepcion ? ' ' + co.horaRecepcion + ' hrs' : '';
             const f = function(l, v) { return '<div class="fila"><span class="lbl">' + l + ':</span><span class="val">' + v + '</span></div>'; };
             let html = '<div id="print-doc"><h1>CONTRATO DE SERVICIOS</h1>' +
-                '<div class="sec">' + f('Cliente', c.nombre) + f('Telefono', c.telefono || 'N/A') + f('Email', c.email || 'N/A') + '</div>' +
+                '<div class="sec">' + f('Cliente', c.nombre) + f('Teléfono', c.telefono || 'N/A') + f('Email', c.email || 'N/A') + '</div>' +
                 '<div class="sec"><div class="grid-2">' + f('Festejado', co.festejado || 'N/A') + f('Tipo', co.tipo === 'paquete' ? 'Paquete' : 'Solo Servicio') + f('Estado', co.estado || 'Pendiente') + f('Fecha Contrato', formatearFecha(co.fechaContrato)) + f('Fecha Evento', formatearFecha(co.fechaEvento) + he) + f('Paquete/Servicio', in_ || 'N/A') + '</div></div>' +
-                '<div class="sec"><div class="grid-2">' + f('Evento Religioso', co.direccionEvento || 'N/A') + f('Recepcion', (co.direccionRecepcion || 'N/A') + hr) + '</div></div>' +
+                '<div class="sec"><div class="grid-2">' + f('Evento Religioso', co.direccionEvento || 'N/A') + f('Recepción', (co.direccionRecepcion || 'N/A') + hr) + '</div></div>' +
                 '<div class="sec">' + f('Precio Base', formatearMoneda(co.precioBase || 0)) + f('Precio Final', formatearMoneda(co.precioFinal || 0)) +
                 (tot.totalCargos > 0 ? f('Cargos Extras', formatearMoneda(tot.totalCargos)) : '') +
                 f('Total a Pagar', '<span class="negrita">' + formatearMoneda(tot.totalAPagar) + '</span>') +
@@ -3883,7 +3840,7 @@
                 '<div class="fila"><span class="lbl" style="color:' + (tot.saldoPendiente === 0 ? '#4caf50' : '#ff9800') + ';">Saldo Pendiente:</span><span class="val ' + (tot.saldoPendiente === 0 ? 'verde' : 'naranja') + '">' + formatearMoneda(tot.saldoPendiente) + '</span></div>' +
                 '</div>';
             if (tot.pagosValidos.length > 0) {
-                html += '<div class="sec"><div class="sec-title">Pagos</div><table><thead><tr><th>Fecha</th><th>Codigo</th><th style="text-align:right;">Monto</th><th>Nota</th></tr></thead><tbody>' +
+                html += '<div class="sec"><div class="sec-title">Pagos</div><table><thead><tr><th>Fecha</th><th>Código</th><th style="text-align:right;">Monto</th><th>Nota</th></tr></thead><tbody>' +
                     tot.pagosValidos.map(function(p) { return '<tr><td>' + formatearFechaHora(p.fecha) + '</td><td style="font-family:monospace;font-size:9px;">' + (p.codigo || '-') + '</td><td style="text-align:right;font-weight:600;">' + formatearMoneda(p.monto) + '</td><td>' + (p.nota || '') + '</td></tr>'; }).join('') +
                     '</tbody></table></div>';
             }
@@ -3896,7 +3853,7 @@
             document.title = 'Contrato - ' + c.nombre;
             window.print();
             setTimeout(function() { cont.style.display = 'none'; document.title = ot; }, 500);
-            mostrarNotificacion('Enviando a impresion...', 'info');
+            mostrarNotificacion('Enviando a impresión...', 'info');
         }
 
         // ============================================================
@@ -3916,7 +3873,7 @@
                 '<div class="form-grupo"><label>Tipo *</label><select id="tarea-tipo" required>' + ot + '</select></div>' +
                 '<div class="form-grupo"><label>Cliente / Prospecto</label><select id="tarea-cliente">' + oc + '</select></div>' +
                 '<div class="form-grupo"><label>Fecha *</label><input type="date" id="tarea-fecha" required value="' + ft + '"></div>' +
-                '<div class="form-grupo"><label>Descripcion *</label><textarea id="tarea-descripcion" required>' + (tarea ? tarea.descripcion : '') + '</textarea></div>' +
+                '<div class="form-grupo"><label>Descripción *</label><textarea id="tarea-descripcion" required>' + (tarea ? tarea.descripcion : '') + '</textarea></div>' +
                 '<div class="form-grupo"><label>Notas</label><textarea id="tarea-notas">' + (tarea ? tarea.notas : '') + '</textarea></div>' +
                 '<div class="form-grupo"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="tarea-completada" ' + ec + '><span>Completada</span></label></div>' +
                 '<div class="form-acciones">' +
@@ -3946,13 +3903,13 @@
                         if (comp && !prev.fechaCompletada) ta.fechaCompletada = obtenerFechaHoraActual();
                         else if (!comp) ta.fechaCompletada = null;
                         tareas[idx] = ta;
-                        registrarHistorial('tarea', 'editar', 'Se edito tarea: "' + tipo + '"', { id: id, nombre: tipo });
+                        registrarHistorial('tarea', 'editar', 'Se editó tarea: "' + tipo + '"', { id: id, nombre: tipo });
                     }
                 } else {
                     const nt = { id: generarId(), tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, fechaCreacion: obtenerFechaHoraActual(), fechaModificacion: obtenerFechaHoraActual() };
                     if (comp) nt.fechaCompletada = obtenerFechaHoraActual();
                     tareas.push(nt);
-                    registrarHistorial('tarea', 'crear', 'Se creo tarea: "' + tipo + '"', { id: nt.id, nombre: tipo });
+                    registrarHistorial('tarea', 'crear', 'Se creó tarea: "' + tipo + '"', { id: nt.id, nombre: tipo });
                 }
                 guardarDatos(); cerrarModal(); renderizarCalendario(); renderizarInformes();
                 mostrarNotificacion(ee2 ? 'Tarea actualizada' : 'Tarea creada', 'success');
@@ -3966,7 +3923,7 @@
                 titulo: 'Eliminar tarea', entidad: 'tarea', nombre: t.tipo,
                 onConfirmar: function() {
                     tareas = tareas.filter(function(x) { return x.id !== id; });
-                    registrarHistorial('tarea', 'eliminar', 'Se elimino tarea: "' + t.tipo + '"', { id: id, nombre: t.tipo });
+                    registrarHistorial('tarea', 'eliminar', 'Se eliminó tarea: "' + t.tipo + '"', { id: id, nombre: t.tipo });
                     guardarDatos(); renderizarCalendario(); renderizarInformes();
                     mostrarNotificacion('Tarea eliminada', 'success');
                 }
@@ -3995,7 +3952,7 @@
             const ct = obtenerContratos();
             const ft = document.getElementById('filtro-tareas-calendario').value;
             const b = document.getElementById('buscar-calendario').value.toLowerCase().trim();
-            const ds = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+            const ds = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
             let h = ds.map(function(d) { return '<div class="dia-nombre">' + d + '</div>'; }).join('');
             for (let i = 0; i < pd; i++) {
                 const d = dma - pd + i + 1;
@@ -4031,7 +3988,7 @@
                     }
                 });
                 const te = ec.length + et.length;
-                if (te > mm) eh_ += '<div class="evento-mas">+' + (te - mm) + ' mas</div>';
+                if (te > mm) eh_ += '<div class="evento-mas">+' + (te - mm) + ' más</div>';
                 h += '<div class="dia ' + (eh ? 'hoy' : '') + '" data-fecha="' + fs + '"><div class="numero">' + d + '</div>' + eh_ + '</div>';
             }
             const td = pd + dm; const dr = (7 - (td % 7)) % 7;
@@ -4049,7 +4006,7 @@
         }
 
         function mostrarOpcionesDia(fecha) {
-            abrirModal('Opciones del dia', '<div style="text-align:center;padding:10px;">' +
+            abrirModal('Opciones del día', '<div style="text-align:center;padding:10px;">' +
                 '<h3 style="color:var(--color-acento);margin-bottom:16px;">' + formatearFecha(fecha) + '</h3>' +
                 '<div style="display:flex;flex-direction:column;gap:12px;max-width:300px;margin:0 auto;">' +
                 '<button class="btn-primario" onclick="cerrarModal(); setTimeout(function() { mostrarFormularioTarea({ fecha: \'' + fecha + '\' }); }, 100);" style="justify-content:center;">Crear Tarea</button>' +
@@ -4213,7 +4170,7 @@
                 '<div class="informe-bloque"><h4>Servicios individuales</h4>' + renderizarDesglose(si) + '</div></div>' +
                 '<div class="informe-grid-3">' +
                 '<div class="informe-bloque"><h4>Servicios contratados</h4>' + renderizarDesglose(ts) + '</div>' +
-                '<div class="informe-bloque"><h4>Distribucion</h4>' +
+                '<div class="informe-bloque"><h4>Distribución</h4>' +
                 '<div class="informe-fila"><span>Paquetes</span><span>' + cp + '</span></div>' +
                 '<div class="informe-fila"><span>Solo Servicio</span><span>' + css + '</span></div>' +
                 '<div class="informe-fila"><span>Total</span><span>' + tc.length + '</span></div>' +
@@ -4269,12 +4226,12 @@
                     '<div class="historial-item-meta"><span>' + formatearFechaHora(e.fecha) + '</span><span>' + (e.usuario || 'Sistema') + '</span></div>' +
                     '</div></div>';
             }).join('');
-            if (info) info.textContent = historialVerTodos ? 'Mostrando ' + ev.length + ' movimientos' : 'Mostrando ultimos ' + am.length + ' de ' + ev.length;
+            if (info) info.textContent = historialVerTodos ? 'Mostrando ' + ev.length + ' movimientos' : 'Mostrando últimos ' + am.length + ' de ' + ev.length;
         }
 
         function actualizarBotonHistorial() {
             const b = document.getElementById('historial-toggle-ver-todos'); if (!b) return;
-            b.innerHTML = historialVerTodos ? 'Ver solo los ultimos 20' : 'Ver todos los movimientos';
+            b.innerHTML = historialVerTodos ? 'Ver solo los últimos 20' : 'Ver todos los movimientos';
         }
 
         // ============================================================
@@ -4301,7 +4258,7 @@
                 '<form id="form-nuevo-usuario">' +
                 '<div class="form-grupo"><label>Nombre completo *</label><input type="text" id="nuevo-usuario-nombre" required></div>' +
                 '<div class="form-grupo"><label>Usuario (sin espacios) *</label><input type="text" id="nuevo-usuario-username" required></div>' +
-                '<div class="form-grupo"><label>PIN inicial (4 a 6 digitos) *</label><input type="password" id="nuevo-usuario-pin" required maxlength="6"></div>' +
+                '<div class="form-grupo"><label>PIN inicial (4 a 6 dígitos) *</label><input type="password" id="nuevo-usuario-pin" required maxlength="6"></div>' +
                 '<div class="form-grupo"><label>Confirmar PIN *</label><input type="password" id="nuevo-usuario-pin2" required maxlength="6"></div>' +
                 '<div class="form-acciones">' +
                 '<button type="button" class="btn-secundario" id="btn-nuevo-usuario-cancelar">Cancelar</button>' +
@@ -4317,13 +4274,13 @@
                 const pin2 = document.getElementById('nuevo-usuario-pin2').value.trim();
                 if (!nombre || !username || !pin) { mostrarNotificacion('Campos obligatorios faltantes', 'warning'); return; }
                 if (usuarios.some(function(u) { return u.username === username; })) { mostrarNotificacion('Ese usuario ya existe', 'warning'); return; }
-                if (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) { mostrarNotificacion('PIN de 4 a 6 digitos', 'warning'); return; }
+                if (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) { mostrarNotificacion('PIN de 4 a 6 dígitos', 'warning'); return; }
                 if (pin !== pin2) { mostrarNotificacion('Los PINs no coinciden', 'warning'); return; }
                 const salt = 'jfr-' + username + '-' + Date.now().toString(36);
                 const pinHash = await generarHashPin(pin, salt);
                 usuarios.push({ username: username, nombre: nombre, rol: 'Operador', admin: false, salt: salt, pinHash: pinHash, requiereCambio: false, fechaCreacion: obtenerFechaActual() });
                 guardarUsuarios();
-                registrarHistorial('usuario', 'crear', 'Se creo el usuario "' + nombre + '"', { nombre: nombre });
+                registrarHistorial('usuario', 'crear', 'Se creó el usuario "' + nombre + '"', { nombre: nombre });
                 guardarDatos();
                 cerrarModal();
                 renderizarUsuarios();
@@ -4346,10 +4303,10 @@
                 e.preventDefault();
                 e.stopPropagation();
                 const nn = document.getElementById('edit-usuario-nombre').value.trim();
-                if (!nn) { mostrarNotificacion('Nombre vacio', 'warning'); return; }
+                if (!nn) { mostrarNotificacion('Nombre vacío', 'warning'); return; }
                 const idx = usuarios.findIndex(function(x) { return x.username === username; });
                 if (idx !== -1) { usuarios[idx].nombre = nn; guardarUsuarios(); }
-                registrarHistorial('usuario', 'editar', 'Se edito usuario "' + nn + '"', { nombre: nn });
+                registrarHistorial('usuario', 'editar', 'Se editó usuario "' + nn + '"', { nombre: nn });
                 guardarDatos();
                 cerrarModal();
                 renderizarUsuarios();
@@ -4372,12 +4329,12 @@
                 e.preventDefault();
                 e.stopPropagation();
                 const pin = document.getElementById('reset-pin').value.trim();
-                if (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) { mostrarNotificacion('PIN invalido', 'warning'); return; }
+                if (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) { mostrarNotificacion('PIN inválido', 'warning'); return; }
                 const nh = await generarHashPin(pin, u.salt);
                 u.pinHash = nh;
                 u.requiereCambio = true;
                 guardarUsuarios();
-                registrarHistorial('usuario', 'editar', 'Se reseteo PIN de "' + u.nombre + '"', { nombre: u.nombre });
+                registrarHistorial('usuario', 'editar', 'Se reseteó PIN de "' + u.nombre + '"', { nombre: u.nombre });
                 guardarDatos();
                 cerrarModal();
                 renderizarUsuarios();
@@ -4394,7 +4351,7 @@
                 onConfirmar: function() {
                     usuarios = usuarios.filter(function(x) { return x.username !== username; });
                     guardarUsuarios();
-                    registrarHistorial('usuario', 'eliminar', 'Se elimino usuario "' + u.nombre + '"', { nombre: u.nombre });
+                    registrarHistorial('usuario', 'eliminar', 'Se eliminó usuario "' + u.nombre + '"', { nombre: u.nombre });
                     guardarDatos();
                     renderizarUsuarios();
                     mostrarNotificacion('Usuario eliminado', 'success');
@@ -4423,7 +4380,7 @@
                 const u = encontrarUsuario(usuarioActual.username); if (!u) return;
                 const hActual = await generarHashPin(actual, u.salt);
                 if (hActual !== u.pinHash) { mostrarNotificacion('PIN actual incorrecto', 'error'); return; }
-                if (n1.length < 4 || n1.length > 6 || !/^\d+$/.test(n1)) { mostrarNotificacion('PIN de 4 a 6 digitos', 'warning'); return; }
+                if (n1.length < 4 || n1.length > 6 || !/^\d+$/.test(n1)) { mostrarNotificacion('PIN de 4 a 6 dígitos', 'warning'); return; }
                 if (n1 !== n2) { mostrarNotificacion('Los PINs no coinciden', 'warning'); return; }
                 const nh = await generarHashPin(n1, u.salt);
                 u.pinHash = nh;
@@ -4520,7 +4477,7 @@
                 if (primerCarga) { primerCarga = false; return; }
                 const remoto = datos.ultimaActualizacion;
                 if (remoto && ultimaActualizacionRemota && remoto > ultimaActualizacionRemota) {
-                    if (cambiosPendientes) { mostrarNotificacion('Otro usuario modifico datos', 'warning'); }
+                    if (cambiosPendientes) { mostrarNotificacion('Otro usuario modificó datos', 'warning'); }
                     else {
                         if (datos.paquetes) paquetes = datos.paquetes;
                         if (datos.serviciosAdicionales) serviciosAdicionales = datos.serviciosAdicionales;
@@ -4553,13 +4510,13 @@
                     if (!sincronizandoFirebase && estadoSync.modo === 'firebase' && cambiosPendientes) await guardarEnFirebase();
                 }, 30000);
                 firebaseInicializado = true;
-                mostrarNotificacion('Conexion con Firebase establecida', 'success');
+                mostrarNotificacion('Conexión con Firebase establecida', 'success');
                 return true;
             } catch (error) {
                 console.error('Error Firebase:', error);
                 estadoSync.modo = 'local';
                 actualizarEstadoSync('offline', 'Modo local');
-                mostrarNotificacion('Sin conexion a Firebase', 'warning');
+                mostrarNotificacion('Sin conexión a Firebase', 'warning');
                 return false;
             }
         }
@@ -4667,7 +4624,7 @@
             if (hashIngresado === usuarioPendienteLogin.pinHash) {
                 usuarioActual = { username: usuarioPendienteLogin.username, nombre: usuarioPendienteLogin.nombre, rol: usuarioPendienteLogin.rol, admin: usuarioPendienteLogin.admin };
                 guardarSesion(usuarioActual);
-                registrarHistorial('sesion', 'login', 'El usuario "' + usuarioActual.nombre + '" inicio sesion', { nombre: usuarioActual.nombre });
+                registrarHistorial('sesion', 'login', 'El usuario "' + usuarioActual.nombre + '" inició sesión', { nombre: usuarioActual.nombre });
                 guardarDatosLocal();
                 iniciarAplicacion();
             } else {
@@ -4684,8 +4641,8 @@
             const pin2 = document.getElementById('login-pin-nuevo-confirmar').value.trim();
             const errorEl = document.getElementById('login-error-nuevo-pin');
             errorEl.classList.remove('visible');
-            if (!pin1 || pin1.length < 4 || pin1.length > 6) { errorEl.textContent = 'PIN de 4 a 6 digitos.'; errorEl.classList.add('visible'); return; }
-            if (!/^\d+$/.test(pin1)) { errorEl.textContent = 'Solo numeros.'; errorEl.classList.add('visible'); return; }
+            if (!pin1 || pin1.length < 4 || pin1.length > 6) { errorEl.textContent = 'PIN de 4 a 6 dígitos.'; errorEl.classList.add('visible'); return; }
+            if (!/^\d+$/.test(pin1)) { errorEl.textContent = 'Solo números.'; errorEl.classList.add('visible'); return; }
             if (pin1 !== pin2) { errorEl.textContent = 'Los PINs no coinciden.'; errorEl.classList.add('visible'); return; }
             if (pin1 === PIN_ADMIN_INICIAL && esPrimerLoginAdmin) { errorEl.textContent = 'No uses el PIN 1234.'; errorEl.classList.add('visible'); return; }
             const nuevoHash = await generarHashPin(pin1, usuarioPendienteLogin.salt);
@@ -4693,7 +4650,7 @@
             if (idx !== -1) { usuarios[idx].pinHash = nuevoHash; usuarios[idx].requiereCambio = false; guardarUsuarios(); }
             usuarioActual = { username: usuarioPendienteLogin.username, nombre: usuarioPendienteLogin.nombre, rol: usuarioPendienteLogin.rol, admin: usuarioPendienteLogin.admin };
             guardarSesion(usuarioActual);
-            registrarHistorial('sesion', 'login', 'El usuario "' + usuarioActual.nombre + '" inicio sesion', { nombre: usuarioActual.nombre });
+            registrarHistorial('sesion', 'login', 'El usuario "' + usuarioActual.nombre + '" inició sesión', { nombre: usuarioActual.nombre });
             guardarDatosLocal();
             iniciarAplicacion();
         }
@@ -4720,23 +4677,94 @@
             renderizarTodo();
             setTimeout(function() { inicializarFirebase(); }, 1000);
         }
-            // Menú móvil
-            const btnMobileMenu = document.getElementById('btn-mobile-menu');
-            const mobileOverlay = document.getElementById('mobile-overlay');
-            if (btnMobileMenu) {
-                btnMobileMenu.addEventListener('click', toggleSidebarMovil);
-            }
-            if (mobileOverlay) {
-                mobileOverlay.addEventListener('click', cerrarSidebarMovil);
-            }
-            // Cerrar el menú al seleccionar una opción
-            document.querySelectorAll('.menu-item').forEach(function(item) {
-                item.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        cerrarSidebarMovil();
+
+        // ============================================================
+        // FILTROS COLAPSABLES
+        // ============================================================
+        function inicializarFiltrosColapsables() {
+            document.querySelectorAll('.btn-toggle-filtros').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const targetId = this.dataset.target;
+                    const contenedor = document.getElementById(targetId);
+                    if (!contenedor) return;
+
+                    const estaAbierto = contenedor.classList.contains('mobile-visible');
+
+                    document.querySelectorAll('.filtros-container.mobile-visible').forEach(function(f) {
+                        f.classList.remove('mobile-visible');
+                    });
+                    document.querySelectorAll('.btn-toggle-filtros.abierto').forEach(function(b) {
+                        b.classList.remove('abierto');
+                    });
+
+                    if (!estaAbierto) {
+                        contenedor.classList.add('mobile-visible');
+                        this.classList.add('abierto');
                     }
                 });
             });
+
+            // Actualizar badges cuando cambian los filtros
+            function getVal(id) {
+                const el = document.getElementById(id);
+                return el ? el.value : null;
+            }
+            function getInputVal(id) {
+                const el = document.getElementById(id);
+                return el ? el.value : '';
+            }
+            function actualizarBadgesFiltros() {
+                const informeActivo =
+                    (getInputVal('filtro-fecha-inicio') !== '') ||
+                    (getInputVal('filtro-fecha-fin') !== '') ||
+                    (getVal('filtro-estado-cliente') !== 'todos') ||
+                    (getVal('filtro-estado-contrato') !== 'todos') ||
+                    (getVal('filtro-paquete') !== 'todos') ||
+                    (getVal('filtro-servicio') !== 'todos');
+                const btnInf = document.querySelector('.btn-toggle-filtros[data-target="filtros-informes"]');
+                if (btnInf) btnInf.classList.toggle('tiene-filtros', !!informeActivo);
+
+                const prospActivo =
+                    (getVal('filtro-fase-prospecto') !== 'todas') ||
+                    (getInputVal('buscar-prospecto') !== '');
+                const btnPros = document.querySelector('.btn-toggle-filtros[data-target="filtros-prospectos"]');
+                if (btnPros) btnPros.classList.toggle('tiene-filtros', !!prospActivo);
+
+                const cliActivo =
+                    (getVal('filtro-estado-cliente-lista') !== 'todos') ||
+                    (getInputVal('buscar-cliente') !== '');
+                const btnCli = document.querySelector('.btn-toggle-filtros[data-target="filtros-clientes"]');
+                if (btnCli) btnCli.classList.toggle('tiene-filtros', !!cliActivo);
+
+                const contActivo =
+                    (getVal('filtro-estado-contrato-lista') !== 'todos') ||
+                    (getVal('filtro-tipo-contrato') !== 'todos') ||
+                    (getInputVal('buscar-contrato') !== '');
+                const btnCont = document.querySelector('.btn-toggle-filtros[data-target="filtros-contratos"]');
+                if (btnCont) btnCont.classList.toggle('tiene-filtros', !!contActivo);
+
+                const calActivo =
+                    (getVal('filtro-tareas-calendario') !== 'todas') ||
+                    (getInputVal('buscar-calendario') !== '');
+                const btnCal = document.querySelector('.btn-toggle-filtros[data-target="filtros-calendario"]');
+                if (btnCal) btnCal.classList.toggle('tiene-filtros', !!calActivo);
+            }
+
+            ['filtro-fecha-inicio','filtro-fecha-fin','filtro-estado-cliente','filtro-estado-contrato',
+             'filtro-paquete','filtro-servicio','filtro-fase-prospecto','buscar-prospecto',
+             'filtro-estado-cliente-lista','buscar-cliente','filtro-estado-contrato-lista',
+             'filtro-tipo-contrato','buscar-contrato','filtro-tareas-calendario','buscar-calendario']
+                .forEach(function(id) {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.addEventListener('change', actualizarBadgesFiltros);
+                        el.addEventListener('input', actualizarBadgesFiltros);
+                    }
+                });
+
+            actualizarBadgesFiltros();
+        }
+
         // ============================================================
         // EVENT LISTENERS APP
         // ============================================================
@@ -4746,6 +4774,7 @@
                     const seccion = this.dataset.seccion;
                     cambiarSeccion(seccion);
                     renderizarSeccion(seccion);
+                    if (window.innerWidth <= 768) cerrarSidebarMovil();
                 });
             });
 
@@ -4796,7 +4825,7 @@
             });
             document.getElementById('btn-cargar-firebase').addEventListener('click', async function() {
                 if (!database) { mostrarNotificacion('Firebase no disponible', 'error'); return; }
-                if (confirm('Cargar datos desde Firebase?')) { await cargarDesdeFirebase(); }
+                if (confirm('¿Cargar datos desde Firebase?')) { await cargarDesdeFirebase(); }
             });
 
             document.getElementById('btn-exportar-datos').addEventListener('click', function() {
@@ -4819,7 +4848,7 @@
                     try {
                         const d = JSON.parse(ev.target.result);
                         if (!d.paquetes || !d.clientes) { mostrarNotificacion('Formato incorrecto', 'error'); return; }
-                        if (!confirm('Esto reemplazara todos los datos. Continuar?')) return;
+                        if (!confirm('Esto reemplazará todos los datos. ¿Continuar?')) return;
                         paquetes = d.paquetes || []; serviciosAdicionales = d.serviciosAdicionales || [];
                         prospectos = d.prospectos || []; clientes = d.clientes || [];
                         tareas = d.tareas || []; historial = d.historial || [];
@@ -4848,10 +4877,22 @@
                 renderizarHistorial();
             });
 
+            // Sidebar colapsable (solo PC)
             document.getElementById('btn-colapsar').addEventListener('click', toggleSidebar);
+
+            // Sidebar móvil (drawer)
+            const btnMobileMenu = document.getElementById('btn-mobile-menu');
+            const mobileOverlay = document.getElementById('mobile-overlay');
+            if (btnMobileMenu) btnMobileMenu.addEventListener('click', toggleSidebarMovil);
+            if (mobileOverlay) mobileOverlay.addEventListener('click', cerrarSidebarMovil);
+
+            // Temas
             document.querySelectorAll('.tema-opcion').forEach(function(op) {
                 op.addEventListener('click', function() { aplicarTema(op.dataset.tema); mostrarNotificacion('Tema aplicado', 'success'); });
             });
+
+            // Filtros colapsables móviles
+            inicializarFiltrosColapsables();
         }
 
         // ============================================================
