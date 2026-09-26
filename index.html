@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Registro PDA v3.7.3 - Estudio Fotografía</title>
+    <title>Registro PDA v3.8.1 - Estudio Fotografía</title>
+    <link rel="icon" type="image/jpeg" href="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -80,7 +81,16 @@
             border-radius: 16px; padding: 40px 36px; max-width: 440px; width: 100%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4); text-align: center;
         }
-        .login-logo { font-size: 48px; color: var(--color-acento); margin-bottom: 8px; }
+        .login-logo {
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 12px;
+        }
+        .login-logo img.logo-img-login {
+            width: 100px; height: 100px; object-fit: contain;
+            border-radius: 50%; display: block; margin: 0 auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            background: var(--color-bg-terciario); padding: 4px;
+        }
         .login-titulo { font-size: 24px; font-weight: 700; color: var(--color-texto-primario); letter-spacing: 0.5px; margin-bottom: 4px; }
         .login-subtitulo { font-size: 13px; color: var(--color-texto-secundario); margin-bottom: 32px; }
         .login-paso { display: none; }
@@ -164,7 +174,12 @@
             position: relative;
         }
         .sidebar.collapsed .logo { padding: 24px 0; justify-content: center; }
-        .logo i { font-size: 28px; color: var(--color-acento); flex-shrink: 0; }
+        .logo img.logo-img-sidebar {
+            width: 34px; height: 34px; object-fit: contain;
+            border-radius: 50%; flex-shrink: 0;
+            background: var(--color-bg-terciario); padding: 2px;
+        }
+        .sidebar.collapsed .logo img.logo-img-sidebar { width: 36px; height: 36px; }
         .logo span {
             font-size: 18px; font-weight: 700; color: var(--color-sidebar-texto-hover);
             letter-spacing: 0.5px; white-space: nowrap; opacity: 1; transition: opacity var(--transition);
@@ -421,6 +436,8 @@
         .mosaico-footer .btn-calendar:hover { color: #4285f4; }
         .mosaico-footer .btn-whatsapp:hover { color: var(--color-whatsapp); }
         .mosaico-footer .btn-email:hover { color: #6d4c8a; }
+        .mosaico-footer .btn-tarea:hover { color: var(--color-morado); }
+        .mosaico-footer .btn-ver-detalle:hover { color: var(--color-cian); }
         .mosaico-summary {
             display: flex; justify-content: space-between; align-items: center;
             gap: 8px; font-size: 12px; color: var(--color-texto-secundario);
@@ -1069,6 +1086,168 @@
             border: 1px solid var(--color-borde-suave);
         }
 
+        /* TAREAS VINCULADAS EN DETALLE */
+        .tarea-vinculada {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 12px 14px;
+            background-color: var(--color-bg-primario);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-borde-suave);
+            transition: all 0.2s ease;
+        }
+        .tarea-vinculada.tarea-pendiente { border-left: 4px solid var(--color-naranja); }
+        .tarea-vinculada.tarea-completada {
+            border-left: 4px solid var(--color-verde);
+            opacity: 0.75;
+        }
+        .tarea-vinculada.tarea-completada .tarea-tipo,
+        .tarea-vinculada.tarea-completada .tarea-desc {
+            text-decoration: line-through;
+            color: var(--color-texto-secundario);
+        }
+        .tarea-check { padding-top: 2px; flex-shrink: 0; }
+        .tarea-check input[type="checkbox"] {
+            width: 22px; height: 22px; cursor: pointer;
+            accent-color: var(--color-verde);
+        }
+        .tarea-info {
+            flex: 1; min-width: 0;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .tarea-tipo {
+            font-size: 14px; font-weight: 700;
+            color: var(--color-texto-primario);
+        }
+        .tarea-desc {
+            font-size: 13px; color: var(--color-texto-primario);
+            line-height: 1.4; word-break: break-word;
+        }
+        .tarea-notas {
+            font-size: 12px; color: var(--color-texto-secundario);
+            background-color: var(--color-bg-terciario);
+            padding: 6px 10px; border-radius: 6px;
+            border-left: 3px solid var(--color-acento);
+            margin-top: 4px; word-break: break-word;
+        }
+        .tarea-fechas {
+            display: flex; flex-wrap: wrap; gap: 12px;
+            font-size: 11px; color: var(--color-texto-secundario);
+            margin-top: 6px;
+        }
+        .tarea-fechas i { font-size: 10px; margin-right: 4px; }
+        .tarea-acciones { display: flex; gap: 2px; flex-shrink: 0; }
+        .tarea-acciones button {
+            background: none; border: none; color: var(--color-texto-secundario);
+            cursor: pointer; padding: 6px 8px; border-radius: 6px;
+            transition: all 0.2s ease; font-size: 13px;
+        }
+        .tarea-acciones button:hover {
+            background-color: var(--color-bg-hover);
+            color: var(--color-texto-primario);
+        }
+        .tarea-acciones button:first-child:hover { color: var(--color-acento); }
+        .tarea-acciones button:last-child:hover { color: var(--color-rojo); }
+
+        /* ============================================ */
+        /* BUSCADOR DE CLIENTES (COMBOBOX)              */
+        /* ============================================ */
+        .buscador-cliente {
+            position: relative;
+            width: 100%;
+        }
+        .buscador-cliente .buscador-input {
+            width: 100%;
+            background-color: var(--color-bg-primario);
+            color: var(--color-texto-primario);
+            border: 1px solid var(--color-borde);
+            padding: 10px 36px 10px 14px;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        .buscador-cliente .buscador-input:focus {
+            outline: none;
+            border-color: var(--color-acento);
+        }
+        .buscador-cliente .buscador-icono {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-texto-secundario);
+            pointer-events: none;
+            font-size: 14px;
+        }
+        .buscador-cliente .buscador-resultados {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background-color: var(--color-bg-secundario);
+            border: 1px solid var(--color-borde);
+            border-radius: var(--border-radius);
+            max-height: 260px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 6px 20px var(--color-shadow-hover);
+            display: none;
+        }
+        .buscador-cliente .buscador-resultados.visible { display: block; }
+        .buscador-cliente .buscador-opcion {
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            font-size: 14px;
+            color: var(--color-texto-primario);
+            border-bottom: 1px solid var(--color-borde-suave);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .buscador-cliente .buscador-opcion:last-child { border-bottom: none; }
+        .buscador-cliente .buscador-opcion:hover,
+        .buscador-cliente .buscador-opcion.activa {
+            background-color: var(--color-bg-hover);
+        }
+        .buscador-cliente .buscador-opcion .tipo-badge {
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            flex-shrink: 0;
+        }
+        .buscador-cliente .buscador-opcion .tipo-cliente {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--color-verde);
+        }
+        .buscador-cliente .buscador-opcion .tipo-prospecto {
+            background-color: rgba(66, 165, 245, 0.2);
+            color: var(--color-azul);
+        }
+        .buscador-cliente .buscador-opcion .nombre-opcion {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .buscador-cliente .buscador-opcion .festejado-hint {
+            font-size: 11px;
+            color: var(--color-texto-secundario);
+            white-space: nowrap;
+        }
+        .buscador-cliente .buscador-vacio {
+            padding: 14px;
+            text-align: center;
+            color: var(--color-texto-secundario);
+            font-size: 13px;
+        }
+
         .comprobante-preview {
             background-color: var(--color-bg-primario);
             border: 1px solid var(--color-borde);
@@ -1148,18 +1327,12 @@
             #impresion-contenedor { display: block !important; padding: 0 !important; margin: 0 !important; background: white !important; }
         }
 
-        /* ============================================ */
-        /* DESKTOP: OCULTAR ELEMENTOS MÓVILES            */
-        /* ============================================ */
         @media (min-width: 769px) {
             .btn-mobile-menu { display: none !important; }
             .mobile-overlay { display: none !important; }
             .btn-toggle-filtros { display: none !important; }
         }
 
-        /* ============================================ */
-        /* TABLET (900px)                                */
-        /* ============================================ */
         @media (max-width: 900px) {
             .config-grid { grid-template-columns: 1fr; }
             .historial-filtros { flex-direction: column; align-items: stretch; }
@@ -1168,12 +1341,7 @@
             .historial-filtros .filtro-grupo select { min-width: auto; }
         }
 
-        /* ============================================ */
-        /* MÓVIL (768px)                                 */
-        /* ============================================ */
         @media (max-width: 768px) {
-
-            /* SIDEBAR COMO DRAWER */
             .sidebar {
                 position: fixed; top: 0; left: 0;
                 width: 280px; min-width: 280px;
@@ -1203,7 +1371,7 @@
             }
             .sidebar .menu-item i { font-size: 20px; width: 24px; }
             .sidebar .user-box { padding: 12px 16px; justify-content: flex-start; }
-                        .sidebar .sidebar-footer {
+            .sidebar .sidebar-footer {
                 padding: 16px 20px calc(32px + env(safe-area-inset-bottom, 20px)) 20px;
                 margin-top: auto;
                 flex-shrink: 0;
@@ -1214,10 +1382,7 @@
                 color: var(--color-sidebar-texto);
                 opacity: 0.8;
             }
-            /* Ocultar botón colapsar en móvil (solo se usa en escritorio) */
-            .sidebar .btn-colapsar {
-                display: none !important;
-            }
+            .sidebar .btn-colapsar { display: none !important; }
 
             .mobile-overlay {
                 display: none;
@@ -1252,14 +1417,12 @@
             .btn-mobile-menu:active { transform: scale(0.92); }
             .btn-mobile-menu.abierto { background-color: var(--color-rojo); }
 
-            /* CONTENIDO PRINCIPAL con safe area */
             .main-content {
                 padding: 76px 16px 140px 16px;
                 padding-bottom: max(140px, calc(100px + env(safe-area-inset-bottom, 40px))) !important;
                 width: 100vw;
             }
 
-            /* Header de sección */
             .seccion-header {
                 flex-direction: column;
                 align-items: stretch;
@@ -1280,9 +1443,8 @@
             }
             .sync-status { width: 100%; justify-content: center; padding: 8px 12px; }
 
-            /* LOGIN EN MÓVIL */
             .login-card { padding: 28px 20px; max-width: 100%; margin: 12px; border-radius: 12px; }
-            .login-logo { font-size: 40px; margin-bottom: 12px; }
+            .login-logo img.logo-img-login { width: 110px; height: 110px; }
             .login-titulo { font-size: 22px; }
             .login-subtitulo { font-size: 13px; margin-bottom: 24px; }
             .login-usuarios { grid-template-columns: 1fr; gap: 12px; }
@@ -1299,7 +1461,6 @@
             .login-botones { gap: 12px; }
             .login-botones button { padding: 14px 20px; font-size: 15px; }
 
-            /* FILTROS COLAPSABLES */
             .btn-toggle-filtros {
                 display: flex !important;
                 align-items: center;
@@ -1364,7 +1525,6 @@
                 font-size: 15px;
             }
 
-            /* MÉTRICAS - 2 COLUMNAS */
             .metricas-container {
                 grid-template-columns: 1fr 1fr !important;
                 gap: 8px;
@@ -1381,7 +1541,6 @@
             .metrica-valor { font-size: 18px; line-height: 1.2; }
             .metrica-etiqueta { font-size: 10px; line-height: 1.2; }
 
-            /* MOSAICOS */
             .mosaico-grid { grid-template-columns: 1fr; gap: 12px; }
             .mosaico-card { padding: 14px; border-radius: 12px; }
             .mosaico-titulo { font-size: 16px; }
@@ -1399,7 +1558,6 @@
             .mosaico-summary { padding: 8px 12px; font-size: 13px; }
             .mosaico-summary .monto { font-size: 15px; }
 
-            /* MODAL FULLSCREEN */
             .modal { padding: 0; }
             .modal-content {
                 width: 100%;
@@ -1416,7 +1574,6 @@
             .modal-cerrar { font-size: 32px; padding: 0 12px; }
             .modal-body { padding: 16px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
 
-            /* FORMULARIOS */
             .row-2col, .row-3col { grid-template-columns: 1fr; gap: 12px; }
             .form-grupo { margin-bottom: 14px; }
             .form-grupo label { font-size: 13px; }
@@ -1436,7 +1593,15 @@
                 font-size: 15px;
             }
 
-            /* DETALLE CONTRATO */
+            .buscador-cliente .buscador-input {
+                padding: 12px 36px 12px 14px;
+                font-size: 15px;
+            }
+            .buscador-cliente .buscador-opcion {
+                padding: 12px 14px;
+                font-size: 15px;
+            }
+
             .detalle-acciones { padding: 12px; gap: 8px; }
             .detalle-acciones button {
                 flex: 1 1 calc(50% - 8px);
@@ -1470,7 +1635,21 @@
                 min-height: 40px;
             }
 
-            /* CALENDARIO */
+            .tarea-vinculada {
+                flex-wrap: wrap;
+                padding: 12px;
+            }
+            .tarea-acciones {
+                width: 100%;
+                justify-content: flex-end;
+                padding-top: 8px;
+                border-top: 1px solid var(--color-borde-suave);
+            }
+            .tarea-acciones button {
+                min-width: 44px;
+                min-height: 44px;
+            }
+
             .calendario-container { padding: 12px; overflow-x: auto; }
             .calendario-header { flex-direction: column; align-items: stretch; gap: 12px; }
             .calendario-header h2 { font-size: 18px; text-align: center; }
@@ -1489,7 +1668,6 @@
             .calendario-grid .dia .evento-mas { font-size: 9px; }
             .leyenda-calendario { flex-direction: column; gap: 8px; }
 
-            /* TAREAS */
             #lista-tareas { padding: 12px; }
             #lista-tareas .tarjeta-registro {
                 flex-direction: column;
@@ -1510,7 +1688,6 @@
                 min-height: 44px;
             }
 
-            /* INFORMES */
             .informe-grid-2, .informe-grid-3 {
                 grid-template-columns: 1fr;
                 gap: 16px;
@@ -1519,7 +1696,6 @@
             .informe-bloque { padding: 14px; }
             .informes-detalle { padding: 16px; }
 
-            /* CONFIGURACIÓN */
             .config-card { padding: 20px; }
             .config-card h3 { font-size: 16px; }
             .config-boton { padding: 14px 16px; font-size: 15px; }
@@ -1529,7 +1705,6 @@
             .tema-preview { height: 36px; }
             .tema-nombre { font-size: 11px; }
 
-            /* HISTORIAL */
             .historial-card { padding: 20px; }
             .historial-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
             .historial-stat { padding: 10px 12px; }
@@ -1553,7 +1728,6 @@
             .historial-item { padding: 12px; }
             .historial-item-meta { flex-direction: column; gap: 4px; }
 
-            /* USUARIOS */
             .usuario-item { flex-wrap: wrap; padding: 14px; }
             .usuario-item .acciones {
                 width: 100%;
@@ -1569,7 +1743,6 @@
                 min-height: 44px;
             }
 
-            /* TABLAS */
             table {
                 font-size: 12px;
                 display: block;
@@ -1578,7 +1751,6 @@
             }
             table thead th, table tbody td { padding: 8px 10px; }
 
-            /* COMPROBANTE */
             .comprobante-preview { padding: 12px; }
             .comprobante-acciones { flex-direction: column; gap: 10px; }
             .comprobante-acciones button {
@@ -1587,12 +1759,10 @@
                 padding: 14px 16px;
             }
 
-            /* CRÉDITO */
             .credito-footer { padding: 20px 16px; }
             .credito-footer .credito-marca { font-size: 20px; }
             .credito-footer .credito-marca i { font-size: 18px; }
 
-            /* NOTIFICACIONES */
             .notificacion {
                 left: 16px;
                 right: 16px;
@@ -1602,7 +1772,6 @@
             }
         }
 
-        /* Móvil muy pequeño */
         @media (max-width: 480px) {
             .main-content { padding: 76px 12px 140px 12px; padding-bottom: max(140px, calc(100px + env(safe-area-inset-bottom, 40px))) !important; }
             .seccion-header h1 { font-size: 20px; }
@@ -1611,7 +1780,7 @@
             .detalle-acciones button { flex: 1 1 100%; }
             .temas-grid { grid-template-columns: 1fr; }
             .login-card { padding: 24px 16px; }
-            .login-logo { font-size: 36px; }
+            .login-logo img.logo-img-login { width: 90px; height: 90px; }
             .login-titulo { font-size: 20px; }
             .calendario-grid { min-width: 420px; }
             .calendario-grid .dia { min-height: 60px; padding: 4px; }
@@ -1619,42 +1788,6 @@
             .calendario-grid .dia .evento { font-size: 8px; }
             .historial-stats { grid-template-columns: 1fr; }
         }
-      /* ============================================ */
-/* LOGO PERSONALIZADO                             */
-/* ============================================ */
-.login-logo img.logo-img-login {
-    width: 100px;
-    height: 100px;
-    object-fit: contain;
-    border-radius: 50%;
-    display: block;
-    margin: 0 auto;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    background: var(--color-bg-terciario);
-    padding: 4px;
-}
-
-.logo img.logo-img-sidebar {
-    width: 34px;
-    height: 34px;
-    object-fit: contain;
-    border-radius: 50%;
-    flex-shrink: 0;
-    background: var(--color-bg-terciario);
-    padding: 2px;
-}
-
-.sidebar.collapsed .logo img.logo-img-sidebar {
-    width: 36px;
-    height: 36px;
-}
-
-@media (max-width: 768px) {
-    .login-logo img.logo-img-login {
-        width: 110px;
-        height: 110px;
-    }
-}  
     </style>
 </head>
 <body>
@@ -1667,7 +1800,9 @@
     <!-- PANTALLA DE LOGIN -->
     <div class="pantalla-login" id="pantalla-login">
         <div class="login-card">
-            <div class="login-logo"><img src="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg" alt="Logo JFR Media" class="logo-img-login"></div>
+            <div class="login-logo">
+                <img src="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg" alt="Logo JFR Media" class="logo-img-login">
+            </div>
             <div class="login-titulo">Registro PDA</div>
             <div class="login-subtitulo">Sistema de gestión · JFR Media</div>
             <div class="login-paso activo" id="login-paso-usuario">
@@ -1701,7 +1836,7 @@
                 </div>
             </div>
             <div class="login-footer">
-                v3.7.3 · Software diseñado por <strong>JFR MEDIA</strong><br>
+                v3.8.1 · Software diseñado por <strong>JFR MEDIA</strong><br>
                 Acceso restringido a personal autorizado
             </div>
         </div>
@@ -1710,7 +1845,10 @@
     <!-- APLICACIÓN PRINCIPAL -->
     <div class="app-container oculto" id="app-container">
         <nav class="sidebar" id="sidebar">
-            <div class="logo"><img src="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg" alt="Logo" class="logo-img-sidebar"><span>Registro PDA</span></div>
+            <div class="logo">
+                <img src="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg" alt="Logo" class="logo-img-sidebar">
+                <span>Registro PDA</span>
+            </div>
             <div class="user-box">
                 <div class="user-avatar" id="user-avatar">U</div>
                 <div class="user-info">
@@ -1731,7 +1869,7 @@
             <div class="sidebar-footer">
                 <button class="btn-colapsar" id="btn-colapsar" title="Colapsar menú"><i class="fas fa-chevron-left"></i><span>Colapsar</span></button>
                 <button class="btn-logout" id="btn-logout" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></button>
-                <div class="version">v3.7.3</div>
+                <div class="version">v3.8.1</div>
             </div>
         </nav>
 
@@ -2055,33 +2193,42 @@
                 </div>
 
                 <div class="version-card">
-                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v3.7.3</span></h3>
+                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v3.8.1</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">3.7.3</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">3.8.1</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
                     </div>
                     <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v3.7.3)</h4>
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v3.8.1)</h4>
                         <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-mobile-alt"></i></div>
+                            <div class="changelog-icono"><i class="fas fa-bug"></i></div>
                             <div class="changelog-contenido">
-                                <div class="changelog-titulo">Diseño móvil optimizado</div>
+                                <div class="changelog-titulo">Fix: crear tarea desde el calendario</div>
                                 <div class="changelog-desc">
-                                    Se mejoró la experiencia en celulares: filtros colapsables para ahorrar espacio,
-                                    métricas en 2 columnas, sidebar tipo drawer con botón hamburguesa,
-                                    modales a pantalla completa y botones táctiles más grandes.
+                                    Se corrigió el bug que impedía guardar tareas creadas directamente desde un día del calendario.
+                                    Ahora la fecha se preconfigura correctamente y la tarea se guarda sin problema.
                                 </div>
                             </div>
                         </div>
                         <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-shield-alt"></i></div>
+                            <div class="changelog-icono"><i class="fas fa-search"></i></div>
                             <div class="changelog-contenido">
-                                <div class="changelog-titulo">Safe area en móvil</div>
+                                <div class="changelog-titulo">Buscador de clientes con filtro</div>
                                 <div class="changelog-desc">
-                                    El contenido ya no queda tapado por la barra de navegación del celular.
-                                    Se respeta la zona segura inferior en iPhone y Android con gestos.
+                                    El campo para vincular una tarea ahora permite buscar escribiendo el nombre del cliente
+                                    o del festejado. Navegación con flechas ↑↓ y Enter para seleccionar.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-tasks"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Tareas vinculadas a clientes y prospectos</div>
+                                <div class="changelog-desc">
+                                    Crea tareas desde la tarjeta de un cliente o prospecto y visualiza todas sus tareas
+                                    en el modal de detalle con checkbox para marcarlas como completadas.
                                 </div>
                             </div>
                         </div>
@@ -2094,13 +2241,13 @@
                             <div class="funcionalidad-item"><i class="fas fa-users"></i> Prospectos</div>
                             <div class="funcionalidad-item"><i class="fas fa-user-check"></i> Clientes</div>
                             <div class="funcionalidad-item"><i class="fas fa-file-contract"></i> Contratos</div>
+                            <div class="funcionalidad-item"><i class="fas fa-tasks"></i> Tareas vinculadas</div>
                             <div class="funcionalidad-item"><i class="fas fa-receipt"></i> Comprobantes</div>
                             <div class="funcionalidad-item"><i class="fas fa-fingerprint"></i> Huella de pago</div>
                             <div class="funcionalidad-item"><i class="fab fa-whatsapp"></i> WhatsApp</div>
                             <div class="funcionalidad-item"><i class="fas fa-envelope"></i> Email</div>
                             <div class="funcionalidad-item"><i class="fas fa-calendar-alt"></i> Calendario</div>
                             <div class="funcionalidad-item"><i class="fas fa-chart-pie"></i> Informes</div>
-                            <div class="funcionalidad-item"><i class="fas fa-history"></i> Historial</div>
                         </div>
                     </div>
                 </div>
@@ -2125,12 +2272,11 @@
     </div>
 
     <div id="impresion-contenedor" style="display:none;"></div>
-
     <script>
         // ============================================================
         // CONFIGURACIÓN
         // ============================================================
-        var VERSION = '3.7.3';
+        var VERSION = '3.8.1';
         var PIN_ADMIN_INICIAL = '1234';
         var EMISOR_COMPROBANTE = "Producciones D'Angel Film";
         var MODO_ZONA_HORARIA = 'local';
@@ -2405,10 +2551,14 @@
 
         function obtenerNombreCliente(id) {
             if (!id) return 'No asignado';
+            if (id.indexOf('pro_') === 0) {
+                const p = obtenerProspecto(id.substring(4));
+                if (p) return (p.nombre || 'Prospecto') + ' (Prospecto)';
+            }
             const c = obtenerCliente(id);
             if (c) return c.nombre || 'Cliente';
-            const p = obtenerProspecto(id);
-            if (p) return (p.nombre || 'Prospecto') + ' (Prospecto)';
+            const p2 = obtenerProspecto(id);
+            if (p2) return (p2.nombre || 'Prospecto') + ' (Prospecto)';
             return 'No asignado';
         }
 
@@ -2624,15 +2774,11 @@
             contenedor.innerHTML = f.map(function(item) {
                 const clickAttr = config.onCardClick ? 'onclick="' + config.onCardClick(item) + '"' : '';
                 const clickClass = config.onCardClick ? 'clickeable' : '';
-                return '<div class="mosaico-card ' + clickClass + '" ' + attrClick(config, item, clickAttr) + '>' +
+                return '<div class="mosaico-card ' + clickClass + '" ' + clickAttr + '>' +
                     config.renderContenido(item) +
                     (config.renderAcciones ? '<div class="mosaico-footer" onclick="event.stopPropagation()">' + config.renderAcciones(item) + '</div>' : '') +
                     '</div>';
             }).join('');
-        }
-
-        function attrClick(config, item, clickAttr) {
-            return clickAttr;
         }
 
         // ============================================================
@@ -2827,18 +2973,23 @@
                 contenedorId: 'lista-prospectos', items: f, textoVacio: 'No hay prospectos',
                 renderContenido: function(p) {
                     const cf = 'etiqueta-' + p.faseActual.toLowerCase().replace('ó', 'o').replace('á', 'a').replace('é', 'e');
-                    const ec = p.clienteId !== null;
+                    const ec = p.clienteId !== null && p.clienteId !== undefined;
+                    const numTareas = tareas.filter(function(t) { return t.clienteId === 'pro_' + p.id; }).length;
                     return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + p.nombre + '</div></div>' +
                         '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + p.faseActual + '</span>' +
-                        (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + '</div>' +
+                        (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') +
+                        (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') +
+                        '</div>' +
                         '<div class="mosaico-separador"></div>' +
                         '<div class="mosaico-detalle">' + (p.telefono ? '<div><i class="fas fa-phone"></i> ' + p.telefono + '</div>' : '') +
                         (p.email ? '<div><i class="fas fa-envelope"></i> ' + p.email + '</div>' : '') +
                         '<div><small>Registrado: ' + formatearFecha(p.fechaRegistro) + '</small></div></div>';
                 },
                 renderAcciones: function(p) {
-                    const ec = p.clienteId !== null;
-                    return '<button class="btn-editar" onclick="editarProspecto(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                    const ec = p.clienteId !== null && p.clienteId !== undefined;
+                    return '<button class="btn-ver-detalle" onclick="verDetalleProspecto(\'' + p.id + '\')" title="Ver detalle"><i class="fas fa-eye"></i></button>' +
+                        '<button class="btn-editar" onclick="editarProspecto(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                        '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + p.id + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
                         (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + p.id + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') +
                         '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
                 }
@@ -2858,9 +3009,12 @@
                     const ec = c.estado === 'Activo' ? 'etiqueta-interesado' : c.estado === 'Inactivo' ? 'etiqueta-inactivo' : 'etiqueta-cancelado';
                     const tc = c.contratos ? c.contratos.length : 0;
                     const uc = tc > 0 ? formatearFecha(c.contratos[c.contratos.length - 1].fechaContrato) : '';
+                    const numTareas = tareas.filter(function(t) { return t.clienteId === c.id; }).length;
                     return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + c.nombre + '</div></div>' +
                         '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span>' +
-                        (c.faseOrigen ? '<span class="tarjeta-etiqueta" style="background:var(--color-azul);color:#fff;">' + c.faseOrigen + '</span>' : '') + '</div>' +
+                        (c.faseOrigen ? '<span class="tarjeta-etiqueta" style="background:var(--color-azul);color:#fff;">' + c.faseOrigen + '</span>' : '') +
+                        (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') +
+                        '</div>' +
                         '<div class="mosaico-separador"></div>' +
                         '<div class="mosaico-detalle"><div><i class="fas fa-phone"></i> ' + c.telefono + '</div>' +
                         (c.email ? '<div><i class="fas fa-envelope"></i> ' + c.email + '</div>' : '') +
@@ -2870,7 +3024,9 @@
                 },
                 renderAcciones: function(c) {
                     const tieneTelefono = c.telefono && normalizarTelefonoWhatsApp(c.telefono);
-                    return '<button class="btn-editar" onclick="CRUD.clientes.editar(\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                    return '<button class="btn-ver-detalle" onclick="verDetalleCliente(\'' + c.id + '\')" title="Ver detalle"><i class="fas fa-eye"></i></button>' +
+                        '<button class="btn-editar" onclick="CRUD.clientes.editar(\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                        '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + c.id + '\', \'cliente\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
                         '<button class="btn-convertir" onclick="mostrarFormularioContrato(\'' + c.id + '\')" title="Agregar contrato"><i class="fas fa-file-contract"></i></button>' +
                         '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.id + '\')" title="Enviar WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button>' +
                         '<button class="btn-eliminar" onclick="eliminarCliente(\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
@@ -2916,7 +3072,8 @@
                 renderizar: renderizarClientes,
                 onEliminar: function(id) {
                     prospectos.forEach(function(p) { if (p && p.clienteId === id) p.clienteId = null; });
-                    guardarDatos(); renderizarProspectos(); renderizarContratos();
+                    tareas = tareas.filter(function(t) { return t.clienteId !== id; });
+                    guardarDatos(); renderizarProspectos(); renderizarContratos(); renderizarCalendario();
                 }
             })
         };
@@ -2984,10 +3141,12 @@
             const p = obtenerProspecto(id); if (!p) return;
             confirmarEliminacion({
                 titulo: 'Eliminar prospecto', entidad: 'prospecto', nombre: p.nombre,
+                detalle: 'Se eliminarán también sus tareas vinculadas',
                 onConfirmar: function() {
                     prospectos = prospectos.filter(function(x) { return x.id !== id; });
+                    tareas = tareas.filter(function(t) { return t.clienteId !== 'pro_' + id; });
                     registrarHistorial('prospecto', 'eliminar', 'Se eliminó prospecto: "' + p.nombre + '"', { id: id, nombre: p.nombre });
-                    guardarDatos(); renderizarProspectos();
+                    guardarDatos(); renderizarProspectos(); renderizarCalendario();
                     mostrarNotificacion('Prospecto eliminado', 'success');
                 }
             });
@@ -3001,22 +3160,32 @@
             const nc = { id: generarId(), nombre: p.nombre, telefono: p.telefono || '', email: p.email || '', fechaRegistro: obtenerFechaActual(), estado: 'Activo', faseOrigen: p.faseActual, contratos: [], notasGenerales: p.notasGenerales || '' };
             clientes.push(nc);
             p.clienteId = nc.id;
-            registrarHistorial('cliente', 'crear', 'Prospecto "' + p.nombre + '" convertido a cliente', { id: nc.id, nombre: nc.nombre });
-            guardarDatos(); renderizarProspectos(); renderizarClientes();
-            mostrarNotificacion('Prospecto convertido a cliente', 'success');
+            const idViejo = 'pro_' + p.id;
+            let tareasMigradas = 0;
+            tareas.forEach(function(t) {
+                if (t.clienteId === idViejo) {
+                    t.clienteId = nc.id;
+                    tareasMigradas++;
+                }
+            });
+            registrarHistorial('cliente', 'crear', 'Prospecto "' + p.nombre + '" convertido a cliente' + (tareasMigradas > 0 ? ' (' + tareasMigradas + ' tareas migradas)' : ''), { id: nc.id, nombre: nc.nombre });
+            guardarDatos(); renderizarProspectos(); renderizarClientes(); renderizarCalendario();
+            mostrarNotificacion('Prospecto convertido a cliente' + (tareasMigradas > 0 ? ' · ' + tareasMigradas + ' tareas migradas' : ''), 'success');
         }
 
         function eliminarCliente(id) {
             const c = obtenerCliente(id); if (!c) return;
             const nc = c.contratos ? c.contratos.length : 0;
+            const nt = tareas.filter(function(t) { return t.clienteId === id; }).length;
             confirmarEliminacion({
                 titulo: 'Eliminar cliente', entidad: 'cliente', nombre: c.nombre,
-                detalle: 'Teléfono: ' + c.telefono + ' - ' + nc + ' contratos',
+                detalle: 'Teléfono: ' + c.telefono + ' - ' + nc + ' contratos - ' + nt + ' tareas vinculadas',
                 onConfirmar: function() {
                     clientes = clientes.filter(function(x) { return x.id !== id; });
                     prospectos.forEach(function(p) { if (p && p.clienteId === id) p.clienteId = null; });
+                    tareas = tareas.filter(function(t) { return t.clienteId !== id; });
                     registrarHistorial('cliente', 'eliminar', 'Se eliminó cliente: "' + c.nombre + '"', { id: id, nombre: c.nombre });
-                    guardarDatos(); renderizarClientes(); renderizarProspectos(); renderizarContratos(); renderizarInformes();
+                    guardarDatos(); renderizarClientes(); renderizarProspectos(); renderizarContratos(); renderizarInformes(); renderizarCalendario();
                     mostrarNotificacion('Cliente eliminado', 'success');
                 }
             });
@@ -3033,6 +3202,464 @@
             window.open(url, '_blank');
             mostrarNotificacion('Abriendo WhatsApp', 'success');
             registrarHistorial('sesion', 'editar', 'Se abrió WhatsApp para contactar a "' + cliente.nombre + '"', { id: clienteId, nombre: cliente.nombre });
+        }
+
+        // ============================================================
+        // TAREAS — CREAR DESDE CLIENTE / PROSPECTO
+        // ============================================================
+        function abrirTareaParaCliente(entidadId, tipo) {
+            let idVincular = entidadId;
+            if (tipo === 'prospecto') idVincular = 'pro_' + entidadId;
+            mostrarFormularioTarea(null, idVincular);
+        }
+
+        // ============================================================
+        // BUSCADOR DE CLIENTES/PROSPECTOS (combo con búsqueda)
+        // ============================================================
+        function inicializarBuscadorCliente(opciones, valorInicial) {
+            const input = document.getElementById('tarea-cliente-input');
+            const resultados = document.getElementById('tarea-cliente-resultados');
+            const hidden = document.getElementById('tarea-cliente');
+            if (!input || !resultados || !hidden) return;
+            
+            let indiceActivo = -1;
+            let opcionesFiltradas = opciones.slice();
+            let timeoutId = null;
+            
+            function renderizarOpciones(filtro) {
+                const f = (filtro || '').toLowerCase().trim();
+                opcionesFiltradas = opciones.filter(function(o) {
+                    if (!f) return true;
+                    const nombreMatch = o.nombre.toLowerCase().indexOf(f) !== -1;
+                    const festeMatch = o.festejados.some(function(fest) {
+                        return (fest || '').toLowerCase().indexOf(f) !== -1;
+                    });
+                    return nombreMatch || festeMatch;
+                });
+                
+                if (opcionesFiltradas.length === 0) {
+                    resultados.innerHTML = '<div class="buscador-vacio"><i class="fas fa-search"></i> Sin resultados</div>';
+                    indiceActivo = -1;
+                    return;
+                }
+                
+                let html = '<div class="buscador-opcion" data-value="">' +
+                    '<span class="nombre-opcion" style="color:var(--color-texto-secundario);font-style:italic;">— Sin vincular —</span>' +
+                    '</div>';
+                
+                opcionesFiltradas.forEach(function(o, idx) {
+                    const claseTipo = o.tipo === 'cliente' ? 'tipo-cliente' : 'tipo-prospecto';
+                    const textoFestejado = o.festejados.length > 0 ? '<span class="festejado-hint">🎉 ' + o.festejados[0] + '</span>' : '';
+                    html += '<div class="buscador-opcion" data-value="' + o.id + '">' +
+                        '<span class="tipo-badge ' + claseTipo + '">' + (o.tipo === 'cliente' ? 'Cliente' : 'Prospecto') + '</span>' +
+                        '<span class="nombre-opcion">' + o.nombre + '</span>' +
+                        textoFestejado +
+                        '</div>';
+                });
+                
+                resultados.innerHTML = html;
+                indiceActivo = -1;
+            }
+            
+            function seleccionarOpcion(valor) {
+                hidden.value = valor;
+                const op = opciones.find(function(o) { return o.id === valor; });
+                if (op) {
+                    input.value = op.nombre + (op.tipo === 'cliente' ? ' (Cliente)' : ' (Prospecto)');
+                } else {
+                    input.value = '';
+                }
+                resultados.classList.remove('visible');
+                indiceActivo = -1;
+            }
+            
+            input.addEventListener('focus', function() {
+                renderizarOpciones(input.value);
+                resultados.classList.add('visible');
+                if (input.value) input.select();
+            });
+            
+            input.addEventListener('input', function() {
+                if (timeoutId) clearTimeout(timeoutId);
+                timeoutId = setTimeout(function() {
+                    renderizarOpciones(input.value);
+                    resultados.classList.add('visible');
+                }, 120);
+            });
+            
+            input.addEventListener('keydown', function(e) {
+                const items = resultados.querySelectorAll('.buscador-opcion');
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!resultados.classList.contains('visible')) {
+                        resultados.classList.add('visible');
+                        return;
+                    }
+                    indiceActivo = Math.min(indiceActivo + 1, items.length - 1);
+                    items.forEach(function(it, i) { it.classList.toggle('activa', i === indiceActivo); });
+                    if (items[indiceActivo]) items[indiceActivo].scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    indiceActivo = Math.max(indiceActivo - 1, 0);
+                    items.forEach(function(it, i) { it.classList.toggle('activa', i === indiceActivo); });
+                    if (items[indiceActivo]) items[indiceActivo].scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'Enter') {
+                    if (indiceActivo >= 0 && items[indiceActivo]) {
+                        e.preventDefault();
+                        seleccionarOpcion(items[indiceActivo].dataset.value);
+                    }
+                } else if (e.key === 'Escape') {
+                    resultados.classList.remove('visible');
+                }
+            });
+            
+            resultados.addEventListener('click', function(e) {
+                const op = e.target.closest('.buscador-opcion');
+                if (!op) return;
+                seleccionarOpcion(op.dataset.value);
+            });
+            
+            // Cerrar al hacer clic fuera
+            setTimeout(function() {
+                document.addEventListener('click', function handler(e) {
+                    if (!e.target.closest('#buscador-cliente-container')) {
+                        resultados.classList.remove('visible');
+                    }
+                });
+            }, 100);
+            
+            if (valorInicial) {
+                const op = opciones.find(function(o) { return o.id === valorInicial; });
+                if (op) input.value = op.nombre + (op.tipo === 'cliente' ? ' (Cliente)' : ' (Prospecto)');
+            }
+        }
+
+        // ============================================================
+        // TAREAS — FORMULARIO (con soporte para cliente y fecha preconfigurados)
+        // ============================================================
+        function mostrarFormularioTarea(tarea, clientePreconfigurado, fechaPreconfigurada) {
+            const ee = tarea !== null && tarea !== undefined && tarea !== false && tarea.id;
+            let ot = '';
+            TIPOS_TAREA.forEach(function(t) { ot += '<option value="' + t + '" ' + (tarea && tarea.tipo === t ? 'selected' : '') + '>' + t + '</option>'; });
+            
+            // Construir lista unificada de opciones (clientes + prospectos)
+            let opcionesVinculacion = [];
+            clientes.forEach(function(c) {
+                opcionesVinculacion.push({ 
+                    id: c.id, 
+                    tipo: 'cliente', 
+                    nombre: c.nombre, 
+                    festejados: (c.contratos || []).map(function(co) { return co.festejado; }).filter(Boolean) 
+                });
+            });
+            prospectos.forEach(function(p) {
+                if (!p.clienteId) {
+                    opcionesVinculacion.push({ 
+                        id: 'pro_' + p.id, 
+                        tipo: 'prospecto', 
+                        nombre: p.nombre, 
+                        festejados: [] 
+                    });
+                }
+            });
+            
+            // Determinar el valor seleccionado actual
+            const clienteActualId = (tarea && tarea.clienteId) || clientePreconfigurado || '';
+            const opcionActual = opcionesVinculacion.find(function(o) { return o.id === clienteActualId; });
+            const textoActual = opcionActual ? opcionActual.nombre + (opcionActual.tipo === 'cliente' ? ' (Cliente)' : ' (Prospecto)') : '';
+            
+            const ft = tarea ? tarea.fecha : (fechaPreconfigurada || obtenerFechaActual());
+            const ec = tarea && tarea.completada ? 'checked' : '';
+            const descVal = tarea ? tarea.descripcion : '';
+            const notasVal = tarea ? tarea.notas : '';
+            const tipoVal = tarea ? tarea.tipo : (TIPOS_TAREA[0] || '');
+            
+            const html = '<form id="form-tarea">' +
+                '<input type="hidden" id="tarea-id" value="' + (tarea ? tarea.id : '') + '">' +
+                '<div class="form-grupo"><label>Tipo *</label><select id="tarea-tipo" required>' + ot + '</select></div>' +
+                '<div class="form-grupo"><label>Cliente / Prospecto</label>' +
+                    '<div class="buscador-cliente" id="buscador-cliente-container">' +
+                        '<input type="text" class="buscador-input" id="tarea-cliente-input" placeholder="Escribe para buscar por nombre o festejado..." autocomplete="off" value="' + textoActual + '">' +
+                        '<i class="fas fa-search buscador-icono"></i>' +
+                        '<div class="buscador-resultados" id="tarea-cliente-resultados"></div>' +
+                    '</div>' +
+                    '<input type="hidden" id="tarea-cliente" value="' + clienteActualId + '">' +
+                '</div>' +
+                '<div class="form-grupo"><label>Fecha programada *</label><input type="date" id="tarea-fecha" required value="' + ft + '"></div>' +
+                '<div class="form-grupo"><label>Descripción *</label><textarea id="tarea-descripcion" required>' + descVal + '</textarea></div>' +
+                '<div class="form-grupo"><label>Notas (opcional)</label><textarea id="tarea-notas">' + notasVal + '</textarea></div>' +
+                '<div class="form-grupo"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="tarea-completada" ' + ec + '><span>Completada</span></label></div>' +
+                '<div class="form-acciones">' +
+                '<button type="button" class="btn-secundario" id="btn-tarea-cancelar">Cancelar</button>' +
+                '<button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button>' +
+                '</div></form>';
+            
+            abrirModal(ee ? 'Editar Tarea' : 'Nueva Tarea', html);
+            
+            // Preseleccionar tipo
+            if (tipoVal) {
+                const sel = document.getElementById('tarea-tipo');
+                if (sel) sel.value = tipoVal;
+            }
+            
+            // Inicializar el buscador de clientes
+            inicializarBuscadorCliente(opcionesVinculacion, clienteActualId);
+
+            document.getElementById('btn-tarea-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
+            document.getElementById('form-tarea').addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const ee2 = document.getElementById('tarea-id').value !== '';
+                const id = document.getElementById('tarea-id').value;
+                const tipo = document.getElementById('tarea-tipo').value;
+                const clid = document.getElementById('tarea-cliente').value || null;
+                const fecha = document.getElementById('tarea-fecha').value;
+                const desc = document.getElementById('tarea-descripcion').value.trim();
+                const not = document.getElementById('tarea-notas').value.trim();
+                const comp = document.getElementById('tarea-completada').checked;
+                if (!tipo || !fecha || !desc) { mostrarNotificacion('Campos obligatorios faltantes', 'warning'); return; }
+                if (ee2) {
+                    const idx = tareas.findIndex(function(t) { return t.id === id; });
+                    if (idx !== -1) {
+                        const prev = tareas[idx];
+                        const ta = Object.assign({}, prev, { tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, fechaModificacion: obtenerFechaHoraActual() });
+                        if (comp && !prev.fechaCompletada) ta.fechaCompletada = obtenerFechaHoraActual();
+                        else if (!comp) ta.fechaCompletada = null;
+                        tareas[idx] = ta;
+                        registrarHistorial('tarea', 'editar', 'Se editó tarea: "' + tipo + '"', { id: id, nombre: tipo });
+                    }
+                } else {
+                    const nt = { id: generarId(), tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, fechaCreacion: obtenerFechaHoraActual(), fechaModificacion: obtenerFechaHoraActual() };
+                    if (comp) nt.fechaCompletada = obtenerFechaHoraActual();
+                    tareas.push(nt);
+                    registrarHistorial('tarea', 'crear', 'Se creó tarea: "' + tipo + '"' + (clid ? ' vinculada' : ''), { id: nt.id, nombre: tipo });
+                }
+                guardarDatos(); cerrarModal(); renderizarCalendario(); renderizarInformes();
+                renderizarClientes(); renderizarProspectos();
+                mostrarNotificacion(ee2 ? 'Tarea actualizada' : 'Tarea creada', 'success');
+            });
+        }
+
+        function editarTarea(id) { const t = tareas.find(function(t) { return t.id === id; }); if (t) mostrarFormularioTarea(t); }
+        
+        function eliminarTarea(id) {
+            const t = tareas.find(function(x) { return x.id === id; }); if (!t) return;
+            confirmarEliminacion({
+                titulo: 'Eliminar tarea', entidad: 'tarea', nombre: t.tipo,
+                onConfirmar: function() {
+                    tareas = tareas.filter(function(x) { return x.id !== id; });
+                    registrarHistorial('tarea', 'eliminar', 'Se eliminó tarea: "' + t.tipo + '"', { id: id, nombre: t.tipo });
+                    guardarDatos(); renderizarCalendario(); renderizarInformes();
+                    renderizarClientes(); renderizarProspectos();
+                    mostrarNotificacion('Tarea eliminada', 'success');
+                }
+            });
+        }
+        
+        function alternarCompletarTarea(id) {
+            const t = tareas.find(function(x) { return x.id === id; }); if (!t) return;
+            t.completada = !t.completada;
+            if (t.completada) { t.fechaCompletada = obtenerFechaHoraActual(); mostrarNotificacion('Tarea completada', 'success'); }
+            else { t.fechaCompletada = null; mostrarNotificacion('Tarea reabierta', 'info'); }
+            t.fechaModificacion = obtenerFechaHoraActual();
+            guardarDatos(); renderizarCalendario(); renderizarInformes();
+            renderizarClientes(); renderizarProspectos();
+        }
+
+        // ============================================================
+        // TAREAS — TOGGLE DESDE EL DETALLE
+        // ============================================================
+        function toggleTareaDesdeDetalle(id, completada) {
+            const t = tareas.find(function(x) { return x.id === id; });
+            if (!t) return;
+            t.completada = completada;
+            if (completada) {
+                t.fechaCompletada = obtenerFechaHoraActual();
+                mostrarNotificacion('Tarea completada', 'success');
+            } else {
+                t.fechaCompletada = null;
+                mostrarNotificacion('Tarea reabierta', 'info');
+            }
+            t.fechaModificacion = obtenerFechaHoraActual();
+            guardarDatos();
+            renderizarCalendario();
+            renderizarInformes();
+            renderizarClientes();
+            renderizarProspectos();
+            
+            const clid = t.clienteId || '';
+            if (clid.indexOf('pro_') === 0) {
+                verDetalleProspecto(clid.substring(4));
+            } else if (clid) {
+                verDetalleCliente(clid);
+            }
+        }
+
+        // ============================================================
+        // DETALLE DE CLIENTE CON TAREAS
+        // ============================================================
+        function verDetalleCliente(clienteId) {
+            const c = obtenerCliente(clienteId);
+            if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
+            const tareasVinculadas = tareas.filter(function(t) { return t.clienteId === clienteId; });
+            const contratos = (c.contratos || []).length;
+            const html = construirDetalleEntidad({
+                tipo: 'cliente',
+                entidad: c,
+                tareas: tareasVinculadas,
+                idParaTareas: clienteId,
+                subtitulo: contratos + ' contrato' + (contratos === 1 ? '' : 's') + ' · Estado: ' + c.estado
+            });
+            abrirModal('Detalle del cliente', html, true);
+        }
+
+        // ============================================================
+        // DETALLE DE PROSPECTO CON TAREAS
+        // ============================================================
+        function verDetalleProspecto(prospectoId) {
+            const p = obtenerProspecto(prospectoId);
+            if (!p) { mostrarNotificacion('Prospecto no encontrado', 'error'); return; }
+            const idVinculado = 'pro_' + prospectoId;
+            const tareasVinculadas = tareas.filter(function(t) { return t.clienteId === idVinculado; });
+            const html = construirDetalleEntidad({
+                tipo: 'prospecto',
+                entidad: p,
+                tareas: tareasVinculadas,
+                idParaTareas: idVinculado,
+                subtitulo: 'Fase: ' + (p.faseActual || 'Sin fase')
+            });
+            abrirModal('Detalle del prospecto', html, true);
+        }
+
+        // ============================================================
+        // CONSTRUCTOR DE DETALLE (compartido cliente/prospecto)
+        // ============================================================
+        function construirDetalleEntidad(opts) {
+            const e = opts.entidad;
+            const tipo = opts.tipo;
+            const tareasVinc = opts.tareas;
+            const idParaTareas = opts.idParaTareas;
+            const subtitulo = opts.subtitulo || '';
+            
+            let accionesHTML = 
+                '<button class="btn-primario" onclick="cerrarModal(); ' + (tipo === 'cliente' ? 'CRUD.clientes.editar' : 'editarProspecto') + '(\'' + e.id + '\')"><i class="fas fa-edit"></i> Editar</button>' +
+                '<button class="btn-morado" onclick="cerrarModal(); abrirTareaParaCliente(\'' + e.id + '\', \'' + tipo + '\')"><i class="fas fa-plus"></i> Nueva tarea</button>';
+            
+            if (tipo === 'cliente') {
+                accionesHTML += '<button class="btn-naranja" onclick="cerrarModal(); mostrarFormularioContrato(\'' + e.id + '\')"><i class="fas fa-file-contract"></i> Nuevo contrato</button>';
+                if (e.telefono) {
+                    accionesHTML += '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + e.id + '\')"><i class="fab fa-whatsapp"></i> WhatsApp</button>';
+                }
+            } else {
+                if (!e.clienteId) {
+                    accionesHTML += '<button class="btn-verde" onclick="cerrarModal(); convertirProspecto(\'' + e.id + '\')"><i class="fas fa-user-check"></i> Convertir a cliente</button>';
+                }
+            }
+            
+            const campo = function(l, v) {
+                return '<div class="detalle-campo"><span class="lbl">' + l + '</span><span class="val">' + (v || 'No especificado') + '</span></div>';
+            };
+            
+            let datosHTML = '';
+            if (tipo === 'cliente') {
+                const ec = e.estado === 'Activo' ? 'etiqueta-interesado' : e.estado === 'Inactivo' ? 'etiqueta-inactivo' : 'etiqueta-cancelado';
+                datosHTML = '<div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + e.estado + '</span></div>' +
+                    '<div class="detalle-grid" style="margin-top:12px;">' +
+                    campo('Nombre', e.nombre) +
+                    campo('Teléfono', e.telefono) +
+                    campo('Email', e.email) +
+                    campo('Origen', e.faseOrigen) +
+                    campo('Fecha registro', formatearFecha(e.fechaRegistro)) +
+                    '</div>';
+            } else {
+                const cf = 'etiqueta-' + (e.faseActual || 'interesado').toLowerCase().replace('ó','o').replace('á','a').replace('é','e');
+                datosHTML = '<div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + (e.faseActual || 'Sin fase') + '</span>' +
+                    (e.clienteId ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Ya es cliente</span>' : '') +
+                    '</div>' +
+                    '<div class="detalle-grid" style="margin-top:12px;">' +
+                    campo('Nombre', e.nombre) +
+                    campo('Teléfono', e.telefono) +
+                    campo('Email', e.email) +
+                    campo('Fecha registro', formatearFecha(e.fechaRegistro)) +
+                    '</div>';
+            }
+            
+            let notasHTML = '';
+            if (e.notasGenerales) {
+                notasHTML = '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas generales</div>' +
+                    '<div class="detalle-notas">' + e.notasGenerales + '</div></div>';
+            }
+            
+            const tareasHTML = construirListaTareasVinculadas(tareasVinc);
+            
+            const html = 
+                '<div class="detalle-acciones">' + accionesHTML + '</div>' +
+                '<div class="detalle-header">' +
+                    '<div class="detalle-cliente">' + e.nombre + '</div>' +
+                    '<div class="detalle-festejado">' + subtitulo + '</div>' +
+                    datosHTML +
+                '</div>' +
+                notasHTML +
+                tareasHTML;
+            
+            return html;
+        }
+
+        // ============================================================
+        // LISTA DE TAREAS VINCULADAS (con checkbox)
+        // ============================================================
+        function construirListaTareasVinculadas(tareasVinc) {
+            const total = tareasVinc.length;
+            const completadas = tareasVinc.filter(function(t) { return t.completada; }).length;
+            const pendientes = total - completadas;
+            
+            let html = '<div class="detalle-seccion">' +
+                '<div class="detalle-seccion-titulo">' +
+                    '<i class="fas fa-tasks"></i> Tareas (' + total + ')' +
+                    (total > 0 ? ' <span style="font-weight:400;color:var(--color-texto-secundario);font-size:11px;">· ' + pendientes + ' pendientes · ' + completadas + ' completadas</span>' : '') +
+                '</div>';
+            
+            if (total === 0) {
+                html += '<div class="detalle-lista-vacia">No hay tareas vinculadas todavía.</div>';
+            } else {
+                const ordenadas = tareasVinc.slice().sort(function(a, b) {
+                    if (a.completada !== b.completada) return a.completada ? 1 : -1;
+                    return (b.fecha || '').localeCompare(a.fecha || '');
+                });
+                
+                html += '<div class="detalle-lista">';
+                ordenadas.forEach(function(t) {
+                    const cl = t.completada ? 'tarea-completada' : 'tarea-pendiente';
+                    const fechaProg = formatearFecha(t.fecha);
+                    const fechaCreacion = t.fechaCreacion ? formatearFechaHora(t.fechaCreacion) : '—';
+                    const fechaCompletada = t.fechaCompletada ? formatearFechaHora(t.fechaCompletada) : null;
+                    
+                    html += '<div class="tarea-vinculada ' + cl + '">' +
+                        '<div class="tarea-check">' +
+                            '<input type="checkbox" ' + (t.completada ? 'checked' : '') + 
+                                ' onchange="toggleTareaDesdeDetalle(\'' + t.id + '\', this.checked)">' +
+                        '</div>' +
+                        '<div class="tarea-info">' +
+                            '<div class="tarea-tipo">' + (t.tipo || 'Tarea') + '</div>' +
+                            '<div class="tarea-desc">' + (t.descripcion || 'Sin descripción') + '</div>' +
+                            (t.notas ? '<div class="tarea-notas"><i class="fas fa-sticky-note"></i> ' + t.notas + '</div>' : '') +
+                            '<div class="tarea-fechas">' +
+                                '<span><i class="fas fa-calendar-plus"></i> Creada: ' + fechaCreacion + '</span>' +
+                                '<span><i class="fas fa-calendar-check"></i> Programada: ' + fechaProg + '</span>' +
+                                (fechaCompletada ? '<span style="color:var(--color-verde);"><i class="fas fa-check-circle"></i> Completada: ' + fechaCompletada + '</span>' : '') +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="tarea-acciones">' +
+                            '<button onclick="cerrarModal(); editarTarea(\'' + t.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button onclick="cerrarModal(); eliminarTarea(\'' + t.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
+                        '</div>' +
+                    '</div>';
+                });
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            return html;
         }
 
         // ============================================================
@@ -3893,88 +4520,6 @@
         }
 
         // ============================================================
-        // TAREAS
-        // ============================================================
-        function mostrarFormularioTarea(tarea) {
-            const ee = tarea !== null && tarea !== undefined;
-            let ot = '';
-            TIPOS_TAREA.forEach(function(t) { ot += '<option value="' + t + '" ' + (tarea && tarea.tipo === t ? 'selected' : '') + '>' + t + '</option>'; });
-            let oc = '<option value="">Sin vincular</option>';
-            clientes.forEach(function(c) { oc += '<option value="' + c.id + '" ' + (tarea && tarea.clienteId === c.id ? 'selected' : '') + '>' + c.nombre + ' (Cliente)</option>'; });
-            prospectos.forEach(function(p) { if (!p.clienteId) oc += '<option value="pro_' + p.id + '" ' + (tarea && tarea.clienteId === 'pro_' + p.id ? 'selected' : '') + '>' + p.nombre + ' (Prospecto)</option>'; });
-            const ft = tarea ? tarea.fecha : obtenerFechaActual();
-            const ec = tarea && tarea.completada ? 'checked' : '';
-            const html = '<form id="form-tarea">' +
-                '<input type="hidden" id="tarea-id" value="' + (tarea ? tarea.id : '') + '">' +
-                '<div class="form-grupo"><label>Tipo *</label><select id="tarea-tipo" required>' + ot + '</select></div>' +
-                '<div class="form-grupo"><label>Cliente / Prospecto</label><select id="tarea-cliente">' + oc + '</select></div>' +
-                '<div class="form-grupo"><label>Fecha *</label><input type="date" id="tarea-fecha" required value="' + ft + '"></div>' +
-                '<div class="form-grupo"><label>Descripción *</label><textarea id="tarea-descripcion" required>' + (tarea ? tarea.descripcion : '') + '</textarea></div>' +
-                '<div class="form-grupo"><label>Notas</label><textarea id="tarea-notas">' + (tarea ? tarea.notas : '') + '</textarea></div>' +
-                '<div class="form-grupo"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="tarea-completada" ' + ec + '><span>Completada</span></label></div>' +
-                '<div class="form-acciones">' +
-                '<button type="button" class="btn-secundario" id="btn-tarea-cancelar">Cancelar</button>' +
-                '<button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button>' +
-                '</div></form>';
-            abrirModal(ee ? 'Editar Tarea' : 'Nueva Tarea', html);
-
-            document.getElementById('btn-tarea-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
-            document.getElementById('form-tarea').addEventListener('submit', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const ee2 = document.getElementById('tarea-id').value !== '';
-                const id = document.getElementById('tarea-id').value;
-                const tipo = document.getElementById('tarea-tipo').value;
-                const clid = document.getElementById('tarea-cliente').value || null;
-                const fecha = document.getElementById('tarea-fecha').value;
-                const desc = document.getElementById('tarea-descripcion').value.trim();
-                const not = document.getElementById('tarea-notas').value.trim();
-                const comp = document.getElementById('tarea-completada').checked;
-                if (!tipo || !fecha || !desc) { mostrarNotificacion('Campos obligatorios faltantes', 'warning'); return; }
-                if (ee2) {
-                    const idx = tareas.findIndex(function(t) { return t.id === id; });
-                    if (idx !== -1) {
-                        const prev = tareas[idx];
-                        const ta = Object.assign({}, prev, { tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, fechaModificacion: obtenerFechaHoraActual() });
-                        if (comp && !prev.fechaCompletada) ta.fechaCompletada = obtenerFechaHoraActual();
-                        else if (!comp) ta.fechaCompletada = null;
-                        tareas[idx] = ta;
-                        registrarHistorial('tarea', 'editar', 'Se editó tarea: "' + tipo + '"', { id: id, nombre: tipo });
-                    }
-                } else {
-                    const nt = { id: generarId(), tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, fechaCreacion: obtenerFechaHoraActual(), fechaModificacion: obtenerFechaHoraActual() };
-                    if (comp) nt.fechaCompletada = obtenerFechaHoraActual();
-                    tareas.push(nt);
-                    registrarHistorial('tarea', 'crear', 'Se creó tarea: "' + tipo + '"', { id: nt.id, nombre: tipo });
-                }
-                guardarDatos(); cerrarModal(); renderizarCalendario(); renderizarInformes();
-                mostrarNotificacion(ee2 ? 'Tarea actualizada' : 'Tarea creada', 'success');
-            });
-        }
-
-        function editarTarea(id) { const t = tareas.find(function(t) { return t.id === id; }); if (t) mostrarFormularioTarea(t); }
-        function eliminarTarea(id) {
-            const t = tareas.find(function(x) { return x.id === id; }); if (!t) return;
-            confirmarEliminacion({
-                titulo: 'Eliminar tarea', entidad: 'tarea', nombre: t.tipo,
-                onConfirmar: function() {
-                    tareas = tareas.filter(function(x) { return x.id !== id; });
-                    registrarHistorial('tarea', 'eliminar', 'Se eliminó tarea: "' + t.tipo + '"', { id: id, nombre: t.tipo });
-                    guardarDatos(); renderizarCalendario(); renderizarInformes();
-                    mostrarNotificacion('Tarea eliminada', 'success');
-                }
-            });
-        }
-        function alternarCompletarTarea(id) {
-            const t = tareas.find(function(x) { return x.id === id; }); if (!t) return;
-            t.completada = !t.completada;
-            if (t.completada) { t.fechaCompletada = obtenerFechaHoraActual(); mostrarNotificacion('Tarea completada', 'success'); }
-            else { t.fechaCompletada = null; mostrarNotificacion('Tarea reabierta', 'info'); }
-            t.fechaModificacion = obtenerFechaHoraActual();
-            guardarDatos(); renderizarCalendario(); renderizarInformes();
-        }
-
-        // ============================================================
         // CALENDARIO
         // ============================================================
         function renderizarCalendario() {
@@ -4041,14 +4586,38 @@
             renderizarListaTareas();
         }
 
+        // ============================================================
+        // OPCIONES DEL DÍA (con fix del bug)
+        // ============================================================
         function mostrarOpcionesDia(fecha) {
             abrirModal('Opciones del día', '<div style="text-align:center;padding:10px;">' +
                 '<h3 style="color:var(--color-acento);margin-bottom:16px;">' + formatearFecha(fecha) + '</h3>' +
                 '<div style="display:flex;flex-direction:column;gap:12px;max-width:300px;margin:0 auto;">' +
-                '<button class="btn-primario" onclick="cerrarModal(); setTimeout(function() { mostrarFormularioTarea({ fecha: \'' + fecha + '\' }); }, 100);" style="justify-content:center;">Crear Tarea</button>' +
-                '<button class="btn-azul" onclick="cerrarModal(); setTimeout(function() { mostrarFormularioContratoDesdeCalendario(\'' + fecha + '\'); }, 100);" style="justify-content:center;">Crear Contrato</button>' +
+                '<button class="btn-primario" id="btn-crear-tarea-dia" style="justify-content:center;"><i class="fas fa-tasks"></i> Crear Tarea</button>' +
+                '<button class="btn-azul" id="btn-crear-contrato-dia" style="justify-content:center;"><i class="fas fa-file-contract"></i> Crear Contrato</button>' +
                 '<button class="btn-secundario" onclick="cerrarModal();" style="justify-content:center;">Cancelar</button>' +
                 '</div></div>');
+            
+            document.getElementById('btn-crear-tarea-dia').addEventListener('click', function() {
+                cerrarModal();
+                setTimeout(function() {
+                    mostrarFormularioTareaConFecha(fecha);
+                }, 100);
+            });
+            
+            document.getElementById('btn-crear-contrato-dia').addEventListener('click', function() {
+                cerrarModal();
+                setTimeout(function() {
+                    mostrarFormularioContratoDesdeCalendario(fecha);
+                }, 100);
+            });
+        }
+
+        // ============================================================
+        // NUEVA FUNCIÓN: abrir tarea con fecha preconfigurada
+        // ============================================================
+        function mostrarFormularioTareaConFecha(fecha) {
+            mostrarFormularioTarea(null, null, fecha);
         }
 
         function mostrarFormularioContratoDesdeCalendario(fecha) {
@@ -4588,7 +5157,6 @@
             renderizarClientes(); renderizarContratos(); renderizarCalendario();
             renderizarInformes(); renderizarHistorial(); renderizarUsuarios();
         }
-
         // ============================================================
         // LOGIN
         // ============================================================
@@ -4596,11 +5164,12 @@
             document.getElementById('pantalla-login').classList.remove('oculta');
             document.getElementById('app-container').classList.add('oculto');
             const contenedor = document.getElementById('login-usuarios-lista');
+            if (!contenedor) { console.error('No se encontró #login-usuarios-lista'); return; }
             contenedor.innerHTML = usuarios.map(function(u) {
                 return '<div class="login-usuario ' + (u.admin ? 'admin' : '') + '" data-username="' + u.username + '">' +
-                    '<div class="avatar">' + u.nombre.charAt(0).toUpperCase() + '</div>' +
-                    '<div class="nombre">' + u.nombre + '</div>' +
-                    '<div class="rol">' + u.rol + '</div>' +
+                    '<div class="avatar">' + (u.nombre || 'U').charAt(0).toUpperCase() + '</div>' +
+                    '<div class="nombre">' + (u.nombre || 'Usuario') + '</div>' +
+                    '<div class="rol">' + (u.rol || 'Operador') + '</div>' +
                     '</div>';
             }).join('');
             contenedor.querySelectorAll('.login-usuario').forEach(function(el) {
@@ -4624,7 +5193,7 @@
             document.getElementById('login-paso-nuevo-pin').classList.remove('activo');
             document.getElementById('login-paso-pin').classList.add('activo');
             document.getElementById('login-usuario-elegido').className = 'login-usuario-elegido ' + (usuario.admin ? 'admin' : '');
-            document.getElementById('login-usuario-elegido').innerHTML = '<div class="avatar">' + usuario.nombre.charAt(0).toUpperCase() + '</div><div><div style="font-weight:600;">' + usuario.nombre + '</div><div style="font-size:11px;">' + usuario.rol + '</div></div>';
+            document.getElementById('login-usuario-elegido').innerHTML = '<div class="avatar">' + (usuario.nombre || 'U').charAt(0).toUpperCase() + '</div><div><div style="font-weight:600;">' + (usuario.nombre || 'Usuario') + '</div><div style="font-size:11px;">' + (usuario.rol || '') + '</div></div>';
             document.getElementById('login-pin-input').value = '';
             document.getElementById('login-error').classList.remove('visible');
             setTimeout(function() { document.getElementById('login-pin-input').focus(); }, 100);
@@ -4740,7 +5309,6 @@
                 });
             });
 
-            // Actualizar badges cuando cambian los filtros
             function getVal(id) {
                 const el = document.getElementById(id);
                 return el ? el.value : null;
@@ -4814,31 +5382,51 @@
                 });
             });
 
-            document.getElementById('btn-nuevo-paquete').addEventListener('click', function() { CRUD.paquetes.nuevo(); });
-            document.getElementById('btn-nuevo-servicio').addEventListener('click', function() { CRUD.servicios.nuevo(); });
-            document.getElementById('btn-nuevo-prospecto').addEventListener('click', function() { mostrarFormularioProspecto(null); });
-            document.getElementById('btn-nuevo-cliente').addEventListener('click', function() { CRUD.clientes.nuevo(); });
-            document.getElementById('btn-nueva-tarea').addEventListener('click', function() { mostrarFormularioTarea(null); });
-            document.getElementById('btn-nuevo-contrato').addEventListener('click', function() {
+            var btn;
+            btn = document.getElementById('btn-nuevo-paquete');
+            if (btn) btn.addEventListener('click', function() { CRUD.paquetes.nuevo(); });
+            btn = document.getElementById('btn-nuevo-servicio');
+            if (btn) btn.addEventListener('click', function() { CRUD.servicios.nuevo(); });
+            btn = document.getElementById('btn-nuevo-prospecto');
+            if (btn) btn.addEventListener('click', function() { mostrarFormularioProspecto(null); });
+            btn = document.getElementById('btn-nuevo-cliente');
+            if (btn) btn.addEventListener('click', function() { CRUD.clientes.nuevo(); });
+            btn = document.getElementById('btn-nueva-tarea');
+            if (btn) btn.addEventListener('click', function() { mostrarFormularioTarea(null); });
+            btn = document.getElementById('btn-nuevo-contrato');
+            if (btn) btn.addEventListener('click', function() {
                 if (clientes.length === 0) { mostrarNotificacion('Registra un cliente primero', 'warning'); return; }
                 mostrarFormularioContrato(null);
             });
 
-            document.getElementById('btn-logout').addEventListener('click', cerrarSesion);
-            document.getElementById('btn-cambiar-usuario').addEventListener('click', cerrarSesion);
-            document.getElementById('btn-cambiar-mi-pin').addEventListener('click', abrirCambiarMiPin);
-            document.getElementById('btn-nuevo-usuario').addEventListener('click', mostrarFormularioNuevoUsuario);
+            btn = document.getElementById('btn-logout');
+            if (btn) btn.addEventListener('click', cerrarSesion);
+            btn = document.getElementById('btn-cambiar-usuario');
+            if (btn) btn.addEventListener('click', cerrarSesion);
+            btn = document.getElementById('btn-cambiar-mi-pin');
+            if (btn) btn.addEventListener('click', abrirCambiarMiPin);
+            btn = document.getElementById('btn-nuevo-usuario');
+            if (btn) btn.addEventListener('click', mostrarFormularioNuevoUsuario);
 
-            document.getElementById('filtro-fase-prospecto').addEventListener('change', renderizarProspectos);
-            document.getElementById('buscar-prospecto').addEventListener('input', renderizarProspectos);
-            document.getElementById('filtro-estado-cliente-lista').addEventListener('change', renderizarClientes);
-            document.getElementById('buscar-cliente').addEventListener('input', renderizarClientes);
-            document.getElementById('filtro-estado-contrato-lista').addEventListener('change', renderizarContratos);
-            document.getElementById('filtro-tipo-contrato').addEventListener('change', renderizarContratos);
-            document.getElementById('buscar-contrato').addEventListener('input', renderizarContratos);
+            btn = document.getElementById('filtro-fase-prospecto');
+            if (btn) btn.addEventListener('change', renderizarProspectos);
+            btn = document.getElementById('buscar-prospecto');
+            if (btn) btn.addEventListener('input', renderizarProspectos);
+            btn = document.getElementById('filtro-estado-cliente-lista');
+            if (btn) btn.addEventListener('change', renderizarClientes);
+            btn = document.getElementById('buscar-cliente');
+            if (btn) btn.addEventListener('input', renderizarClientes);
+            btn = document.getElementById('filtro-estado-contrato-lista');
+            if (btn) btn.addEventListener('change', renderizarContratos);
+            btn = document.getElementById('filtro-tipo-contrato');
+            if (btn) btn.addEventListener('change', renderizarContratos);
+            btn = document.getElementById('buscar-contrato');
+            if (btn) btn.addEventListener('input', renderizarContratos);
 
-            document.getElementById('btn-filtrar-informes').addEventListener('click', renderizarInformes);
-            document.getElementById('btn-limpiar-informes').addEventListener('click', function() {
+            btn = document.getElementById('btn-filtrar-informes');
+            if (btn) btn.addEventListener('click', renderizarInformes);
+            btn = document.getElementById('btn-limpiar-informes');
+            if (btn) btn.addEventListener('click', function() {
                 document.getElementById('filtro-fecha-inicio').value = '';
                 document.getElementById('filtro-fecha-fin').value = '';
                 document.getElementById('filtro-estado-cliente').value = 'todos';
@@ -4848,23 +5436,31 @@
                 renderizarInformes();
             });
 
-            document.getElementById('filtro-tareas-calendario').addEventListener('change', renderizarCalendario);
-            document.getElementById('buscar-calendario').addEventListener('input', renderizarCalendario);
-            document.getElementById('btn-mes-anterior').addEventListener('click', function() { mesActualCal--; if (mesActualCal < 0) { mesActualCal = 11; anoActualCal--; } renderizarCalendario(); });
-            document.getElementById('btn-mes-siguiente').addEventListener('click', function() { mesActualCal++; if (mesActualCal > 11) { mesActualCal = 0; anoActualCal++; } renderizarCalendario(); });
-            document.getElementById('btn-mes-actual').addEventListener('click', function() { const h = new Date(); mesActualCal = h.getMonth(); anoActualCal = h.getFullYear(); renderizarCalendario(); });
+            btn = document.getElementById('filtro-tareas-calendario');
+            if (btn) btn.addEventListener('change', renderizarCalendario);
+            btn = document.getElementById('buscar-calendario');
+            if (btn) btn.addEventListener('input', renderizarCalendario);
+            btn = document.getElementById('btn-mes-anterior');
+            if (btn) btn.addEventListener('click', function() { mesActualCal--; if (mesActualCal < 0) { mesActualCal = 11; anoActualCal--; } renderizarCalendario(); });
+            btn = document.getElementById('btn-mes-siguiente');
+            if (btn) btn.addEventListener('click', function() { mesActualCal++; if (mesActualCal > 11) { mesActualCal = 0; anoActualCal++; } renderizarCalendario(); });
+            btn = document.getElementById('btn-mes-actual');
+            if (btn) btn.addEventListener('click', function() { const h = new Date(); mesActualCal = h.getMonth(); anoActualCal = h.getFullYear(); renderizarCalendario(); });
 
-            document.getElementById('btn-sync-firebase').addEventListener('click', async function() {
+            btn = document.getElementById('btn-sync-firebase');
+            if (btn) btn.addEventListener('click', async function() {
                 if (!database) { mostrarNotificacion('Firebase no disponible', 'error'); return; }
                 if (estadoSync.modo === 'firebase') { const ok = await guardarEnFirebase(); if (ok) mostrarNotificacion('Sincronizado', 'success'); }
                 else { await inicializarFirebase(); }
             });
-            document.getElementById('btn-cargar-firebase').addEventListener('click', async function() {
+            btn = document.getElementById('btn-cargar-firebase');
+            if (btn) btn.addEventListener('click', async function() {
                 if (!database) { mostrarNotificacion('Firebase no disponible', 'error'); return; }
                 if (confirm('¿Cargar datos desde Firebase?')) { await cargarDesdeFirebase(); }
             });
 
-            document.getElementById('btn-exportar-datos').addEventListener('click', function() {
+            btn = document.getElementById('btn-exportar-datos');
+            if (btn) btn.addEventListener('click', function() {
                 try {
                     const json = JSON.stringify({ version: VERSION, fechaExportacion: obtenerFechaActual(), paquetes: paquetes, serviciosAdicionales: serviciosAdicionales, prospectos: prospectos, clientes: clientes, tareas: tareas, historial: historial, usuarios: usuarios }, null, 2);
                     const blob = new Blob([json], { type: 'application/json' });
@@ -4876,8 +5472,10 @@
                     mostrarNotificacion('Datos exportados', 'success');
                 } catch (e) { mostrarNotificacion('Error: ' + e.message, 'error'); }
             });
-            document.getElementById('btn-importar-datos').addEventListener('click', function() { document.getElementById('input-importar-datos').click(); });
-            document.getElementById('input-importar-datos').addEventListener('change', function(e) {
+            btn = document.getElementById('btn-importar-datos');
+            if (btn) btn.addEventListener('click', function() { document.getElementById('input-importar-datos').click(); });
+            btn = document.getElementById('input-importar-datos');
+            if (btn) btn.addEventListener('change', function(e) {
                 const f = e.target.files[0]; if (!f) return;
                 const r = new FileReader();
                 r.onload = function(ev) {
@@ -4896,79 +5494,107 @@
                 r.readAsText(f); this.value = '';
             });
 
-            document.getElementById('historial-filtro-entidad').addEventListener('change', renderizarHistorial);
-            document.getElementById('historial-filtro-accion').addEventListener('change', renderizarHistorial);
-            document.getElementById('historial-filtro-usuario').addEventListener('input', renderizarHistorial);
-            document.getElementById('historial-filtro-buscar').addEventListener('input', renderizarHistorial);
-            document.getElementById('historial-limpiar-filtros').addEventListener('click', function() {
+            btn = document.getElementById('historial-filtro-entidad');
+            if (btn) btn.addEventListener('change', renderizarHistorial);
+            btn = document.getElementById('historial-filtro-accion');
+            if (btn) btn.addEventListener('change', renderizarHistorial);
+            btn = document.getElementById('historial-filtro-usuario');
+            if (btn) btn.addEventListener('input', renderizarHistorial);
+            btn = document.getElementById('historial-filtro-buscar');
+            if (btn) btn.addEventListener('input', renderizarHistorial);
+            btn = document.getElementById('historial-limpiar-filtros');
+            if (btn) btn.addEventListener('click', function() {
                 document.getElementById('historial-filtro-entidad').value = 'todas';
                 document.getElementById('historial-filtro-accion').value = 'todas';
                 document.getElementById('historial-filtro-usuario').value = '';
                 document.getElementById('historial-filtro-buscar').value = '';
                 renderizarHistorial();
             });
-            document.getElementById('historial-toggle-ver-todos').addEventListener('click', function() {
+            btn = document.getElementById('historial-toggle-ver-todos');
+            if (btn) btn.addEventListener('click', function() {
                 historialVerTodos = !historialVerTodos;
                 actualizarBotonHistorial();
                 renderizarHistorial();
             });
 
-            // Sidebar colapsable (solo PC)
-            document.getElementById('btn-colapsar').addEventListener('click', toggleSidebar);
+            btn = document.getElementById('btn-colapsar');
+            if (btn) btn.addEventListener('click', toggleSidebar);
 
-            // Sidebar móvil (drawer)
             const btnMobileMenu = document.getElementById('btn-mobile-menu');
             const mobileOverlay = document.getElementById('mobile-overlay');
             if (btnMobileMenu) btnMobileMenu.addEventListener('click', toggleSidebarMovil);
             if (mobileOverlay) mobileOverlay.addEventListener('click', cerrarSidebarMovil);
 
-            // Temas
             document.querySelectorAll('.tema-opcion').forEach(function(op) {
                 op.addEventListener('click', function() { aplicarTema(op.dataset.tema); mostrarNotificacion('Tema aplicado', 'success'); });
             });
 
-            // Filtros colapsables móviles
             inicializarFiltrosColapsables();
         }
 
         // ============================================================
         // LOGIN LISTENERS
         // ============================================================
-        document.getElementById('login-btn-cancelar').addEventListener('click', volverAPasoUsuario);
-        document.getElementById('login-btn-ingresar').addEventListener('click', intentarLogin);
-        document.getElementById('login-pin-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') intentarLogin(); });
-        document.getElementById('login-btn-cancelar-nuevo').addEventListener('click', volverAPasoUsuario);
-        document.getElementById('login-btn-guardar-pin').addEventListener('click', guardarNuevoPinLogin);
-        document.getElementById('login-pin-nuevo-confirmar').addEventListener('keypress', function(e) { if (e.key === 'Enter') guardarNuevoPinLogin(); });
+        (function conectarListenersLogin() {
+            var btn;
+            btn = document.getElementById('login-btn-cancelar');
+            if (btn) btn.addEventListener('click', volverAPasoUsuario);
+            btn = document.getElementById('login-btn-ingresar');
+            if (btn) btn.addEventListener('click', intentarLogin);
+            btn = document.getElementById('login-pin-input');
+            if (btn) btn.addEventListener('keypress', function(e) { if (e.key === 'Enter') intentarLogin(); });
+            btn = document.getElementById('login-btn-cancelar-nuevo');
+            if (btn) btn.addEventListener('click', volverAPasoUsuario);
+            btn = document.getElementById('login-btn-guardar-pin');
+            if (btn) btn.addEventListener('click', guardarNuevoPinLogin);
+            btn = document.getElementById('login-pin-nuevo-confirmar');
+            if (btn) btn.addEventListener('keypress', function(e) { if (e.key === 'Enter') guardarNuevoPinLogin(); });
+        })();
 
         // ============================================================
-        // BOOT
+        // BOOT (con protección contra errores)
         // ============================================================
         (async function boot() {
-            const temaInicial = localStorage.getItem(PREF_TEMA) || 'dark';
-            document.documentElement.setAttribute('data-theme', temaInicial);
-            await inicializarUsuariosSiEsNecesario();
-            cargarDatosLocal();
-            if (usuarios.length === 0) {
-                const admin = await crearUsuarioAdminInicial();
-                usuarios = [admin];
-                guardarUsuarios();
-            }
-            const sg = localStorage.getItem(PREF_SIDEBAR) === '1';
-            aplicarSidebarColapsado(sg);
-            aplicarTema(temaInicial);
-            const sesion = cargarSesion();
-            if (sesion) {
-                const u = encontrarUsuario(sesion.username);
-                if (u) {
-                    usuarioActual = { username: u.username, nombre: u.nombre, rol: u.rol, admin: u.admin };
-                    iniciarAplicacion();
-                    return;
-                } else {
-                    localStorage.removeItem(PREF_SESION);
+            try {
+                const temaInicial = localStorage.getItem(PREF_TEMA) || 'dark';
+                document.documentElement.setAttribute('data-theme', temaInicial);
+                await inicializarUsuariosSiEsNecesario();
+                cargarDatosLocal();
+                if (usuarios.length === 0) {
+                    const admin = await crearUsuarioAdminInicial();
+                    usuarios = [admin];
+                    guardarUsuarios();
+                }
+                const sg = localStorage.getItem(PREF_SIDEBAR) === '1';
+                aplicarSidebarColapsado(sg);
+                aplicarTema(temaInicial);
+                const sesion = cargarSesion();
+                if (sesion) {
+                    const u = encontrarUsuario(sesion.username);
+                    if (u) {
+                        usuarioActual = { username: u.username, nombre: u.nombre, rol: u.rol, admin: u.admin };
+                        iniciarAplicacion();
+                        return;
+                    } else {
+                        localStorage.removeItem(PREF_SESION);
+                    }
+                }
+                mostrarPantallaLogin();
+            } catch (err) {
+                console.error('❌ Error en boot:', err);
+                // Fallback: mostrar login de todas formas
+                try {
+                    if (usuarios.length === 0) {
+                        const admin = await crearUsuarioAdminInicial();
+                        usuarios = [admin];
+                        guardarUsuarios();
+                    }
+                    mostrarPantallaLogin();
+                } catch (e2) {
+                    console.error('❌ Error de fallback:', e2);
+                    mostrarNotificacion('Error iniciando la app: ' + err.message, 'error');
                 }
             }
-            mostrarPantallaLogin();
         })();
     </script>
 </body>
