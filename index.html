@@ -1619,6 +1619,42 @@
             .calendario-grid .dia .evento { font-size: 8px; }
             .historial-stats { grid-template-columns: 1fr; }
         }
+      /* ============================================ */
+/* LOGO PERSONALIZADO                             */
+/* ============================================ */
+.login-logo img.logo-img-login {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border-radius: 50%;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    background: var(--color-bg-terciario);
+    padding: 4px;
+}
+
+.logo img.logo-img-sidebar {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--color-bg-terciario);
+    padding: 2px;
+}
+
+.sidebar.collapsed .logo img.logo-img-sidebar {
+    width: 36px;
+    height: 36px;
+}
+
+@media (max-width: 768px) {
+    .login-logo img.logo-img-login {
+        width: 110px;
+        height: 110px;
+    }
+}  
     </style>
 </head>
 <body>
@@ -1631,7 +1667,7 @@
     <!-- PANTALLA DE LOGIN -->
     <div class="pantalla-login" id="pantalla-login">
         <div class="login-card">
-            <div class="login-logo"><i class="fas fa-camera-retro"></i></div>
+            <div class="login-logo"><img src="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg" alt="Logo JFR Media" class="logo-img-login"></div>
             <div class="login-titulo">Registro PDA</div>
             <div class="login-subtitulo">Sistema de gestión · JFR Media</div>
             <div class="login-paso activo" id="login-paso-usuario">
@@ -1674,7 +1710,7 @@
     <!-- APLICACIÓN PRINCIPAL -->
     <div class="app-container oculto" id="app-container">
         <nav class="sidebar" id="sidebar">
-            <div class="logo"><i class="fas fa-camera"></i><span>Registro PDA</span></div>
+            <div class="logo"><img src="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg" alt="Logo" class="logo-img-sidebar"><span>Registro PDA</span></div>
             <div class="user-box">
                 <div class="user-avatar" id="user-avatar">U</div>
                 <div class="user-info">
