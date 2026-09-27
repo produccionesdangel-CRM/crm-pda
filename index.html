@@ -1818,36 +1818,373 @@
         /* ─────── FIN @CSS-MODALS-COMPROBANTE ─────── */
 
         /* ─────── @CSS-MODALS-IMPRESION ─────── */
-        #print-doc { max-width: 700px; margin: 0 auto; padding: 15px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #0d0d0d; line-height: 1.4; }
-        #print-doc h1 { font-size: 16px; margin: 0 0 8px; text-align: center; border-bottom: 2px solid #333; padding-bottom: 6px; color: #0d0d0d; }
-        #print-doc .sec { margin-bottom: 6px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 3px; background: #fafafa; }
-        #print-doc .sec-title { font-weight: 600; font-size: 12px; border-bottom: 1px solid #ddd; padding-bottom: 3px; margin-bottom: 3px; }
-        #print-doc .fila { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee; }
-        #print-doc .fila:last-child { border-bottom: none; }
-        #print-doc .fila .lbl { font-weight: 600; color: #333; }
-        #print-doc .fila .val { color: #0d0d0d; text-align: right; }
-        #print-doc .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
-        #print-doc table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 4px; }
-        #print-doc table th { background: #f0f0f0; color: #0d0d0d; border: 1px solid #ccc; padding: 3px 6px; text-align: left; font-size: 10px; }
-        #print-doc table td { border: 1px solid #ccc; padding: 3px 6px; color: #0d0d0d; font-size: 10px; }
-        #print-doc .pie { text-align: center; border-top: 1px solid #ccc; padding-top: 6px; margin-top: 6px; font-size: 9px; color: #999; }
-        #print-doc .verde { color: #4caf50; font-weight: 600; }
-        #print-doc .naranja { color: #ff9800; font-weight: 700; }
-        #print-doc .negrita { font-weight: 700; }
+               /* ─────── @CSS-MODALS-IMPRESION ─────── */
+        /* Estilos del contrato imprimible v4.3
+           Paleta: 2 colores de texto (negro puro + gris medio)
+           Optimizado para escala de grises y ahorro de tinta */
+        .hoja-contrato {
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+            background: #ffffff;
+            color: #000000;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            min-height: 1024px;
+        }
+
+        /* ─── Barra superior ─── */
+        .hoja-contrato .barra-superior {
+            height: 75px;
+            background: linear-gradient(135deg, #7b2cbf 0%, #9d4edd 30%, #c77dff 50%, #e0aaff 70%, #7b2cbf 100%);
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            padding: 0 20px;
+            gap: 12px;
+            position: relative;
+            flex-shrink: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .hoja-contrato .barra-superior::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #7b2cbf 0%, #c77dff 30%, #e91e63 55%, #3a86ff 80%, #0d0d0d 100%);
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .hoja-contrato .barra-izq { color: #ffffff; line-height: 1.15; }
+        .hoja-contrato .barra-izq .nombre-negocio {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .hoja-contrato .barra-izq .lema-negocio {
+            font-size: 9px;
+            color: #f0d9ff;
+            font-style: italic;
+            letter-spacing: 0.3px;
+            margin-top: 1px;
+        }
+
+        .hoja-contrato .barra-centro { display: flex; justify-content: center; }
+        .hoja-contrato .logo-circular {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: #0d0d0d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ffffff;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .hoja-contrato .logo-circular img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .hoja-contrato .barra-der {
+            color: #ffffff;
+            font-size: 8.5px;
+            line-height: 1.35;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .hoja-contrato .barra-der .contacto-nombre {
+            font-weight: 700;
+            font-size: 9px;
+            letter-spacing: 0.3px;
+            margin-bottom: 1px;
+        }
+        .hoja-contrato .barra-der .contacto-linea {
+            color: #f0d9ff;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            justify-content: flex-end;
+        }
+        .hoja-contrato .barra-der .contacto-linea i {
+            font-size: 8px;
+            opacity: 0.9;
+        }
+
+        /* ─── Contenido ─── */
+        .hoja-contrato .contenido {
+            flex: 1;
+            padding: 22px 32px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* ─── Título ─── */
+        .hoja-contrato .titulo-doc {
+            text-align: center;
+            padding-bottom: 8px;
+            border-bottom: 1.5px solid #000000;
+            margin-bottom: 4px;
+        }
+        .hoja-contrato .titulo-doc h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #000000;
+            margin-bottom: 2px;
+        }
+        .hoja-contrato .titulo-doc .sub {
+            font-size: 10px;
+            color: #666666;
+            letter-spacing: 1px;
+        }
+
+        /* ─── Secciones ─── */
+        .hoja-contrato .seccion {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .hoja-contrato .seccion-titulo {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #000000;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #cccccc;
+        }
+
+        .hoja-contrato .grid-datos {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px 20px;
+        }
+        .hoja-contrato .grid-datos.col-3 { grid-template-columns: repeat(3, 1fr); }
+        .hoja-contrato .grid-datos.col-1 { grid-template-columns: 1fr; }
+
+        .hoja-contrato .dato {
+            display: flex;
+            gap: 6px;
+            align-items: baseline;
+            padding: 2px 0;
+            font-size: 10.5px;
+        }
+        .hoja-contrato .dato .lbl {
+            color: #666666;
+            font-weight: 600;
+            font-size: 9.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            flex-shrink: 0;
+        }
+        .hoja-contrato .dato .val {
+            color: #000000;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        /* ─── Caja financiera ─── */
+        .hoja-contrato .caja-financiera {
+            background: #f5f5f5;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin-top: 4px;
+        }
+        .hoja-contrato .caja-financiera .fila {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-size: 11px;
+        }
+        .hoja-contrato .caja-financiera .fila .lbl { color: #666666; }
+        .hoja-contrato .caja-financiera .fila .vlr { font-weight: 600; color: #000000; }
+        .hoja-contrato .caja-financiera .fila.total {
+            border-top: 1.5px solid #000000;
+            margin-top: 4px;
+            padding-top: 6px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .hoja-contrato .caja-financiera .fila.total .vlr {
+            color: #000000;
+            font-size: 15px;
+        }
+        .hoja-contrato .caja-financiera .fila.saldo {
+            border-top: 1.5px solid #000000;
+            margin-top: 4px;
+            padding-top: 6px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .hoja-contrato .caja-financiera .fila.saldo .vlr {
+            color: #000000;
+            font-size: 15px;
+        }
+
+        /* ─── Tablas ─── */
+        .hoja-contrato table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-top: 4px;
+        }
+        .hoja-contrato table thead th {
+            background: #f0f0f0;
+            color: #000000;
+            padding: 5px 8px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1.5px solid #000000;
+        }
+        .hoja-contrato table tbody td {
+            padding: 5px 8px;
+            border-bottom: 1px solid #e0e0e0;
+            color: #000000;
+        }
+        .hoja-contrato table tbody tr:last-child td { border-bottom: none; }
+        .hoja-contrato table .text-right { text-align: right; }
+        .hoja-contrato table .codigo {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #000000;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* ─── Notas ─── */
+        .hoja-contrato .notas-caja {
+            background: #fafafa;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 10.5px;
+            color: #000000;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        /* ─── Firmas ─── */
+        .hoja-contrato .firma-seccion {
+            margin-top: auto;
+            padding-top: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: end;
+        }
+        .hoja-contrato .firma-bloque { text-align: center; }
+        .hoja-contrato .firma-linea {
+            height: 1.5px;
+            background: #000000;
+            margin-bottom: 6px;
+        }
+        .hoja-contrato .firma-nombre {
+            font-size: 10px;
+            font-weight: 700;
+            color: #000000;
+            letter-spacing: 0.5px;
+        }
+        .hoja-contrato .firma-rol {
+            font-size: 9px;
+            color: #666666;
+            letter-spacing: 0.5px;
+            margin-top: 1px;
+        }
+
+        /* ─── Barra inferior ─── */
+        .hoja-contrato .barra-inferior {
+            height: 30px;
+            background: linear-gradient(135deg, #0d0d0d 0%, #2d1b4e 30%, #7b2cbf 55%, #e91e63 80%, #3a86ff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: #ffffff;
+            font-size: 8.5px;
+            letter-spacing: 1px;
+            position: relative;
+            flex-shrink: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .hoja-contrato .barra-inferior::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0d0d0d 0%, #7b2cbf 30%, #e91e63 55%, #3a86ff 80%, #7b2cbf 100%);
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .hoja-contrato .barra-inferior .marca {
+            color: #ffffff;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-size: 9px;
+        }
+        /* ─────── FIN @CSS-MODALS-IMPRESION ─────── */
         /* ─────── FIN @CSS-MODALS-IMPRESION ─────── */
 
         /* ─────── @CSS-MODALS-PRINT-MEDIA ─────── */
-        @media print {
+              @media print {
+            @page { 
+                margin: 10mm;
+                size: A4;
+            }
             .sidebar, .menu, .filtros-container, .header-actions, .sync-status,
             .seccion-header, .mosaico-footer, .modal, .notificacion,
             .calendario-container, .leyenda-calendario, .calendario-nav,
             .calendario-grid, .form-acciones, .credito-footer, .pantalla-login,
             .user-box, .btn-toggle-filtros { display: none !important; }
-            body { background: white !important; color: black !important; overflow: visible !important; }
-            .main-content { padding: 0 !important; margin: 0 !important; overflow: visible !important; height: auto !important; background: white !important; }
+            body { 
+                background: white !important; 
+                color: black !important; 
+                overflow: visible !important; 
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .main-content { 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                overflow: visible !important; 
+                height: auto !important; 
+                background: white !important; 
+            }
             .seccion { display: block !important; padding: 0 !important; margin: 0 !important; }
-            #impresion-contenedor { display: block !important; padding: 0 !important; margin: 0 !important; background: white !important; }
-        }
+            #impresion-contenedor { 
+                display: block !important; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                background: white !important; 
+            }
+            /* Evita cortes de página feos dentro de bloques clave */
+            .hoja-contrato .seccion, 
+            .hoja-contrato .caja-financiera,
+            .hoja-contrato .firma-seccion { page-break-inside: avoid; }
+        } 
         /* ─────── FIN @CSS-MODALS-PRINT-MEDIA ─────── */
 
         /* ═══════════════════════════════════════════════════════════ */
@@ -6793,38 +7130,201 @@ var DATOS_EMISOR = {
 
         // ─────── @JS-PRINT-CONTRATO ───────
         // Genera HTML optimizado para impresión y dispara window.print()
-        function generarVistaImpresion(clienteId, contratoId) {
-            const c = obtenerCliente(clienteId); if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
-            const co = c.contratos.find(function(x) { return x.id === contratoId; }); if (!co) { mostrarNotificacion('Contrato no encontrado', 'error'); return; }
+               function generarVistaImpresion(clienteId, contratoId) {
+            const c = obtenerCliente(clienteId); 
+            if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
+            const co = c.contratos.find(function(x) { return x.id === contratoId; }); 
+            if (!co) { mostrarNotificacion('Contrato no encontrado', 'error'); return; }
+            
             const tot = calcularTotalesContrato(co);
             const in_ = obtenerNombreItemContrato(co);
             const he = co.horaEvento ? ' ' + co.horaEvento + ' hrs' : '';
             const hr = co.horaRecepcion ? ' ' + co.horaRecepcion + ' hrs' : '';
-            const f = function(l, v) { return '<div class="fila"><span class="lbl">' + l + ':</span><span class="val">' + v + '</span></div>'; };
-            let html = '<div id="print-doc"><h1>CONTRATO DE SERVICIOS</h1>' +
-                '<div class="sec">' + f('Cliente', c.nombre) + f('Teléfono', c.telefono || 'N/A') + f('Email', c.email || 'N/A') + '</div>' +
-                '<div class="sec"><div class="grid-2">' + f('Festejado', co.festejado || 'N/A') + f('Tipo', co.tipo === 'paquete' ? 'Paquete' : 'Solo Servicio') + f('Estado', co.estado || 'Pendiente') + f('Fecha Contrato', formatearFecha(co.fechaContrato)) + f('Fecha Evento', formatearFecha(co.fechaEvento) + he) + f('Paquete/Servicio', in_ || 'N/A') + '</div></div>' +
-                '<div class="sec"><div class="grid-2">' + f('Evento Religioso', co.direccionEvento || 'N/A') + f('Recepción', (co.direccionRecepcion || 'N/A') + hr) + '</div></div>' +
-                '<div class="sec">' + f('Precio Base', formatearMoneda(co.precioBase || 0)) + f('Precio Final', formatearMoneda(co.precioFinal || 0)) +
-                (tot.totalCargos > 0 ? f('Cargos Extras', formatearMoneda(tot.totalCargos)) : '') +
-                f('Total a Pagar', '<span class="negrita">' + formatearMoneda(tot.totalAPagar) + '</span>') +
-                '<div class="fila"><span class="lbl" style="color:#4caf50;">Total Pagado:</span><span class="val verde">' + formatearMoneda(tot.totalPagos) + '</span></div>' +
-                '<div class="fila"><span class="lbl" style="color:' + (tot.saldoPendiente === 0 ? '#4caf50' : '#ff9800') + ';">Saldo Pendiente:</span><span class="val ' + (tot.saldoPendiente === 0 ? 'verde' : 'naranja') + '">' + formatearMoneda(tot.saldoPendiente) + '</span></div>' +
-                '</div>';
+            const tl = co.tipo === 'paquete' ? 'Paquete' : 'Solo Servicio';
+
+            // ─── Helper: fila de dato ───
+            const dato = function(lbl, val) {
+                return '<div class="dato"><span class="lbl">' + lbl + '</span><span class="val">' + (val || 'No especificado') + '</span></div>';
+            };
+
+            // ─── Lista de servicios adicionales ───
+            let serviciosTxt = '';
+            if (co.tipo === 'paquete' && co.serviciosIds && co.serviciosIds.length > 0) {
+                serviciosTxt = co.serviciosIds.map(function(id) { return obtenerNombreServicio(id); }).filter(function(n) { return n !== 'Servicio no encontrado'; }).join(', ');
+            } else if (co.tipo === 'solo-servicio') {
+                serviciosTxt = in_;
+            }
+
+            // ─── Tabla de pagos ───
+            let pagosTablaHTML = '';
             if (tot.pagosValidos.length > 0) {
-                html += '<div class="sec"><div class="sec-title">Pagos</div><table><thead><tr><th>Fecha</th><th>Código</th><th style="text-align:right;">Monto</th><th>Registrado por</th><th>Nota</th></tr></thead><tbody>' +
-                    tot.pagosValidos.map(function(p) { return '<tr><td>' + formatearFechaHora(p.fecha) + '</td><td style="font-family:monospace;font-size:9px;">' + (p.codigo || '-') + '</td><td style="text-align:right;font-weight:600;">' + formatearMoneda(p.monto) + '</td><td>' + (p.registradoPor || '-') + '</td><td>' + (p.nota || '') + '</td></tr>'; }).join('') +
+                pagosTablaHTML = '<div class="seccion"><div class="seccion-titulo">Pagos registrados</div>' +
+                    '<table><thead><tr>' +
+                    '<th>Fecha</th><th>Código</th><th class="text-right">Monto</th><th>Registrado por</th><th>Nota</th>' +
+                    '</tr></thead><tbody>' +
+                    tot.pagosValidos.map(function(p) {
+                        return '<tr>' +
+                            '<td>' + formatearFechaHora(p.fecha) + '</td>' +
+                            '<td class="codigo">' + (p.codigo || '-') + '</td>' +
+                            '<td class="text-right"><strong>' + formatearMoneda(p.monto) + '</strong></td>' +
+                            '<td>' + (p.registradoPor || '-') + '</td>' +
+                            '<td>' + (p.nota || '-') + '</td>' +
+                            '</tr>';
+                    }).join('') +
                     '</tbody></table></div>';
             }
-            if (co.notas) html += '<div class="sec"><div class="sec-title">Notas</div><div style="font-size:11px;color:#555;">' + co.notas + '</div></div>';
-            html += '<div class="pie">Generado: ' + formatearFechaHora(obtenerFechaHoraActual()) + ' | PDA v' + VERSION + ' - JFR Media</div></div>';
+
+            // ─── Cargos extras (si hay) ───
+            let cargosHTML = '';
+            if (tot.cargosValidos.length > 0) {
+                cargosHTML = '<div class="seccion"><div class="seccion-titulo">Cargos extras</div>' +
+                    '<table><thead><tr>' +
+                    '<th>Fecha</th><th>Descripción</th><th class="text-right">Monto</th><th>Registrado por</th>' +
+                    '</tr></thead><tbody>' +
+                    tot.cargosValidos.map(function(c) {
+                        return '<tr>' +
+                            '<td>' + formatearFechaHora(c.fecha) + '</td>' +
+                            '<td>' + (c.nota || '-') + '</td>' +
+                            '<td class="text-right"><strong>+' + formatearMoneda(c.monto) + '</strong></td>' +
+                            '<td>' + (c.registradoPor || '-') + '</td>' +
+                            '</tr>';
+                    }).join('') +
+                    '</tbody></table></div>';
+            }
+
+            // ─── Bloque de descuento (si hay) ───
+            let descuentoFila = '';
+            if (co.descuentoMonto && co.descuentoMonto > 0) {
+                descuentoFila = '<div class="fila"><span class="lbl">Descuento: ' + (co.descuentoDescripcion || 'Aplicado') + '</span><span class="vlr">-' + formatearMoneda(co.descuentoMonto) + '</span></div>';
+            }
+
+            // ─── HTML completo del contrato ───
+            const html = '<div id="print-doc" class="hoja-contrato">' +
+
+                // ═══ BARRA SUPERIOR ═══
+                '<div class="barra-superior">' +
+                    '<div class="barra-izq">' +
+                        '<div class="nombre-negocio">' + EMISOR_COMPROBANTE + '</div>' +
+                        '<div class="lema-negocio">' + (typeof LEMA_EMISOR !== 'undefined' ? LEMA_EMISOR : 'El ángel de tu evento') + '</div>' +
+                    '</div>' +
+                    '<div class="barra-centro">' +
+                        '<div class="logo-circular">' +
+                            '<img src="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg" alt="Logo">' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="barra-der">' +
+                        '<div class="contacto-nombre">' + (typeof DATOS_EMISOR !== 'undefined' ? DATOS_EMISOR.nombre : 'Adolfo Pérez Aguirre') + '</div>' +
+                        '<div class="contacto-linea"><i class="fas fa-phone"></i> ' + (typeof DATOS_EMISOR !== 'undefined' ? DATOS_EMISOR.telefono : '878 785 1685') + '</div>' +
+                        '<div class="contacto-linea"><i class="fas fa-map-marker-alt"></i> ' + (typeof DATOS_EMISOR !== 'undefined' ? DATOS_EMISOR.direccion : 'San Martín 410, Col. Vista Hermosa') + '</div>' +
+                        '<div class="contacto-linea"><i class="fas fa-city"></i> ' + (typeof DATOS_EMISOR !== 'undefined' ? DATOS_EMISOR.ciudad : 'Piedras Negras, Coahuila') + '</div>' +
+                        '<div class="contacto-linea"><i class="fas fa-envelope"></i> ' + (typeof DATOS_EMISOR !== 'undefined' ? DATOS_EMISOR.email : 'd_angelestudio@hotmail.com') + '</div>' +
+                    '</div>' +
+                '</div>' +
+
+                // ═══ CONTENIDO ═══
+                '<div class="contenido">' +
+
+                    // Título
+                    '<div class="titulo-doc">' +
+                        '<h1>Contrato de Servicios</h1>' +
+                        '<div class="sub">Documento oficial · Registro PDA</div>' +
+                    '</div>' +
+
+                    // Datos del cliente
+                    '<div class="seccion">' +
+                        '<div class="seccion-titulo">Datos del cliente</div>' +
+                        '<div class="grid-datos col-3">' +
+                            dato('Nombre:', c.nombre) +
+                            dato('Teléfono:', c.telefono) +
+                            dato('Email:', c.email) +
+                        '</div>' +
+                    '</div>' +
+
+                    // Datos del evento
+                    '<div class="seccion">' +
+                        '<div class="seccion-titulo">Datos del evento</div>' +
+                        '<div class="grid-datos col-3">' +
+                            dato('Festejado:', co.festejado) +
+                            dato('Fecha:', formatearFecha(co.fechaEvento)) +
+                            dato('Hora:', co.horaEvento ? co.horaEvento + ' hrs' : 'Sin especificar') +
+                            dato('Tipo:', tl) +
+                            dato('Estado:', co.estado) +
+                            dato('Fecha contrato:', formatearFecha(co.fechaContrato)) +
+                        '</div>' +
+                    '</div>' +
+
+                    // Ubicaciones
+                    '<div class="seccion">' +
+                        '<div class="seccion-titulo">Ubicaciones</div>' +
+                        '<div class="grid-datos">' +
+                            dato('Evento religioso:', co.direccionEvento || 'No especificado') +
+                            dato('Recepción:', (co.direccionRecepcion || 'No especificado') + (co.horaRecepcion ? ' · ' + co.horaRecepcion + ' hrs' : '')) +
+                        '</div>' +
+                    '</div>' +
+
+                    // Paquete y servicios
+                    '<div class="seccion">' +
+                        '<div class="seccion-titulo">Paquete y servicios contratados</div>' +
+                        '<div class="grid-datos col-1">' +
+                            (co.tipo === 'paquete' ? dato('Paquete:', obtenerNombrePaquete(co.paqueteId)) : dato('Servicio:', in_)) +
+                            (serviciosTxt ? dato('Servicios adicionales:', serviciosTxt) : '') +
+                        '</div>' +
+                    '</div>' +
+
+                    // Resumen financiero
+                    '<div class="caja-financiera">' +
+                        '<div class="fila"><span class="lbl">Precio base (paquete + servicios)</span><span class="vlr">' + formatearMoneda(tot.precioBase) + '</span></div>' +
+                        (tot.totalCargos > 0 ? '<div class="fila"><span class="lbl">Cargos extras</span><span class="vlr">+' + formatearMoneda(tot.totalCargos) + '</span></div>' : '') +
+                        descuentoFila +
+                        '<div class="fila total"><span class="lbl">Total a pagar</span><span class="vlr">' + formatearMoneda(tot.totalAPagar) + '</span></div>' +
+                        '<div class="fila"><span class="lbl">Total pagado</span><span class="vlr">' + formatearMoneda(tot.totalPagos) + '</span></div>' +
+                        '<div class="fila saldo"><span class="lbl">Saldo pendiente</span><span class="vlr">' + formatearMoneda(tot.saldoPendiente) + '</span></div>' +
+                    '</div>' +
+
+                    // Tabla de pagos
+                    pagosTablaHTML +
+
+                    // Cargos extras
+                    cargosHTML +
+
+                    // Notas
+                    (co.notas ? '<div class="seccion"><div class="seccion-titulo">Notas</div><div class="notas-caja">' + co.notas + '</div></div>' : '') +
+
+                    // Firmas
+                    '<div class="firma-seccion">' +
+                        '<div class="firma-bloque">' +
+                            '<div class="firma-linea"></div>' +
+                            '<div class="firma-nombre">' + c.nombre + '</div>' +
+                            '<div class="firma-rol">Firma del cliente</div>' +
+                        '</div>' +
+                        '<div class="firma-bloque">' +
+                            '<div class="firma-linea"></div>' +
+                            '<div class="firma-nombre">' + (typeof DATOS_EMISOR !== 'undefined' ? DATOS_EMISOR.nombre : 'Adolfo Pérez Aguirre') + '</div>' +
+                            '<div class="firma-rol">' + EMISOR_COMPROBANTE + '</div>' +
+                        '</div>' +
+                    '</div>' +
+
+                '</div>' +
+
+                // ═══ BARRA INFERIOR ═══
+                '<div class="barra-inferior">' +
+                    '<span class="marca">Registro PDA · JFR Media</span>' +
+                    '<span>Generado: ' + formatearFechaHora(obtenerFechaHoraActual()) + ' · v' + VERSION + '</span>' +
+                '</div>' +
+
+            '</div>';
+
             const cont = document.getElementById('impresion-contenedor');
             cont.innerHTML = html;
             cont.style.display = 'block';
+
             const ot = document.title;
             document.title = 'Contrato - ' + c.nombre;
             window.print();
-            setTimeout(function() { cont.style.display = 'none'; document.title = ot; }, 500);
+            setTimeout(function() {
+                cont.style.display = 'none';
+                document.title = ot;
+            }, 500);
             mostrarNotificacion('Enviando a impresión...', 'info');
         }
         // ─────── FIN @JS-PRINT-CONTRATO ───────
