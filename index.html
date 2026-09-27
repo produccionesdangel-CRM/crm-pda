@@ -1,17 +1,74 @@
 <!DOCTYPE html>
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  REGISTRO PDA — v4.0                                                 ║
+║  Estudio Fotográfico · JFR MEDIA                                     ║
+║                                                                      ║
+║  ─────────────────────────────────────────────────────────────────   ║
+║  📌 ÍNDICE GENERAL DE MARCADORES                                     ║
+║  ─────────────────────────────────────────────────────────────────   ║
+║  Busca con Ctrl+F el marcador para saltar a ese bloque.              ║
+║                                                                      ║
+║  [00] @META .................... Metadatos y bloque v4.0             ║
+║  [01] @HEAD .................... Head / CSS / scripts externos       ║
+║  [02] @CSS-VARS ................ Variables de tema                    ║
+║  [03] @CSS-GLOBAL .............. Reset y estilos base                 ║
+║  [04] @CSS-LAYOUT .............. Login / Sidebar / Main               ║
+║  [05] @CSS-SECTIONS ............ Estilos de secciones                 ║
+║  [06] @CSS-MODALS .............. Modales y formularios                ║
+║  [07] @CSS-MOBILE .............. Media queries                        ║
+║  [08] @HTML-STRUCT ............. Estructura HTML completa             ║
+║  [09] @JS-CONFIG ............... Configuración y constantes           ║
+║  [10] @JS-FIREBASE ............. Firebase init                        ║
+║  [11] @JS-STATE ................ Estado global                        ║
+║  [12] @JS-UTILS ................ Permisos y utilidades                ║
+║  [13] @JS-USERS ................ Usuarios / Sesión / PIN              ║
+║  [14] @JS-PERSIST .............. Persistencia                         ║
+║  [15] @JS-UI ................... UI base (modal / tema / sidebar)     ║
+║  [16] @JS-CRUD ................. CRUD Factory                         ║
+║  [17] @JS-RENDER ............... Render de mosaicos                   ║
+║  [18] @JS-PROSPECTOS ........... Prospectos                           ║
+║  [19] @JS-CLIENTES ............. Clientes                             ║
+║  [20] @JS-TAREAS ............... Tareas y buscador                    ║
+║  [21] @JS-CONTRATOS ............ Contratos                            ║
+║  [22] @JS-COMPROBANTES ......... Comprobantes / WhatsApp / Email      ║
+║  [23] @JS-CALENDARIO ........... Calendario / Google Calendar         ║
+║  [24] @JS-INFORMES ............. Informes                             ║
+║  [25] @JS-HISTORIAL ............ Historial                            ║
+║  [26] @JS-ADMIN-USERS .......... Gestión de usuarios (admin)          ║
+║  [27] @JS-PRINT ................ Impresión de contratos               ║
+║  [28] @JS-LOGIN ................ Login y arranque                     ║
+║  [29] @JS-LISTENERS ............ Event listeners globales             ║
+║  [30] @JS-BOOT ................. Boot e inicialización                ║
+║                                                                      ║
+║  ─────────────────────────────────────────────────────────────────   ║
+║  📝 CONVENCIÓN:                                                      ║
+║  @BLOQUE          → bloque principal del archivo                     ║
+║  @BLOQUE-FUNCION  → función específica dentro de un bloque           ║
+║  ▼▼▼ INICIO / ▲▲▲ FIN → límites de bloques largos                    ║
+║  ─────────────────────────────────────────────────────────────────   ║
+║  📚 Ver CHANGELOG.md para historial completo de versiones            ║
+╚══════════════════════════════════════════════════════════════════════╝
+-->
 <html lang="es">
 <head>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- @HEAD — Head, metas, dependencias externas                  -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Registro PDA v3.9 - Estudio Fotografía</title>
+    <title>Registro PDA v4.0 - Estudio Fotografía</title>
     <link rel="icon" type="image/jpeg" href="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @CSS-VARS — Variables de tema                                */
+        /* ═══════════════════════════════════════════════════════════ */
         :root { --sidebar-width: 220px; --sidebar-width-collapsed: 64px; --border-radius: 8px; --transition: 0.25s ease; }
 
+        /* ─────── @CSS-VARS-DARK ─────── */
         html[data-theme="dark"] {
             --color-bg-primario: #0d0d0d; --color-bg-secundario: #1a1a1a; --color-bg-terciario: #2a2a2a;
             --color-bg-hover: #3a3a3a; --color-bg-card: #1f1f1f; --color-bg-card-hover: #262626;
@@ -27,6 +84,9 @@
             --color-shadow: rgba(0, 0, 0, 0.5); --color-shadow-hover: rgba(0, 0, 0, 0.7);
             --color-modal-overlay: rgba(0, 0, 0, 0.8);
         }
+        /* ─────── FIN @CSS-VARS-DARK ─────── */
+
+        /* ─────── @CSS-VARS-LIGHT ─────── */
         html[data-theme="light"] {
             --color-bg-primario: #f5f5f7; --color-bg-secundario: #ffffff; --color-bg-terciario: #eeeeee;
             --color-bg-hover: #e0e0e0; --color-bg-card: #ffffff; --color-bg-card-hover: #fafafa;
@@ -42,6 +102,9 @@
             --color-shadow: rgba(0, 0, 0, 0.08); --color-shadow-hover: rgba(0, 0, 0, 0.15);
             --color-modal-overlay: rgba(0, 0, 0, 0.4);
         }
+        /* ─────── FIN @CSS-VARS-LIGHT ─────── */
+
+        /* ─────── @CSS-VARS-OTONO ─────── */
         html[data-theme="otono"] {
             --color-bg-primario: #f8f4eb; --color-bg-secundario: #fffaf0; --color-bg-terciario: #efe6d3;
             --color-bg-hover: #e5d9c1; --color-bg-card: #fffbf3; --color-bg-card-hover: #fdf5e6;
@@ -57,6 +120,62 @@
             --color-shadow: rgba(61, 50, 38, 0.15); --color-shadow-hover: rgba(61, 50, 38, 0.25);
             --color-modal-overlay: rgba(61, 50, 38, 0.5);
         }
+        /* ─────── FIN @CSS-VARS-OTONO ─────── */
+        
+                /* ─────── @CSS-VARS-ANGEL ─────── */
+        /* Tema Ángel: fondo beige claro + acentos lila, rosa y negro */
+        html[data-theme="angel"] {
+            /* Fondos en beige con matiz lila (dos tonalidades) */
+            --color-bg-primario: #faf5ff;      /* beige muy claro - fondo general */
+            --color-bg-secundario: #f3e8ff;    /* beige con tinte lila - cards/paneles */
+            --color-bg-terciario: #ece0f5;     /* beige saturado - sidebar/chips */
+            --color-bg-hover: #e0cff5;         /* hover estados */
+            --color-bg-card: #fdfaff;          /* mosaicos casi blancos */
+            --color-bg-card-hover: #f8f0ff;    /* hover de mosaicos */
+
+            /* Textos: negro con matiz lila + lila grisáceo para secundarios */
+            --color-texto-primario: #1a0d2e;
+            --color-texto-secundario: #6b5580;
+
+            /* Bordes en lila suave */
+            --color-borde: #d4c4e8;
+            --color-borde-suave: #e8ddf0;
+
+            /* Acento principal: lila */
+            --color-acento: #c77dff;
+            --color-acento-hover: #b565e8;
+            --color-acento-contraste: #ffffff;
+
+            /* Colores semánticos adaptados a la paleta */
+            --color-verde: #10b981;
+            --color-rojo: #ef4444;
+            --color-amarillo: #f59e0b;
+            --color-azul: #3a86ff;
+            --color-naranja: #f59e0b;
+            --color-morado: #a855f7;
+            --color-cian: #06b6d4;
+            --color-rosa: #ec4899;
+            --color-whatsapp: #25D366;
+
+            /* Sidebar: beige más saturado con texto negro-lila */
+            --color-sidebar-bg: #ece0f5;
+            --color-sidebar-texto: #6b5580;
+            --color-sidebar-texto-hover: #1a0d2e;
+            --color-sidebar-hover: rgba(199, 125, 255, 0.15);
+            --color-sidebar-active-bg: rgba(199, 125, 255, 0.25);
+            --color-sidebar-borde: #d4c4e8;
+
+            /* Sombras con matiz lila */
+            --color-shadow: rgba(123, 44, 191, 0.12);
+            --color-shadow-hover: rgba(123, 44, 191, 0.25);
+            --color-modal-overlay: rgba(26, 13, 46, 0.5);
+        }
+        /* ─────── FIN @CSS-VARS-ANGEL ─────── */
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @CSS-GLOBAL — Reset y estilos base                          */
+        /* ═══════════════════════════════════════════════════════════ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         html, body {
             height: 100%; margin: 0; padding: 0;
@@ -68,6 +187,144 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* ─────── @CSS-GLOBAL-BOTONES ─────── */
+        /* Sistema unificado de botones (primario, secundario, etc.) */
+        .btn-primario, .btn-secundario, .btn-verde, .btn-azul, .btn-naranja, .btn-cian, .btn-morado,
+        .btn-imprimir, .btn-calendar, .btn-filtrar, .btn-limpiar, .btn-peligro, .btn-whatsapp, .btn-email {
+            border: none; border-radius: var(--border-radius); cursor: pointer;
+            transition: all 0.2s ease; display: inline-flex; align-items: center;
+            gap: 6px; font-family: inherit;
+        }
+        .btn-primario {
+            background-color: var(--color-acento); color: var(--color-acento-contraste);
+            padding: 10px 20px; font-size: 14px; font-weight: 600;
+        }
+        .btn-primario:hover { background-color: var(--color-acento-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(201, 168, 76, 0.3); }
+        .btn-secundario {
+            background-color: var(--color-bg-terciario); color: var(--color-texto-primario);
+            border: 1px solid var(--color-borde); padding: 8px 16px; font-size: 13px;
+        }
+        .btn-secundario:hover { background-color: var(--color-bg-hover); }
+        .btn-verde { background-color: var(--color-verde); color: #ffffff; padding: 8px 16px; font-size: 13px; }
+        .btn-verde:hover { filter: brightness(1.1); }
+        .btn-azul { background-color: var(--color-azul); color: #ffffff; padding: 8px 16px; font-size: 13px; }
+        .btn-azul:hover { filter: brightness(1.1); }
+        .btn-naranja { background-color: var(--color-naranja); color: #ffffff; padding: 6px 14px; font-size: 12px; }
+        .btn-naranja:hover { filter: brightness(1.1); }
+        .btn-cian { background-color: var(--color-cian); color: #ffffff; padding: 6px 14px; font-size: 12px; }
+        .btn-cian:hover { filter: brightness(1.1); }
+        .btn-morado { background-color: var(--color-morado); color: #ffffff; padding: 6px 14px; font-size: 12px; }
+        .btn-morado:hover { filter: brightness(1.1); }
+        .btn-imprimir { background-color: #1a237e; color: #ffffff; padding: 8px 16px; font-size: 13px; }
+        .btn-imprimir:hover { filter: brightness(1.1); }
+        .btn-calendar { background-color: #4285f4; color: #ffffff; padding: 8px 16px; font-size: 13px; }
+        .btn-calendar:hover { filter: brightness(1.1); }
+        .btn-peligro { background-color: var(--color-rojo); color: #ffffff; padding: 8px 16px; font-size: 13px; }
+        .btn-peligro:hover { filter: brightness(1.1); }
+        .btn-whatsapp { background-color: var(--color-whatsapp); color: #ffffff; padding: 8px 16px; font-size: 13px; }
+        .btn-whatsapp:hover { filter: brightness(1.1); }
+        .btn-email { background-color: #6d4c8a; color: #ffffff; padding: 8px 16px; font-size: 13px; }
+        .btn-email:hover { filter: brightness(1.1); }
+        .btn-eliminar-item {
+            background: none; border: none; color: var(--color-rojo); cursor: pointer;
+            padding: 2px 8px; border-radius: var(--border-radius);
+            font-size: 12px; transition: all 0.2s ease;
+        }
+        .btn-eliminar-item:hover { background-color: var(--color-rojo); color: #ffffff; }
+        .btn-filtrar { background-color: var(--color-azul); color: #ffffff; padding: 8px 20px; font-size: 14px; }
+        .btn-filtrar:hover { filter: brightness(1.1); }
+        .btn-limpiar {
+            background-color: var(--color-bg-terciario); color: var(--color-texto-secundario);
+            border: 1px solid var(--color-borde); padding: 8px 20px; font-size: 14px;
+        }
+        .btn-limpiar:hover { background-color: var(--color-bg-hover); color: var(--color-texto-primario); }
+        button:disabled { opacity: 0.4 !important; cursor: not-allowed !important; }
+        /* ─────── FIN @CSS-GLOBAL-BOTONES ─────── */
+
+        /* ─────── @CSS-GLOBAL-UTILS ─────── */
+        /* Scrollbars, notificaciones, tablas y animaciones */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--color-bg-primario); }
+        ::-webkit-scrollbar-thumb { background: var(--color-bg-terciario); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--color-bg-hover); }
+
+        .notificacion {
+            position: fixed; bottom: 20px; right: 20px;
+            background: var(--color-acento); color: var(--color-acento-contraste);
+            padding: 12px 20px; border-radius: 8px;
+            font-weight: 600; z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease; max-width: 350px;
+        }
+        .notificacion i { margin-right: 8px; }
+        @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100px); opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @keyframes pulse-fast { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.8); } }
+
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        table thead th {
+            text-align: left; padding: 8px 12px;
+            border-bottom: 2px solid var(--color-borde);
+            color: var(--color-texto-secundario);
+            font-weight: 600; font-size: 12px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        table tbody td {
+            padding: 8px 12px; border-bottom: 1px solid var(--color-borde);
+            color: var(--color-texto-primario);
+        }
+        table tbody tr:hover { background-color: var(--color-bg-terciario); }
+
+        .tarjeta-etiqueta {
+            display: inline-block; padding: 2px 10px; border-radius: 12px;
+            font-size: 11px; font-weight: 600; white-space: nowrap;
+        }
+        /* ─────── FIN @CSS-GLOBAL-UTILS ─────── */
+
+        /* ─────── @CSS-GLOBAL-ETIQUETAS ─────── */
+        /* Colores de etiquetas (fases, estados, tipos de tarea) */
+        .etiqueta-interesado { background-color: #4caf50; color: #ffffff; }
+        .etiqueta-cotizacion { background-color: #2196f3; color: #ffffff; }
+        .etiqueta-negociacion { background-color: #ff9800; color: #ffffff; }
+        .etiqueta-contrato { background-color: #9c27b0; color: #ffffff; }
+        .etiqueta-frecuente { background-color: #00bcd4; color: #ffffff; }
+        .etiqueta-cancelado { background-color: #f44336; color: #ffffff; }
+        .etiqueta-inactivo { background-color: #757575; color: #ffffff; }
+        .etiqueta-pendiente { background-color: #ff9800; color: #ffffff; }
+        .etiqueta-completado { background-color: #4caf50; color: #ffffff; }
+        .etiqueta-solo-servicio { background-color: #9c27b0; color: #ffffff; }
+        .etiqueta-paquete { background-color: #2196f3; color: #ffffff; }
+        .etiqueta-llamar { background-color: #4caf50; color: #ffffff; }
+        .etiqueta-enviar-mensaje { background-color: #2196f3; color: #ffffff; }
+        .etiqueta-confirmar { background-color: #ff9800; color: #ffffff; }
+        .etiqueta-resolver-dudas { background-color: #9c27b0; color: #ffffff; }
+        .etiqueta-sesion-de-fotos { background-color: #e91e63; color: #ffffff; }
+        .etiqueta-visita { background-color: #00bcd4; color: #ffffff; }
+        .etiqueta-escoger-fotos { background-color: #ffc107; color: #0d0d0d; }
+        .etiqueta-recoger-material { background-color: #795548; color: #ffffff; }
+        .etiqueta-entrega-de-fotos { background-color: #607d8b; color: #ffffff; }
+        .etiqueta-otro { background-color: #757575; color: #ffffff; }
+        /* Ajuste de etiquetas para el tema Angel (versión suave) */
+        html[data-theme="angel"] .etiqueta-interesado { background-color: rgba(16, 185, 129, 0.15); color: #047857; }
+        html[data-theme="angel"] .etiqueta-cotizacion { background-color: rgba(58, 134, 255, 0.15); color: #1e40af; }
+        html[data-theme="angel"] .etiqueta-negociacion { background-color: rgba(245, 158, 11, 0.15); color: #b45309; }
+        html[data-theme="angel"] .etiqueta-contrato { background-color: rgba(168, 85, 247, 0.15); color: #6b21a8; }
+        html[data-theme="angel"] .etiqueta-frecuente { background-color: rgba(6, 182, 212, 0.15); color: #0e7490; }
+        html[data-theme="angel"] .etiqueta-cancelado { background-color: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+        html[data-theme="angel"] .etiqueta-inactivo { background-color: rgba(107, 85, 128, 0.15); color: #4a3a5c; }
+        html[data-theme="angel"] .etiqueta-pendiente { background-color: rgba(245, 158, 11, 0.15); color: #b45309; }
+        html[data-theme="angel"] .etiqueta-completado { background-color: rgba(16, 185, 129, 0.15); color: #047857; }
+        html[data-theme="angel"] .etiqueta-solo-servicio { background-color: rgba(168, 85, 247, 0.15); color: #6b21a8; }
+        html[data-theme="angel"] .etiqueta-paquete { background-color: rgba(58, 134, 255, 0.15); color: #1e40af; }
+        /* ─────── FIN @CSS-GLOBAL-ETIQUETAS ─────── */
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @CSS-LAYOUT — Login, Sidebar, Main, Mosaicos base            */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        /* ─────── @CSS-LAYOUT-LOGIN ─────── */
         .pantalla-login {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: var(--color-bg-primario);
@@ -147,10 +404,14 @@
             font-size: 11px; color: var(--color-texto-secundario); line-height: 1.6;
         }
         .login-footer strong { color: var(--color-acento); letter-spacing: 0.5px; }
+        /* ─────── FIN @CSS-LAYOUT-LOGIN ─────── */
 
+        /* ─────── @CSS-LAYOUT-APP ─────── */
         .app-container { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
         .app-container.oculto { display: none; }
+        /* ─────── FIN @CSS-LAYOUT-APP ─────── */
 
+        /* ─────── @CSS-LAYOUT-SIDEBAR ─────── */
         .sidebar {
             width: var(--sidebar-width); min-width: var(--sidebar-width);
             background-color: var(--color-sidebar-bg);
@@ -253,14 +514,15 @@
         .btn-colapsar i { transition: transform var(--transition); }
         .sidebar.collapsed .btn-colapsar i { transform: rotate(180deg); }
         .sidebar.collapsed .btn-colapsar span, .sidebar.collapsed .btn-logout span { display: none; }
+        /* ─────── FIN @CSS-LAYOUT-SIDEBAR ─────── */
 
+        /* ─────── @CSS-LAYOUT-MAIN ─────── */
         .main-content {
             flex: 1; padding: 24px 32px; overflow-y: auto; height: 100vh;
             background-color: var(--color-bg-primario); transition: background-color var(--transition);
         }
         .seccion { display: none; animation: fadeIn 0.3s ease; }
         .seccion.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .seccion-header {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 24px; padding-bottom: 16px;
@@ -281,100 +543,10 @@
         .sync-status .sync-dot.online { background-color: var(--color-verde); }
         .sync-status .sync-dot.offline { background-color: var(--color-rojo); animation: none; }
         .sync-status .sync-dot.syncing { background-color: var(--color-naranja); animation: pulse-fast 0.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        @keyframes pulse-fast { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.8); } }
         .sync-status .sync-text { color: var(--color-texto-secundario); white-space: nowrap; }
+        /* ─────── FIN @CSS-LAYOUT-MAIN ─────── */
 
-        .btn-primario, .btn-secundario, .btn-verde, .btn-azul, .btn-naranja, .btn-cian, .btn-morado,
-        .btn-imprimir, .btn-calendar, .btn-filtrar, .btn-limpiar, .btn-peligro, .btn-whatsapp, .btn-email {
-            border: none; border-radius: var(--border-radius); cursor: pointer;
-            transition: all 0.2s ease; display: inline-flex; align-items: center;
-            gap: 6px; font-family: inherit;
-        }
-        .btn-primario {
-            background-color: var(--color-acento); color: var(--color-acento-contraste);
-            padding: 10px 20px; font-size: 14px; font-weight: 600;
-        }
-        .btn-primario:hover { background-color: var(--color-acento-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(201, 168, 76, 0.3); }
-        .btn-secundario {
-            background-color: var(--color-bg-terciario); color: var(--color-texto-primario);
-            border: 1px solid var(--color-borde); padding: 8px 16px; font-size: 13px;
-        }
-        .btn-secundario:hover { background-color: var(--color-bg-hover); }
-        .btn-verde { background-color: var(--color-verde); color: #ffffff; padding: 8px 16px; font-size: 13px; }
-        .btn-verde:hover { filter: brightness(1.1); }
-        .btn-azul { background-color: var(--color-azul); color: #ffffff; padding: 8px 16px; font-size: 13px; }
-        .btn-azul:hover { filter: brightness(1.1); }
-        .btn-naranja { background-color: var(--color-naranja); color: #ffffff; padding: 6px 14px; font-size: 12px; }
-        .btn-naranja:hover { filter: brightness(1.1); }
-        .btn-cian { background-color: var(--color-cian); color: #ffffff; padding: 6px 14px; font-size: 12px; }
-        .btn-cian:hover { filter: brightness(1.1); }
-        .btn-morado { background-color: var(--color-morado); color: #ffffff; padding: 6px 14px; font-size: 12px; }
-        .btn-morado:hover { filter: brightness(1.1); }
-        .btn-imprimir { background-color: #1a237e; color: #ffffff; padding: 8px 16px; font-size: 13px; }
-        .btn-imprimir:hover { filter: brightness(1.1); }
-        .btn-calendar { background-color: #4285f4; color: #ffffff; padding: 8px 16px; font-size: 13px; }
-        .btn-calendar:hover { filter: brightness(1.1); }
-        .btn-peligro { background-color: var(--color-rojo); color: #ffffff; padding: 8px 16px; font-size: 13px; }
-        .btn-peligro:hover { filter: brightness(1.1); }
-        .btn-whatsapp { background-color: var(--color-whatsapp); color: #ffffff; padding: 8px 16px; font-size: 13px; }
-        .btn-whatsapp:hover { filter: brightness(1.1); }
-        .btn-email { background-color: #6d4c8a; color: #ffffff; padding: 8px 16px; font-size: 13px; }
-        .btn-email:hover { filter: brightness(1.1); }
-        .btn-eliminar-item {
-            background: none; border: none; color: var(--color-rojo); cursor: pointer;
-            padding: 2px 8px; border-radius: var(--border-radius);
-            font-size: 12px; transition: all 0.2s ease;
-        }
-        .btn-eliminar-item:hover { background-color: var(--color-rojo); color: #ffffff; }
-        .btn-filtrar { background-color: var(--color-azul); color: #ffffff; padding: 8px 20px; font-size: 14px; }
-        .btn-filtrar:hover { filter: brightness(1.1); }
-        .btn-limpiar {
-            background-color: var(--color-bg-terciario); color: var(--color-texto-secundario);
-            border: 1px solid var(--color-borde); padding: 8px 20px; font-size: 14px;
-        }
-        .btn-limpiar:hover { background-color: var(--color-bg-hover); color: var(--color-texto-primario); }
-
-        button:disabled { opacity: 0.4 !important; cursor: not-allowed !important; }
-
-        .filtros-container {
-            display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
-            background-color: var(--color-bg-secundario); padding: 16px 20px;
-            border-radius: var(--border-radius); margin-bottom: 24px;
-            border: 1px solid var(--color-borde);
-            transition: background-color var(--transition);
-        }
-        .filtro-grupo { display: flex; flex-direction: column; gap: 4px; flex: 0 1 auto; min-width: 140px; }
-        .filtro-grupo label {
-            font-size: 11px; color: var(--color-texto-secundario);
-            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .filtro-grupo input, .filtro-grupo select {
-            background-color: var(--color-bg-primario); color: var(--color-texto-primario);
-            border: 1px solid var(--color-borde); padding: 8px 12px;
-            border-radius: var(--border-radius); font-size: 14px;
-            min-width: 150px; font-family: inherit;
-        }
-        .filtro-grupo input:focus, .filtro-grupo select:focus { outline: none; border-color: var(--color-acento); }
-
-        .metricas-container {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px; margin-bottom: 24px;
-        }
-        .metrica-card {
-            background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
-            border-radius: var(--border-radius); padding: 16px 20px;
-            display: flex; align-items: center; gap: 16px;
-        }
-        .metrica-icono {
-            width: 48px; height: 48px; background-color: var(--color-bg-terciario);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 20px; color: var(--color-acento); flex-shrink: 0;
-        }
-        .metrica-info { display: flex; flex-direction: column; }
-        .metrica-valor { font-size: 24px; font-weight: 700; color: var(--color-texto-primario); }
-        .metrica-etiqueta { font-size: 12px; color: var(--color-texto-secundario); }
-
+        /* ─────── @CSS-LAYOUT-MOSAICO ─────── */
         .mosaico-grid {
             background-color: transparent; border: none; padding: 0;
             min-height: 200px;
@@ -450,7 +622,55 @@
         #lista-prospectos, #lista-clientes, #lista-paquetes, #lista-servicios, #lista-contratos {
             background-color: transparent; border: none; padding: 0; min-height: 200px;
         }
+        /* ─────── FIN @CSS-LAYOUT-MOSAICO ─────── */
 
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @CSS-SECTIONS — Estilos específicos por sección              */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        /* ─────── @CSS-SECTIONS-FILTROS ─────── */
+        .filtros-container {
+            display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
+            background-color: var(--color-bg-secundario); padding: 16px 20px;
+            border-radius: var(--border-radius); margin-bottom: 24px;
+            border: 1px solid var(--color-borde);
+            transition: background-color var(--transition);
+        }
+        .filtro-grupo { display: flex; flex-direction: column; gap: 4px; flex: 0 1 auto; min-width: 140px; }
+        .filtro-grupo label {
+            font-size: 11px; color: var(--color-texto-secundario);
+            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .filtro-grupo input, .filtro-grupo select {
+            background-color: var(--color-bg-primario); color: var(--color-texto-primario);
+            border: 1px solid var(--color-borde); padding: 8px 12px;
+            border-radius: var(--border-radius); font-size: 14px;
+            min-width: 150px; font-family: inherit;
+        }
+        .filtro-grupo input:focus, .filtro-grupo select:focus { outline: none; border-color: var(--color-acento); }
+        /* ─────── FIN @CSS-SECTIONS-FILTROS ─────── */
+
+        /* ─────── @CSS-SECTIONS-METRICAS ─────── */
+        .metricas-container {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px; margin-bottom: 24px;
+        }
+        .metrica-card {
+            background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
+            border-radius: var(--border-radius); padding: 16px 20px;
+            display: flex; align-items: center; gap: 16px;
+        }
+        .metrica-icono {
+            width: 48px; height: 48px; background-color: var(--color-bg-terciario);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: var(--color-acento); flex-shrink: 0;
+        }
+        .metrica-info { display: flex; flex-direction: column; }
+        .metrica-valor { font-size: 24px; font-weight: 700; color: var(--color-texto-primario); }
+        .metrica-etiqueta { font-size: 12px; color: var(--color-texto-secundario); }
+        /* ─────── FIN @CSS-SECTIONS-METRICAS ─────── */
+
+        /* ─────── @CSS-SECTIONS-TAREAS ─────── */
         #lista-tareas {
             background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
             border-radius: var(--border-radius); padding: 16px; display: block; min-height: 200px;
@@ -479,33 +699,9 @@
         #lista-tareas .tarjeta-acciones .btn-editar:hover { color: var(--color-acento); }
         #lista-tareas .tarjeta-acciones .btn-eliminar:hover { color: var(--color-rojo); }
         #lista-tareas .tarjeta-acciones .btn-completar:hover { color: var(--color-verde); }
+        /* ─────── FIN @CSS-SECTIONS-TAREAS ─────── */
 
-        .tarjeta-etiqueta {
-            display: inline-block; padding: 2px 10px; border-radius: 12px;
-            font-size: 11px; font-weight: 600; white-space: nowrap;
-        }
-        .etiqueta-interesado { background-color: #4caf50; color: #ffffff; }
-        .etiqueta-cotizacion { background-color: #2196f3; color: #ffffff; }
-        .etiqueta-negociacion { background-color: #ff9800; color: #ffffff; }
-        .etiqueta-contrato { background-color: #9c27b0; color: #ffffff; }
-        .etiqueta-frecuente { background-color: #00bcd4; color: #ffffff; }
-        .etiqueta-cancelado { background-color: #f44336; color: #ffffff; }
-        .etiqueta-inactivo { background-color: #757575; color: #ffffff; }
-        .etiqueta-pendiente { background-color: #ff9800; color: #ffffff; }
-        .etiqueta-completado { background-color: #4caf50; color: #ffffff; }
-        .etiqueta-solo-servicio { background-color: #9c27b0; color: #ffffff; }
-        .etiqueta-paquete { background-color: #2196f3; color: #ffffff; }
-        .etiqueta-llamar { background-color: #4caf50; color: #ffffff; }
-        .etiqueta-enviar-mensaje { background-color: #2196f3; color: #ffffff; }
-        .etiqueta-confirmar { background-color: #ff9800; color: #ffffff; }
-        .etiqueta-resolver-dudas { background-color: #9c27b0; color: #ffffff; }
-        .etiqueta-sesion-de-fotos { background-color: #e91e63; color: #ffffff; }
-        .etiqueta-visita { background-color: #00bcd4; color: #ffffff; }
-        .etiqueta-escoger-fotos { background-color: #ffc107; color: #0d0d0d; }
-        .etiqueta-recoger-material { background-color: #795548; color: #ffffff; }
-        .etiqueta-entrega-de-fotos { background-color: #607d8b; color: #ffffff; }
-        .etiqueta-otro { background-color: #757575; color: #ffffff; }
-
+        /* ─────── @CSS-SECTIONS-CALENDARIO ─────── */
         .calendario-container {
             background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
             border-radius: var(--border-radius); padding: 20px;
@@ -579,7 +775,9 @@
         .leyenda-color-contrato { background-color: rgba(33, 150, 243, 0.3); border-left: 3px solid var(--color-azul); }
         .leyenda-color-tarea { background-color: rgba(255, 152, 0, 0.3); border-left: 3px solid var(--color-naranja); }
         .leyenda-color-completada { background-color: rgba(76, 175, 80, 0.2); border-left: 3px solid var(--color-verde); }
+        /* ─────── FIN @CSS-SECTIONS-CALENDARIO ─────── */
 
+        /* ─────── @CSS-SECTIONS-INFORMES ─────── */
         .informes-detalle {
             background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
             border-radius: var(--border-radius); padding: 20px;
@@ -595,7 +793,9 @@
         .informe-fila:last-child { border-bottom: none; }
         .informe-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
         .informe-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+        /* ─────── FIN @CSS-SECTIONS-INFORMES ─────── */
 
+        /* ─────── @CSS-SECTIONS-CONFIG ─────── */
         .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
         .config-card {
             background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
@@ -611,7 +811,7 @@
             font-size: 13px; color: var(--color-texto-secundario);
             margin-bottom: 16px; line-height: 1.5;
         }
-        .temas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+                        .temas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
         .tema-opcion {
             background-color: var(--color-bg-primario); border: 2px solid var(--color-borde);
             border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s ease;
@@ -634,6 +834,11 @@
         .tema-preview.preview-otono .tema-preview-sidebar { background: #4a3f2e; }
         .tema-preview.preview-otono .tema-preview-main { background: #f8f4eb; }
         .tema-preview.preview-otono .bar { background: #ddd0b8; }
+                .tema-preview.preview-angel .tema-preview-sidebar { background: #ece0f5; border-right: 1px solid #d4c4e8; }
+        .tema-preview.preview-angel .tema-preview-main { background: #faf5ff; }
+        .tema-preview.preview-angel .bar { background: #c77dff; }
+        .tema-preview.preview-angel .bar:nth-child(2) { background: #ec4899; }
+        .tema-preview.preview-angel .bar:nth-child(3) { background: #1a0d2e; }
         .tema-nombre { font-size: 12px; font-weight: 600; color: var(--color-texto-primario); }
         .tema-opcion i { color: var(--color-acento); font-size: 14px; }
         .tema-opcion.activo .tema-check { display: inline-block; }
@@ -660,7 +865,9 @@
         .config-boton.exportar i { background-color: var(--color-naranja); }
         .config-boton.importar i { background-color: var(--color-morado); }
         .config-boton.peligro i { background-color: var(--color-rojo); }
+        /* ─────── FIN @CSS-SECTIONS-CONFIG ─────── */
 
+        /* ─────── @CSS-SECTIONS-USUARIOS-LISTA ─────── */
         .usuarios-lista { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
         .usuario-item {
             display: flex; align-items: center; gap: 12px;
@@ -702,7 +909,9 @@
             font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
             background-color: var(--color-azul); color: #ffffff;
         }
+        /* ─────── FIN @CSS-SECTIONS-USUARIOS-LISTA ─────── */
 
+        /* ─────── @CSS-SECTIONS-VERSION ─────── */
         .version-card {
             background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
             border-radius: var(--border-radius); padding: 24px; margin-top: 24px;
@@ -775,7 +984,9 @@
             font-size: 12px; color: var(--color-texto-secundario);
             margin-top: 8px; font-style: italic;
         }
+        /* ─────── FIN @CSS-SECTIONS-VERSION ─────── */
 
+        /* ─────── @CSS-SECTIONS-HISTORIAL ─────── */
         .historial-card {
             background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde);
             border-radius: var(--border-radius); padding: 24px; margin-top: 24px;
@@ -834,15 +1045,6 @@
         .historial-item.accion-crear { border-left-color: var(--color-verde); }
         .historial-item.accion-editar { border-left-color: var(--color-azul); }
         .historial-item.accion-eliminar { border-left-color: var(--color-rojo); }
-        .historial-item-icono {
-            width: 36px; height: 36px; border-radius: 50%;
-            background-color: var(--color-bg-terciario);
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0; font-size: 14px;
-        }
-        .historial-item.accion-crear .historial-item-icono { color: var(--color-verde); }
-        .historial-item.accion-editar .historial-item-icono { color: var(--color-azul); }
-        .historial-item.accion-eliminar .historial-item-icono { color: var(--color-rojo); }
         .historial-item-contenido { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
         .historial-item-titulo {
             font-size: 14px; font-weight: 600; color: var(--color-texto-primario);
@@ -869,7 +1071,13 @@
             align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 12px;
         }
         .historial-acciones-info { font-size: 12px; color: var(--color-texto-secundario); }
+        /* ─────── FIN @CSS-SECTIONS-HISTORIAL ─────── */
 
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @CSS-MODALS — Modales, formularios, inputs                   */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        /* ─────── @CSS-MODALS-BASE ─────── */
         .modal {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
@@ -901,7 +1109,9 @@
         }
         .modal-cerrar:hover { color: var(--color-texto-primario); transform: rotate(90deg); }
         .modal-body { padding: 24px; }
+        /* ─────── FIN @CSS-MODALS-BASE ─────── */
 
+        /* ─────── @CSS-MODALS-FORM ─────── */
         .form-grupo { margin-bottom: 16px; }
         .form-grupo label {
             display: block; font-size: 13px; color: var(--color-texto-secundario);
@@ -961,7 +1171,9 @@
         }
         .resumen-financiero .fila:last-child { border-bottom: none; }
         .resumen-financiero .total { font-weight: 700; color: var(--color-acento); }
+        /* ─────── FIN @CSS-MODALS-FORM ─────── */
 
+        /* ─────── @CSS-MODALS-ADVERTENCIA ─────── */
         .advertencia-eliminar {
             background-color: rgba(239, 83, 80, 0.1);
             border: 1px solid var(--color-rojo);
@@ -978,7 +1190,9 @@
             padding: 8px 10px; margin-top: 8px; font-size: 12px;
             color: var(--color-texto-secundario); border: 1px solid var(--color-borde-suave);
         }
+        /* ─────── FIN @CSS-MODALS-ADVERTENCIA ─────── */
 
+        /* ─────── @CSS-MODALS-DETALLE ─────── */
         .detalle-acciones {
             display: flex; flex-wrap: wrap; gap: 8px;
             padding: 12px 16px; margin-bottom: 20px;
@@ -1086,11 +1300,11 @@
             padding: 12px; border-radius: var(--border-radius);
             border: 1px solid var(--color-borde-suave);
         }
+        /* ─────── FIN @CSS-MODALS-DETALLE ─────── */
 
+        /* ─────── @CSS-MODALS-TAREAS-VINCULADAS ─────── */
         .tarea-vinculada {
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
+            display: flex; gap: 12px; align-items: flex-start;
             padding: 12px 14px;
             background-color: var(--color-bg-primario);
             border-radius: var(--border-radius);
@@ -1149,7 +1363,10 @@
         }
         .tarea-acciones button:first-child:hover { color: var(--color-acento); }
         .tarea-acciones button:last-child:hover { color: var(--color-rojo); }
+        /* ─────── FIN @CSS-MODALS-TAREAS-VINCULADAS ─────── */
 
+        /* ─────── @CSS-MODALS-BUSCADOR-CLIENTE ─────── */
+        /* Buscador tipo combobox para vincular tareas a clientes/prospectos */
         .buscador-cliente {
             position: relative;
             width: 100%;
@@ -1244,7 +1461,9 @@
             color: var(--color-texto-secundario);
             font-size: 13px;
         }
+        /* ─────── FIN @CSS-MODALS-BUSCADOR-CLIENTE ─────── */
 
+        /* ─────── @CSS-MODALS-COMPROBANTE ─────── */
         .comprobante-preview {
             background-color: var(--color-bg-primario);
             border: 1px solid var(--color-borde);
@@ -1263,38 +1482,9 @@
             flex: 1 1 auto; min-width: 150px; justify-content: center;
             padding: 10px 18px; font-size: 14px;
         }
+        /* ─────── FIN @CSS-MODALS-COMPROBANTE ─────── */
 
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        table thead th {
-            text-align: left; padding: 8px 12px;
-            border-bottom: 2px solid var(--color-borde);
-            color: var(--color-texto-secundario);
-            font-weight: 600; font-size: 12px;
-            text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        table tbody td {
-            padding: 8px 12px; border-bottom: 1px solid var(--color-borde);
-            color: var(--color-texto-primario);
-        }
-        table tbody tr:hover { background-color: var(--color-bg-terciario); }
-
-        .notificacion {
-            position: fixed; bottom: 20px; right: 20px;
-            background: var(--color-acento); color: var(--color-acento-contraste);
-            padding: 12px 20px; border-radius: 8px;
-            font-weight: 600; z-index: 9999;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            animation: slideIn 0.3s ease; max-width: 350px;
-        }
-        .notificacion i { margin-right: 8px; }
-        @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100px); opacity: 0; } }
-
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--color-bg-primario); }
-        ::-webkit-scrollbar-thumb { background: var(--color-bg-terciario); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--color-bg-hover); }
-
+        /* ─────── @CSS-MODALS-IMPRESION ─────── */
         #print-doc { max-width: 700px; margin: 0 auto; padding: 15px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #0d0d0d; line-height: 1.4; }
         #print-doc h1 { font-size: 16px; margin: 0 0 8px; text-align: center; border-bottom: 2px solid #333; padding-bottom: 6px; color: #0d0d0d; }
         #print-doc .sec { margin-bottom: 6px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 3px; background: #fafafa; }
@@ -1311,7 +1501,9 @@
         #print-doc .verde { color: #4caf50; font-weight: 600; }
         #print-doc .naranja { color: #ff9800; font-weight: 700; }
         #print-doc .negrita { font-weight: 700; }
+        /* ─────── FIN @CSS-MODALS-IMPRESION ─────── */
 
+        /* ─────── @CSS-MODALS-PRINT-MEDIA ─────── */
         @media print {
             .sidebar, .menu, .filtros-container, .header-actions, .sync-status,
             .seccion-header, .mosaico-footer, .modal, .notificacion,
@@ -1323,13 +1515,21 @@
             .seccion { display: block !important; padding: 0 !important; margin: 0 !important; }
             #impresion-contenedor { display: block !important; padding: 0 !important; margin: 0 !important; background: white !important; }
         }
+        /* ─────── FIN @CSS-MODALS-PRINT-MEDIA ─────── */
 
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @CSS-MOBILE — Media queries responsivas                      */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        /* ─────── @CSS-MOBILE-DESKTOP ─────── */
         @media (min-width: 769px) {
             .btn-mobile-menu { display: none !important; }
             .mobile-overlay { display: none !important; }
             .btn-toggle-filtros { display: none !important; }
         }
+        /* ─────── FIN @CSS-MOBILE-DESKTOP ─────── */
 
+        /* ─────── @CSS-MOBILE-TABLET ─────── */
         @media (max-width: 900px) {
             .config-grid { grid-template-columns: 1fr; }
             .historial-filtros { flex-direction: column; align-items: stretch; }
@@ -1337,7 +1537,9 @@
             .historial-filtros .filtro-grupo input,
             .historial-filtros .filtro-grupo select { min-width: auto; }
         }
+        /* ─────── FIN @CSS-MOBILE-TABLET ─────── */
 
+        /* ─────── @CSS-MOBILE-PHONE ─────── */
         @media (max-width: 768px) {
             .sidebar {
                 position: fixed; top: 0; left: 0;
@@ -1697,7 +1899,7 @@
             .config-card h3 { font-size: 16px; }
             .config-boton { padding: 14px 16px; font-size: 15px; }
             .config-boton i { width: 36px; height: 36px; font-size: 15px; }
-            .temas-grid { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+            .temas-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
             .tema-opcion { padding: 8px; }
             .tema-preview { height: 36px; }
             .tema-nombre { font-size: 11px; }
@@ -1768,7 +1970,9 @@
                 text-align: center;
             }
         }
+        /* ─────── FIN @CSS-MOBILE-PHONE ─────── */
 
+        /* ─────── @CSS-MOBILE-SMALL ─────── */
         @media (max-width: 480px) {
             .main-content { padding: 76px 12px 140px 12px; padding-bottom: max(140px, calc(100px + env(safe-area-inset-bottom, 40px))) !important; }
             .seccion-header h1 { font-size: 20px; }
@@ -1785,16 +1989,25 @@
             .calendario-grid .dia .evento { font-size: 8px; }
             .historial-stats { grid-template-columns: 1fr; }
         }
+        /* ─────── FIN @CSS-MOBILE-SMALL ─────── */
     </style>
 </head>
 <body>
-    <!-- Botón menú móvil -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- @HTML-STRUCT — Estructura completa de la interfaz            -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- ─────── @HTML-MOBILE-MENU ─────── -->
+    <!-- Botón hamburguesa y overlay para móvil -->
     <button class="btn-mobile-menu" id="btn-mobile-menu" aria-label="Menú">
         <i class="fas fa-bars"></i>
     </button>
     <div class="mobile-overlay" id="mobile-overlay"></div>
+    <!-- ─────── FIN @HTML-MOBILE-MENU ─────── -->
 
-    <!-- PANTALLA DE LOGIN -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- @HTML-LOGIN — Pantalla de login completa                     -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="pantalla-login" id="pantalla-login">
         <div class="login-card">
             <div class="login-logo">
@@ -1802,10 +2015,15 @@
             </div>
             <div class="login-titulo">Registro PDA</div>
             <div class="login-subtitulo">Sistema de gestión · JFR Media</div>
+            
+            <!-- ─────── @HTML-LOGIN-PASO-USUARIO ─────── -->
             <div class="login-paso activo" id="login-paso-usuario">
                 <h3>Selecciona tu usuario</h3>
                 <div class="login-usuarios" id="login-usuarios-lista"></div>
             </div>
+            <!-- ─────── FIN @HTML-LOGIN-PASO-USUARIO ─────── -->
+            
+            <!-- ─────── @HTML-LOGIN-PASO-PIN ─────── -->
             <div class="login-paso" id="login-paso-pin">
                 <h3 id="login-pin-titulo">Ingresa tu PIN</h3>
                 <div class="login-usuario-elegido" id="login-usuario-elegido"></div>
@@ -1817,6 +2035,9 @@
                     <button type="button" class="btn-primario" id="login-btn-ingresar"><i class="fas fa-sign-in-alt"></i> Ingresar</button>
                 </div>
             </div>
+            <!-- ─────── FIN @HTML-LOGIN-PASO-PIN ─────── -->
+            
+            <!-- ─────── @HTML-LOGIN-PASO-NUEVO-PIN ─────── -->
             <div class="login-paso" id="login-paso-nuevo-pin">
                 <h3>Configura tu PIN</h3>
                 <div class="login-info visible">
@@ -1832,15 +2053,24 @@
                     <button type="button" class="btn-primario" id="login-btn-guardar-pin"><i class="fas fa-save"></i> Guardar PIN</button>
                 </div>
             </div>
+            <!-- ─────── FIN @HTML-LOGIN-PASO-NUEVO-PIN ─────── -->
+            
             <div class="login-footer">
-                v3.9 · Software diseñado por <strong>JFR MEDIA</strong><br>
+                v4.0 · Software diseñado por <strong>JFR MEDIA</strong><br>
                 Acceso restringido a personal autorizado
             </div>
         </div>
     </div>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- FIN @HTML-LOGIN                                              -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
 
-    <!-- APLICACIÓN PRINCIPAL -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- @HTML-APP — Aplicación principal (solo visible tras login)   -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="app-container oculto" id="app-container">
+        
+        <!-- ─────── @HTML-SIDEBAR ─────── -->
         <nav class="sidebar" id="sidebar">
             <div class="logo">
                 <img src="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg" alt="Logo" class="logo-img-sidebar">
@@ -1866,12 +2096,16 @@
             <div class="sidebar-footer">
                 <button class="btn-colapsar" id="btn-colapsar" title="Colapsar menú"><i class="fas fa-chevron-left"></i><span>Colapsar</span></button>
                 <button class="btn-logout" id="btn-logout" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></button>
-                <div class="version">v3.9</div>
+                <div class="version">v4.0</div>
             </div>
         </nav>
+        <!-- ─────── FIN @HTML-SIDEBAR ─────── -->
 
         <main class="main-content">
-            <!-- INFORMES -->
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- @HTML-SECTION-INFORMES                                   -->
+            <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-informes" class="seccion active">
                 <div class="seccion-header">
                     <h1><i class="fas fa-chart-pie"></i> Informes y Análisis</h1>
@@ -1945,8 +2179,11 @@
                     <div id="contenedor-informes"><p class="mensaje-vacio">Agrega tus primeros datos para ver los informes aquí</p></div>
                 </div>
             </section>
+            <!-- FIN @HTML-SECTION-INFORMES -->
 
-            <!-- PROSPECTOS -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- @HTML-SECTION-PROSPECTOS                                 -->
+            <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-prospectos" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-users"></i> Prospectos</h1>
@@ -1973,8 +2210,11 @@
                 </div>
                 <div id="lista-prospectos" class="mosaico-grid"><p class="mensaje-vacio">No hay prospectos registrados</p></div>
             </section>
+            <!-- FIN @HTML-SECTION-PROSPECTOS -->
 
-            <!-- CLIENTES -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- @HTML-SECTION-CLIENTES                                   -->
+            <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-clientes" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-user-check"></i> Clientes</h1>
@@ -1997,8 +2237,11 @@
                 </div>
                 <div id="lista-clientes" class="mosaico-grid"><p class="mensaje-vacio">No hay clientes registrados</p></div>
             </section>
+            <!-- FIN @HTML-SECTION-CLIENTES -->
 
-            <!-- CONTRATOS -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- @HTML-SECTION-CONTRATOS                                  -->
+            <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-contratos" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-file-contract"></i> Contratos</h1>
@@ -2028,8 +2271,11 @@
                 </div>
                 <div id="lista-contratos" class="mosaico-grid"><p class="mensaje-vacio">No hay contratos registrados</p></div>
             </section>
+            <!-- FIN @HTML-SECTION-CONTRATOS -->
 
-            <!-- PAQUETES (solo admin) -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- @HTML-SECTION-PAQUETES (solo admin)                      -->
+            <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-paquetes" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-box"></i> Paquetes</h1>
@@ -2037,8 +2283,11 @@
                 </div>
                 <div id="lista-paquetes" class="mosaico-grid"><p class="mensaje-vacio">No hay paquetes registrados</p></div>
             </section>
+            <!-- FIN @HTML-SECTION-PAQUETES -->
 
-            <!-- SERVICIOS (solo admin) -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- @HTML-SECTION-SERVICIOS (solo admin)                     -->
+            <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-servicios" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-tools"></i> Servicios Adicionales</h1>
@@ -2046,8 +2295,11 @@
                 </div>
                 <div id="lista-servicios" class="mosaico-grid"><p class="mensaje-vacio">No hay servicios adicionales registrados</p></div>
             </section>
+            <!-- FIN @HTML-SECTION-SERVICIOS -->
 
-            <!-- CALENDARIO -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- @HTML-SECTION-CALENDARIO                                 -->
+            <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-calendario" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-calendar-alt"></i> Calendario</h1>
@@ -2089,13 +2341,17 @@
                     <div id="lista-tareas"><p class="mensaje-vacio">No hay tareas registradas</p></div>
                 </div>
             </section>
+            <!-- FIN @HTML-SECTION-CALENDARIO -->
 
-            <!-- CONFIGURACIÓN -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- @HTML-SECTION-CONFIGURACION                              -->
+            <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-configuracion" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-cog"></i> Configuración</h1>
                 </div>
 
+                <!-- ─────── @HTML-CONFIG-TEMAS ─────── -->
                 <div class="config-grid">
                     <div class="config-card">
                         <h3><i class="fas fa-palette"></i> Tema de la aplicación</h3>
@@ -2113,6 +2369,10 @@
                                 <div class="tema-preview preview-otono"><div class="tema-preview-sidebar"></div><div class="tema-preview-main"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div></div>
                                 <div class="tema-nombre">Otoño <i class="fas fa-check-circle tema-check"></i></div>
                             </div>
+                            <div class="tema-opcion" data-tema="angel">
+                                <div class="tema-preview preview-angel"><div class="tema-preview-sidebar"></div><div class="tema-preview-main"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div></div>
+                                <div class="tema-nombre">Angel <i class="fas fa-check-circle tema-check"></i></div>
+                            </div>
                         </div>
                     </div>
                     <div class="config-card">
@@ -2127,7 +2387,10 @@
                         </div>
                     </div>
                 </div>
+                           
+                <!-- ─────── FIN @HTML-CONFIG-TEMAS ─────── -->
 
+                <!-- ─────── @HTML-CONFIG-MI-CUENTA ─────── -->
                 <div class="config-card" style="margin-bottom:24px;">
                     <h3><i class="fas fa-user-cog"></i> Mi cuenta</h3>
                     <p class="config-descripcion">Administra tu cuenta personal. Puedes cambiar tu PIN de acceso.</p>
@@ -2136,7 +2399,9 @@
                         <button class="config-boton peligro" id="btn-cambiar-usuario"><i class="fas fa-user-friends"></i><div class="info"><div class="titulo">Cambiar de usuario</div><div class="subtitulo">Cierra sesión y permite elegir otro usuario</div></div></button>
                     </div>
                 </div>
+                <!-- ─────── FIN @HTML-CONFIG-MI-CUENTA ─────── -->
 
+                <!-- ─────── @HTML-CONFIG-GESTION-USUARIOS ─────── -->
                 <div class="config-card" id="card-gestion-usuarios" style="margin-bottom:24px; display:none;">
                     <h3><i class="fas fa-users-cog"></i> Gestión de usuarios</h3>
                     <p class="config-descripcion">Como administrador puedes agregar nuevos usuarios con permisos de operador.</p>
@@ -2145,7 +2410,9 @@
                     </div>
                     <div class="usuarios-lista" id="usuarios-lista"></div>
                 </div>
+                <!-- ─────── FIN @HTML-CONFIG-GESTION-USUARIOS ─────── -->
 
+                <!-- ─────── @HTML-CONFIG-HISTORIAL ─────── -->
                 <div class="historial-card">
                     <h3><i class="fas fa-history"></i> Historial de actividad</h3>
                     <p class="config-descripcion">Consulta todos los movimientos. Cada evento registra al usuario que lo realizó.</p>
@@ -2188,45 +2455,37 @@
                         <button class="btn-secundario" id="historial-toggle-ver-todos"><i class="fas fa-list"></i> Ver todos los movimientos</button>
                     </div>
                 </div>
+                <!-- ─────── FIN @HTML-CONFIG-HISTORIAL ─────── -->
 
+                <!-- ─────── @HTML-CONFIG-VERSION-CARD ─────── -->
                 <div class="version-card">
-                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v3.9</span></h3>
+                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v4.0</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">3.9</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">4.0</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
                     </div>
                     <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v3.9)</h4>
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v4.0)</h4>
                         <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-user-shield"></i></div>
+                            <div class="changelog-icono"><i class="fas fa-bookmark"></i></div>
                             <div class="changelog-contenido">
-                                <div class="changelog-titulo">Restricciones para operadores</div>
+                                <div class="changelog-titulo">Reorganización interna completa</div>
                                 <div class="changelog-desc">
-                                    Los operadores ya no pueden ver las secciones de Paquetes y Servicios,
-                                    ni eliminar clientes y contratos. Los pagos y cargos extras sí se pueden
-                                    modificar, con registro del usuario que realizó cada movimiento.
+                                    El código ahora está organizado en bloques con marcadores @BOOKMARK navegables.
+                                    Cada función tiene su propio marcador para facilitar futuras ediciones.
+                                    Sin cambios funcionales respecto a v3.9.
                                 </div>
                             </div>
                         </div>
                         <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-fingerprint"></i></div>
+                            <div class="changelog-icono"><i class="fas fa-file-alt"></i></div>
                             <div class="changelog-contenido">
-                                <div class="changelog-titulo">Auditoría completa</div>
+                                <div class="changelog-titulo">CHANGELOG separado</div>
                                 <div class="changelog-desc">
-                                    Cada pago y cargo extra registra quién lo creó. Las eliminaciones
-                                    quedan marcadas con el usuario y la fecha, sin borrar el registro original.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-search"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Buscador de clientes con filtro</div>
-                                <div class="changelog-desc">
-                                    Al vincular una tarea, busca por nombre de cliente o por nombre del festejado.
-                                    Navega con flechas ↑↓ y selecciona con Enter.
+                                    El historial de cambios ahora vive en un archivo CHANGELOG.md separado,
+                                    útil como contexto para análisis futuros con o sin IA.
                                 </div>
                             </div>
                         </div>
@@ -2249,16 +2508,27 @@
                         </div>
                     </div>
                 </div>
+                <!-- ─────── FIN @HTML-CONFIG-VERSION-CARD ─────── -->
 
+                <!-- ─────── @HTML-CONFIG-CREDITO ─────── -->
                 <div class="credito-footer">
                     <div class="credito-titulo">Diseñado y desarrollado por</div>
                     <div class="credito-marca"><i class="fas fa-camera-retro"></i> JFR MEDIA <i class="fas fa-camera-retro"></i></div>
                     <div class="credito-sub">Registro PDA · Sistema de gestión para estudios fotográficos</div>
                 </div>
+                <!-- ─────── FIN @HTML-CONFIG-CREDITO ─────── -->
             </section>
+            <!-- FIN @HTML-SECTION-CONFIGURACION -->
+
         </main>
     </div>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- FIN @HTML-APP                                                -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
 
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- @HTML-MODAL — Modal genérico (usado por toda la app)         -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <div id="modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -2269,29 +2539,44 @@
         </div>
     </div>
 
+    <!-- Contenedor oculto para impresión de contratos -->
     <div id="impresion-contenedor" style="display:none;"></div>
+    <!-- FIN @HTML-MODAL -->
+
     <script>
-        // ============================================================
-        // CONFIGURACIÓN
-        // ============================================================
-        var VERSION = '3.9';
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-CONFIG — Configuración y constantes globales             */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-CONFIG-VERSION ───────
+        var VERSION = '4.0';
+        // ─────── FIN @JS-CONFIG-VERSION ───────
+
+        // ─────── @JS-CONFIG-CONSTANTES ───────
         var PIN_ADMIN_INICIAL = '1234';
         var EMISOR_COMPROBANTE = "Producciones D'Angel Film";
+var LEMA_EMISOR = "El ángel de tu evento";
+var DATOS_EMISOR = {
+    nombre: "Adolfo Pérez Aguirre",
+    telefono: "878 785 1685",
+    direccion: "San Martín 410, Col. Vista Hermosa",
+    ciudad: "Piedras Negras, Coahuila",
+    email: "d_angelestudio@hotmail.com"
+};
         var MODO_ZONA_HORARIA = 'local';
         var CODIGO_PAIS_DEFAULT = '52';
         var MENSAJE_WHATSAPP_DEFAULT = '';
 
-        var TEMAS_DISPONIBLES = ['dark', 'light', 'otono'];
+        var TEMAS_DISPONIBLES = ['dark', 'light', 'otono', 'angel'];
         var FASES_DISPONIBLES = ['Interesado', 'Cotización', 'Negociación', 'Contrato', 'Frecuente', 'Cancelado', 'Inactivo'];
         var ESTADOS_CONTRATO = ['Pendiente', 'Completado', 'Cancelado'];
         var ESTADOS_CLIENTE = ['Activo', 'Inactivo', 'Cancelado'];
         var TIPOS_TAREA = ['Llamar', 'Enviar mensaje', 'Confirmar', 'Resolver dudas', 'Sesión de fotos', 'Visita', 'Escoger fotos', 'Recoger material', 'Entrega de fotos', 'Otro'];
         var MAX_HISTORIAL_MOVIMIENTOS = 2000;
         var DURACION_SESION_MS = 12 * 60 * 60 * 1000;
+        // ─────── FIN @JS-CONFIG-CONSTANTES ───────
 
-        // ============================================================
-        // CONFIGURACIÓN E INICIALIZACIÓN DE FIREBASE
-        // ============================================================
+        // ─────── @JS-CONFIG-FIREBASE-CREDENTIALS ───────
         var firebaseConfig = {
             apiKey: "AIzaSyAqHelYUMSfuZpOBLb-_0LEKnoxH9yF8Ts",
             authDomain: "crm-pda.firebaseapp.com",
@@ -2301,7 +2586,13 @@
             messagingSenderId: "308550111377",
             appId: "1:308550111377:web:893128880c21e2de16af30"
         };
+        // ─────── FIN @JS-CONFIG-FIREBASE-CREDENTIALS ───────
 
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-FIREBASE — Inicialización de Firebase                    */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-FIREBASE-INIT ───────
         var database = null;
         var firebaseListo = false;
         try {
@@ -2313,10 +2604,14 @@
             console.error('❌ Error inicializando Firebase:', error);
             firebaseListo = false;
         }
+        // ─────── FIN @JS-FIREBASE-INIT ───────
 
-        // ============================================================
-        // ESTADO GLOBAL
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-STATE — Estado global y preferencias                     */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-STATE-COLLECTIONS ───────
+        // Arrays principales que contienen todos los datos de la app
         var paquetes = [];
         var serviciosAdicionales = [];
         var prospectos = [];
@@ -2324,7 +2619,10 @@
         var tareas = [];
         var historial = [];
         var usuarios = [];
+        // ─────── FIN @JS-STATE-COLLECTIONS ───────
 
+        // ─────── @JS-STATE-SYNC ───────
+        // Variables de estado de sincronización con Firebase
         var sincronizandoFirebase = false;
         var primerCarga = true;
         var firebaseInicializado = false;
@@ -2333,19 +2631,31 @@
         var ultimaActualizacionRemota = null;
         var cambiosPendientes = false;
         var hayConflictoRemoto = false;
+        // ─────── FIN @JS-STATE-SYNC ───────
 
+        // ─────── @JS-STATE-CALENDAR ───────
+        // Estado del mes/año visible en el calendario
         var mesActualCal = new Date().getMonth();
         var anoActualCal = new Date().getFullYear();
+        // ─────── FIN @JS-STATE-CALENDAR ───────
 
+        // ─────── @JS-STATE-PREFERENCES ───────
+        // Claves de localStorage
         var PREF_TEMA = 'pda_tema';
         var PREF_SIDEBAR = 'pda_sidebar_colapsado';
         var PREF_SESION = 'pda_sesion';
+        // ─────── FIN @JS-STATE-PREFERENCES ───────
 
+        // ─────── @JS-STATE-USER ───────
+        // Usuario actual y variables de login
         var usuarioActual = null;
         var usuarioPendienteLogin = null;
         var esPrimerLoginAdmin = false;
         var historialVerTodos = false;
+        // ─────── FIN @JS-STATE-USER ───────
 
+        // ─────── @JS-STATE-HORAS ───────
+        // Generación de opciones de hora (00:00 a 23:30 cada 30min)
         var OPCIONES_HORA = '';
         (function() {
             for (var h = 0; h < 24; h++) {
@@ -2355,10 +2665,14 @@
                 }
             }
         })();
+        // ─────── FIN @JS-STATE-HORAS ───────
 
-        // ============================================================
-        // PERMISOS
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-UTILS — Permisos, IDs, fechas, formato y utilidades      */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-UTILS-PERMISOS ───────
+        // Verificación de rol y bloqueos por falta de permisos
         function esAdmin() {
             return usuarioActual && usuarioActual.admin === true;
         }
@@ -2374,21 +2688,33 @@
         function nombreUsuarioActual() {
             return usuarioActual ? usuarioActual.nombre : 'Sistema';
         }
+        // ─────── FIN @JS-UTILS-PERMISOS ───────
 
-        // ============================================================
-        // HASH DE PIN
-        // ============================================================
+        // ─────── @JS-UTILS-HASH ───────
+        // Hash SHA-256 para PINs
         async function generarHashPin(pin, salt) {
             const buf = new TextEncoder().encode(String(pin) + '::' + salt);
             const hash = await crypto.subtle.digest('SHA-256', buf);
             return Array.from(new Uint8Array(hash)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
         }
+        // ─────── FIN @JS-UTILS-HASH ───────
 
-        // ============================================================
-        // UTILIDADES
-        // ============================================================
-        function generarId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
+        // ─────── @JS-UTILS-ID ───────
+        // Generadores de IDs únicos
+        function generarId() { 
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); 
+        }
 
+        function generarHuellaPago() {
+            const bytes = new Uint8Array(8);
+            crypto.getRandomValues(bytes);
+            const hex = Array.from(bytes).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+            return hex.substring(0, 15);
+        }
+        // ─────── FIN @JS-UTILS-ID ───────
+
+        // ─────── @JS-UTILS-FECHAS ───────
+        // Manejo y formateo de fechas
         function obtenerComponentesFecha(fecha) {
             var ano, mes, dia, hora, minuto;
             if (MODO_ZONA_HORARIA === 'gmt-6') {
@@ -2433,10 +2759,15 @@
             return p[2] + '/' + p[1] + '/' + p[0];
         }
 
-        function formatearMoneda(cantidad) { return '$' + (cantidad || 0).toLocaleString('es-MX'); }
-
         function fechaLocalToString(ano, mes, dia) {
             return ano + '-' + String(mes + 1).padStart(2, '0') + '-' + String(dia).padStart(2, '0');
+        }
+        // ─────── FIN @JS-UTILS-FECHAS ───────
+
+        // ─────── @JS-UTILS-FORMATO ───────
+        // Formateo de moneda y notificaciones al usuario
+        function formatearMoneda(cantidad) { 
+            return '$' + (cantidad || 0).toLocaleString('es-MX'); 
         }
 
         function mostrarNotificacion(mensaje, tipo) {
@@ -2454,14 +2785,10 @@
                 setTimeout(function() { notificacion.remove(); }, 300);
             }, 3500);
         }
+        // ─────── FIN @JS-UTILS-FORMATO ───────
 
-        function generarHuellaPago() {
-            const bytes = new Uint8Array(8);
-            crypto.getRandomValues(bytes);
-            const hex = Array.from(bytes).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
-            return hex.substring(0, 15);
-        }
-
+        // ─────── @JS-UTILS-TELEFONO ───────
+        // Normalización de teléfonos para WhatsApp
         function normalizarTelefonoWhatsApp(telefono) {
             if (!telefono) return null;
             let limpio = String(telefono).replace(/\D/g, '');
@@ -2472,10 +2799,13 @@
             if (limpio.length > 13) return null;
             return limpio;
         }
+        // ─────── FIN @JS-UTILS-TELEFONO ───────
 
-        // ============================================================
-        // USUARIOS
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-USERS — Usuarios, sesión y PIN                           */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-USERS-ADMIN-INICIAL ───────
         async function crearUsuarioAdminInicial() {
             const salt = 'jfr-admin-' + Date.now().toString(36);
             const pinHash = await generarHashPin(PIN_ADMIN_INICIAL, salt);
@@ -2485,7 +2815,9 @@
                 fechaCreacion: new Date().toISOString().split('T')[0]
             };
         }
+        // ─────── FIN @JS-USERS-ADMIN-INICIAL ───────
 
+        // ─────── @JS-USERS-INIT ───────
         async function inicializarUsuariosSiEsNecesario() {
             try {
                 const guardados = JSON.parse(localStorage.getItem('usuarios')) || [];
@@ -2495,18 +2827,21 @@
                 localStorage.setItem('usuarios', JSON.stringify(usuarios));
             } catch (e) { console.error('Error usuarios:', e); usuarios = []; }
         }
+        // ─────── FIN @JS-USERS-INIT ───────
 
+        // ─────── @JS-USERS-GUARDAR ───────
         function guardarUsuarios() {
             try { localStorage.setItem('usuarios', JSON.stringify(usuarios)); } catch (e) {}
         }
+        // ─────── FIN @JS-USERS-GUARDAR ───────
 
+        // ─────── @JS-USERS-ENCONTRAR ───────
         function encontrarUsuario(username) {
             return usuarios.find(function(u) { return u.username === username; });
         }
+        // ─────── FIN @JS-USERS-ENCONTRAR ───────
 
-        // ============================================================
-        // SESIÓN
-        // ============================================================
+        // ─────── @JS-USERS-SESION-GUARDAR ───────
         function guardarSesion(usuario) {
             const sesion = {
                 username: usuario.username, nombre: usuario.nombre,
@@ -2515,7 +2850,9 @@
             };
             try { localStorage.setItem(PREF_SESION, JSON.stringify(sesion)); } catch (e) {}
         }
+        // ─────── FIN @JS-USERS-SESION-GUARDAR ───────
 
+        // ─────── @JS-USERS-SESION-CARGAR ───────
         function cargarSesion() {
             try {
                 const raw = localStorage.getItem(PREF_SESION);
@@ -2527,7 +2864,9 @@
                 return sesion;
             } catch (e) { return null; }
         }
+        // ─────── FIN @JS-USERS-SESION-CARGAR ───────
 
+        // ─────── @JS-USERS-CERRAR-SESION ───────
         function cerrarSesion() {
             const usuarioAnterior = usuarioActual ? usuarioActual.nombre : 'Desconocido';
             localStorage.removeItem(PREF_SESION);
@@ -2535,10 +2874,10 @@
             guardarDatosLocal();
             window.location.reload();
         }
+        // ─────── FIN @JS-USERS-CERRAR-SESION ───────
 
-        // ============================================================
-        // HISTORIAL
-        // ============================================================
+        // ─────── @JS-USERS-HISTORIAL ───────
+        // Registro de eventos en el historial general
         function registrarHistorial(entidad, accion, descripcion, meta) {
             if (!meta) meta = {};
             const evento = {
@@ -2555,17 +2894,23 @@
             if (sc && sc.classList.contains('active')) renderizarHistorial();
             marcarCambiosPendientes();
         }
+        // ─────── FIN @JS-USERS-HISTORIAL ───────
 
-        // ============================================================
-        // ACCESO A DATOS
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-PERSIST — Persistencia y acceso a datos                  */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-PERSIST-GETTERS ───────
+        // Funciones de acceso rápido a datos relacionados
         function obtenerPaquete(id) { return paquetes.find(function(p) { return p && p.id === id; }) || null; }
         function obtenerServicio(id) { return serviciosAdicionales.find(function(s) { return s && s.id === id; }) || null; }
         function obtenerCliente(id) { return clientes.find(function(c) { return c && c.id === id; }) || null; }
         function obtenerProspecto(id) { return prospectos.find(function(p) { return p && p.id === id; }) || null; }
         function obtenerNombrePaquete(id) { const p = obtenerPaquete(id); return p ? p.nombre : 'Paquete no encontrado'; }
         function obtenerNombreServicio(id) { const s = obtenerServicio(id); return s ? s.nombre : 'Servicio no encontrado'; }
+        // ─────── FIN @JS-PERSIST-GETTERS ───────
 
+        // ─────── @JS-PERSIST-NOMBRE-CLIENTE ───────
         function obtenerNombreCliente(id) {
             if (!id) return 'No asignado';
             if (id.indexOf('pro_') === 0) {
@@ -2578,7 +2923,10 @@
             if (p2) return (p2.nombre || 'Prospecto') + ' (Prospecto)';
             return 'No asignado';
         }
+        // ─────── FIN @JS-PERSIST-NOMBRE-CLIENTE ───────
 
+        // ─────── @JS-PERSIST-CONTRATOS ───────
+        // Devuelve todos los contratos aplanados (con datos del cliente)
         function obtenerContratos() {
             const todos = [];
             clientes.forEach(function(cliente) {
@@ -2597,7 +2945,10 @@
             });
             return todos;
         }
+        // ─────── FIN @JS-PERSIST-CONTRATOS ───────
 
+        // ─────── @JS-PERSIST-TOTALES-CONTRATO ───────
+        // Cálculo de totales financieros de un contrato
         function calcularTotalesContrato(contrato) {
             const pagosValidos = (contrato.pagos || []).filter(function(p) { return !p.eliminado; });
             const cargosValidos = (contrato.cargos || []).filter(function(c) { return !c.eliminado; });
@@ -2607,7 +2958,9 @@
             const saldoPendiente = totalAPagar - totalPagos;
             return { pagosValidos: pagosValidos, cargosValidos: cargosValidos, totalPagos: totalPagos, totalCargos: totalCargos, totalAPagar: totalAPagar, saldoPendiente: saldoPendiente };
         }
+        // ─────── FIN @JS-PERSIST-TOTALES-CONTRATO ───────
 
+        // ─────── @JS-PERSIST-NOMBRE-ITEM-CONTRATO ───────
         function obtenerNombreItemContrato(contrato) {
             if (contrato.tipo === 'paquete') {
                 let nombre = obtenerNombrePaquete(contrato.paqueteId);
@@ -2617,10 +2970,9 @@
             }
             return obtenerNombreServicio(contrato.servicioId);
         }
+        // ─────── FIN @JS-PERSIST-NOMBRE-ITEM-CONTRATO ───────
 
-        // ============================================================
-        // PERSISTENCIA
-        // ============================================================
+        // ─────── @JS-PERSIST-GUARDAR-LOCAL ───────
         function guardarDatosLocal() {
             try {
                 localStorage.setItem('paquetes', JSON.stringify(paquetes || []));
@@ -2635,7 +2987,9 @@
                 if (error.name === 'QuotaExceededError') mostrarNotificacion('Almacenamiento lleno', 'error');
             }
         }
+        // ─────── FIN @JS-PERSIST-GUARDAR-LOCAL ───────
 
+        // ─────── @JS-PERSIST-CARGAR-LOCAL ───────
         function cargarDatosLocal() {
             try {
                 paquetes = JSON.parse(localStorage.getItem('paquetes')) || [];
@@ -2647,18 +3001,25 @@
                 usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
             } catch (error) { console.error('Error cargando:', error); }
         }
+        // ─────── FIN @JS-PERSIST-CARGAR-LOCAL ───────
 
+        // ─────── @JS-PERSIST-GUARDAR ───────
         function guardarDatos() {
             guardarDatosLocal();
             marcarCambiosPendientes();
             if (estadoSync.modo === 'firebase' && database) guardarEnFirebase();
         }
+        // ─────── FIN @JS-PERSIST-GUARDAR ───────
 
+        // ─────── @JS-PERSIST-MARCAR-CAMBIOS ───────
         function marcarCambiosPendientes() { cambiosPendientes = true; }
+        // ─────── FIN @JS-PERSIST-MARCAR-CAMBIOS ───────
 
-        // ============================================================
-        // MODAL
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-UI — Modales, temas, sidebar, confirmaciones             */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-UI-MODAL-ABRIR ───────
         function abrirModal(titulo, contenidoHTML, anchoAmplio) {
             const modal = document.getElementById('modal');
             const modalTitulo = document.getElementById('modal-titulo');
@@ -2670,14 +3031,19 @@
             else modalContent.classList.remove('modal-wide');
             modal.classList.add('active');
         }
+        // ─────── FIN @JS-UI-MODAL-ABRIR ───────
 
+        // ─────── @JS-UI-MODAL-CERRAR ───────
         function cerrarModal() {
             const modal = document.getElementById('modal');
             const modalContent = modal.querySelector('.modal-content');
             modal.classList.remove('active');
             modalContent.classList.remove('modal-wide');
         }
+        // ─────── FIN @JS-UI-MODAL-CERRAR ───────
 
+        // ─────── @JS-UI-MODAL-LISTENERS ───────
+        // Listeners de cierre del modal (X y click afuera)
         document.getElementById('modal-cerrar').addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -2686,10 +3052,10 @@
         document.getElementById('modal').addEventListener('click', function(e) {
             if (e.target === this) cerrarModal();
         });
+        // ─────── FIN @JS-UI-MODAL-LISTENERS ───────
 
-        // ============================================================
-        // CONFIRMACIÓN
-        // ============================================================
+        // ─────── @JS-UI-CONFIRMAR-ELIMINAR ───────
+        // Modal de confirmación para eliminar cualquier entidad
         function confirmarEliminacion(opciones) {
             const titulo = opciones.titulo || 'Confirmar eliminación';
             const entidad = opciones.entidad || 'registro';
@@ -2718,10 +3084,9 @@
                 if (typeof onConfirmar === 'function') onConfirmar();
             });
         }
+        // ─────── FIN @JS-UI-CONFIRMAR-ELIMINAR ───────
 
-        // ============================================================
-        // TEMAS Y SIDEBAR
-        // ============================================================
+        // ─────── @JS-UI-TEMA-APLICAR ───────
         function aplicarTema(tema) {
             if (TEMAS_DISPONIBLES.indexOf(tema) === -1) tema = 'dark';
             document.documentElement.setAttribute('data-theme', tema);
@@ -2730,7 +3095,9 @@
                 op.classList.toggle('activo', op.dataset.tema === tema);
             });
         }
+        // ─────── FIN @JS-UI-TEMA-APLICAR ───────
 
+        // ─────── @JS-UI-SIDEBAR-COLAPSAR ───────
         function aplicarSidebarColapsado(colapsado) {
             const s = document.getElementById('sidebar');
             if (!s) return;
@@ -2745,7 +3112,10 @@
             const c = s.classList.toggle('collapsed');
             localStorage.setItem(PREF_SIDEBAR, c ? '1' : '0');
         }
+        // ─────── FIN @JS-UI-SIDEBAR-COLAPSAR ───────
 
+        // ─────── @JS-UI-SIDEBAR-MOVIL ───────
+        // Sidebar como drawer en móvil
         function toggleSidebarMovil() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
@@ -2776,31 +3146,14 @@
             btn.classList.remove('abierto');
             btn.innerHTML = '<i class="fas fa-bars"></i>';
         }
+        // ─────── FIN @JS-UI-SIDEBAR-MOVIL ───────
 
-        // ============================================================
-        // RENDERIZADO DE MOSAICOS
-        // ============================================================
-        function renderizarMosaicos(config) {
-            const contenedor = document.getElementById(config.contenedorId);
-            if (!contenedor) return;
-            const f = config.items.filter(Boolean);
-            if (f.length === 0) {
-                contenedor.innerHTML = '<p class="mensaje-vacio">' + config.textoVacio + '</p>';
-                return;
-            }
-            contenedor.innerHTML = f.map(function(item) {
-                const clickAttr = config.onCardClick ? 'onclick="' + config.onCardClick(item) + '"' : '';
-                const clickClass = config.onCardClick ? 'clickeable' : '';
-                return '<div class="mosaico-card ' + clickClass + '" ' + clickAttr + '>' +
-                    config.renderContenido(item) +
-                    (config.renderAcciones ? '<div class="mosaico-footer" onclick="event.stopPropagation()">' + config.renderAcciones(item) + '</div>' : '') +
-                    '</div>';
-            }).join('');
-        }
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-CRUD — CRUD Factory genérico para paquetes/servicios/clientes */
+        /* ═══════════════════════════════════════════════════════════ */
 
-        // ============================================================
-        // CRUD FACTORY
-        // ============================================================
+        // ─────── @JS-CRUD-FACTORY ───────
+        // Genera un CRUD completo (crear, editar, eliminar) para una colección
         function crearCRUD(config) {
             const coleccion = config.coleccion;
             const titulo = config.titulo;
@@ -2810,6 +3163,7 @@
             const onEliminar = config.onEliminar;
             const soloAdmin = config.soloAdmin === true;
 
+            // ─────── @JS-CRUD-FACTORY-FORMULARIO ───────
             function mostrarFormulario(item) {
                 if (soloAdmin && !esAdmin()) {
                     mostrarNotificacion('Solo administradores pueden gestionar ' + titulo.toLowerCase() + 's.', 'warning');
@@ -2906,7 +3260,9 @@
                     }
                 });
             }
+            // ─────── FIN @JS-CRUD-FACTORY-FORMULARIO ───────
 
+            // ─────── @JS-CRUD-FACTORY-API ───────
             return {
                 nuevo: function() { mostrarFormulario(); },
                 editar: function(id) {
@@ -2947,126 +3303,12 @@
                     });
                 }
             };
+            // ─────── FIN @JS-CRUD-FACTORY-API ───────
         }
+        // ─────── FIN @JS-CRUD-FACTORY ───────
 
-        // ============================================================
-        // RENDERIZADOS
-        // ============================================================
-        function renderizarPaquetes() {
-            renderizarMosaicos({
-                contenedorId: 'lista-paquetes', items: paquetes, textoVacio: 'No hay paquetes registrados',
-                renderContenido: function(p) {
-                    const pf = (p.precio || 0) - (p.descuento || 0);
-                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + (p.nombre || 'Sin nombre') + '</div></div>' +
-                        '<div class="mosaico-detalle">' + (p.descripcion || '') + '</div>' +
-                        '<div class="mosaico-separador"></div>' +
-                        '<div class="mosaico-detalle"><div><strong>Precio:</strong> ' + formatearMoneda(p.precio || 0) + '</div>' +
-                        (p.descuento ? '<div><strong>Descuento:</strong> ' + formatearMoneda(p.descuento) + '</div>' : '') +
-                        '<div><strong>Final:</strong> ' + formatearMoneda(pf) + '</div></div>' +
-                        '<div class="mosaico-summary"><span><i class="fas fa-calendar"></i> Vigencia</span><span class="monto">' + formatearFecha(p.vigencia) + '</span></div>';
-                },
-                renderAcciones: function(p) {
-                    return '<button class="btn-editar" onclick="CRUD.paquetes.editar(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
-                        '<button class="btn-eliminar" onclick="CRUD.paquetes.eliminar(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
-                }
-            });
-        }
-
-        function renderizarServicios() {
-            renderizarMosaicos({
-                contenedorId: 'lista-servicios', items: serviciosAdicionales, textoVacio: 'No hay servicios registrados',
-                renderContenido: function(s) {
-                    const pf = (s.precio || 0) - (s.descuento || 0);
-                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + (s.nombre || 'Sin nombre') + '</div></div>' +
-                        '<div class="mosaico-detalle">' + (s.descripcion || '') + '</div>' +
-                        '<div class="mosaico-separador"></div>' +
-                        '<div class="mosaico-detalle"><div><strong>Precio:</strong> ' + formatearMoneda(s.precio || 0) + '</div>' +
-                        (s.descuento ? '<div><strong>Descuento:</strong> ' + formatearMoneda(s.descuento) + '</div>' : '') +
-                        '<div><strong>Final:</strong> ' + formatearMoneda(pf) + '</div></div>' +
-                        '<div class="mosaico-summary"><span><i class="fas fa-calendar"></i> Vigencia</span><span class="monto">' + formatearFecha(s.vigencia) + '</span></div>';
-                },
-                renderAcciones: function(s) {
-                    return '<button class="btn-editar" onclick="CRUD.servicios.editar(\'' + s.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
-                        '<button class="btn-eliminar" onclick="CRUD.servicios.eliminar(\'' + s.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
-                }
-            });
-        }
-
-        function renderizarProspectos() {
-            const filtroFase = document.getElementById('filtro-fase-prospecto').value;
-            const busqueda = document.getElementById('buscar-prospecto').value.toLowerCase().trim();
-            let f = prospectos.slice();
-            if (filtroFase !== 'todas') f = f.filter(function(p) { return p && p.faseActual === filtroFase; });
-            if (busqueda) f = f.filter(function(p) { return p && (p.nombre.toLowerCase().indexOf(busqueda) !== -1 || (p.telefono && p.telefono.indexOf(busqueda) !== -1)); });
-
-            renderizarMosaicos({
-                contenedorId: 'lista-prospectos', items: f, textoVacio: 'No hay prospectos',
-                renderContenido: function(p) {
-                    const cf = 'etiqueta-' + p.faseActual.toLowerCase().replace('ó', 'o').replace('á', 'a').replace('é', 'e');
-                    const ec = p.clienteId !== null && p.clienteId !== undefined;
-                    const numTareas = tareas.filter(function(t) { return t.clienteId === 'pro_' + p.id; }).length;
-                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + p.nombre + '</div></div>' +
-                        '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + p.faseActual + '</span>' +
-                        (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') +
-                        (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') +
-                        '</div>' +
-                        '<div class="mosaico-separador"></div>' +
-                        '<div class="mosaico-detalle">' + (p.telefono ? '<div><i class="fas fa-phone"></i> ' + p.telefono + '</div>' : '') +
-                        (p.email ? '<div><i class="fas fa-envelope"></i> ' + p.email + '</div>' : '') +
-                        '<div><small>Registrado: ' + formatearFecha(p.fechaRegistro) + '</small></div></div>';
-                },
-                renderAcciones: function(p) {
-                    const ec = p.clienteId !== null && p.clienteId !== undefined;
-                    return '<button class="btn-ver-detalle" onclick="verDetalleProspecto(\'' + p.id + '\')" title="Ver detalle"><i class="fas fa-eye"></i></button>' +
-                        '<button class="btn-editar" onclick="editarProspecto(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
-                        '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + p.id + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
-                        (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + p.id + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') +
-                        '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
-                }
-            });
-        }
-
-        function renderizarClientes() {
-            const filtroEstado = document.getElementById('filtro-estado-cliente-lista').value;
-            const busqueda = document.getElementById('buscar-cliente').value.toLowerCase().trim();
-            let f = clientes.slice();
-            if (filtroEstado !== 'todos') f = f.filter(function(c) { return c && c.estado === filtroEstado; });
-            if (busqueda) f = f.filter(function(c) { return c && (c.nombre.toLowerCase().indexOf(busqueda) !== -1 || c.telefono.indexOf(busqueda) !== -1); });
-
-            renderizarMosaicos({
-                contenedorId: 'lista-clientes', items: f, textoVacio: 'No hay clientes',
-                renderContenido: function(c) {
-                    const ec = c.estado === 'Activo' ? 'etiqueta-interesado' : c.estado === 'Inactivo' ? 'etiqueta-inactivo' : 'etiqueta-cancelado';
-                    const tc = c.contratos ? c.contratos.length : 0;
-                    const uc = tc > 0 ? formatearFecha(c.contratos[c.contratos.length - 1].fechaContrato) : '';
-                    const numTareas = tareas.filter(function(t) { return t.clienteId === c.id; }).length;
-                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + c.nombre + '</div></div>' +
-                        '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span>' +
-                        (c.faseOrigen ? '<span class="tarjeta-etiqueta" style="background:var(--color-azul);color:#fff;">' + c.faseOrigen + '</span>' : '') +
-                        (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') +
-                        '</div>' +
-                        '<div class="mosaico-separador"></div>' +
-                        '<div class="mosaico-detalle"><div><i class="fas fa-phone"></i> ' + c.telefono + '</div>' +
-                        (c.email ? '<div><i class="fas fa-envelope"></i> ' + c.email + '</div>' : '') +
-                        '<div><small>Registrado: ' + formatearFecha(c.fechaRegistro) + '</small></div></div>' +
-                        '<div class="mosaico-summary"><span><i class="fas fa-file-contract"></i> ' + tc + ' contrato' + (tc === 1 ? '' : 's') + '</span>' +
-                        (uc ? '<span class="monto">' + uc + '</span>' : '') + '</div>';
-                },
-                renderAcciones: function(c) {
-                    const tieneTelefono = c.telefono && normalizarTelefonoWhatsApp(c.telefono);
-                    return '<button class="btn-ver-detalle" onclick="verDetalleCliente(\'' + c.id + '\')" title="Ver detalle"><i class="fas fa-eye"></i></button>' +
-                        '<button class="btn-editar" onclick="CRUD.clientes.editar(\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
-                        '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + c.id + '\', \'cliente\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
-                        '<button class="btn-convertir" onclick="mostrarFormularioContrato(\'' + c.id + '\')" title="Agregar contrato"><i class="fas fa-file-contract"></i></button>' +
-                        '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.id + '\')" title="Enviar WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button>' +
-                        (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarCliente(\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '');
-                }
-            });
-        }
-
-        // ============================================================
-        // CRUDs INSTANCIADOS
-        // ============================================================
+        // ─────── @JS-CRUD-INSTANCIAS ───────
+        // Instancias de CRUD para cada colección
         const CRUD = {
             paquetes: crearCRUD({
                 coleccion: 'paquetes', titulo: 'Paquete', entidadHistorial: 'paquete',
@@ -3110,10 +3352,163 @@
             })
         };
         window.CRUD = CRUD;
+        // ─────── FIN @JS-CRUD-INSTANCIAS ───────
 
-        // ============================================================
-        // PROSPECTOS
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-RENDER — Renderizado de mosaicos genéricos                */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-RENDER-MOSAICOS ───────
+        // Renderiza una lista de tarjetas (mosaicos) con contenido y acciones
+        function renderizarMosaicos(config) {
+            const contenedor = document.getElementById(config.contenedorId);
+            if (!contenedor) return;
+            const f = config.items.filter(Boolean);
+            if (f.length === 0) {
+                contenedor.innerHTML = '<p class="mensaje-vacio">' + config.textoVacio + '</p>';
+                return;
+            }
+            contenedor.innerHTML = f.map(function(item) {
+                const clickAttr = config.onCardClick ? 'onclick="' + config.onCardClick(item) + '"' : '';
+                const clickClass = config.onCardClick ? 'clickeable' : '';
+                return '<div class="mosaico-card ' + clickClass + '" ' + clickAttr + '>' +
+                    config.renderContenido(item) +
+                    (config.renderAcciones ? '<div class="mosaico-footer" onclick="event.stopPropagation()">' + config.renderAcciones(item) + '</div>' : '') +
+                    '</div>';
+            }).join('');
+        }
+        // ─────── FIN @JS-RENDER-MOSAICOS ───────
+
+        // ─────── @JS-RENDER-PAQUETES ───────
+        // Vista de tarjetas de paquetes (solo admin ve los botones)
+        function renderizarPaquetes() {
+            renderizarMosaicos({
+                contenedorId: 'lista-paquetes', items: paquetes, textoVacio: 'No hay paquetes registrados',
+                renderContenido: function(p) {
+                    const pf = (p.precio || 0) - (p.descuento || 0);
+                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + (p.nombre || 'Sin nombre') + '</div></div>' +
+                        '<div class="mosaico-detalle">' + (p.descripcion || '') + '</div>' +
+                        '<div class="mosaico-separador"></div>' +
+                        '<div class="mosaico-detalle"><div><strong>Precio:</strong> ' + formatearMoneda(p.precio || 0) + '</div>' +
+                        (p.descuento ? '<div><strong>Descuento:</strong> ' + formatearMoneda(p.descuento) + '</div>' : '') +
+                        '<div><strong>Final:</strong> ' + formatearMoneda(pf) + '</div></div>' +
+                        '<div class="mosaico-summary"><span><i class="fas fa-calendar"></i> Vigencia</span><span class="monto">' + formatearFecha(p.vigencia) + '</span></div>';
+                },
+                renderAcciones: function(p) {
+                    return '<button class="btn-editar" onclick="CRUD.paquetes.editar(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                        '<button class="btn-eliminar" onclick="CRUD.paquetes.eliminar(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
+                }
+            });
+        }
+        // ─────── FIN @JS-RENDER-PAQUETES ───────
+
+        // ─────── @JS-RENDER-SERVICIOS ───────
+        // Vista de tarjetas de servicios adicionales (solo admin ve los botones)
+        function renderizarServicios() {
+            renderizarMosaicos({
+                contenedorId: 'lista-servicios', items: serviciosAdicionales, textoVacio: 'No hay servicios registrados',
+                renderContenido: function(s) {
+                    const pf = (s.precio || 0) - (s.descuento || 0);
+                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + (s.nombre || 'Sin nombre') + '</div></div>' +
+                        '<div class="mosaico-detalle">' + (s.descripcion || '') + '</div>' +
+                        '<div class="mosaico-separador"></div>' +
+                        '<div class="mosaico-detalle"><div><strong>Precio:</strong> ' + formatearMoneda(s.precio || 0) + '</div>' +
+                        (s.descuento ? '<div><strong>Descuento:</strong> ' + formatearMoneda(s.descuento) + '</div>' : '') +
+                        '<div><strong>Final:</strong> ' + formatearMoneda(pf) + '</div></div>' +
+                        '<div class="mosaico-summary"><span><i class="fas fa-calendar"></i> Vigencia</span><span class="monto">' + formatearFecha(s.vigencia) + '</span></div>';
+                },
+                renderAcciones: function(s) {
+                    return '<button class="btn-editar" onclick="CRUD.servicios.editar(\'' + s.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                        '<button class="btn-eliminar" onclick="CRUD.servicios.eliminar(\'' + s.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
+                }
+            });
+        }
+        // ─────── FIN @JS-RENDER-SERVICIOS ───────
+
+        // ─────── @JS-RENDER-CLIENTES ───────
+        // Vista de tarjetas de clientes (con badge de tareas vinculadas)
+        function renderizarClientes() {
+            const filtroEstado = document.getElementById('filtro-estado-cliente-lista').value;
+            const busqueda = document.getElementById('buscar-cliente').value.toLowerCase().trim();
+            let f = clientes.slice();
+            if (filtroEstado !== 'todos') f = f.filter(function(c) { return c && c.estado === filtroEstado; });
+            if (busqueda) f = f.filter(function(c) { return c && (c.nombre.toLowerCase().indexOf(busqueda) !== -1 || c.telefono.indexOf(busqueda) !== -1); });
+
+            renderizarMosaicos({
+                contenedorId: 'lista-clientes', items: f, textoVacio: 'No hay clientes',
+                renderContenido: function(c) {
+                    const ec = c.estado === 'Activo' ? 'etiqueta-interesado' : c.estado === 'Inactivo' ? 'etiqueta-inactivo' : 'etiqueta-cancelado';
+                    const tc = c.contratos ? c.contratos.length : 0;
+                    const uc = tc > 0 ? formatearFecha(c.contratos[c.contratos.length - 1].fechaContrato) : '';
+                    const numTareas = tareas.filter(function(t) { return t.clienteId === c.id; }).length;
+                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + c.nombre + '</div></div>' +
+                        '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span>' +
+                        (c.faseOrigen ? '<span class="tarjeta-etiqueta" style="background:var(--color-azul);color:#fff;">' + c.faseOrigen + '</span>' : '') +
+                        (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') +
+                        '</div>' +
+                        '<div class="mosaico-separador"></div>' +
+                        '<div class="mosaico-detalle"><div><i class="fas fa-phone"></i> ' + c.telefono + '</div>' +
+                        (c.email ? '<div><i class="fas fa-envelope"></i> ' + c.email + '</div>' : '') +
+                        '<div><small>Registrado: ' + formatearFecha(c.fechaRegistro) + '</small></div></div>' +
+                        '<div class="mosaico-summary"><span><i class="fas fa-file-contract"></i> ' + tc + ' contrato' + (tc === 1 ? '' : 's') + '</span>' +
+                        (uc ? '<span class="monto">' + uc + '</span>' : '') + '</div>';
+                },
+                renderAcciones: function(c) {
+                    const tieneTelefono = c.telefono && normalizarTelefonoWhatsApp(c.telefono);
+                    return '<button class="btn-ver-detalle" onclick="verDetalleCliente(\'' + c.id + '\')" title="Ver detalle"><i class="fas fa-eye"></i></button>' +
+                        '<button class="btn-editar" onclick="CRUD.clientes.editar(\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                        '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + c.id + '\', \'cliente\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
+                        '<button class="btn-convertir" onclick="mostrarFormularioContrato(\'' + c.id + '\')" title="Agregar contrato"><i class="fas fa-file-contract"></i></button>' +
+                        '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.id + '\')" title="Enviar WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button>' +
+                        (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarCliente(\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '');
+                }
+            });
+        }
+        // ─────── FIN @JS-RENDER-CLIENTES ───────
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-PROSPECTOS — Gestión completa de prospectos              */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-PROSPECTOS-RENDER ───────
+        // Vista de tarjetas de prospectos
+        function renderizarProspectos() {
+            const filtroFase = document.getElementById('filtro-fase-prospecto').value;
+            const busqueda = document.getElementById('buscar-prospecto').value.toLowerCase().trim();
+            let f = prospectos.slice();
+            if (filtroFase !== 'todas') f = f.filter(function(p) { return p && p.faseActual === filtroFase; });
+            if (busqueda) f = f.filter(function(p) { return p && (p.nombre.toLowerCase().indexOf(busqueda) !== -1 || (p.telefono && p.telefono.indexOf(busqueda) !== -1)); });
+
+            renderizarMosaicos({
+                contenedorId: 'lista-prospectos', items: f, textoVacio: 'No hay prospectos',
+                renderContenido: function(p) {
+                    const cf = 'etiqueta-' + p.faseActual.toLowerCase().replace('ó', 'o').replace('á', 'a').replace('é', 'e');
+                    const ec = p.clienteId !== null && p.clienteId !== undefined;
+                    const numTareas = tareas.filter(function(t) { return t.clienteId === 'pro_' + p.id; }).length;
+                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + p.nombre + '</div></div>' +
+                        '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + p.faseActual + '</span>' +
+                        (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') +
+                        (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') +
+                        '</div>' +
+                        '<div class="mosaico-separador"></div>' +
+                        '<div class="mosaico-detalle">' + (p.telefono ? '<div><i class="fas fa-phone"></i> ' + p.telefono + '</div>' : '') +
+                        (p.email ? '<div><i class="fas fa-envelope"></i> ' + p.email + '</div>' : '') +
+                        '<div><small>Registrado: ' + formatearFecha(p.fechaRegistro) + '</small></div></div>';
+                },
+                renderAcciones: function(p) {
+                    const ec = p.clienteId !== null && p.clienteId !== undefined;
+                    return '<button class="btn-ver-detalle" onclick="verDetalleProspecto(\'' + p.id + '\')" title="Ver detalle"><i class="fas fa-eye"></i></button>' +
+                        '<button class="btn-editar" onclick="editarProspecto(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                        '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + p.id + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
+                        (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + p.id + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') +
+                        '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
+                }
+            });
+        }
+        // ─────── FIN @JS-PROSPECTOS-RENDER ───────
+
+        // ─────── @JS-PROSPECTOS-FORMULARIO ───────
+        // Formulario de creación/edición de prospecto
         function mostrarFormularioProspecto(prospecto) {
             const ee = prospecto !== null && prospecto !== undefined;
             let opf = '';
@@ -3166,9 +3561,17 @@
                 mostrarNotificacion('Prospecto guardado', 'success');
             });
         }
+        // ─────── FIN @JS-PROSPECTOS-FORMULARIO ───────
 
-        function editarProspecto(id) { const p = obtenerProspecto(id); if (p) mostrarFormularioProspecto(p); }
+        // ─────── @JS-PROSPECTOS-EDITAR ───────
+        function editarProspecto(id) { 
+            const p = obtenerProspecto(id); 
+            if (p) mostrarFormularioProspecto(p); 
+        }
+        // ─────── FIN @JS-PROSPECTOS-EDITAR ───────
 
+        // ─────── @JS-PROSPECTOS-ELIMINAR ───────
+        // Operadores SÍ pueden eliminar prospectos (queda registro en historial)
         function eliminarProspecto(id) {
             const p = obtenerProspecto(id); if (!p) return;
             confirmarEliminacion({
@@ -3183,7 +3586,10 @@
                 }
             });
         }
+        // ─────── FIN @JS-PROSPECTOS-ELIMINAR ───────
 
+        // ─────── @JS-PROSPECTOS-CONVERTIR ───────
+        // Convierte prospecto a cliente y migra sus tareas vinculadas
         function convertirProspecto(id) {
             const p = obtenerProspecto(id);
             if (!p || p.clienteId) return;
@@ -3204,7 +3610,14 @@
             guardarDatos(); renderizarProspectos(); renderizarClientes(); renderizarCalendario();
             mostrarNotificacion('Prospecto convertido a cliente' + (tareasMigradas > 0 ? ' · ' + tareasMigradas + ' tareas migradas' : ''), 'success');
         }
+        // ─────── FIN @JS-PROSPECTOS-CONVERTIR ───────
 
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-CLIENTES — Eliminación y WhatsApp de clientes            */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-CLIENTES-ELIMINAR ───────
+        // Solo admin puede eliminar clientes
         function eliminarCliente(id) {
             if (bloquearSiNoEsAdmin('eliminar clientes')) return;
             const c = obtenerCliente(id); if (!c) return;
@@ -3223,7 +3636,10 @@
                 }
             });
         }
+        // ─────── FIN @JS-CLIENTES-ELIMINAR ───────
 
+        // ─────── @JS-CLIENTES-WHATSAPP ───────
+        // Abre WhatsApp con el número del cliente
         function enviarWhatsAppCliente(clienteId) {
             const cliente = obtenerCliente(clienteId);
             if (!cliente) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
@@ -3236,19 +3652,24 @@
             mostrarNotificacion('Abriendo WhatsApp', 'success');
             registrarHistorial('sesion', 'editar', 'Se abrió WhatsApp para contactar a "' + cliente.nombre + '"', { id: clienteId, nombre: cliente.nombre });
         }
+        // ─────── FIN @JS-CLIENTES-WHATSAPP ───────
 
-        // ============================================================
-        // TAREAS — CREAR DESDE CLIENTE / PROSPECTO
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-TAREAS — Tareas vinculadas, buscador de clientes         */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-TAREAS-ABRIR-PARA-CLIENTE ───────
+        // Abre el formulario de tarea ya preconfigurado con un cliente/prospecto
         function abrirTareaParaCliente(entidadId, tipo) {
             let idVincular = entidadId;
             if (tipo === 'prospecto') idVincular = 'pro_' + entidadId;
             mostrarFormularioTarea(null, idVincular);
         }
+        // ─────── FIN @JS-TAREAS-ABRIR-PARA-CLIENTE ───────
 
-        // ============================================================
-        // BUSCADOR DE CLIENTES/PROSPECTOS
-        // ============================================================
+        // ─────── @JS-TAREAS-BUSCADOR-CLIENTE ───────
+        // Combobox con búsqueda para vincular tarea a cliente/prospecto
+        // Permite buscar por nombre o por festejado
         function inicializarBuscadorCliente(opciones, valorInicial) {
             const input = document.getElementById('tarea-cliente-input');
             const resultados = document.getElementById('tarea-cliente-resultados');
@@ -3365,10 +3786,11 @@
                 if (op) input.value = op.nombre + (op.tipo === 'cliente' ? ' (Cliente)' : ' (Prospecto)');
             }
         }
+        // ─────── FIN @JS-TAREAS-BUSCADOR-CLIENTE ───────
 
-        // ============================================================
-        // TAREAS — FORMULARIO
-        // ============================================================
+        // ─────── @JS-TAREAS-FORMULARIO ───────
+        // Formulario para crear/editar tarea
+        // Acepta: tarea (objeto), clientePreconfigurado (id), fechaPreconfigurada (YYYY-MM-DD)
         function mostrarFormularioTarea(tarea, clientePreconfigurado, fechaPreconfigurada) {
             const ee = tarea !== null && tarea !== undefined && tarea !== false && tarea.id;
             let ot = '';
@@ -3467,9 +3889,16 @@
                 mostrarNotificacion(ee2 ? 'Tarea actualizada' : 'Tarea creada', 'success');
             });
         }
+        // ─────── FIN @JS-TAREAS-FORMULARIO ───────
 
-        function editarTarea(id) { const t = tareas.find(function(t) { return t.id === id; }); if (t) mostrarFormularioTarea(t); }
-        
+        // ─────── @JS-TAREAS-EDITAR ───────
+        function editarTarea(id) { 
+            const t = tareas.find(function(t) { return t.id === id; }); 
+            if (t) mostrarFormularioTarea(t); 
+        }
+        // ─────── FIN @JS-TAREAS-EDITAR ───────
+
+        // ─────── @JS-TAREAS-ELIMINAR ───────
         function eliminarTarea(id) {
             const t = tareas.find(function(x) { return x.id === id; }); if (!t) return;
             confirmarEliminacion({
@@ -3483,7 +3912,9 @@
                 }
             });
         }
-        
+        // ─────── FIN @JS-TAREAS-ELIMINAR ───────
+
+        // ─────── @JS-TAREAS-ALTERNAR-COMPLETAR ───────
         function alternarCompletarTarea(id) {
             const t = tareas.find(function(x) { return x.id === id; }); if (!t) return;
             t.completada = !t.completada;
@@ -3493,7 +3924,10 @@
             guardarDatos(); renderizarCalendario(); renderizarInformes();
             renderizarClientes(); renderizarProspectos();
         }
+        // ─────── FIN @JS-TAREAS-ALTERNAR-COMPLETAR ───────
 
+        // ─────── @JS-TAREAS-TOGGLE-DESDE-DETALLE ───────
+        // Marcar tarea como completada desde el detalle del cliente/prospecto
         function toggleTareaDesdeDetalle(id, completada) {
             const t = tareas.find(function(x) { return x.id === id; });
             if (!t) return;
@@ -3519,10 +3953,10 @@
                 verDetalleCliente(clid);
             }
         }
+        // ─────── FIN @JS-TAREAS-TOGGLE-DESDE-DETALLE ───────
 
-        // ============================================================
-        // DETALLE DE CLIENTE CON TAREAS
-        // ============================================================
+        // ─────── @JS-TAREAS-DETALLE-CLIENTE ───────
+        // Modal de detalle de cliente con lista de tareas vinculadas
         function verDetalleCliente(clienteId) {
             const c = obtenerCliente(clienteId);
             if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
@@ -3537,7 +3971,10 @@
             });
             abrirModal('Detalle del cliente', html, true);
         }
+        // ─────── FIN @JS-TAREAS-DETALLE-CLIENTE ───────
 
+        // ─────── @JS-TAREAS-DETALLE-PROSPECTO ───────
+        // Modal de detalle de prospecto con lista de tareas vinculadas
         function verDetalleProspecto(prospectoId) {
             const p = obtenerProspecto(prospectoId);
             if (!p) { mostrarNotificacion('Prospecto no encontrado', 'error'); return; }
@@ -3552,7 +3989,10 @@
             });
             abrirModal('Detalle del prospecto', html, true);
         }
+        // ─────── FIN @JS-TAREAS-DETALLE-PROSPECTO ───────
 
+        // ─────── @JS-TAREAS-CONSTRUIR-DETALLE ───────
+        // Constructor compartido de modal de detalle para cliente/prospecto
         function construirDetalleEntidad(opts) {
             const e = opts.entidad;
             const tipo = opts.tipo;
@@ -3623,7 +4063,10 @@
             
             return html;
         }
+        // ─────── FIN @JS-TAREAS-CONSTRUIR-DETALLE ───────
 
+        // ─────── @JS-TAREAS-LISTA-VINCULADAS ───────
+        // Genera HTML de lista de tareas vinculadas con checkboxes
         function construirListaTareasVinculadas(tareasVinc) {
             const total = tareasVinc.length;
             const completadas = tareasVinc.filter(function(t) { return t.completada; }).length;
@@ -3677,10 +4120,15 @@
             html += '</div>';
             return html;
         }
+        // ─────── FIN @JS-TAREAS-LISTA-VINCULADAS ───────
 
-        // ============================================================
-        // CONTRATOS
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-CONTRATOS — Contratos, pagos, cargos extras              */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-CONTRATOS-FORMULARIO ───────
+        // Formulario completo para crear/editar un contrato
+        // Incluye pagos, cargos extras, calculadora de precios, etc.
         function mostrarFormularioContrato(clienteId, titulo, contrato) {
             if (!clienteId) clienteId = null;
             if (!titulo) titulo = 'Nuevo Contrato';
@@ -3787,6 +4235,8 @@
 
             const el = function(id) { return document.getElementById(id); };
 
+            // ─────── @JS-CONTRATOS-RENDER-MOVIMIENTOS ───────
+            // Dibuja pagos y cargos en la lista de movimientos
             function renderizarMovimientos() {
                 const lista = el('movimientos-lista');
                 if (!lista) return;
@@ -3831,7 +4281,10 @@
                 }).join('');
                 actualizarResumen();
             }
+            // ─────── FIN @JS-CONTRATOS-RENDER-MOVIMIENTOS ───────
 
+            // ─────── @JS-CONTRATOS-ACTUALIZAR-RESUMEN ───────
+            // Actualiza el resumen financiero del formulario de contrato
             function actualizarResumen() {
                 const pv = pagosArr.filter(function(p) { return !p.eliminado; });
                 const cv = cargosArr.filter(function(c) { return !c.eliminado; });
@@ -3848,7 +4301,10 @@
                 se.textContent = formatearMoneda(sa);
                 se.style.color = sa === 0 ? 'var(--color-verde)' : 'var(--color-naranja)';
             }
+            // ─────── FIN @JS-CONTRATOS-ACTUALIZAR-RESUMEN ───────
 
+            // ─────── @JS-CONTRATOS-ELIMINAR-MOVIMIENTO ───────
+            // Marca un pago o cargo como eliminado (soft delete con auditoría)
             window.PDA = window.PDA || {};
             window.PDA.eliminarMovimiento = function(tipo, index) {
                 const esPago = tipo === 'pago';
@@ -3882,7 +4338,10 @@
                     }
                 });
             };
+            // ─────── FIN @JS-CONTRATOS-ELIMINAR-MOVIMIENTO ───────
 
+            // ─────── @JS-CONTRATOS-CALCULAR-PRECIOS ───────
+            // Calcula automáticamente el precio base según paquete/servicios
             const ts = el('contrato-tipo');
             const sp = el('seccion-paquete');
             const ss = el('seccion-solo-servicio');
@@ -3911,7 +4370,10 @@
                 if (!pfa || pfa === 0) pfi.value = pb;
                 actualizarResumen();
             }
+            // ─────── FIN @JS-CONTRATOS-CALCULAR-PRECIOS ───────
 
+            // ─────── @JS-CONTRATOS-LISTENERS-FORM ───────
+            // Listeners de los campos del formulario
             ts.addEventListener('change', function() {
                 if (this.value === 'paquete') {
                     sp.style.display = ''; ss.style.display = 'none';
@@ -3969,6 +4431,7 @@
                 di.focus();
                 mostrarNotificacion('Cargo extra agregado', 'success');
             });
+            // ─────── FIN @JS-CONTRATOS-LISTENERS-FORM ───────
 
             if (contrato) {
                 if (contrato.horaEvento) el('contrato-hora-evento').value = contrato.horaEvento;
@@ -3989,7 +4452,10 @@
                 guardarContrato(ee, contrato, pagosArr, cargosArr, pagosRecientes);
             });
         }
+        // ─────── FIN @JS-CONTRATOS-FORMULARIO ───────
 
+        // ─────── @JS-CONTRATOS-GUARDAR ───────
+        // Persiste un contrato nuevo o editado
         function guardarContrato(ee, contratoOriginal, pagosArr, cargosArr, pagosRecientes) {
             const el = function(id) { return document.getElementById(id); };
             const ci = el('contrato-id').value;
@@ -4070,7 +4536,10 @@
                 setTimeout(function() { abrirSelectorComprobante(clid, nc.id, ultimoPago.id); }, 300);
             }
         }
+        // ─────── FIN @JS-CONTRATOS-GUARDAR ───────
 
+        // ─────── @JS-CONTRATOS-RENDER-LISTA ───────
+        // Vista de tarjetas de contratos
         function renderizarContratos() {
             const fe = document.getElementById('filtro-estado-contrato-lista').value;
             const ft = document.getElementById('filtro-tipo-contrato').value;
@@ -4125,7 +4594,9 @@
                 }
             });
         }
+        // ─────── FIN @JS-CONTRATOS-RENDER-LISTA ───────
 
+        // ─────── @JS-CONTRATOS-EDITAR ───────
         function editarContrato(clienteId, contratoId) {
             const c = obtenerCliente(clienteId);
             if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
@@ -4133,7 +4604,10 @@
             if (!co) { mostrarNotificacion('Contrato no encontrado', 'error'); return; }
             mostrarFormularioContrato(clienteId, 'Editar Contrato', co);
         }
+        // ─────── FIN @JS-CONTRATOS-EDITAR ───────
 
+        // ─────── @JS-CONTRATOS-ELIMINAR ───────
+        // Solo admin puede eliminar contratos
         function eliminarContrato(clienteId, contratoId) {
             if (bloquearSiNoEsAdmin('eliminar contratos')) return;
             const c = obtenerCliente(clienteId); if (!c) return;
@@ -4149,7 +4623,10 @@
                 }
             });
         }
+        // ─────── FIN @JS-CONTRATOS-ELIMINAR ───────
 
+        // ─────── @JS-CONTRATOS-PAGO-RAPIDO ───────
+        // Modal rápido para agregar un pago desde la lista de contratos
         function agregarPagoRapido(clienteId, contratoId) {
             const c = obtenerCliente(clienteId); if (!c) return;
             const co = c.contratos.find(function(x) { return x.id === contratoId; }); if (!co) return;
@@ -4180,10 +4657,10 @@
                 setTimeout(function() { abrirSelectorComprobante(clienteId, contratoId, nuevoPago.id); }, 200);
             });
         }
+        // ─────── FIN @JS-CONTRATOS-PAGO-RAPIDO ───────
 
-        // ============================================================
-        // DETALLE CONTRATO
-        // ============================================================
+        // ─────── @JS-CONTRATOS-DETALLE ───────
+        // Modal de detalle completo de un contrato
         function verDetalleContrato(clienteId, contratoId) {
             const cliente = obtenerCliente(clienteId);
             if (!cliente) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
@@ -4265,10 +4742,13 @@
 
             abrirModal('Detalle del contrato', html, true);
         }
+        // ─────── FIN @JS-CONTRATOS-DETALLE ───────
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-COMPROBANTES — Generación, descarga y envío de comprobantes */
+        /* ═══════════════════════════════════════════════════════════ */
 
-        // ============================================================
-        // COMPROBANTES
-        // ============================================================
+        // ─────── @JS-COMPROBANTES-DATOS ───────
+        // Obtiene cliente, contrato y pago para armar un comprobante
         function obtenerDatosComprobante(clienteId, contratoId, pagoId) {
             const cliente = obtenerCliente(clienteId);
             if (!cliente) return null;
@@ -4279,119 +4759,369 @@
             const totales = calcularTotalesContrato(contrato);
             return { cliente: cliente, contrato: contrato, pago: pago, totales: totales };
         }
+        // ─────── FIN @JS-COMPROBANTES-DATOS ───────
 
-        function generarCanvasComprobante(datos) {
+        // ─────── @JS-COMPROBANTES-CANVAS ───────
+        // Genera el canvas con el diseño completo del comprobante
+               function generarCanvasComprobante(datos) {
             const cliente = datos.cliente, contrato = datos.contrato, pago = datos.pago, totales = datos.totales;
             const canvas = document.createElement('canvas');
             const W = 720, H = 1024;
             canvas.width = W; canvas.height = H;
             const ctx = canvas.getContext('2d');
 
-            const grad = ctx.createLinearGradient(0, 0, 0, H);
-            grad.addColorStop(0, '#fafaf7'); grad.addColorStop(1, '#f0ece4');
-            ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+            // ─── Fondo general ───
+            const gradFondo = ctx.createLinearGradient(0, 0, 0, H);
+            gradFondo.addColorStop(0, '#fafaf7');
+            gradFondo.addColorStop(1, '#f0ece4');
+            ctx.fillStyle = gradFondo;
+            ctx.fillRect(0, 0, W, H);
 
-            ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, 0, W, 130);
-            ctx.fillStyle = '#c9a84c'; ctx.fillRect(0, 130, W, 6);
+            // ─── Barra superior con gradiente lila → rosa → lila ───
+            const gradTop = ctx.createLinearGradient(0, 0, W, 180);
+            gradTop.addColorStop(0, '#7b2cbf');
+            gradTop.addColorStop(0.3, '#9d4edd');
+            gradTop.addColorStop(0.5, '#c77dff');
+            gradTop.addColorStop(0.7, '#e0aaff');
+            gradTop.addColorStop(1, '#7b2cbf');
+            ctx.fillStyle = gradTop;
+            ctx.fillRect(0, 0, W, 180);
 
-            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 32px "Segoe UI", Arial, sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText(EMISOR_COMPROBANTE, W / 2, 62);
-            ctx.fillStyle = '#c9a84c'; ctx.font = '500 15px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('COMPROBANTE DE PAGO', W / 2, 90);
-            ctx.fillStyle = '#a8a8a8'; ctx.font = '400 12px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('Estudio Fotográfico', W / 2, 112);
+            // ─── Línea decorativa bajo el header (multicolor) ───
+            const gradLineaTop = ctx.createLinearGradient(0, 0, W, 0);
+            gradLineaTop.addColorStop(0, '#7b2cbf');
+            gradLineaTop.addColorStop(0.3, '#c77dff');
+            gradLineaTop.addColorStop(0.55, '#e91e63');
+            gradLineaTop.addColorStop(0.8, '#3a86ff');
+            gradLineaTop.addColorStop(1, '#0d0d0d');
+            ctx.fillStyle = gradLineaTop;
+            ctx.fillRect(0, 180, W, 6);
 
-            let y = 190;
-            ctx.fillStyle = '#666'; ctx.font = '500 13px "Segoe UI", Arial, sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText('MONTO RECIBIDO', W / 2, y);
-            y += 55;
-            ctx.fillStyle = '#2e7d32'; ctx.font = 'bold 56px "Segoe UI", Arial, sans-serif';
-            ctx.fillText(formatearMoneda(pago.monto), W / 2, y);
-            y += 30;
-            ctx.strokeStyle = '#d0c9b8'; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(60, y); ctx.lineTo(W - 60, y); ctx.stroke();
+            // ─── Logo circular (120px) con borde lila ───
+            const logoX = 100; // centro del logo
+            const logoY = 90;  // centro del logo
+            const logoRadio = 60;
+            const logoImg = new Image();
+            logoImg.crossOrigin = 'anonymous';
+            let logoCargado = false;
+            logoImg.onload = function() { logoCargado = true; };
+            logoImg.onerror = function() { console.warn('No se pudo cargar el logo'); };
+            logoImg.src = 'https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg';
 
-            y += 35;
-            const marginX = 60;
-            function fila(label, valor, yPos) {
-                ctx.textAlign = 'left'; ctx.fillStyle = '#888'; ctx.font = '500 12px "Segoe UI", Arial, sans-serif';
-                ctx.fillText(label.toUpperCase(), marginX, yPos);
-                ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 17px "Segoe UI", Arial, sans-serif';
-                ctx.fillText(valor, marginX, yPos + 24);
-                ctx.strokeStyle = '#e8e4d8'; ctx.beginPath();
-                ctx.moveTo(marginX, yPos + 34); ctx.lineTo(W - marginX, yPos + 34); ctx.stroke();
+            // Fondo del logo (círculo negro)
+            ctx.beginPath();
+            ctx.arc(logoX, logoY, logoRadio, 0, Math.PI * 2);
+            ctx.fillStyle = '#0d0d0d';
+            ctx.fill();
+
+            // Borde lila brillante
+            ctx.beginPath();
+            ctx.arc(logoX, logoY, logoRadio + 3, 0, Math.PI * 2);
+            ctx.strokeStyle = '#c77dff';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Imagen del logo (si carga)
+            if (logoImg.complete && logoImg.naturalWidth > 0) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(logoX, logoY, logoRadio - 2, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.drawImage(logoImg, logoX - logoRadio, logoY - logoRadio, logoRadio * 2, logoRadio * 2);
+                ctx.restore();
             }
 
-            ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 14px "Segoe UI", Arial, sans-serif'; ctx.textAlign = 'left';
-            ctx.fillText('DATOS DEL CONTRATANTE', marginX, y); y += 30;
-            fila('Contratante', cliente.nombre || 'Sin nombre', y); y += 60;
-            if (cliente.telefono) { fila('Teléfono', cliente.telefono, y); y += 60; }
+            // ─── Lema bajo el logo ───
+            ctx.fillStyle = '#f0d9ff';
+            ctx.font = 'italic 12px "Segoe UI", Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(LEMA_EMISOR, logoX, logoY + logoRadio + 22);
 
-            ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 14px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('DATOS DEL EVENTO', marginX, y); y += 30;
-            fila('Festejado', contrato.festejado || 'Sin especificar', y); y += 60;
-            fila('Fecha evento', formatearFecha(contrato.fechaEvento) + (contrato.horaEvento ? ' ' + contrato.horaEvento + ' hrs' : ''), y); y += 60;
+            // ─── Columna derecha: nombre del negocio ───
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 24px "Segoe UI", Arial, sans-serif';
+            ctx.fillText(EMISOR_COMPROBANTE, W - 40, 55);
 
-            const cajaY = y, cajaH = 155;
-            ctx.fillStyle = '#f8f5eb'; ctx.strokeStyle = '#d0c9b8'; ctx.lineWidth = 1.5;
-            ctx.beginPath(); ctx.rect(marginX, cajaY, W - 120, cajaH); ctx.fill(); ctx.stroke();
-            ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 14px "Segoe UI", Arial, sans-serif'; ctx.textAlign = 'left';
-            ctx.fillText('RESUMEN FINANCIERO', marginX + 20, cajaY + 28);
+            ctx.fillStyle = '#f0d9ff';
+            ctx.font = '500 12px "Segoe UI", Arial, sans-serif';
+            ctx.fillText('COMPROBANTE DE PAGO', W - 40, 78);
 
-            ctx.textAlign = 'left'; ctx.fillStyle = '#555'; ctx.font = '500 12px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('Monto de este pago', marginX + 20, cajaY + 62);
-            ctx.textAlign = 'right'; ctx.fillStyle = '#2e7d32'; ctx.font = 'bold 18px "Segoe UI", Arial, sans-serif';
-            ctx.fillText(formatearMoneda(pago.monto), W - marginX - 20, cajaY + 62);
+            // ─── Caja de contacto (compacta, alineada a la derecha) ───
+            const cajaAncho = 340;
+            const cajaX = W - 40 - cajaAncho;
+            const cajaY = 95;
+            const cajaAlto = 78;
 
-            ctx.textAlign = 'left'; ctx.fillStyle = '#555'; ctx.font = '500 12px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('Total pagado', marginX + 20, cajaY + 92);
-            ctx.textAlign = 'right'; ctx.fillStyle = '#2e7d32'; ctx.font = 'bold 16px "Segoe UI", Arial, sans-serif';
-            ctx.fillText(formatearMoneda(totales.totalPagos), W - marginX - 20, cajaY + 92);
+            // Fondo semitransparente
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(cajaX, cajaY, cajaAncho, cajaAlto, 6);
+            } else {
+                ctx.rect(cajaX, cajaY, cajaAncho, cajaAlto);
+            }
+            ctx.fill();
 
-            ctx.textAlign = 'left'; ctx.fillStyle = '#555'; ctx.font = '500 12px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('Saldo pendiente', marginX + 20, cajaY + 122);
-            ctx.textAlign = 'right'; ctx.fillStyle = totales.saldoPendiente === 0 ? '#2e7d32' : '#ef6c00'; ctx.font = 'bold 16px "Segoe UI", Arial, sans-serif';
-            ctx.fillText((totales.saldoPendiente === 0 ? 'Liquidado ' : '') + formatearMoneda(totales.saldoPendiente), W - marginX - 20, cajaY + 122);
+            // Borde izquierdo lila
+            ctx.fillStyle = '#e0aaff';
+            ctx.fillRect(cajaX, cajaY, 3, cajaAlto);
 
-            y = cajaY + cajaH + 30;
+            // Contenido de la caja de contacto
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#f0d9ff';
+            ctx.font = 'bold 12px "Segoe UI", Arial, sans-serif';
+            ctx.fillText(DATOS_EMISOR.nombre, cajaX + 14, cajaY + 18);
 
-            ctx.fillStyle = '#1a1a1a'; ctx.font = 'bold 14px "Segoe UI", Arial, sans-serif'; ctx.textAlign = 'left';
-            ctx.fillText('DETALLES DEL PAGO', marginX, y); y += 30;
-            fila('Fecha y hora', formatearFechaHora(pago.fecha), y); y += 60;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+            ctx.font = '11px "Segoe UI", Arial, sans-serif';
+            const lineasContacto = [
+                'Tel. ' + DATOS_EMISOR.telefono,
+                DATOS_EMISOR.direccion,
+                DATOS_EMISOR.ciudad,
+                DATOS_EMISOR.email
+            ];
+            lineasContacto.forEach(function(linea, i) {
+                ctx.fillText(linea, cajaX + 14, cajaY + 34 + (i * 13));
+            });
 
-            const codigoY = y + 10, codigoH = 85;
-            ctx.fillStyle = '#1a1a1a'; ctx.strokeStyle = '#c9a84c'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.rect(marginX, codigoY, W - 120, codigoH); ctx.fill(); ctx.stroke();
-            ctx.textAlign = 'center'; ctx.fillStyle = '#c9a84c'; ctx.font = 'bold 12px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('CÓDIGO ÚNICO DE VERIFICACIÓN', W / 2, codigoY + 28);
-            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 30px "Courier New", monospace';
-            ctx.fillText((pago.codigo || 'SIN-CODIGO').toUpperCase(), W / 2, codigoY + 65);
+            // ─── Puntos decorativos (arriba derecha del contenido) ───
+            const puntosColores = ['#7b2cbf', '#c77dff', '#e91e63', '#3a86ff', '#0d0d0d'];
+            puntosColores.forEach(function(color, i) {
+                ctx.beginPath();
+                ctx.arc(W - 60 - (i * 12), 210, 3, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+            });
 
-            y = codigoY + codigoH + 20;
+            // ═══════════════════════════════════════════════════════
+            // CONTENIDO CENTRAL
+            // ═══════════════════════════════════════════════════════
+            let y = 260;
+            const marginX = 60;
 
-            ctx.textAlign = 'center'; ctx.fillStyle = '#888'; ctx.font = 'italic 11px "Segoe UI", Arial, sans-serif';
+            // ─── Monto recibido (destacado) ───
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#666';
+            ctx.font = '500 13px "Segoe UI", Arial, sans-serif';
+            ctx.fillText('MONTO RECIBIDO', W / 2, y);
+            y += 55;
+
+            // Degradado para el monto (simulado por dos capas)
+            ctx.fillStyle = '#7b2cbf';
+            ctx.font = 'bold 52px "Segoe UI", Arial, sans-serif';
+            ctx.fillText(formatearMoneda(pago.monto), W / 2 - 1, y);
+            ctx.fillStyle = '#e91e63';
+            ctx.globalAlpha = 0.6;
+            ctx.fillText(formatearMoneda(pago.monto), W / 2 + 1, y);
+            ctx.globalAlpha = 1;
+
+            // Reset para el siguiente contenido
+            y += 30;
+
+            // ─── Línea separadora con gradiente ───
+            const gradSep = ctx.createLinearGradient(0, 0, W, 0);
+            gradSep.addColorStop(0, 'rgba(123, 44, 191, 0)');
+            gradSep.addColorStop(0.2, '#7b2cbf');
+            gradSep.addColorStop(0.5, '#e91e63');
+            gradSep.addColorStop(0.8, '#3a86ff');
+            gradSep.addColorStop(1, 'rgba(58, 134, 255, 0)');
+            ctx.fillStyle = gradSep;
+            ctx.fillRect(marginX, y, W - marginX * 2, 2);
+            y += 30;
+
+            // ─── Función helper para títulos de sección ───
+            function tituloSeccion(texto, yPos) {
+                ctx.textAlign = 'left';
+                ctx.fillStyle = '#7b2cbf';
+                ctx.font = 'bold 12px "Segoe UI", Arial, sans-serif';
+                ctx.fillText(texto.toUpperCase(), marginX, yPos);
+                return yPos + 20;
+            }
+
+            // ─── Función helper para filas de datos ───
+            function filaDato(label, valor, yPos) {
+                ctx.textAlign = 'left';
+                ctx.fillStyle = '#888';
+                ctx.font = '500 11px "Segoe UI", Arial, sans-serif';
+                ctx.fillText(label.toUpperCase(), marginX, yPos);
+
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#1a1a1a';
+                ctx.font = '600 14px "Segoe UI", Arial, sans-serif';
+                ctx.fillText(valor, W - marginX, yPos);
+
+                // Línea separadora
+                ctx.strokeStyle = '#e8e4d8';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(marginX, yPos + 8);
+                ctx.lineTo(W - marginX, yPos + 8);
+                ctx.stroke();
+
+                return yPos + 26;
+            }
+
+            // ─── Datos del contratante ───
+            y = tituloSeccion('Datos del Contratante', y);
+            y = filaDato('Contratante', cliente.nombre || 'Sin nombre', y);
+            if (cliente.telefono) {
+                y = filaDato('Teléfono', cliente.telefono, y);
+            }
+            y += 10;
+
+            // ─── Datos del evento ───
+            y = tituloSeccion('Datos del Evento', y);
+            y = filaDato('Festejado', contrato.festejado || 'Sin especificar', y);
+            y = filaDato('Fecha evento', formatearFecha(contrato.fechaEvento) + (contrato.horaEvento ? ' ' + contrato.horaEvento + ' hrs' : ''), y);
+            y += 20;
+
+            // ─── Caja de resumen financiero ───
+            const cajaFinY = y;
+            const cajaFinAlto = 130;
+            const cajaFinAncho = W - marginX * 2;
+
+            // Fondo con gradiente sutil
+            const gradCaja = ctx.createLinearGradient(marginX, cajaFinY, W - marginX, cajaFinY + cajaFinAlto);
+            gradCaja.addColorStop(0, 'rgba(123, 44, 191, 0.06)');
+            gradCaja.addColorStop(1, 'rgba(233, 30, 99, 0.06)');
+            ctx.fillStyle = gradCaja;
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(marginX, cajaFinY, cajaFinAncho, cajaFinAlto, 8);
+            } else {
+                ctx.rect(marginX, cajaFinY, cajaFinAncho, cajaFinAlto);
+            }
+            ctx.fill();
+
+            // Borde
+            ctx.strokeStyle = '#d0c9b8';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Barra lateral con gradiente lila → rosa
+            const gradBorde = ctx.createLinearGradient(0, cajaFinY, 0, cajaFinY + cajaFinAlto);
+            gradBorde.addColorStop(0, '#7b2cbf');
+            gradBorde.addColorStop(1, '#e91e63');
+            ctx.fillStyle = gradBorde;
+            ctx.fillRect(marginX, cajaFinY + 4, 4, cajaFinAlto - 8);
+
+            // Título de la caja
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#7b2cbf';
+            ctx.font = 'bold 11px "Segoe UI", Arial, sans-serif';
+            ctx.fillText('RESUMEN FINANCIERO', marginX + 18, cajaFinY + 26);
+
+            // Filas dentro de la caja
+            const filasCaja = [
+                { lbl: 'Monto de este pago', vlr: formatearMoneda(pago.monto), color: '#2e7d32', bold: true },
+                { lbl: 'Total pagado', vlr: formatearMoneda(totales.totalPagos), color: '#2e7d32', bold: false },
+                { lbl: 'Saldo pendiente', vlr: totales.saldoPendiente === 0 ? 'Liquidado' : formatearMoneda(totales.saldoPendiente), color: totales.saldoPendiente === 0 ? '#2e7d32' : '#ef6c00', bold: false }
+            ];
+
+            filasCaja.forEach(function(f, i) {
+                const yFila = cajaFinY + 50 + (i * 24);
+                ctx.textAlign = 'left';
+                ctx.fillStyle = '#666';
+                ctx.font = '11px "Segoe UI", Arial, sans-serif';
+                ctx.fillText(f.lbl, marginX + 18, yFila);
+
+                ctx.textAlign = 'right';
+                ctx.fillStyle = f.color;
+                ctx.font = (f.bold ? 'bold 16px' : 'bold 14px') + ' "Segoe UI", Arial, sans-serif';
+                ctx.fillText(f.vlr, W - marginX - 18, yFila);
+            });
+
+            y = cajaFinY + cajaFinAlto + 25;
+
+            // ─── Caja del código único ───
+            const codigoAlto = 85;
+            const codigoAncho = W - marginX * 2;
+
+            // Fondo negro con matiz lila
+            const gradCodigo = ctx.createLinearGradient(marginX, y, W - marginX, y + codigoAlto);
+            gradCodigo.addColorStop(0, '#1a0d2e');
+            gradCodigo.addColorStop(0.4, '#2d1b4e');
+            gradCodigo.addColorStop(0.7, '#4a2360');
+            gradCodigo.addColorStop(1, '#1a0d2e');
+            ctx.fillStyle = gradCodigo;
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(marginX, y, codigoAncho, codigoAlto, 8);
+            } else {
+                ctx.rect(marginX, y, codigoAncho, codigoAlto);
+            }
+            ctx.fill();
+
+            // Borde con gradiente lila/rosa/azul
+            const gradBordeCodigo = ctx.createLinearGradient(marginX, y, W - marginX, y + codigoAlto);
+            gradBordeCodigo.addColorStop(0, '#7b2cbf');
+            gradBordeCodigo.addColorStop(0.5, '#e91e63');
+            gradBordeCodigo.addColorStop(1, '#3a86ff');
+            ctx.strokeStyle = gradBordeCodigo;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Título del código
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#c77dff';
+            ctx.font = 'bold 11px "Segoe UI", Arial, sans-serif';
+            ctx.fillText('CÓDIGO ÚNICO DE VERIFICACIÓN', W / 2, y + 28);
+
+            // Valor del código
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 26px "Courier New", monospace';
+            ctx.fillText((pago.codigo || 'SIN-CODIGO').toUpperCase(), W / 2, y + 65);
+
+            y += codigoAlto + 20;
+
+            // ─── Nota de verificación ───
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#888';
+            ctx.font = 'italic 10px "Segoe UI", Arial, sans-serif';
             ctx.fillText('Este código es único e irrepetible.', W / 2, y);
-            y += 18;
+            y += 16;
             ctx.fillText('Comprobantes sin este código deben considerarse inválidos.', W / 2, y);
 
-            y += 40;
-            const lineaFirmaY = y + 40;
-            ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(marginX + 40, lineaFirmaY); ctx.lineTo(W - marginX - 40, lineaFirmaY); ctx.stroke();
+            // ═══════════════════════════════════════════════════════
+            // BARRA INFERIOR con gradiente negro → lila → rosa → azul
+            // ═══════════════════════════════════════════════════════
+            const barraInfY = H - 80;
+            const gradInf = ctx.createLinearGradient(0, barraInfY, W, H);
+            gradInf.addColorStop(0, '#0d0d0d');
+            gradInf.addColorStop(0.3, '#2d1b4e');
+            gradInf.addColorStop(0.55, '#7b2cbf');
+            gradInf.addColorStop(0.8, '#e91e63');
+            gradInf.addColorStop(1, '#3a86ff');
+            ctx.fillStyle = gradInf;
+            ctx.fillRect(0, barraInfY, W, 80);
 
-            ctx.textAlign = 'center'; ctx.fillStyle = '#1a1a1a'; ctx.font = 'italic 22px "Segoe UI", Arial, sans-serif';
-            ctx.fillText(pago.registradoPor || (usuarioActual ? usuarioActual.nombre : 'Usuario'), W / 2, lineaFirmaY - 8);
-            ctx.fillStyle = '#555'; ctx.font = '500 12px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('Firmado por el emisor', W / 2, lineaFirmaY + 20);
-            ctx.fillStyle = '#888'; ctx.font = '400 11px "Segoe UI", Arial, sans-serif';
-            ctx.fillText(EMISOR_COMPROBANTE, W / 2, lineaFirmaY + 38);
+            // Línea decorativa superior de la barra
+            const gradLineaInf = ctx.createLinearGradient(0, 0, W, 0);
+            gradLineaInf.addColorStop(0, '#0d0d0d');
+            gradLineaInf.addColorStop(0.3, '#7b2cbf');
+            gradLineaInf.addColorStop(0.55, '#e91e63');
+            gradLineaInf.addColorStop(0.8, '#3a86ff');
+            gradLineaInf.addColorStop(1, '#7b2cbf');
+            ctx.fillStyle = gradLineaInf;
+            ctx.fillRect(0, barraInfY - 4, W, 4);
 
-            ctx.textAlign = 'center'; ctx.fillStyle = '#999'; ctx.font = '400 10px "Segoe UI", Arial, sans-serif';
-            ctx.fillText('Generado: ' + formatearFechaHora(obtenerFechaHoraActual()) + ' | PDA v' + VERSION, W / 2, H - 30);
+            // Texto inferior: marca
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#e0aaff';
+            ctx.font = 'bold 12px "Segoe UI", Arial, sans-serif';
+            ctx.fillText('REGISTRO PDA · JFR MEDIA', W / 2, barraInfY + 32);
+
+            // Texto inferior: generación
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.font = '10px "Segoe UI", Arial, sans-serif';
+            ctx.fillText('Generado: ' + formatearFechaHora(obtenerFechaHoraActual()) + ' · v' + VERSION, W / 2, barraInfY + 52);
 
             return canvas;
         }
+        // ─────── FIN @JS-COMPROBANTES-CANVAS ───────
 
+        // ─────── @JS-COMPROBANTES-DESCARGAR ───────
         function descargarComprobante(clienteId, contratoId, pagoId) {
             const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
             if (!datos) return;
@@ -4403,7 +5133,9 @@
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
             mostrarNotificacion('Comprobante descargado', 'success');
         }
+        // ─────── FIN @JS-COMPROBANTES-DESCARGAR ───────
 
+        // ─────── @JS-COMPROBANTES-VER ───────
         function verComprobantePago(clienteId, contratoId, pagoId) {
             const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
             if (!datos) { mostrarNotificacion('Datos no encontrados', 'error'); return; }
@@ -4416,7 +5148,10 @@
                 '</div>';
             abrirModal('Comprobante de pago', html, true);
         }
+        // ─────── FIN @JS-COMPROBANTES-VER ───────
 
+        // ─────── @JS-COMPROBANTES-SELECTOR ───────
+        // Modal con opciones de envío tras registrar un pago
         function abrirSelectorComprobante(clienteId, contratoId, pagoId) {
             const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
             if (!datos) return;
@@ -4435,7 +5170,9 @@
                 '</div></div>';
             abrirModal('Enviar comprobante', html);
         }
+        // ─────── FIN @JS-COMPROBANTES-SELECTOR ───────
 
+        // ─────── @JS-COMPROBANTES-WHATSAPP ───────
         function enviarComprobanteWhatsApp(clienteId, contratoId, pagoId) {
             const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
             if (!datos) { mostrarNotificacion('Datos no encontrados', 'error'); return; }
@@ -4454,7 +5191,9 @@
                 mostrarNotificacion('WhatsApp abierto. Adjunta la imagen.', 'info');
             }, 800);
         }
+        // ─────── FIN @JS-COMPROBANTES-WHATSAPP ───────
 
+        // ─────── @JS-COMPROBANTES-EMAIL ───────
         function enviarComprobanteEmail(clienteId, contratoId, pagoId) {
             const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
             if (!datos) { mostrarNotificacion('Datos no encontrados', 'error'); return; }
@@ -4479,12 +5218,17 @@
             }, 800);
         }
 
+        // Alias para llamadas desde el detalle del contrato
         function compartirComprobanteWhatsApp(clienteId, contratoId, pagoId) { enviarComprobanteWhatsApp(clienteId, contratoId, pagoId); }
         function compartirComprobanteEmail(clienteId, contratoId, pagoId) { enviarComprobanteEmail(clienteId, contratoId, pagoId); }
+        // ─────── FIN @JS-COMPROBANTES-EMAIL ───────
 
-        // ============================================================
-        // GOOGLE CALENDAR
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-CALENDARIO — Vista, eventos, Google Calendar             */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-CALENDARIO-GOOGLE ───────
+        // Genera link de Google Calendar con los datos del contrato
         function crearEventoGoogleCalendar(clienteId, contratoId) {
             const c = obtenerCliente(clienteId); if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
             const co = c.contratos.find(function(x) { return x.id === contratoId; }); if (!co) { mostrarNotificacion('Contrato no encontrado', 'error'); return; }
@@ -4515,48 +5259,10 @@
             registrarHistorial('contrato', 'editar', 'Evento enviado a Google Calendar para "' + c.nombre + '"', { id: contratoId, nombre: c.nombre });
             mostrarNotificacion('Abriendo Google Calendar', 'info');
         }
+        // ─────── FIN @JS-CALENDARIO-GOOGLE ───────
 
-        // ============================================================
-        // IMPRESIÓN
-        // ============================================================
-        function generarVistaImpresion(clienteId, contratoId) {
-            const c = obtenerCliente(clienteId); if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
-            const co = c.contratos.find(function(x) { return x.id === contratoId; }); if (!co) { mostrarNotificacion('Contrato no encontrado', 'error'); return; }
-            const tot = calcularTotalesContrato(co);
-            const in_ = obtenerNombreItemContrato(co);
-            const he = co.horaEvento ? ' ' + co.horaEvento + ' hrs' : '';
-            const hr = co.horaRecepcion ? ' ' + co.horaRecepcion + ' hrs' : '';
-            const f = function(l, v) { return '<div class="fila"><span class="lbl">' + l + ':</span><span class="val">' + v + '</span></div>'; };
-            let html = '<div id="print-doc"><h1>CONTRATO DE SERVICIOS</h1>' +
-                '<div class="sec">' + f('Cliente', c.nombre) + f('Teléfono', c.telefono || 'N/A') + f('Email', c.email || 'N/A') + '</div>' +
-                '<div class="sec"><div class="grid-2">' + f('Festejado', co.festejado || 'N/A') + f('Tipo', co.tipo === 'paquete' ? 'Paquete' : 'Solo Servicio') + f('Estado', co.estado || 'Pendiente') + f('Fecha Contrato', formatearFecha(co.fechaContrato)) + f('Fecha Evento', formatearFecha(co.fechaEvento) + he) + f('Paquete/Servicio', in_ || 'N/A') + '</div></div>' +
-                '<div class="sec"><div class="grid-2">' + f('Evento Religioso', co.direccionEvento || 'N/A') + f('Recepción', (co.direccionRecepcion || 'N/A') + hr) + '</div></div>' +
-                '<div class="sec">' + f('Precio Base', formatearMoneda(co.precioBase || 0)) + f('Precio Final', formatearMoneda(co.precioFinal || 0)) +
-                (tot.totalCargos > 0 ? f('Cargos Extras', formatearMoneda(tot.totalCargos)) : '') +
-                f('Total a Pagar', '<span class="negrita">' + formatearMoneda(tot.totalAPagar) + '</span>') +
-                '<div class="fila"><span class="lbl" style="color:#4caf50;">Total Pagado:</span><span class="val verde">' + formatearMoneda(tot.totalPagos) + '</span></div>' +
-                '<div class="fila"><span class="lbl" style="color:' + (tot.saldoPendiente === 0 ? '#4caf50' : '#ff9800') + ';">Saldo Pendiente:</span><span class="val ' + (tot.saldoPendiente === 0 ? 'verde' : 'naranja') + '">' + formatearMoneda(tot.saldoPendiente) + '</span></div>' +
-                '</div>';
-            if (tot.pagosValidos.length > 0) {
-                html += '<div class="sec"><div class="sec-title">Pagos</div><table><thead><tr><th>Fecha</th><th>Código</th><th style="text-align:right;">Monto</th><th>Registrado por</th><th>Nota</th></tr></thead><tbody>' +
-                    tot.pagosValidos.map(function(p) { return '<tr><td>' + formatearFechaHora(p.fecha) + '</td><td style="font-family:monospace;font-size:9px;">' + (p.codigo || '-') + '</td><td style="text-align:right;font-weight:600;">' + formatearMoneda(p.monto) + '</td><td>' + (p.registradoPor || '-') + '</td><td>' + (p.nota || '') + '</td></tr>'; }).join('') +
-                    '</tbody></table></div>';
-            }
-            if (co.notas) html += '<div class="sec"><div class="sec-title">Notas</div><div style="font-size:11px;color:#555;">' + co.notas + '</div></div>';
-            html += '<div class="pie">Generado: ' + formatearFechaHora(obtenerFechaHoraActual()) + ' | PDA v' + VERSION + ' - JFR Media</div></div>';
-            const cont = document.getElementById('impresion-contenedor');
-            cont.innerHTML = html;
-            cont.style.display = 'block';
-            const ot = document.title;
-            document.title = 'Contrato - ' + c.nombre;
-            window.print();
-            setTimeout(function() { cont.style.display = 'none'; document.title = ot; }, 500);
-            mostrarNotificacion('Enviando a impresión...', 'info');
-        }
-
-        // ============================================================
-        // CALENDARIO
-        // ============================================================
+        // ─────── @JS-CALENDARIO-RENDER ───────
+        // Dibuja la cuadrícula del mes con eventos y tareas
         function renderizarCalendario() {
             const grid = document.getElementById('calendario-grid');
             const tit = document.getElementById('calendario-mes-ano');
@@ -4620,7 +5326,10 @@
             });
             renderizarListaTareas();
         }
+        // ─────── FIN @JS-CALENDARIO-RENDER ───────
 
+        // ─────── @JS-CALENDARIO-OPCIONES-DIA ───────
+        // Modal con acciones al hacer clic en un día del calendario
         function mostrarOpcionesDia(fecha) {
             abrirModal('Opciones del día', '<div style="text-align:center;padding:10px;">' +
                 '<h3 style="color:var(--color-acento);margin-bottom:16px;">' + formatearFecha(fecha) + '</h3>' +
@@ -4640,11 +5349,17 @@
                 setTimeout(function() { mostrarFormularioContratoDesdeCalendario(fecha); }, 100);
             });
         }
+        // ─────── FIN @JS-CALENDARIO-OPCIONES-DIA ───────
 
+        // ─────── @JS-CALENDARIO-TAREA-CON-FECHA ───────
+        // Abre el formulario de tarea con fecha preconfigurada
         function mostrarFormularioTareaConFecha(fecha) {
             mostrarFormularioTarea(null, null, fecha);
         }
+        // ─────── FIN @JS-CALENDARIO-TAREA-CON-FECHA ───────
 
+        // ─────── @JS-CALENDARIO-CONTRATO-DESDE-CAL ───────
+        // Selector de cliente antes de crear contrato desde el calendario
         function mostrarFormularioContratoDesdeCalendario(fecha) {
             if (clientes.length === 0) { mostrarNotificacion('Registra un cliente primero', 'warning'); return; }
             let oc = '';
@@ -4669,10 +5384,21 @@
                 }, 100);
             });
         }
+        // ─────── FIN @JS-CALENDARIO-CONTRATO-DESDE-CAL ───────
 
-        function editarTareaDesdeCalendario(id) { const t = tareas.find(function(x) { return x.id === id; }); if (t) mostrarFormularioTarea(t); }
-        function abrirContratoDesdeCalendario(clienteId, contratoId) { verDetalleContrato(clienteId, contratoId); }
+        // ─────── @JS-CALENDARIO-ACCIONES-RAPIDAS ───────
+        // Acciones disparadas desde eventos del calendario
+        function editarTareaDesdeCalendario(id) { 
+            const t = tareas.find(function(x) { return x.id === id; }); 
+            if (t) mostrarFormularioTarea(t); 
+        }
+        function abrirContratoDesdeCalendario(clienteId, contratoId) { 
+            verDetalleContrato(clienteId, contratoId); 
+        }
+        // ─────── FIN @JS-CALENDARIO-ACCIONES-RAPIDAS ───────
 
+        // ─────── @JS-CALENDARIO-LISTA-TAREAS ───────
+        // Lista global de tareas bajo el calendario
         function renderizarListaTareas() {
             const c = document.getElementById('lista-tareas'); if (!c) return;
             const filtro = document.getElementById('filtro-tareas-calendario').value;
@@ -4699,10 +5425,14 @@
                     '</div></div>';
             }).join('');
         }
+        // ─────── FIN @JS-CALENDARIO-LISTA-TAREAS ───────
 
-        // ============================================================
-        // INFORMES
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-INFORMES — Dashboard de métricas y desglose              */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-INFORMES-FILTROS ───────
+        // Repuebla los selects de filtros con paquetes y servicios
         function actualizarFiltrosInformes() {
             const fp = document.getElementById('filtro-paquete');
             const fs = document.getElementById('filtro-servicio');
@@ -4719,7 +5449,10 @@
                 fs.innerHTML = html; fs.value = v;
             }
         }
+        // ─────── FIN @JS-INFORMES-FILTROS ───────
 
+        // ─────── @JS-INFORMES-DESGLOSE ───────
+        // Genera HTML de desglose por categoría (paquetes/servicios)
         function renderizarDesglose(items) {
             const e = Object.entries(items).sort(function(a, b) { return (b[1].cantidad || b[1]) - (a[1].cantidad || a[1]); });
             if (e.length === 0) return '<p style="color:var(--color-texto-secundario);">Sin datos</p>';
@@ -4730,7 +5463,10 @@
                 return '<div class="informe-fila"><span>' + n + '</span><span>' + c + i + '</span></div>';
             }).join('');
         }
+        // ─────── FIN @JS-INFORMES-DESGLOSE ───────
 
+        // ─────── @JS-INFORMES-RENDER ───────
+        // Dashboard completo: métricas, desglose, distribución, finanzas
         function renderizarInformes() {
             const cont = document.getElementById('contenedor-informes'); if (!cont) return;
             const fi = document.getElementById('filtro-fecha-inicio').value;
@@ -4818,10 +5554,14 @@
                 '<div class="informe-fila"><span>Completadas</span><span>' + tcm + '</span></div></div></div>';
             cont.innerHTML = h;
         }
+        // ─────── FIN @JS-INFORMES-RENDER ───────
 
-        // ============================================================
-        // HISTORIAL RENDER
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-HISTORIAL — Registro de actividad                        */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-HISTORIAL-RENDER ───────
+        // Lista con filtros y estadísticas del historial
         function renderizarHistorial() {
             const lista = document.getElementById('historial-lista'); if (!lista) return;
             const info = document.getElementById('historial-info');
@@ -4858,15 +5598,21 @@
             }).join('');
             if (info) info.textContent = historialVerTodos ? 'Mostrando ' + ev.length + ' movimientos' : 'Mostrando últimos ' + am.length + ' de ' + ev.length;
         }
+        // ─────── FIN @JS-HISTORIAL-RENDER ───────
 
+        // ─────── @JS-HISTORIAL-BOTON-VER-TODOS ───────
+        // Alterna el texto del botón "Ver todos / Ver últimos 20"
         function actualizarBotonHistorial() {
             const b = document.getElementById('historial-toggle-ver-todos'); if (!b) return;
             b.innerHTML = historialVerTodos ? 'Ver solo los últimos 20' : 'Ver todos los movimientos';
         }
+        // ─────── FIN @JS-HISTORIAL-BOTON-VER-TODOS ───────
 
-        // ============================================================
-        // USUARIOS
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-ADMIN-USERS — Gestión de usuarios (solo admin)           */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-ADMIN-USERS-RENDER ───────
         function renderizarUsuarios() {
             const cont = document.getElementById('usuarios-lista'); if (!cont) return;
             cont.innerHTML = usuarios.map(function(u) {
@@ -4881,7 +5627,10 @@
                     '</div></div>';
             }).join('');
         }
+        // ─────── FIN @JS-ADMIN-USERS-RENDER ───────
 
+        // ─────── @JS-ADMIN-USERS-NUEVO ───────
+        // Modal para crear un nuevo usuario operador
         function mostrarFormularioNuevoUsuario() {
             if (!usuarioActual || !usuarioActual.admin) return;
             abrirModal('Nuevo usuario',
@@ -4917,7 +5666,9 @@
                 mostrarNotificacion('Usuario creado', 'success');
             });
         }
+        // ─────── FIN @JS-ADMIN-USERS-NUEVO ───────
 
+        // ─────── @JS-ADMIN-USERS-EDITAR ───────
         function abrirEditarUsuario(username) {
             if (!usuarioActual || !usuarioActual.admin) return;
             const u = encontrarUsuario(username); if (!u) return;
@@ -4943,7 +5694,9 @@
                 mostrarNotificacion('Usuario actualizado', 'success');
             });
         }
+        // ─────── FIN @JS-ADMIN-USERS-EDITAR ───────
 
+        // ─────── @JS-ADMIN-USERS-RESET-PIN ───────
         function resetearPinUsuario(username) {
             if (!usuarioActual || !usuarioActual.admin) return;
             const u = encontrarUsuario(username); if (!u) return;
@@ -4971,7 +5724,9 @@
                 mostrarNotificacion('PIN reseteado', 'success');
             });
         }
+        // ─────── FIN @JS-ADMIN-USERS-RESET-PIN ───────
 
+        // ─────── @JS-ADMIN-USERS-ELIMINAR ───────
         function eliminarUsuario(username) {
             if (!usuarioActual || !usuarioActual.admin) return;
             const u = encontrarUsuario(username); if (!u) return;
@@ -4988,7 +5743,10 @@
                 }
             });
         }
+        // ─────── FIN @JS-ADMIN-USERS-ELIMINAR ───────
 
+        // ─────── @JS-ADMIN-USERS-CAMBIAR-MI-PIN ───────
+        // Cualquier usuario puede cambiar su propio PIN
         function abrirCambiarMiPin() {
             if (!usuarioActual) return;
             abrirModal('Cambiar mi PIN',
@@ -5021,195 +5779,56 @@
                 mostrarNotificacion('PIN actualizado', 'success');
             });
         }
+        // ─────── FIN @JS-ADMIN-USERS-CAMBIAR-MI-PIN ───────
 
-        // ============================================================
-        // FIREBASE SYNC
-        // ============================================================
-        function actualizarEstadoSync(estado, texto) {
-            const dot = document.getElementById('sync-dot'); const text = document.getElementById('sync-text');
-            if (!dot || !text) return;
-            dot.className = 'sync-dot';
-            if (estado === 'online') { dot.classList.add('online'); text.textContent = texto || 'Conectado'; estadoSync.conectado = true; }
-            else if (estado === 'offline') { dot.classList.add('offline'); text.textContent = texto || 'Modo local'; estadoSync.conectado = false; }
-            else if (estado === 'syncing') { dot.classList.add('syncing'); text.textContent = texto || 'Sincronizando...'; }
-        }
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-PRINT — Impresión de contratos                           */
+        /* ═══════════════════════════════════════════════════════════ */
 
-        async function guardarEnFirebase(esForzado) {
-            if (!database || sincronizandoFirebase) return false;
-            if (!usuarioActual) return false;
-            try {
-                sincronizandoFirebase = true;
-                actualizarEstadoSync('syncing', 'Verificando...');
-                const snap = await database.ref('datos/ultimaActualizacion').once('value');
-                const remoto = snap.val();
-                if (!esForzado && remoto && ultimaActualizacionRemota && remoto > ultimaActualizacionRemota) {
-                    sincronizandoFirebase = false;
-                    actualizarEstadoSync('online', 'Conflicto');
-                    return false;
-                }
-                actualizarEstadoSync('syncing', 'Guardando...');
-                const ahora = new Date().toISOString();
-                await database.ref('datos').set({
-                    paquetes: paquetes, serviciosAdicionales: serviciosAdicionales, prospectos: prospectos,
-                    clientes: clientes, tareas: tareas, historial: historial, usuarios: usuarios,
-                    ultimaActualizacion: ahora, ultimoUsuario: usuarioActual.nombre, version: VERSION
-                });
-                ultimaActualizacionRemota = ahora;
-                cambiosPendientes = false;
-                actualizarEstadoSync('online', 'Guardado');
-                return true;
-            } catch (error) {
-                console.error('Error Firebase:', error);
-                actualizarEstadoSync('offline', 'Error');
-                return false;
-            } finally { sincronizandoFirebase = false; }
-        }
-
-        async function cargarDesdeFirebase() {
-            if (!database) return false;
-            try {
-                actualizarEstadoSync('syncing', 'Cargando...');
-                const snap = await database.ref('datos').once('value');
-                const datos = snap.val();
-                if (datos) {
-                    if (datos.paquetes) paquetes = datos.paquetes;
-                    if (datos.serviciosAdicionales) serviciosAdicionales = datos.serviciosAdicionales;
-                    if (datos.prospectos) prospectos = datos.prospectos;
-                    if (datos.clientes) clientes = datos.clientes;
-                    if (datos.tareas) tareas = datos.tareas;
-                    if (datos.historial) historial = datos.historial;
-                    if (datos.usuarios && datos.usuarios.length > 0) {
-                        const fusionados = datos.usuarios.slice();
-                        usuarios.forEach(function(lu) { if (!fusionados.some(function(ru) { return ru.username === lu.username; })) fusionados.push(lu); });
-                        usuarios = fusionados;
-                        guardarUsuarios();
-                    }
-                    ultimaActualizacionRemota = datos.ultimaActualizacion || null;
-                    cambiosPendientes = false;
-                    guardarDatosLocal();
-                    renderizarTodo();
-                    actualizarEstadoSync('online', 'Cargado');
-                    return true;
-                }
-                return false;
-            } catch (error) {
-                console.error('Error cargando:', error);
-                actualizarEstadoSync('offline', 'Error');
-                return false;
+        // ─────── @JS-PRINT-CONTRATO ───────
+        // Genera HTML optimizado para impresión y dispara window.print()
+        function generarVistaImpresion(clienteId, contratoId) {
+            const c = obtenerCliente(clienteId); if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
+            const co = c.contratos.find(function(x) { return x.id === contratoId; }); if (!co) { mostrarNotificacion('Contrato no encontrado', 'error'); return; }
+            const tot = calcularTotalesContrato(co);
+            const in_ = obtenerNombreItemContrato(co);
+            const he = co.horaEvento ? ' ' + co.horaEvento + ' hrs' : '';
+            const hr = co.horaRecepcion ? ' ' + co.horaRecepcion + ' hrs' : '';
+            const f = function(l, v) { return '<div class="fila"><span class="lbl">' + l + ':</span><span class="val">' + v + '</span></div>'; };
+            let html = '<div id="print-doc"><h1>CONTRATO DE SERVICIOS</h1>' +
+                '<div class="sec">' + f('Cliente', c.nombre) + f('Teléfono', c.telefono || 'N/A') + f('Email', c.email || 'N/A') + '</div>' +
+                '<div class="sec"><div class="grid-2">' + f('Festejado', co.festejado || 'N/A') + f('Tipo', co.tipo === 'paquete' ? 'Paquete' : 'Solo Servicio') + f('Estado', co.estado || 'Pendiente') + f('Fecha Contrato', formatearFecha(co.fechaContrato)) + f('Fecha Evento', formatearFecha(co.fechaEvento) + he) + f('Paquete/Servicio', in_ || 'N/A') + '</div></div>' +
+                '<div class="sec"><div class="grid-2">' + f('Evento Religioso', co.direccionEvento || 'N/A') + f('Recepción', (co.direccionRecepcion || 'N/A') + hr) + '</div></div>' +
+                '<div class="sec">' + f('Precio Base', formatearMoneda(co.precioBase || 0)) + f('Precio Final', formatearMoneda(co.precioFinal || 0)) +
+                (tot.totalCargos > 0 ? f('Cargos Extras', formatearMoneda(tot.totalCargos)) : '') +
+                f('Total a Pagar', '<span class="negrita">' + formatearMoneda(tot.totalAPagar) + '</span>') +
+                '<div class="fila"><span class="lbl" style="color:#4caf50;">Total Pagado:</span><span class="val verde">' + formatearMoneda(tot.totalPagos) + '</span></div>' +
+                '<div class="fila"><span class="lbl" style="color:' + (tot.saldoPendiente === 0 ? '#4caf50' : '#ff9800') + ';">Saldo Pendiente:</span><span class="val ' + (tot.saldoPendiente === 0 ? 'verde' : 'naranja') + '">' + formatearMoneda(tot.saldoPendiente) + '</span></div>' +
+                '</div>';
+            if (tot.pagosValidos.length > 0) {
+                html += '<div class="sec"><div class="sec-title">Pagos</div><table><thead><tr><th>Fecha</th><th>Código</th><th style="text-align:right;">Monto</th><th>Registrado por</th><th>Nota</th></tr></thead><tbody>' +
+                    tot.pagosValidos.map(function(p) { return '<tr><td>' + formatearFechaHora(p.fecha) + '</td><td style="font-family:monospace;font-size:9px;">' + (p.codigo || '-') + '</td><td style="text-align:right;font-weight:600;">' + formatearMoneda(p.monto) + '</td><td>' + (p.registradoPor || '-') + '</td><td>' + (p.nota || '') + '</td></tr>'; }).join('') +
+                    '</tbody></table></div>';
             }
+            if (co.notas) html += '<div class="sec"><div class="sec-title">Notas</div><div style="font-size:11px;color:#555;">' + co.notas + '</div></div>';
+            html += '<div class="pie">Generado: ' + formatearFechaHora(obtenerFechaHoraActual()) + ' | PDA v' + VERSION + ' - JFR Media</div></div>';
+            const cont = document.getElementById('impresion-contenedor');
+            cont.innerHTML = html;
+            cont.style.display = 'block';
+            const ot = document.title;
+            document.title = 'Contrato - ' + c.nombre;
+            window.print();
+            setTimeout(function() { cont.style.display = 'none'; document.title = ot; }, 500);
+            mostrarNotificacion('Enviando a impresión...', 'info');
         }
+        // ─────── FIN @JS-PRINT-CONTRATO ───────
 
-        function escucharCambiosFirebase() {
-            if (!database) return;
-            database.ref('datos').on('value', function(snap) {
-                const datos = snap.val();
-                if (!datos || sincronizandoFirebase) return;
-                if (primerCarga) { primerCarga = false; return; }
-                const remoto = datos.ultimaActualizacion;
-                if (remoto && ultimaActualizacionRemota && remoto > ultimaActualizacionRemota) {
-                    if (cambiosPendientes) { mostrarNotificacion('Otro usuario modificó datos', 'warning'); }
-                    else {
-                        if (datos.paquetes) paquetes = datos.paquetes;
-                        if (datos.serviciosAdicionales) serviciosAdicionales = datos.serviciosAdicionales;
-                        if (datos.prospectos) prospectos = datos.prospectos;
-                        if (datos.clientes) clientes = datos.clientes;
-                        if (datos.tareas) tareas = datos.tareas;
-                        if (datos.historial) historial = datos.historial;
-                        ultimaActualizacionRemota = remoto;
-                        guardarDatosLocal();
-                        renderizarTodo();
-                        mostrarNotificacion('Datos actualizados desde la nube', 'success');
-                    }
-                }
-            });
-        }
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-LOGIN — Pantalla de login y arranque                     */
+        /* ═══════════════════════════════════════════════════════════ */
 
-        async function inicializarFirebase() {
-            if (!database) { actualizarEstadoSync('offline', 'Firebase no disponible'); estadoSync.modo = 'local'; return false; }
-            if (firebaseInicializado) return true;
-            try {
-                actualizarEstadoSync('syncing', 'Conectando...');
-                await database.ref('test').set('testing');
-                await database.ref('test').remove();
-                estadoSync.modo = 'firebase';
-                actualizarEstadoSync('online', 'Conectado');
-                await cargarDesdeFirebase();
-                escucharCambiosFirebase();
-                if (firebaseIntervalId) clearInterval(firebaseIntervalId);
-                firebaseIntervalId = setInterval(async function() {
-                    if (!sincronizandoFirebase && estadoSync.modo === 'firebase' && cambiosPendientes) await guardarEnFirebase();
-                }, 30000);
-                firebaseInicializado = true;
-                mostrarNotificacion('Conexión con Firebase establecida', 'success');
-                return true;
-            } catch (error) {
-                console.error('Error Firebase:', error);
-                estadoSync.modo = 'local';
-                actualizarEstadoSync('offline', 'Modo local');
-                mostrarNotificacion('Sin conexión a Firebase', 'warning');
-                return false;
-            }
-        }
-
-        // ============================================================
-        // NAVEGACIÓN
-        // ============================================================
-        function cambiarSeccion(seccionId) {
-            document.querySelectorAll('.seccion').forEach(function(s) { s.classList.remove('active'); });
-            const sec = document.getElementById('seccion-' + seccionId);
-            if (sec) sec.classList.add('active');
-            document.querySelectorAll('.menu-item').forEach(function(m) { m.classList.remove('active'); });
-            const mi = document.querySelector('.menu-item[data-seccion="' + seccionId + '"]');
-            if (mi) mi.classList.add('active');
-        }
-
-        function renderizarSeccion(seccion) {
-            switch(seccion) {
-                case 'informes': renderizarInformes(); break;
-                case 'prospectos': renderizarProspectos(); break;
-                case 'clientes': renderizarClientes(); break;
-                case 'contratos': renderizarContratos(); break;
-                case 'paquetes': if (esAdmin()) renderizarPaquetes(); break;
-                case 'servicios': if (esAdmin()) renderizarServicios(); break;
-                case 'calendario': renderizarCalendario(); break;
-                case 'configuracion': renderizarHistorial(); renderizarUsuarios(); break;
-            }
-        }
-
-        function renderizarTodo() {
-            actualizarFiltrosInformes();
-            if (esAdmin()) { renderizarPaquetes(); renderizarServicios(); }
-            renderizarProspectos();
-            renderizarClientes(); renderizarContratos(); renderizarCalendario();
-            renderizarInformes(); renderizarHistorial(); renderizarUsuarios();
-        }
-
-        // ============================================================
-        // APLICAR RESTRICCIONES SEGÚN ROL
-        // ============================================================
-        function aplicarRestriccionesPorRol() {
-            // Ocultar menú Paquetes y Servicios para operadores
-            document.querySelectorAll('.menu-item.solo-admin').forEach(function(el) {
-                el.style.display = esAdmin() ? '' : 'none';
-            });
-            // Ocultar botones "Nuevo Paquete" y "Nuevo Servicio" para operadores
-            const btnNuevoPaq = document.getElementById('btn-nuevo-paquete');
-            const btnNuevoServ = document.getElementById('btn-nuevo-servicio');
-            if (btnNuevoPaq) btnNuevoPaq.style.display = esAdmin() ? '' : 'none';
-            if (btnNuevoServ) btnNuevoServ.style.display = esAdmin() ? '' : 'none';
-            
-            // Si el operador estaba viendo la sección de paquetes o servicios, redirigir a informes
-            if (!esAdmin()) {
-                const seccionActiva = document.querySelector('.seccion.active');
-                if (seccionActiva && (seccionActiva.id === 'seccion-paquetes' || seccionActiva.id === 'seccion-servicios')) {
-                    cambiarSeccion('informes');
-                    renderizarSeccion('informes');
-                }
-            }
-        }
-        // ============================================================
-        // LOGIN
-        // ============================================================
+        // ─────── @JS-LOGIN-MOSTRAR ───────
+        // Renderiza la pantalla de login con la lista de usuarios
         function mostrarPantallaLogin() {
             document.getElementById('pantalla-login').classList.remove('oculta');
             document.getElementById('app-container').classList.add('oculto');
@@ -5229,12 +5848,17 @@
                 });
             });
         }
+        // ─────── FIN @JS-LOGIN-MOSTRAR ───────
 
+        // ─────── @JS-LOGIN-OCULTAR ───────
         function ocultarPantallaLogin() {
             document.getElementById('pantalla-login').classList.add('oculta');
             document.getElementById('app-container').classList.remove('oculto');
         }
+        // ─────── FIN @JS-LOGIN-OCULTAR ───────
 
+        // ─────── @JS-LOGIN-PASO-PIN ───────
+        // Muestra el paso de ingresar PIN
         function irAPasoPin(usuario) {
             usuarioPendienteLogin = usuario;
             esPrimerLoginAdmin = false;
@@ -5248,7 +5872,10 @@
             document.getElementById('login-error').classList.remove('visible');
             setTimeout(function() { document.getElementById('login-pin-input').focus(); }, 100);
         }
+        // ─────── FIN @JS-LOGIN-PASO-PIN ───────
 
+        // ─────── @JS-LOGIN-PASO-NUEVO-PIN ───────
+        // Muestra el paso de crear PIN (primer login o reset)
         function irAPasoNuevoPin(usuario, esCambioObligatorio) {
             usuarioPendienteLogin = usuario;
             esPrimerLoginAdmin = esCambioObligatorio;
@@ -5260,7 +5887,10 @@
             document.getElementById('login-pin-nuevo-confirmar').value = '';
             setTimeout(function() { document.getElementById('login-pin-nuevo').focus(); }, 100);
         }
+        // ─────── FIN @JS-LOGIN-PASO-NUEVO-PIN ───────
 
+        // ─────── @JS-LOGIN-VOLVER ───────
+        // Vuelve al paso de selección de usuario
         function volverAPasoUsuario() {
             usuarioPendienteLogin = null;
             esPrimerLoginAdmin = false;
@@ -5268,7 +5898,10 @@
             document.getElementById('login-paso-nuevo-pin').classList.remove('activo');
             document.getElementById('login-paso-usuario').classList.add('activo');
         }
+        // ─────── FIN @JS-LOGIN-VOLVER ───────
 
+        // ─────── @JS-LOGIN-INTENTAR ───────
+        // Valida el PIN ingresado y arranca la app si es correcto
         async function intentarLogin() {
             if (!usuarioPendienteLogin) return;
             const pin = document.getElementById('login-pin-input').value.trim();
@@ -5289,7 +5922,10 @@
                 document.getElementById('login-pin-input').focus();
             }
         }
+        // ─────── FIN @JS-LOGIN-INTENTAR ───────
 
+        // ─────── @JS-LOGIN-GUARDAR-NUEVO-PIN ───────
+        // Guarda el PIN nuevo tras validar y arranca la app
         async function guardarNuevoPinLogin() {
             if (!usuarioPendienteLogin) return;
             const pin1 = document.getElementById('login-pin-nuevo').value.trim();
@@ -5309,10 +5945,10 @@
             guardarDatosLocal();
             iniciarAplicacion();
         }
+        // ─────── FIN @JS-LOGIN-GUARDAR-NUEVO-PIN ───────
 
-        // ============================================================
-        // INICIAR APP
-        // ============================================================
+        // ─────── @JS-LOGIN-INICIAR-APP ───────
+        // Arranca la aplicación tras login exitoso
         function actualizarUIUsuario() {
             if (!usuarioActual) return;
             const avatarEl = document.getElementById('user-avatar');
@@ -5333,10 +5969,38 @@
             renderizarTodo();
             setTimeout(function() { inicializarFirebase(); }, 1000);
         }
+        // ─────── FIN @JS-LOGIN-INICIAR-APP ───────
 
-        // ============================================================
-        // FILTROS COLAPSABLES
-        // ============================================================
+        // ─────── @JS-LOGIN-RESTRICCIONES-ROL ───────
+        // Oculta menús y botones según el rol del usuario
+        function aplicarRestriccionesPorRol() {
+            // Ocultar menú Paquetes y Servicios para operadores
+            document.querySelectorAll('.menu-item.solo-admin').forEach(function(el) {
+                el.style.display = esAdmin() ? '' : 'none';
+            });
+            // Ocultar botones "Nuevo Paquete" y "Nuevo Servicio" para operadores
+            const btnNuevoPaq = document.getElementById('btn-nuevo-paquete');
+            const btnNuevoServ = document.getElementById('btn-nuevo-servicio');
+            if (btnNuevoPaq) btnNuevoPaq.style.display = esAdmin() ? '' : 'none';
+            if (btnNuevoServ) btnNuevoServ.style.display = esAdmin() ? '' : 'none';
+            
+            // Si el operador estaba viendo la sección de paquetes o servicios, redirigir a informes
+            if (!esAdmin()) {
+                const seccionActiva = document.querySelector('.seccion.active');
+                if (seccionActiva && (seccionActiva.id === 'seccion-paquetes' || seccionActiva.id === 'seccion-servicios')) {
+                    cambiarSeccion('informes');
+                    renderizarSeccion('informes');
+                }
+            }
+        }
+        // ─────── FIN @JS-LOGIN-RESTRICCIONES-ROL ───────
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-LISTENERS — Event listeners globales                     */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-LISTENERS-FILTROS-COLAPSABLES ───────
+        // Sistema de filtros colapsables en móvil
         function inicializarFiltrosColapsables() {
             document.querySelectorAll('.btn-toggle-filtros').forEach(function(btn) {
                 btn.addEventListener('click', function() {
@@ -5419,10 +6083,10 @@
 
             actualizarBadgesFiltros();
         }
+        // ─────── FIN @JS-LISTENERS-FILTROS-COLAPSABLES ───────
 
-        // ============================================================
-        // EVENT LISTENERS APP
-        // ============================================================
+        // ─────── @JS-LISTENERS-APP ───────
+        // Conecta todos los listeners de la aplicación
         function conectarEventListenersApp() {
             document.querySelectorAll('.menu-item').forEach(function(item) {
                 item.addEventListener('click', function() {
@@ -5586,10 +6250,10 @@
 
             inicializarFiltrosColapsables();
         }
+        // ─────── FIN @JS-LISTENERS-APP ───────
 
-        // ============================================================
-        // LOGIN LISTENERS
-        // ============================================================
+        // ─────── @JS-LISTENERS-LOGIN ───────
+        // Conecta los listeners de la pantalla de login
         (function conectarListenersLogin() {
             var btn;
             btn = document.getElementById('login-btn-cancelar');
@@ -5605,17 +6269,57 @@
             btn = document.getElementById('login-pin-nuevo-confirmar');
             if (btn) btn.addEventListener('keypress', function(e) { if (e.key === 'Enter') guardarNuevoPinLogin(); });
         })();
+        // ─────── FIN @JS-LISTENERS-LOGIN ───────
 
-        // ============================================================
-        // CAPTURA GLOBAL DE ERRORES (para diagnóstico)
-        // ============================================================
+        // ─────── @JS-LISTENERS-ERROR-GLOBAL ───────
+        // Captura errores globales para diagnóstico
         window.addEventListener('error', function(ev) {
             console.error('⚠️ Error global:', ev.message, 'en', ev.filename, 'línea', ev.lineno);
         });
+        // ─────── FIN @JS-LISTENERS-ERROR-GLOBAL ───────
 
-        // ============================================================
-        // BOOT
-        // ============================================================
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-BOOT — Inicialización de la aplicación                   */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-BOOT-RENDER-TODO ───────
+        // Refresca todas las vistas principales
+        function renderizarTodo() {
+            actualizarFiltrosInformes();
+            if (esAdmin()) { renderizarPaquetes(); renderizarServicios(); }
+            renderizarProspectos();
+            renderizarClientes(); renderizarContratos(); renderizarCalendario();
+            renderizarInformes(); renderizarHistorial(); renderizarUsuarios();
+        }
+        // ─────── FIN @JS-BOOT-RENDER-TODO ───────
+
+        // ─────── @JS-BOOT-NAVEGACION ───────
+        // Cambia entre secciones de la app
+        function cambiarSeccion(seccionId) {
+            document.querySelectorAll('.seccion').forEach(function(s) { s.classList.remove('active'); });
+            const sec = document.getElementById('seccion-' + seccionId);
+            if (sec) sec.classList.add('active');
+            document.querySelectorAll('.menu-item').forEach(function(m) { m.classList.remove('active'); });
+            const mi = document.querySelector('.menu-item[data-seccion="' + seccionId + '"]');
+            if (mi) mi.classList.add('active');
+        }
+
+        function renderizarSeccion(seccion) {
+            switch(seccion) {
+                case 'informes': renderizarInformes(); break;
+                case 'prospectos': renderizarProspectos(); break;
+                case 'clientes': renderizarClientes(); break;
+                case 'contratos': renderizarContratos(); break;
+                case 'paquetes': if (esAdmin()) renderizarPaquetes(); break;
+                case 'servicios': if (esAdmin()) renderizarServicios(); break;
+                case 'calendario': renderizarCalendario(); break;
+                case 'configuracion': renderizarHistorial(); renderizarUsuarios(); break;
+            }
+        }
+        // ─────── FIN @JS-BOOT-NAVEGACION ───────
+
+        // ─────── @JS-BOOT-INIT ───────
+        // Función principal de arranque con manejo de errores
         (async function boot() {
             try {
                 const temaInicial = localStorage.getItem(PREF_TEMA) || 'dark';
@@ -5657,6 +6361,7 @@
                 }
             }
         })();
+        // ─────── FIN @JS-BOOT-INIT ───────
     </script>
 </body>
 </html>
