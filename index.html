@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Registro PDA v3.8.1 - Estudio Fotografía</title>
+    <title>Registro PDA v3.9 - Estudio Fotografía</title>
     <link rel="icon" type="image/jpeg" href="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -68,7 +68,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* PANTALLA DE LOGIN */
         .pantalla-login {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: var(--color-bg-primario);
@@ -81,10 +80,7 @@
             border-radius: 16px; padding: 40px 36px; max-width: 440px; width: 100%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4); text-align: center;
         }
-        .login-logo {
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 12px;
-        }
+        .login-logo { display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
         .login-logo img.logo-img-login {
             width: 100px; height: 100px; object-fit: contain;
             border-radius: 50%; display: block; margin: 0 auto;
@@ -155,7 +151,6 @@
         .app-container { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
         .app-container.oculto { display: none; }
 
-        /* SIDEBAR */
         .sidebar {
             width: var(--sidebar-width); min-width: var(--sidebar-width);
             background-color: var(--color-sidebar-bg);
@@ -947,6 +942,9 @@
             font-family: 'Courier New', monospace; color: var(--color-acento);
             font-size: 10.5px; letter-spacing: 0.5px;
         }
+        .form-grupo .pago-registrado-por {
+            font-size: 11px; color: var(--color-azul); font-style: italic;
+        }
         .form-grupo .pago-eliminado { color: var(--color-rojo); font-style: italic; opacity: 0.7; }
         .form-grupo .pago-eliminado .pago-monto { color: var(--color-rojo); text-decoration: line-through; }
         .form-acciones { display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end; flex-wrap: wrap; }
@@ -1059,6 +1057,9 @@
             padding: 2px 8px; border-radius: 4px; display: inline-block;
             letter-spacing: 1px; font-weight: 700; border: 1px solid var(--color-borde);
         }
+        .detalle-lista-item .reg-por {
+            font-size: 11px; color: var(--color-azul); font-style: italic;
+        }
         .detalle-lista-item .der { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
         .detalle-lista-item .monto { font-weight: 700; font-size: 14px; white-space: nowrap; }
         .detalle-lista-item .monto.verde { color: var(--color-verde); }
@@ -1086,7 +1087,6 @@
             border: 1px solid var(--color-borde-suave);
         }
 
-        /* TAREAS VINCULADAS EN DETALLE */
         .tarea-vinculada {
             display: flex;
             gap: 12px;
@@ -1150,9 +1150,6 @@
         .tarea-acciones button:first-child:hover { color: var(--color-acento); }
         .tarea-acciones button:last-child:hover { color: var(--color-rojo); }
 
-        /* ============================================ */
-        /* BUSCADOR DE CLIENTES (COMBOBOX)              */
-        /* ============================================ */
         .buscador-cliente {
             position: relative;
             width: 100%;
@@ -1836,7 +1833,7 @@
                 </div>
             </div>
             <div class="login-footer">
-                v3.8.1 · Software diseñado por <strong>JFR MEDIA</strong><br>
+                v3.9 · Software diseñado por <strong>JFR MEDIA</strong><br>
                 Acceso restringido a personal autorizado
             </div>
         </div>
@@ -1861,15 +1858,15 @@
                 <li class="menu-item" data-seccion="prospectos" data-label="Prospectos"><i class="fas fa-users"></i><span>Prospectos</span></li>
                 <li class="menu-item" data-seccion="clientes" data-label="Clientes"><i class="fas fa-user-check"></i><span>Clientes</span></li>
                 <li class="menu-item" data-seccion="contratos" data-label="Contratos"><i class="fas fa-file-contract"></i><span>Contratos</span></li>
-                <li class="menu-item" data-seccion="paquetes" data-label="Paquetes"><i class="fas fa-box"></i><span>Paquetes</span></li>
-                <li class="menu-item" data-seccion="servicios" data-label="Servicios"><i class="fas fa-tools"></i><span>Servicios</span></li>
+                <li class="menu-item solo-admin" data-seccion="paquetes" data-label="Paquetes"><i class="fas fa-box"></i><span>Paquetes</span></li>
+                <li class="menu-item solo-admin" data-seccion="servicios" data-label="Servicios"><i class="fas fa-tools"></i><span>Servicios</span></li>
                 <li class="menu-item" data-seccion="calendario" data-label="Calendario"><i class="fas fa-calendar-alt"></i><span>Calendario</span></li>
                 <li class="menu-item" data-seccion="configuracion" data-label="Configuración"><i class="fas fa-cog"></i><span>Configuración</span></li>
             </ul>
             <div class="sidebar-footer">
                 <button class="btn-colapsar" id="btn-colapsar" title="Colapsar menú"><i class="fas fa-chevron-left"></i><span>Colapsar</span></button>
                 <button class="btn-logout" id="btn-logout" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></button>
-                <div class="version">v3.8.1</div>
+                <div class="version">v3.9</div>
             </div>
         </nav>
 
@@ -2032,7 +2029,7 @@
                 <div id="lista-contratos" class="mosaico-grid"><p class="mensaje-vacio">No hay contratos registrados</p></div>
             </section>
 
-            <!-- PAQUETES -->
+            <!-- PAQUETES (solo admin) -->
             <section id="seccion-paquetes" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-box"></i> Paquetes</h1>
@@ -2041,7 +2038,7 @@
                 <div id="lista-paquetes" class="mosaico-grid"><p class="mensaje-vacio">No hay paquetes registrados</p></div>
             </section>
 
-            <!-- SERVICIOS -->
+            <!-- SERVICIOS (solo admin) -->
             <section id="seccion-servicios" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-tools"></i> Servicios Adicionales</h1>
@@ -2193,22 +2190,33 @@
                 </div>
 
                 <div class="version-card">
-                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v3.8.1</span></h3>
+                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v3.9</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">3.8.1</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">3.9</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
                     </div>
                     <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v3.8.1)</h4>
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v3.9)</h4>
                         <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-bug"></i></div>
+                            <div class="changelog-icono"><i class="fas fa-user-shield"></i></div>
                             <div class="changelog-contenido">
-                                <div class="changelog-titulo">Fix: crear tarea desde el calendario</div>
+                                <div class="changelog-titulo">Restricciones para operadores</div>
                                 <div class="changelog-desc">
-                                    Se corrigió el bug que impedía guardar tareas creadas directamente desde un día del calendario.
-                                    Ahora la fecha se preconfigura correctamente y la tarea se guarda sin problema.
+                                    Los operadores ya no pueden ver las secciones de Paquetes y Servicios,
+                                    ni eliminar clientes y contratos. Los pagos y cargos extras sí se pueden
+                                    modificar, con registro del usuario que realizó cada movimiento.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-fingerprint"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Auditoría completa</div>
+                                <div class="changelog-desc">
+                                    Cada pago y cargo extra registra quién lo creó. Las eliminaciones
+                                    quedan marcadas con el usuario y la fecha, sin borrar el registro original.
                                 </div>
                             </div>
                         </div>
@@ -2217,18 +2225,8 @@
                             <div class="changelog-contenido">
                                 <div class="changelog-titulo">Buscador de clientes con filtro</div>
                                 <div class="changelog-desc">
-                                    El campo para vincular una tarea ahora permite buscar escribiendo el nombre del cliente
-                                    o del festejado. Navegación con flechas ↑↓ y Enter para seleccionar.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-tasks"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Tareas vinculadas a clientes y prospectos</div>
-                                <div class="changelog-desc">
-                                    Crea tareas desde la tarjeta de un cliente o prospecto y visualiza todas sus tareas
-                                    en el modal de detalle con checkbox para marcarlas como completadas.
+                                    Al vincular una tarea, busca por nombre de cliente o por nombre del festejado.
+                                    Navega con flechas ↑↓ y selecciona con Enter.
                                 </div>
                             </div>
                         </div>
@@ -2276,7 +2274,7 @@
         // ============================================================
         // CONFIGURACIÓN
         // ============================================================
-        var VERSION = '3.8.1';
+        var VERSION = '3.9';
         var PIN_ADMIN_INICIAL = '1234';
         var EMISOR_COMPROBANTE = "Producciones D'Angel Film";
         var MODO_ZONA_HORARIA = 'local';
@@ -2357,6 +2355,25 @@
                 }
             }
         })();
+
+        // ============================================================
+        // PERMISOS
+        // ============================================================
+        function esAdmin() {
+            return usuarioActual && usuarioActual.admin === true;
+        }
+
+        function bloquearSiNoEsAdmin(accion) {
+            if (!esAdmin()) {
+                mostrarNotificacion('Acción restringida. Solo administradores pueden ' + (accion || 'realizar esta acción') + '.', 'warning');
+                return true;
+            }
+            return false;
+        }
+
+        function nombreUsuarioActual() {
+            return usuarioActual ? usuarioActual.nombre : 'Sistema';
+        }
 
         // ============================================================
         // HASH DE PIN
@@ -2791,8 +2808,13 @@
             const campos = config.campos;
             const renderizar = config.renderizar;
             const onEliminar = config.onEliminar;
+            const soloAdmin = config.soloAdmin === true;
 
             function mostrarFormulario(item) {
+                if (soloAdmin && !esAdmin()) {
+                    mostrarNotificacion('Solo administradores pueden gestionar ' + titulo.toLowerCase() + 's.', 'warning');
+                    return;
+                }
                 const esEdicion = item !== null && item !== undefined;
                 let camposHTML = '';
                 campos.forEach(function(c) {
@@ -2888,6 +2910,10 @@
             return {
                 nuevo: function() { mostrarFormulario(); },
                 editar: function(id) {
+                    if (soloAdmin && !esAdmin()) {
+                        mostrarNotificacion('Solo administradores pueden editar ' + titulo.toLowerCase() + 's.', 'warning');
+                        return;
+                    }
                     const lista = window[coleccion];
                     if (!Array.isArray(lista)) { mostrarNotificacion('Error: lista no disponible', 'error'); return; }
                     const item = lista.find(function(x) { return x.id === id; });
@@ -2895,6 +2921,10 @@
                     else mostrarNotificacion('Registro no encontrado', 'warning');
                 },
                 eliminar: function(id) {
+                    if (soloAdmin && !esAdmin()) {
+                        mostrarNotificacion('Solo administradores pueden eliminar ' + titulo.toLowerCase() + 's.', 'warning');
+                        return;
+                    }
                     const lista = window[coleccion];
                     if (!Array.isArray(lista)) return;
                     const item = lista.find(function(x) { return x.id === id; });
@@ -3029,7 +3059,7 @@
                         '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + c.id + '\', \'cliente\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
                         '<button class="btn-convertir" onclick="mostrarFormularioContrato(\'' + c.id + '\')" title="Agregar contrato"><i class="fas fa-file-contract"></i></button>' +
                         '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.id + '\')" title="Enviar WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button>' +
-                        '<button class="btn-eliminar" onclick="eliminarCliente(\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
+                        (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarCliente(\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '');
                 }
             });
         }
@@ -3040,6 +3070,7 @@
         const CRUD = {
             paquetes: crearCRUD({
                 coleccion: 'paquetes', titulo: 'Paquete', entidadHistorial: 'paquete',
+                soloAdmin: true,
                 campos: [
                     { name: 'nombre', label: 'Nombre *', required: true },
                     { name: 'descripcion', label: 'Descripción *', type: 'textarea', required: true },
@@ -3051,6 +3082,7 @@
             }),
             servicios: crearCRUD({
                 coleccion: 'serviciosAdicionales', titulo: 'Servicio', entidadHistorial: 'servicio',
+                soloAdmin: true,
                 campos: [
                     { name: 'nombre', label: 'Nombre *', required: true },
                     { name: 'descripcion', label: 'Descripción *', type: 'textarea', required: true },
@@ -3145,7 +3177,7 @@
                 onConfirmar: function() {
                     prospectos = prospectos.filter(function(x) { return x.id !== id; });
                     tareas = tareas.filter(function(t) { return t.clienteId !== 'pro_' + id; });
-                    registrarHistorial('prospecto', 'eliminar', 'Se eliminó prospecto: "' + p.nombre + '"', { id: id, nombre: p.nombre });
+                    registrarHistorial('prospecto', 'eliminar', 'Se eliminó prospecto: "' + p.nombre + '" (por ' + nombreUsuarioActual() + ')', { id: id, nombre: p.nombre });
                     guardarDatos(); renderizarProspectos(); renderizarCalendario();
                     mostrarNotificacion('Prospecto eliminado', 'success');
                 }
@@ -3174,6 +3206,7 @@
         }
 
         function eliminarCliente(id) {
+            if (bloquearSiNoEsAdmin('eliminar clientes')) return;
             const c = obtenerCliente(id); if (!c) return;
             const nc = c.contratos ? c.contratos.length : 0;
             const nt = tareas.filter(function(t) { return t.clienteId === id; }).length;
@@ -3214,7 +3247,7 @@
         }
 
         // ============================================================
-        // BUSCADOR DE CLIENTES/PROSPECTOS (combo con búsqueda)
+        // BUSCADOR DE CLIENTES/PROSPECTOS
         // ============================================================
         function inicializarBuscadorCliente(opciones, valorInicial) {
             const input = document.getElementById('tarea-cliente-input');
@@ -3319,7 +3352,6 @@
                 seleccionarOpcion(op.dataset.value);
             });
             
-            // Cerrar al hacer clic fuera
             setTimeout(function() {
                 document.addEventListener('click', function handler(e) {
                     if (!e.target.closest('#buscador-cliente-container')) {
@@ -3335,14 +3367,13 @@
         }
 
         // ============================================================
-        // TAREAS — FORMULARIO (con soporte para cliente y fecha preconfigurados)
+        // TAREAS — FORMULARIO
         // ============================================================
         function mostrarFormularioTarea(tarea, clientePreconfigurado, fechaPreconfigurada) {
             const ee = tarea !== null && tarea !== undefined && tarea !== false && tarea.id;
             let ot = '';
             TIPOS_TAREA.forEach(function(t) { ot += '<option value="' + t + '" ' + (tarea && tarea.tipo === t ? 'selected' : '') + '>' + t + '</option>'; });
             
-            // Construir lista unificada de opciones (clientes + prospectos)
             let opcionesVinculacion = [];
             clientes.forEach(function(c) {
                 opcionesVinculacion.push({ 
@@ -3363,7 +3394,6 @@
                 }
             });
             
-            // Determinar el valor seleccionado actual
             const clienteActualId = (tarea && tarea.clienteId) || clientePreconfigurado || '';
             const opcionActual = opcionesVinculacion.find(function(o) { return o.id === clienteActualId; });
             const textoActual = opcionActual ? opcionActual.nombre + (opcionActual.tipo === 'cliente' ? ' (Cliente)' : ' (Prospecto)') : '';
@@ -3396,13 +3426,11 @@
             
             abrirModal(ee ? 'Editar Tarea' : 'Nueva Tarea', html);
             
-            // Preseleccionar tipo
             if (tipoVal) {
                 const sel = document.getElementById('tarea-tipo');
                 if (sel) sel.value = tipoVal;
             }
             
-            // Inicializar el buscador de clientes
             inicializarBuscadorCliente(opcionesVinculacion, clienteActualId);
 
             document.getElementById('btn-tarea-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
@@ -3429,7 +3457,7 @@
                         registrarHistorial('tarea', 'editar', 'Se editó tarea: "' + tipo + '"', { id: id, nombre: tipo });
                     }
                 } else {
-                    const nt = { id: generarId(), tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, fechaCreacion: obtenerFechaHoraActual(), fechaModificacion: obtenerFechaHoraActual() };
+                    const nt = { id: generarId(), tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, fechaCreacion: obtenerFechaHoraActual(), fechaModificacion: obtenerFechaHoraActual(), creadaPor: nombreUsuarioActual() };
                     if (comp) nt.fechaCompletada = obtenerFechaHoraActual();
                     tareas.push(nt);
                     registrarHistorial('tarea', 'crear', 'Se creó tarea: "' + tipo + '"' + (clid ? ' vinculada' : ''), { id: nt.id, nombre: tipo });
@@ -3466,9 +3494,6 @@
             renderizarClientes(); renderizarProspectos();
         }
 
-        // ============================================================
-        // TAREAS — TOGGLE DESDE EL DETALLE
-        // ============================================================
         function toggleTareaDesdeDetalle(id, completada) {
             const t = tareas.find(function(x) { return x.id === id; });
             if (!t) return;
@@ -3513,9 +3538,6 @@
             abrirModal('Detalle del cliente', html, true);
         }
 
-        // ============================================================
-        // DETALLE DE PROSPECTO CON TAREAS
-        // ============================================================
         function verDetalleProspecto(prospectoId) {
             const p = obtenerProspecto(prospectoId);
             if (!p) { mostrarNotificacion('Prospecto no encontrado', 'error'); return; }
@@ -3531,9 +3553,6 @@
             abrirModal('Detalle del prospecto', html, true);
         }
 
-        // ============================================================
-        // CONSTRUCTOR DE DETALLE (compartido cliente/prospecto)
-        // ============================================================
         function construirDetalleEntidad(opts) {
             const e = opts.entidad;
             const tipo = opts.tipo;
@@ -3605,9 +3624,6 @@
             return html;
         }
 
-        // ============================================================
-        // LISTA DE TAREAS VINCULADAS (con checkbox)
-        // ============================================================
         function construirListaTareasVinculadas(tareasVinc) {
             const total = tareasVinc.length;
             const completadas = tareasVinc.filter(function(t) { return t.completada; }).length;
@@ -3799,6 +3815,8 @@
                         ? '<button type="button" class="btn-eliminar-item" onclick="PDA.eliminarMovimiento(\'' + m.tipo + '\',' + m.index + ')" title="Eliminar"><i class="fas fa-trash"></i></button>'
                         : '';
                     const codigo = item.codigo ? '<span class="pago-codigo"><i class="fas fa-fingerprint"></i> ' + item.codigo + '</span>' : '';
+                    const regPor = item.registradoPor ? '<span class="pago-registrado-por"><i class="fas fa-user"></i> ' + item.registradoPor + '</span>' : '';
+                    const elimPor = item.eliminadoPor ? '<span class="pago-registrado-por" style="color:var(--color-rojo);"><i class="fas fa-user-times"></i> Eliminado por: ' + item.eliminadoPor + '</span>' : '';
 
                     return '<div class="pago-item ' + claseEliminado + '">' +
                         '<div class="pago-info">' +
@@ -3806,6 +3824,8 @@
                         '<span class="pago-monto" style="' + (m.tipo === 'cargo' ? 'color:var(--color-naranja);' : '') + '">' + formatearMoneda(item.monto) + textoEliminado + '</span>' +
                         '<span class="pago-fecha">' + formatearFechaHora(item.fecha) + '</span>' +
                         codigo +
+                        regPor +
+                        elimPor +
                         (item.nota ? '<span style="font-size:11px;color:var(--color-texto-secundario);width:100%;">' + item.nota + '</span>' : '') +
                         '</div>' + botonEliminar + '</div>';
                 }).join('');
@@ -3841,10 +3861,22 @@
                     detalle: item.nota || '',
                     onConfirmar: function() {
                         item.eliminado = true;
-                        item.nota = (item.nota || '') + ' | ELIMINADO: ' + obtenerFechaHoraActual();
-                        const nota = { monto: 0, fecha: obtenerFechaHoraActual(), nota: (esPago ? 'Pago de ' : 'Cargo de ') + formatearMoneda(item.monto) + ' eliminado', eliminado: false, esNotaEliminacion: true };
+                        item.eliminadoPor = nombreUsuarioActual();
+                        item.fechaEliminacion = obtenerFechaHoraActual();
+                        item.nota = (item.nota || '') + ' | ELIMINADO por ' + nombreUsuarioActual() + ' el ' + obtenerFechaHoraActual();
+                        const nota = { 
+                            monto: 0, 
+                            fecha: obtenerFechaHoraActual(), 
+                            nota: (esPago ? 'Pago de ' : 'Cargo de ') + formatearMoneda(item.monto) + ' eliminado por ' + nombreUsuarioActual(), 
+                            eliminado: false, 
+                            esNotaEliminacion: true,
+                            registradoPor: nombreUsuarioActual()
+                        };
                         if (esPago) pagosArr.push(nota);
                         else cargosArr.push(nota);
+                        registrarHistorial(esPago ? 'pago' : 'cargo', 'eliminar', 
+                            'Se eliminó ' + (esPago ? 'pago' : 'cargo extra') + ' de ' + formatearMoneda(item.monto) + ' (' + nombreUsuarioActual() + ')', 
+                            { nombre: formatearMoneda(item.monto) });
                         renderizarMovimientos();
                         mostrarNotificacion('Movimiento eliminado', 'success');
                     }
@@ -3900,7 +3932,7 @@
                 if (a > 0) {
                     const ea = pagosArr.some(function(p) { return p.nota && p.nota.indexOf('Anticipo') !== -1 && !p.eliminado; });
                     if (!ea) {
-                        const pagoAnticipo = { id: generarId(), monto: a, fecha: obtenerFechaHoraActual(), nota: 'Anticipo registrado por ' + formatearMoneda(a), codigo: generarHuellaPago(), registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema' };
+                        const pagoAnticipo = { id: generarId(), monto: a, fecha: obtenerFechaHoraActual(), nota: 'Anticipo registrado por ' + formatearMoneda(a), codigo: generarHuellaPago(), registradoPor: nombreUsuarioActual() };
                         pagosArr.push(pagoAnticipo);
                         pagosRecientes.push(pagoAnticipo);
                         renderizarMovimientos();
@@ -3913,7 +3945,7 @@
                 const mi = el('contrato-nuevo-pago');
                 const m = parseFloat(mi.value);
                 if (!m || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
-                const nuevoPago = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Pago registrado por ' + formatearMoneda(m), codigo: generarHuellaPago(), registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema' };
+                const nuevoPago = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Pago registrado por ' + formatearMoneda(m), codigo: generarHuellaPago(), registradoPor: nombreUsuarioActual() };
                 pagosArr.push(nuevoPago);
                 pagosRecientes.push(nuevoPago);
                 renderizarMovimientos();
@@ -3929,7 +3961,7 @@
                 const m = parseFloat(mi.value);
                 if (!m || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
                 if (!d) { mostrarNotificacion('Ingresa una descripción', 'warning'); return; }
-                const nuevoCargo = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Cargo extra: ' + d + ' - ' + formatearMoneda(m), registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema' };
+                const nuevoCargo = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Cargo extra: ' + d + ' - ' + formatearMoneda(m), registradoPor: nombreUsuarioActual() };
                 cargosArr.push(nuevoCargo);
                 renderizarMovimientos();
                 di.value = '';
@@ -3996,7 +4028,7 @@
             if (ant > 0) {
                 const ea = pagosFinales.some(function(p) { return p.nota && p.nota.indexOf('Anticipo') !== -1; });
                 if (!ea) {
-                    const pagoAnticipo = { id: generarId(), monto: ant, fecha: obtenerFechaHoraActual(), nota: 'Anticipo registrado por ' + formatearMoneda(ant), codigo: generarHuellaPago(), registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema' };
+                    const pagoAnticipo = { id: generarId(), monto: ant, fecha: obtenerFechaHoraActual(), nota: 'Anticipo registrado por ' + formatearMoneda(ant), codigo: generarHuellaPago(), registradoPor: nombreUsuarioActual() };
                     pagosFinales.push(pagoAnticipo);
                     if (pagosRecientes) pagosRecientes.push(pagoAnticipo);
                 }
@@ -4089,7 +4121,7 @@
                         '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.clienteId + '\')" title="WhatsApp al cliente"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button>' +
                         '<button class="btn-calendar" onclick="crearEventoGoogleCalendar(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Google Calendar"><i class="fab fa-google"></i></button>' +
                         '<button class="btn-imprimir" onclick="generarVistaImpresion(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Imprimir"><i class="fas fa-print"></i></button>' +
-                        '<button class="btn-eliminar" onclick="eliminarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
+                        (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '');
                 }
             });
         }
@@ -4103,6 +4135,7 @@
         }
 
         function eliminarContrato(clienteId, contratoId) {
+            if (bloquearSiNoEsAdmin('eliminar contratos')) return;
             const c = obtenerCliente(clienteId); if (!c) return;
             const co = c.contratos.find(function(x) { return x.id === contratoId; }); if (!co) return;
             confirmarEliminacion({
@@ -4136,7 +4169,7 @@
                 const n = document.getElementById('pago-rapido-nota').value.trim();
                 if (isNaN(m) || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
                 if (!co.pagos) co.pagos = [];
-                const nuevoPago = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: n ? 'Pago: ' + n + ' - ' + formatearMoneda(m) : 'Pago de ' + formatearMoneda(m), codigo: generarHuellaPago(), registradoPor: usuarioActual ? usuarioActual.nombre : 'Sistema' };
+                const nuevoPago = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: n ? 'Pago: ' + n + ' - ' + formatearMoneda(m) : 'Pago de ' + formatearMoneda(m), codigo: generarHuellaPago(), registradoPor: nombreUsuarioActual() };
                 co.pagos.push(nuevoPago);
                 registrarHistorial('pago', 'crear', 'Pago de ' + formatearMoneda(m) + ' para "' + c.nombre + '" - Código: ' + nuevoPago.codigo, { id: nuevoPago.id, nombre: c.nombre });
                 guardarDatos();
@@ -4173,6 +4206,7 @@
                     return '<div class="detalle-lista-item">' +
                         '<div class="izq">' +
                         '<span class="fecha">' + formatearFechaHora(p.fecha) + '</span>' +
+                        (p.registradoPor ? '<span class="reg-por"><i class="fas fa-user"></i> ' + p.registradoPor + '</span>' : '') +
                         (p.nota ? '<span class="nota">' + p.nota + '</span>' : '') +
                         (p.codigo ? '<span class="codigo"><i class="fas fa-fingerprint"></i> ' + p.codigo + '</span>' : '') +
                         '</div>' +
@@ -4192,6 +4226,7 @@
                     '<div class="detalle-lista">' + tot.cargosValidos.map(function(c) {
                         return '<div class="detalle-lista-item"><div class="izq">' +
                             '<span class="fecha">' + formatearFechaHora(c.fecha) + '</span>' +
+                            (c.registradoPor ? '<span class="reg-por"><i class="fas fa-user"></i> ' + c.registradoPor + '</span>' : '') +
                             (c.nota ? '<span class="nota">' + c.nota + '</span>' : '') +
                             '</div><span class="monto naranja">' + formatearMoneda(c.monto) + '</span></div>';
                     }).join('') + '</div></div>';
@@ -4201,7 +4236,7 @@
                 '<button class="btn-primario" onclick="editarContrato(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-edit"></i> Editar</button>' +
                 '<button class="btn-naranja" onclick="cerrarModal(); agregarPagoRapido(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-coins"></i> Agregar pago</button>' +
                 '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + clienteId + '\')"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i> WhatsApp cliente</button>' +
-                '<button class="btn-peligro" onclick="cerrarModal(); eliminarContrato(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-trash"></i> Eliminar</button>' +
+                (esAdmin() ? '<button class="btn-peligro" onclick="cerrarModal(); eliminarContrato(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-trash"></i> Eliminar</button>' : '') +
                 '</div>' +
                 '<div class="detalle-header">' +
                 '<div class="detalle-cliente">' + cliente.nombre + '</div>' +
@@ -4345,7 +4380,7 @@
             ctx.beginPath(); ctx.moveTo(marginX + 40, lineaFirmaY); ctx.lineTo(W - marginX - 40, lineaFirmaY); ctx.stroke();
 
             ctx.textAlign = 'center'; ctx.fillStyle = '#1a1a1a'; ctx.font = 'italic 22px "Segoe UI", Arial, sans-serif';
-            ctx.fillText(usuarioActual ? usuarioActual.nombre : 'Usuario', W / 2, lineaFirmaY - 8);
+            ctx.fillText(pago.registradoPor || (usuarioActual ? usuarioActual.nombre : 'Usuario'), W / 2, lineaFirmaY - 8);
             ctx.fillStyle = '#555'; ctx.font = '500 12px "Segoe UI", Arial, sans-serif';
             ctx.fillText('Firmado por el emisor', W / 2, lineaFirmaY + 20);
             ctx.fillStyle = '#888'; ctx.font = '400 11px "Segoe UI", Arial, sans-serif';
@@ -4436,7 +4471,7 @@
                     'Festejado: ' + datos.contrato.festejado + '\n\n' +
                     'Gracias por tu preferencia.\n\n' +
                     EMISOR_COMPROBANTE + '\n' +
-                    'Firmado por: ' + (usuarioActual ? usuarioActual.nombre : 'Usuario') + '\n\n' +
+                    'Firmado por: ' + (datos.pago.registradoPor || nombreUsuarioActual()) + '\n\n' +
                     '(Adjunta la imagen descargada al correo antes de enviarlo)';
                 window.open('mailto:' + datos.cliente.email + '?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(cuerpo), '_blank');
                 registrarHistorial('pago', 'editar', 'Se envió comprobante por Email a "' + datos.cliente.nombre + '"', { id: pagoId, nombre: datos.cliente.nombre });
@@ -4503,8 +4538,8 @@
                 '<div class="fila"><span class="lbl" style="color:' + (tot.saldoPendiente === 0 ? '#4caf50' : '#ff9800') + ';">Saldo Pendiente:</span><span class="val ' + (tot.saldoPendiente === 0 ? 'verde' : 'naranja') + '">' + formatearMoneda(tot.saldoPendiente) + '</span></div>' +
                 '</div>';
             if (tot.pagosValidos.length > 0) {
-                html += '<div class="sec"><div class="sec-title">Pagos</div><table><thead><tr><th>Fecha</th><th>Código</th><th style="text-align:right;">Monto</th><th>Nota</th></tr></thead><tbody>' +
-                    tot.pagosValidos.map(function(p) { return '<tr><td>' + formatearFechaHora(p.fecha) + '</td><td style="font-family:monospace;font-size:9px;">' + (p.codigo || '-') + '</td><td style="text-align:right;font-weight:600;">' + formatearMoneda(p.monto) + '</td><td>' + (p.nota || '') + '</td></tr>'; }).join('') +
+                html += '<div class="sec"><div class="sec-title">Pagos</div><table><thead><tr><th>Fecha</th><th>Código</th><th style="text-align:right;">Monto</th><th>Registrado por</th><th>Nota</th></tr></thead><tbody>' +
+                    tot.pagosValidos.map(function(p) { return '<tr><td>' + formatearFechaHora(p.fecha) + '</td><td style="font-family:monospace;font-size:9px;">' + (p.codigo || '-') + '</td><td style="text-align:right;font-weight:600;">' + formatearMoneda(p.monto) + '</td><td>' + (p.registradoPor || '-') + '</td><td>' + (p.nota || '') + '</td></tr>'; }).join('') +
                     '</tbody></table></div>';
             }
             if (co.notas) html += '<div class="sec"><div class="sec-title">Notas</div><div style="font-size:11px;color:#555;">' + co.notas + '</div></div>';
@@ -4586,9 +4621,6 @@
             renderizarListaTareas();
         }
 
-        // ============================================================
-        // OPCIONES DEL DÍA (con fix del bug)
-        // ============================================================
         function mostrarOpcionesDia(fecha) {
             abrirModal('Opciones del día', '<div style="text-align:center;padding:10px;">' +
                 '<h3 style="color:var(--color-acento);margin-bottom:16px;">' + formatearFecha(fecha) + '</h3>' +
@@ -4600,22 +4632,15 @@
             
             document.getElementById('btn-crear-tarea-dia').addEventListener('click', function() {
                 cerrarModal();
-                setTimeout(function() {
-                    mostrarFormularioTareaConFecha(fecha);
-                }, 100);
+                setTimeout(function() { mostrarFormularioTareaConFecha(fecha); }, 100);
             });
             
             document.getElementById('btn-crear-contrato-dia').addEventListener('click', function() {
                 cerrarModal();
-                setTimeout(function() {
-                    mostrarFormularioContratoDesdeCalendario(fecha);
-                }, 100);
+                setTimeout(function() { mostrarFormularioContratoDesdeCalendario(fecha); }, 100);
             });
         }
 
-        // ============================================================
-        // NUEVA FUNCIÓN: abrir tarea con fecha preconfigurada
-        // ============================================================
         function mostrarFormularioTareaConFecha(fecha) {
             mostrarFormularioTarea(null, null, fecha);
         }
@@ -4666,7 +4691,7 @@
                 return '<div class="tarjeta-registro"><div class="tarjeta-info">' +
                     '<div class="tarjeta-titulo">' + t.tipo + ' <span class="tarjeta-etiqueta ' + cc + '">' + el_ + '</span></div>' +
                     '<div class="tarjeta-detalle">' + t.descripcion + '</div>' +
-                    '<div class="tarjeta-detalle">' + formatearFecha(t.fecha) + (t.clienteId ? ' | ' + nc : '') + '</div>' +
+                    '<div class="tarjeta-detalle">' + formatearFecha(t.fecha) + (t.clienteId ? ' | ' + nc : '') + (t.creadaPor ? ' | Creada por: ' + t.creadaPor : '') + '</div>' +
                     '</div><div class="tarjeta-acciones">' +
                     '<button class="btn-completar" onclick="alternarCompletarTarea(\'' + t.id + '\')"><i class="fas ' + ic + '"></i></button>' +
                     '<button class="btn-editar" onclick="editarTarea(\'' + t.id + '\')"><i class="fas fa-edit"></i></button>' +
@@ -5144,8 +5169,8 @@
                 case 'prospectos': renderizarProspectos(); break;
                 case 'clientes': renderizarClientes(); break;
                 case 'contratos': renderizarContratos(); break;
-                case 'paquetes': renderizarPaquetes(); break;
-                case 'servicios': renderizarServicios(); break;
+                case 'paquetes': if (esAdmin()) renderizarPaquetes(); break;
+                case 'servicios': if (esAdmin()) renderizarServicios(); break;
                 case 'calendario': renderizarCalendario(); break;
                 case 'configuracion': renderizarHistorial(); renderizarUsuarios(); break;
             }
@@ -5153,9 +5178,34 @@
 
         function renderizarTodo() {
             actualizarFiltrosInformes();
-            renderizarPaquetes(); renderizarServicios(); renderizarProspectos();
+            if (esAdmin()) { renderizarPaquetes(); renderizarServicios(); }
+            renderizarProspectos();
             renderizarClientes(); renderizarContratos(); renderizarCalendario();
             renderizarInformes(); renderizarHistorial(); renderizarUsuarios();
+        }
+
+        // ============================================================
+        // APLICAR RESTRICCIONES SEGÚN ROL
+        // ============================================================
+        function aplicarRestriccionesPorRol() {
+            // Ocultar menú Paquetes y Servicios para operadores
+            document.querySelectorAll('.menu-item.solo-admin').forEach(function(el) {
+                el.style.display = esAdmin() ? '' : 'none';
+            });
+            // Ocultar botones "Nuevo Paquete" y "Nuevo Servicio" para operadores
+            const btnNuevoPaq = document.getElementById('btn-nuevo-paquete');
+            const btnNuevoServ = document.getElementById('btn-nuevo-servicio');
+            if (btnNuevoPaq) btnNuevoPaq.style.display = esAdmin() ? '' : 'none';
+            if (btnNuevoServ) btnNuevoServ.style.display = esAdmin() ? '' : 'none';
+            
+            // Si el operador estaba viendo la sección de paquetes o servicios, redirigir a informes
+            if (!esAdmin()) {
+                const seccionActiva = document.querySelector('.seccion.active');
+                if (seccionActiva && (seccionActiva.id === 'seccion-paquetes' || seccionActiva.id === 'seccion-servicios')) {
+                    cambiarSeccion('informes');
+                    renderizarSeccion('informes');
+                }
+            }
         }
         // ============================================================
         // LOGIN
@@ -5278,6 +5328,7 @@
             ocultarPantallaLogin();
             actualizarUIUsuario();
             cargarDatosLocal();
+            aplicarRestriccionesPorRol();
             conectarEventListenersApp();
             renderizarTodo();
             setTimeout(function() { inicializarFirebase(); }, 1000);
@@ -5376,6 +5427,10 @@
             document.querySelectorAll('.menu-item').forEach(function(item) {
                 item.addEventListener('click', function() {
                     const seccion = this.dataset.seccion;
+                    if ((seccion === 'paquetes' || seccion === 'servicios') && !esAdmin()) {
+                        mostrarNotificacion('Solo administradores pueden acceder a esta sección.', 'warning');
+                        return;
+                    }
                     cambiarSeccion(seccion);
                     renderizarSeccion(seccion);
                     if (window.innerWidth <= 768) cerrarSidebarMovil();
@@ -5552,7 +5607,14 @@
         })();
 
         // ============================================================
-        // BOOT (con protección contra errores)
+        // CAPTURA GLOBAL DE ERRORES (para diagnóstico)
+        // ============================================================
+        window.addEventListener('error', function(ev) {
+            console.error('⚠️ Error global:', ev.message, 'en', ev.filename, 'línea', ev.lineno);
+        });
+
+        // ============================================================
+        // BOOT
         // ============================================================
         (async function boot() {
             try {
@@ -5582,7 +5644,6 @@
                 mostrarPantallaLogin();
             } catch (err) {
                 console.error('❌ Error en boot:', err);
-                // Fallback: mostrar login de todas formas
                 try {
                     if (usuarios.length === 0) {
                         const admin = await crearUsuarioAdminInicial();
