@@ -1461,6 +1461,339 @@
             color: var(--color-texto-secundario);
             font-size: 13px;
         }
+                /* Botón inline "Nuevo cliente" junto al buscador */
+        .cliente-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+        .cliente-wrapper .buscador-cliente { flex: 1; }
+        .btn-nuevo-cliente-inline {
+            background-color: var(--color-acento);
+            color: var(--color-acento-contraste);
+            border: none;
+            padding: 0 16px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-nuevo-cliente-inline:hover {
+            background-color: var(--color-acento-hover);
+        }
+
+        /* Dropdown de servicios adicionales */
+        .servicios-dropdown {
+            position: relative;
+        }
+        .servicios-dropdown-toggle {
+            width: 100%;
+            background-color: var(--color-bg-primario);
+            color: var(--color-texto-primario);
+            border: 1px solid var(--color-borde);
+            padding: 10px 14px;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .servicios-dropdown-toggle:focus {
+            outline: none;
+            border-color: var(--color-acento);
+        }
+        .servicios-dropdown-toggle .icono {
+            color: var(--color-texto-secundario);
+            transition: transform 0.2s ease;
+        }
+        .servicios-dropdown.abierto .servicios-dropdown-toggle .icono {
+            transform: rotate(180deg);
+        }
+        .servicios-dropdown-panel {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background-color: var(--color-bg-secundario);
+            border: 1px solid var(--color-borde);
+            border-radius: var(--border-radius);
+            max-height: 260px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 6px 20px var(--color-shadow-hover);
+            padding: 8px;
+            display: none;
+        }
+        .servicios-dropdown.abierto .servicios-dropdown-panel {
+            display: block;
+        }
+        .servicio-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            color: var(--color-texto-primario);
+            font-size: 13px;
+        }
+        .servicio-item:hover {
+            background-color: var(--color-bg-hover);
+        }
+        .servicio-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--color-acento);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .servicio-item .nombre-servicio {
+            flex: 1;
+            min-width: 0;
+        }
+        .servicio-item .precio-servicio {
+            font-weight: 600;
+            color: var(--color-acento);
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        .servicios-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .chip-servicio {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: rgba(199, 125, 255, 0.15);
+            color: #7b2cbf;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .chip-servicio .precio {
+            color: var(--color-texto-secundario);
+            font-weight: 500;
+        }
+        .chip-servicio button {
+            background: none;
+            border: none;
+            color: #7b2cbf;
+            cursor: pointer;
+            padding: 0;
+            font-size: 14px;
+            line-height: 1;
+        }
+        .chip-servicio button:hover {
+            color: #ec4899;
+        }
+
+        /* Caja resumen de precios (solo lectura) */
+        .resumen-precios-caja {
+            background: linear-gradient(135deg, rgba(199, 125, 255, 0.08), rgba(236, 72, 153, 0.08));
+            border: 1px solid var(--color-borde);
+            border-left: 4px solid var(--color-acento);
+            border-radius: var(--border-radius);
+            padding: 14px 18px;
+            margin-bottom: 16px;
+        }
+        .resumen-precios-caja .titulo-resumen {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #7b2cbf;
+            margin-bottom: 10px;
+        }
+        .resumen-precios-caja .fila-resumen {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 13px;
+            color: var(--color-texto-secundario);
+        }
+        .resumen-precios-caja .fila-resumen.total {
+            border-top: 2px solid var(--color-borde);
+            margin-top: 6px;
+            padding-top: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--color-texto-primario);
+        }
+        .resumen-precios-caja .fila-resumen.total .valor {
+            color: #7b2cbf;
+            font-size: 18px;
+        }
+        .resumen-precios-caja .fila-resumen .valor {
+            font-weight: 600;
+            color: var(--color-texto-primario);
+        }
+
+        /* Secciones separadas: descuento, cargos, pagos */
+        .seccion-bloque-contrato {
+            border-top: 1px solid var(--color-borde);
+            padding-top: 16px;
+            margin-top: 16px;
+            margin-bottom: 16px;
+        }
+        .seccion-bloque-titulo {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--color-texto-primario);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .seccion-bloque-titulo i { color: var(--color-acento); }
+        .seccion-bloque-titulo.titulo-descuento i { color: #ec4899; }
+        .seccion-bloque-titulo.titulo-cargos i { color: var(--color-naranja); }
+        .seccion-bloque-titulo.titulo-pagos i { color: var(--color-verde); }
+
+        /* Descuento activo */
+        .descuento-activo {
+            background-color: rgba(236, 72, 153, 0.08);
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            border-left: 4px solid #ec4899;
+            border-radius: var(--border-radius);
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .descuento-activo .desc-info {
+            flex: 1;
+            font-size: 13px;
+        }
+        .descuento-activo .desc-info strong {
+            color: var(--color-texto-primario);
+        }
+        .descuento-activo .desc-info .motivo {
+            font-size: 12px;
+            color: var(--color-texto-secundario);
+            margin-top: 2px;
+        }
+        .descuento-activo .desc-monto {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ec4899;
+            white-space: nowrap;
+        }
+        .descuento-activo .btn-quitar-desc {
+            background: none;
+            border: none;
+            color: #ec4899;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .descuento-activo .btn-quitar-desc:hover {
+            background-color: rgba(236, 72, 153, 0.15);
+        }
+
+        /* Formulario inline para agregar movimientos */
+        .inline-add-movimiento {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .inline-add-movimiento input {
+            background-color: var(--color-bg-primario);
+            color: var(--color-texto-primario);
+            border: 1px solid var(--color-borde);
+            padding: 10px 14px;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .inline-add-movimiento input:focus {
+            outline: none;
+            border-color: var(--color-acento);
+        }
+        .inline-add-movimiento .btn-agregar {
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+        .inline-add-movimiento .btn-agregar:hover { filter: brightness(1.1); }
+        .btn-agregar-cargo { background-color: var(--color-naranja); }
+        .btn-agregar-pago { background-color: var(--color-verde); }
+        .btn-agregar-descuento { background-color: #ec4899; }
+
+        /* Resumen financiero completo */
+        .resumen-financiero-caja {
+            background-color: var(--color-bg-primario);
+            border: 1px solid var(--color-borde);
+            border-radius: var(--border-radius);
+            padding: 14px 18px;
+            margin-top: 16px;
+        }
+        .resumen-financiero-caja .titulo {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #7b2cbf;
+            margin-bottom: 10px;
+        }
+        .resumen-financiero-caja .fila {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 13px;
+        }
+        .resumen-financiero-caja .fila .lbl { color: var(--color-texto-secundario); }
+        .resumen-financiero-caja .fila .vlr { font-weight: 600; color: var(--color-texto-primario); }
+        .resumen-financiero-caja .fila.desc .vlr { color: #ec4899; }
+        .resumen-financiero-caja .fila.total {
+            border-top: 2px solid var(--color-borde);
+            margin-top: 6px;
+            padding-top: 10px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .resumen-financiero-caja .fila.pagado .vlr { color: var(--color-verde); }
+        .resumen-financiero-caja .fila.saldo {
+            border-top: 2px solid var(--color-borde);
+            margin-top: 6px;
+            padding-top: 10px;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .resumen-financiero-caja .fila.saldo .vlr {
+            color: var(--color-naranja);
+            font-size: 18px;
+        }
         /* ─────── FIN @CSS-MODALS-BUSCADOR-CLIENTE ─────── */
 
         /* ─────── @CSS-MODALS-COMPROBANTE ─────── */
@@ -2822,6 +3155,8 @@ var DATOS_EMISOR = {
         var usuarioPendienteLogin = null;
         var esPrimerLoginAdmin = false;
         var historialVerTodos = false;
+        // Descuento temporal mientras se edita el formulario de contrato
+        var descuentoTemporal = null;
         // ─────── FIN @JS-STATE-USER ───────
         // ─────── @JS-STATE-LOGO-PRECARGADO ───────
         // Precarga el logo una sola vez al iniciar la app para que
@@ -3125,14 +3460,27 @@ var DATOS_EMISOR = {
 
         // ─────── @JS-PERSIST-TOTALES-CONTRATO ───────
         // Cálculo de totales financieros de un contrato
-        function calcularTotalesContrato(contrato) {
+                      function calcularTotalesContrato(contrato) {
             const pagosValidos = (contrato.pagos || []).filter(function(p) { return !p.eliminado; });
             const cargosValidos = (contrato.cargos || []).filter(function(c) { return !c.eliminado; });
             const totalPagos = pagosValidos.reduce(function(s, p) { return s + (p.monto || 0); }, 0);
             const totalCargos = cargosValidos.reduce(function(s, c) { return s + (c.monto || 0); }, 0);
-            const totalAPagar = (contrato.precioFinal || 0) + totalCargos;
+            const descuento = contrato.descuentoMonto || 0;
+            // Compatibilidad: si tiene precioFinal (contratos viejos), usar ese; si no, usar precioBase
+            const precioEfectivo = contrato.precioFinal || contrato.precioBase || 0;
+            const precioBase = contrato.precioBase || precioEfectivo;
+            const totalAPagar = precioEfectivo + totalCargos - descuento;
             const saldoPendiente = totalAPagar - totalPagos;
-            return { pagosValidos: pagosValidos, cargosValidos: cargosValidos, totalPagos: totalPagos, totalCargos: totalCargos, totalAPagar: totalAPagar, saldoPendiente: saldoPendiente };
+            return {
+                pagosValidos: pagosValidos,
+                cargosValidos: cargosValidos,
+                totalPagos: totalPagos,
+                totalCargos: totalCargos,
+                descuento: descuento,
+                precioBase: precioBase,
+                totalAPagar: totalAPagar,
+                saldoPendiente: saldoPendiente
+            };
         }
         // ─────── FIN @JS-PERSIST-TOTALES-CONTRATO ───────
 
@@ -3962,6 +4310,169 @@ var DATOS_EMISOR = {
                 if (op) input.value = op.nombre + (op.tipo === 'cliente' ? ' (Cliente)' : ' (Prospecto)');
             }
         }
+                // ─────── @JS-CONTRATOS-BUSCADOR-CLIENTE ───────
+        // Buscador de cliente específico para el formulario de contratos
+        function inicializarBuscadorClienteContrato(opciones, valorInicial) {
+            const input = document.getElementById('contrato-cliente-input');
+            const resultados = document.getElementById('contrato-cliente-resultados');
+            const hidden = document.getElementById('contrato-cliente-id');
+            if (!input || !resultados || !hidden) return;
+            
+            let indiceActivo = -1;
+            let timeoutId = null;
+            
+            function renderizarOpciones(filtro) {
+                const f = (filtro || '').toLowerCase().trim();
+                const filtradas = opciones.filter(function(o) {
+                    if (!f) return true;
+                    return o.nombre.toLowerCase().indexOf(f) !== -1;
+                });
+                
+                if (filtradas.length === 0) {
+                    resultados.innerHTML = '<div class="buscador-vacio"><i class="fas fa-search"></i> Sin resultados</div>';
+                    indiceActivo = -1;
+                    return;
+                }
+                
+                let html = '';
+                filtradas.forEach(function(o, idx) {
+                    html += '<div class="buscador-opcion" data-value="' + o.id + '">' +
+                        '<span class="tipo-badge tipo-cliente">Cliente</span>' +
+                        '<span class="nombre-opcion">' + o.nombre + '</span>' +
+                        '<span class="cliente-info">' + (o.telefono || '') + '</span>' +
+                        '</div>';
+                });
+                resultados.innerHTML = html;
+                indiceActivo = -1;
+            }
+            
+            function seleccionarOpcion(valor) {
+                hidden.value = valor;
+                const op = opciones.find(function(o) { return o.id === valor; });
+                if (op) {
+                    input.value = op.nombre;
+                    // Actualizar tarjeta de info del cliente
+                    const infoCont = document.getElementById('contrato-info-cliente');
+                    const htmlInfo = '<div style="background-color:var(--color-bg-terciario);padding:12px;border-radius:var(--border-radius);border-left:3px solid var(--color-acento);">' +
+                        '<p style="margin:4px 0;font-size:14px;color:var(--color-texto-primario);"><strong>' + op.nombre + '</strong></p>' +
+                        '<p style="margin:4px 0;font-size:13px;color:var(--color-texto-secundario);">Tel: ' + op.telefono + (op.email ? ' | ' + op.email : '') + '</p>' +
+                        '<p style="margin:4px 0;font-size:13px;color:var(--color-texto-secundario);">Origen: ' + (op.faseOrigen || 'No especificado') + ' | Estado: ' + (op.estado || 'Activo') + '</p>' +
+                        '</div>';
+                    if (infoCont) {
+                        infoCont.innerHTML = htmlInfo;
+                    } else {
+                        const festeja = document.getElementById('contrato-festejado');
+                        if (festeja) {
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'form-grupo';
+                            wrapper.id = 'contrato-info-cliente';
+                            wrapper.innerHTML = htmlInfo;
+                            festeja.closest('.form-grupo').before(wrapper);
+                        }
+                    }
+                }
+                resultados.classList.remove('visible');
+                indiceActivo = -1;
+            }
+            
+            input.addEventListener('focus', function() {
+                renderizarOpciones(input.value);
+                resultados.classList.add('visible');
+                if (input.value) input.select();
+            });
+            
+            input.addEventListener('input', function() {
+                if (timeoutId) clearTimeout(timeoutId);
+                timeoutId = setTimeout(function() {
+                    renderizarOpciones(input.value);
+                    resultados.classList.add('visible');
+                }, 120);
+            });
+            
+            input.addEventListener('keydown', function(e) {
+                const items = resultados.querySelectorAll('.buscador-opcion');
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!resultados.classList.contains('visible')) { resultados.classList.add('visible'); return; }
+                    indiceActivo = Math.min(indiceActivo + 1, items.length - 1);
+                    items.forEach(function(it, i) { it.classList.toggle('activa', i === indiceActivo); });
+                    if (items[indiceActivo]) items[indiceActivo].scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    indiceActivo = Math.max(indiceActivo - 1, 0);
+                    items.forEach(function(it, i) { it.classList.toggle('activa', i === indiceActivo); });
+                    if (items[indiceActivo]) items[indiceActivo].scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'Enter') {
+                    if (indiceActivo >= 0 && items[indiceActivo]) {
+                        e.preventDefault();
+                        seleccionarOpcion(items[indiceActivo].dataset.value);
+                    }
+                } else if (e.key === 'Escape') {
+                    resultados.classList.remove('visible');
+                }
+            });
+            
+            resultados.addEventListener('click', function(e) {
+                const op = e.target.closest('.buscador-opcion');
+                if (!op) return;
+                seleccionarOpcion(op.dataset.value);
+            });
+            
+            setTimeout(function() {
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('#buscador-contrato-cliente-container')) {
+                        resultados.classList.remove('visible');
+                    }
+                });
+            }, 100);
+        }
+        // ─────── FIN @JS-CONTRATOS-BUSCADOR-CLIENTE ───────
+
+        // ─────── @JS-CONTRATOS-NUEVO-CLIENTE-RAPIDO ───────
+        // Modal rápido para crear cliente sin salir del formulario de contrato
+        function abrirModalNuevoClienteRapido(callback) {
+            abrirModal('Nuevo Cliente Rápido',
+                '<form id="form-nuevo-cliente-rapido">' +
+                '<div class="form-grupo"><label>Nombre *</label><input type="text" id="nc-nombre" required></div>' +
+                '<div class="form-grupo"><label>Teléfono *</label><input type="text" id="nc-telefono" required></div>' +
+                '<div class="form-grupo"><label>Email (opcional)</label><input type="email" id="nc-email"></div>' +
+                '<div class="form-grupo"><label>Estado *</label><select id="nc-estado" required>' + ESTADOS_CLIENTE.map(function(e) { return '<option value="' + e + '">' + e + '</option>'; }).join('') + '</select></div>' +
+                '<div class="form-acciones">' +
+                '<button type="button" class="btn-secundario" id="btn-nc-cancelar">Cancelar</button>' +
+                '<button type="submit" class="btn-primario">Guardar y usar</button>' +
+                '</div></form>');
+            document.getElementById('btn-nc-cancelar').addEventListener('click', function(ev) {
+                ev.preventDefault();
+                cerrarModal();
+            });
+            document.getElementById('form-nuevo-cliente-rapido').addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const nombre = document.getElementById('nc-nombre').value.trim();
+                const telefono = document.getElementById('nc-telefono').value.trim();
+                const email = document.getElementById('nc-email').value.trim();
+                const estado = document.getElementById('nc-estado').value;
+                if (!nombre || !telefono) { mostrarNotificacion('Nombre y teléfono obligatorios', 'warning'); return; }
+                const nuevo = {
+                    id: generarId(),
+                    nombre: nombre,
+                    telefono: telefono,
+                    email: email,
+                    estado: estado,
+                    faseOrigen: 'Registro rápido',
+                    contratos: [],
+                    notasGenerales: '',
+                    fechaRegistro: obtenerFechaActual()
+                };
+                clientes.push(nuevo);
+                registrarHistorial('cliente', 'crear', 'Se creó cliente: "' + nombre + '"', { id: nuevo.id, nombre: nombre });
+                guardarDatos();
+                cerrarModal();
+                mostrarNotificacion('Cliente creado', 'success');
+                if (typeof callback === 'function') callback(nuevo);
+            });
+        }
+        // ─────── FIN @JS-CONTRATOS-NUEVO-CLIENTE-RAPIDO ───────
         // ─────── FIN @JS-TAREAS-BUSCADOR-CLIENTE ───────
 
         // ─────── @JS-TAREAS-FORMULARIO ───────
@@ -4305,184 +4816,482 @@ var DATOS_EMISOR = {
         // ─────── @JS-CONTRATOS-FORMULARIO ───────
         // Formulario completo para crear/editar un contrato
         // Incluye pagos, cargos extras, calculadora de precios, etc.
-        function mostrarFormularioContrato(clienteId, titulo, contrato) {
+               function mostrarFormularioContrato(clienteId, titulo, contrato) {
             if (!clienteId) clienteId = null;
             if (!titulo) titulo = 'Nuevo Contrato';
             if (!contrato) contrato = null;
             const ee = contrato !== null;
             const tc = contrato ? contrato.tipo : 'paquete';
 
-            let oc = '';
+            // Reiniciar descuento temporal
+            descuentoTemporal = contrato && contrato.descuentoMonto ? {
+                monto: contrato.descuentoMonto,
+                descripcion: contrato.descuentoDescripcion || 'Descuento aplicado'
+            } : null;
+
+            // ─── Construir lista unificada de clientes ───
+            const opcionesClientes = [];
             clientes.forEach(function(c) {
-                const sel = clienteId === c.id ? 'selected' : '';
-                oc += '<option value="' + c.id + '" ' + sel + '>' + c.nombre + ' (' + c.estado + ')</option>';
+                opcionesClientes.push({
+                    id: c.id,
+                    nombre: c.nombre,
+                    telefono: c.telefono || '',
+                    email: c.email || '',
+                    estado: c.estado || 'Activo',
+                    faseOrigen: c.faseOrigen || 'No especificado'
+                });
             });
 
-            let op = '';
-            paquetes.forEach(function(p) {
-                const sel = contrato && contrato.paqueteId === p.id ? 'selected' : '';
-                op += '<option value="' + p.id + '" ' + sel + '>' + p.nombre + ' - ' + formatearMoneda(p.precio - (p.descuento || 0)) + '</option>';
-            });
+            // Datos del cliente preconfigurado
+            const clienteActualId = clienteId || '';
+            const clienteActual = clienteActualId ? obtenerCliente(clienteActualId) : null;
+            const nombreClienteActual = clienteActual ? clienteActual.nombre : '';
 
-            let os = '';
-            serviciosAdicionales.forEach(function(s) {
-                const sel = contrato && contrato.servicioId === s.id ? 'selected' : '';
-                os += '<option value="' + s.id + '" ' + sel + '>' + s.nombre + ' - ' + formatearMoneda(s.precio - (s.descuento || 0)) + '</option>';
-            });
-
-            let osm = '';
+            // ─── Opciones del dropdown de servicios ───
+            let serviciosCheckboxes = '';
             serviciosAdicionales.forEach(function(s) {
                 const ck = contrato && contrato.serviciosIds && contrato.serviciosIds.indexOf(s.id) !== -1 ? 'checked' : '';
-                osm += '<label style="display:block;margin:4px 0;color:var(--color-texto-primario);"><input type="checkbox" class="servicio-check" value="' + s.id + '" ' + ck + '> ' + s.nombre + ' - ' + formatearMoneda(s.precio - (s.descuento || 0)) + '</label>';
+                const pf = (s.precio || 0) - (s.descuento || 0);
+                serviciosCheckboxes += '<label class="servicio-item"><input type="checkbox" class="servicio-check-form" value="' + s.id + '" data-nombre="' + s.nombre + '" data-precio="' + pf + '" ' + ck + '><span class="nombre-servicio">' + s.nombre + '</span><span class="precio-servicio">' + formatearMoneda(pf) + '</span></label>';
             });
 
-            let ic = '';
-            if (clienteId) {
-                const c = obtenerCliente(clienteId);
-                if (c) ic = '<div class="info-cliente"><p><strong>' + c.nombre + '</strong></p><p>Tel: ' + c.telefono + (c.email ? ' | ' + c.email : '') + '</p><p>Origen: ' + (c.faseOrigen || 'No especificado') + ' | Estado: ' + c.estado + '</p></div>';
+            // ─── Info del cliente (si hay uno preseleccionado) ───
+            let infoClienteHTML = '';
+            if (clienteActual) {
+                infoClienteHTML = '<div class="form-grupo" id="contrato-info-cliente">' +
+                    '<div style="background-color:var(--color-bg-terciario);padding:12px;border-radius:var(--border-radius);border-left:3px solid var(--color-acento);">' +
+                    '<p style="margin:4px 0;font-size:14px;color:var(--color-texto-primario);"><strong>' + clienteActual.nombre + '</strong></p>' +
+                    '<p style="margin:4px 0;font-size:13px;color:var(--color-texto-secundario);">Tel: ' + clienteActual.telefono + (clienteActual.email ? ' | ' + clienteActual.email : '') + '</p>' +
+                    '<p style="margin:4px 0;font-size:13px;color:var(--color-texto-secundario);">Origen: ' + (clienteActual.faseOrigen || 'No especificado') + ' | Estado: ' + clienteActual.estado + '</p>' +
+                    '</div></div>';
             }
 
+            // ─── Opciones de paquetes ───
+            let op = '<option value="">Seleccionar...</option>';
+            paquetes.forEach(function(p) {
+                const sel = contrato && contrato.paqueteId === p.id ? 'selected' : '';
+                const pf = (p.precio || 0) - (p.descuento || 0);
+                op += '<option value="' + p.id + '" data-precio="' + pf + '" data-nombre="' + p.nombre + '" ' + sel + '>' + p.nombre + ' - ' + formatearMoneda(pf) + '</option>';
+            });
+
+            // ─── Opciones de servicios para "solo servicio" ───
+            let os = '<option value="">Seleccionar...</option>';
+            serviciosAdicionales.forEach(function(s) {
+                const sel = contrato && contrato.servicioId === s.id ? 'selected' : '';
+                const pf = (s.precio || 0) - (s.descuento || 0);
+                os += '<option value="' + s.id + '" data-precio="' + pf + '" data-nombre="' + s.nombre + '" ' + sel + '>' + s.nombre + ' - ' + formatearMoneda(pf) + '</option>';
+            });
+
+            // ─── HTML del formulario ───
             const html = '<form id="form-contrato">' +
                 '<input type="hidden" id="contrato-id" value="' + (contrato ? contrato.id : '') + '">' +
-                '<div class="form-grupo"><label>Cliente *</label><select id="contrato-cliente" required ' + (clienteId ? 'disabled' : '') + '><option value="">Seleccionar...</option>' + oc + '</select>' +
-                (clienteId ? '<input type="hidden" id="contrato-cliente-id" value="' + clienteId + '">' : '') + '</div>' +
-                ic +
+                '<input type="hidden" id="contrato-cliente-id" value="' + clienteActualId + '">' +
+
+                // ─── Cliente (buscador + botón nuevo) ───
+                '<div class="form-grupo"><label>Cliente *</label>' +
+                    '<div class="cliente-wrapper">' +
+                        '<div class="buscador-cliente" id="buscador-contrato-cliente-container">' +
+                            '<input type="text" class="buscador-input" id="contrato-cliente-input" placeholder="Escribe para buscar cliente..." autocomplete="off" value="' + nombreClienteActual + '">' +
+                            '<i class="fas fa-search buscador-icono"></i>' +
+                            '<div class="buscador-resultados" id="contrato-cliente-resultados"></div>' +
+                        '</div>' +
+                        '<button type="button" class="btn-nuevo-cliente-inline" id="btn-nuevo-cliente-contrato"><i class="fas fa-user-plus"></i> Nuevo</button>' +
+                    '</div>' +
+                '</div>' +
+                infoClienteHTML +
+
+                // ─── Festejado ───
                 '<div class="form-grupo"><label>Nombre del festejado *</label><input type="text" id="contrato-festejado" required value="' + (contrato ? contrato.festejado : '') + '"></div>' +
+
+                // ─── Tipo ───
                 '<div class="form-grupo"><label>Tipo *</label><select id="contrato-tipo" required><option value="paquete" ' + (tc === 'paquete' ? 'selected' : '') + '>Paquete</option><option value="solo-servicio" ' + (tc === 'solo-servicio' ? 'selected' : '') + '>Solo servicio</option></select></div>' +
+
+                // ─── Sección Paquete ───
                 '<div id="seccion-paquete" style="' + (tc === 'paquete' ? '' : 'display:none;') + '">' +
-                '<div class="form-grupo"><label>Paquete *</label><select id="contrato-paquete" ' + (tc === 'paquete' ? 'required' : '') + '><option value="">Seleccionar...</option>' + op + '</select></div>' +
-                '<div class="form-grupo"><label>Servicios adicionales</label><div style="background:var(--color-bg-primario);padding:12px;border-radius:var(--border-radius);">' + (osm || 'No hay servicios') + '</div></div>' +
+                    '<div class="form-grupo"><label>Paquete *</label><select id="contrato-paquete" ' + (tc === 'paquete' ? 'required' : '') + '>' + op + '</select></div>' +
+                    '<div class="form-grupo"><label>Servicios adicionales</label>' +
+                        '<div class="servicios-dropdown" id="servicios-dropdown">' +
+                            '<button type="button" class="servicios-dropdown-toggle" id="servicios-dropdown-toggle">' +
+                                '<span id="servicios-dropdown-label"><i class="fas fa-plus-circle"></i> Seleccionar servicios</span>' +
+                                '<i class="fas fa-chevron-down icono"></i>' +
+                            '</button>' +
+                            '<div class="servicios-dropdown-panel">' + (serviciosCheckboxes || '<div style="padding:12px;text-align:center;color:var(--color-texto-secundario);font-size:13px;">No hay servicios registrados</div>') + '</div>' +
+                        '</div>' +
+                        '<div class="servicios-chips" id="servicios-chips"></div>' +
+                    '</div>' +
                 '</div>' +
+
+                // ─── Sección Solo Servicio ───
                 '<div id="seccion-solo-servicio" style="' + (tc === 'solo-servicio' ? '' : 'display:none;') + '">' +
-                '<div class="form-grupo"><label>Servicio *</label><select id="contrato-servicio" ' + (tc === 'solo-servicio' ? 'required' : '') + '><option value="">Seleccionar...</option>' + os + '</select></div>' +
+                    '<div class="form-grupo"><label>Servicio *</label><select id="contrato-servicio" ' + (tc === 'solo-servicio' ? 'required' : '') + '>' + os + '</select></div>' +
                 '</div>' +
+
+                // ─── Fecha y hora ───
                 '<div class="row-2col">' +
-                '<div class="form-grupo"><label>Fecha del evento *</label><input type="date" id="contrato-fecha-evento" required value="' + (contrato ? contrato.fechaEvento : '') + '"></div>' +
-                '<div class="form-grupo"><label>Hora del evento</label><select id="contrato-hora-evento"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div>' +
+                    '<div class="form-grupo"><label>Fecha del evento *</label><input type="date" id="contrato-fecha-evento" required value="' + (contrato ? contrato.fechaEvento : '') + '"></div>' +
+                    '<div class="form-grupo"><label>Hora del evento</label><select id="contrato-hora-evento"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div>' +
                 '</div>' +
                 '<div class="form-grupo"><label>Dirección del evento religioso</label><input type="text" id="contrato-direccion-evento" value="' + (contrato ? contrato.direccionEvento : '') + '"></div>' +
                 '<div class="row-2col">' +
-                '<div class="form-grupo"><label>Dirección de la recepción</label><input type="text" id="contrato-direccion-recepcion" value="' + (contrato ? contrato.direccionRecepcion : '') + '"></div>' +
-                '<div class="form-grupo"><label>Hora de la recepción</label><select id="contrato-hora-recepcion"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div>' +
+                    '<div class="form-grupo"><label>Dirección de la recepción</label><input type="text" id="contrato-direccion-recepcion" value="' + (contrato ? contrato.direccionRecepcion : '') + '"></div>' +
+                    '<div class="form-grupo"><label>Hora de la recepción</label><select id="contrato-hora-recepcion"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div>' +
                 '</div>' +
-                '<div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;">' +
-                '<h4 style="color:var(--color-acento);margin-bottom:12px;"><i class="fas fa-calculator"></i> Precios</h4>' +
-                '<div class="row-2col">' +
-                '<div class="form-grupo"><label>Precio base (auto)</label><input type="number" id="contrato-precio-base" readonly value="' + (contrato ? contrato.precioBase : '') + '" style="background:var(--color-bg-primario);opacity:0.7;"></div>' +
-                '<div class="form-grupo"><label>Precio final (editable)</label><input type="number" id="contrato-precio-final" min="0" step="100" value="' + (contrato ? contrato.precioFinal : '') + '"></div>' +
-                '</div></div>' +
-                '<div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;">' +
-                '<h4 style="color:var(--color-naranja);margin-bottom:12px;"><i class="fas fa-plus-circle"></i> Cargos Extras</h4>' +
-                '<div class="row-2col">' +
-                '<div class="form-grupo"><label>Descripción del cargo</label><input type="text" id="cargo-descripcion" placeholder="Ej: Fotos extra, Álbum adicional..."></div>' +
-                '<div class="form-grupo"><label>Monto</label><div style="display:flex;gap:8px;"><input type="number" id="cargo-monto" min="0" step="100" placeholder="0" style="flex:1;"><button type="button" class="btn-cian" id="btn-agregar-cargo" style="white-space:nowrap;"><i class="fas fa-plus"></i> Agregar</button></div></div>' +
+
+                // ─── Resumen de precios (solo lectura) ───
+                '<div class="resumen-precios-caja" id="contrato-resumen-precios">' +
+                    '<div class="titulo-resumen"><i class="fas fa-calculator"></i> Precio base del contrato</div>' +
+                    '<div id="resumen-precios-filas"></div>' +
+                    '<div class="fila-resumen total"><span>Total base</span><span class="valor" id="resumen-precios-total">$0</span></div>' +
                 '</div>' +
-                '<div class="form-grupo"><label>Movimientos del contrato</label>' +
-                '<div id="movimientos-lista" class="pagos-container" style="max-height:280px;overflow-y:auto;"></div></div>' +
+
+                // ─── DESCUENTO ───
+                '<div class="seccion-bloque-contrato">' +
+                    '<div class="seccion-bloque-titulo titulo-descuento"><i class="fas fa-tag"></i> Descuento</div>' +
+                    '<div id="descuento-contenedor"></div>' +
+                    '<div class="inline-add-movimiento" id="descuento-form">' +
+                        '<input type="text" id="descuento-descripcion" placeholder="Descripción del descuento" style="flex:2;">' +
+                        '<input type="number" id="descuento-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;">' +
+                        '<button type="button" class="btn-agregar btn-agregar-descuento" id="btn-aplicar-descuento"><i class="fas fa-tag"></i> Aplicar</button>' +
+                    '</div>' +
                 '</div>' +
-                '<div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;">' +
-                '<h4 style="color:var(--color-verde);margin-bottom:12px;"><i class="fas fa-coins"></i> Pagos</h4>' +
-                '<div class="row-2col">' +
-                '<div class="form-grupo"><label>Anticipo (si aplica)</label><input type="number" id="contrato-anticipo" min="0" step="100" placeholder="0" value="' + (contrato && contrato.anticipo ? contrato.anticipo : '') + '"></div>' +
-                '<div class="form-grupo"><label>Nuevo pago</label><div style="display:flex;gap:8px;"><input type="number" id="contrato-nuevo-pago" min="0" step="100" placeholder="0" style="flex:1;"><button type="button" class="btn-naranja" id="btn-agregar-pago" style="white-space:nowrap;"><i class="fas fa-plus"></i> Agregar</button></div></div>' +
+
+                // ─── CARGOS EXTRAS ───
+                '<div class="seccion-bloque-contrato">' +
+                    '<div class="seccion-bloque-titulo titulo-cargos"><i class="fas fa-plus-circle"></i> Cargos extras</div>' +
+                    '<div class="inline-add-movimiento">' +
+                        '<input type="text" id="cargo-descripcion" placeholder="Descripción del cargo" style="flex:2;">' +
+                        '<input type="number" id="cargo-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;">' +
+                        '<button type="button" class="btn-agregar btn-agregar-cargo" id="btn-agregar-cargo"><i class="fas fa-plus"></i> Agregar</button>' +
+                    '</div>' +
+                    '<div id="cargos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div>' +
                 '</div>' +
+
+                // ─── PAGOS ───
+                '<div class="seccion-bloque-contrato">' +
+                    '<div class="seccion-bloque-titulo titulo-pagos"><i class="fas fa-coins"></i> Pagos</div>' +
+                    '<div class="inline-add-movimiento">' +
+                        '<input type="number" id="contrato-nuevo-pago" placeholder="Monto del pago" min="0" step="100" style="flex:1;">' +
+                        '<button type="button" class="btn-agregar btn-agregar-pago" id="btn-agregar-pago"><i class="fas fa-plus"></i> Registrar pago</button>' +
+                    '</div>' +
+                    '<div id="pagos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div>' +
                 '</div>' +
-                '<div class="form-grupo" style="border-top:1px solid var(--color-borde);padding-top:16px;">' +
-                '<h4 style="color:var(--color-acento);margin-bottom:12px;"><i class="fas fa-chart-line"></i> Resumen Financiero</h4>' +
-                '<div class="resumen-financiero">' +
-                '<div class="fila"><span>Precio final</span><span id="resumen-precio-final">$0</span></div>' +
-                '<div class="fila"><span>Cargos extras</span><span id="resumen-cargos">$0</span></div>' +
-                '<div class="fila" style="font-weight:bold;color:var(--color-texto-primario);"><span>Total a pagar</span><span id="resumen-total">$0</span></div>' +
-                '<div class="fila" style="border-top:2px solid var(--color-borde);margin-top:4px;padding-top:4px;"><span>Total pagado</span><span id="resumen-pagado" style="color:var(--color-verde);">$0</span></div>' +
-                '<div class="fila total"><span>Saldo pendiente</span><span id="resumen-saldo">$0</span></div>' +
-                '</div></div>' +
-                '<div class="form-grupo"><label>Estado *</label><select id="contrato-estado" required>' + ESTADOS_CONTRATO.map(function(e) { return '<option value="' + e + '" ' + (contrato && contrato.estado === e ? 'selected' : '') + '>' + e + '</option>'; }).join('') + '</select></div>' +
+
+                // ─── RESUMEN FINANCIERO ───
+                '<div class="resumen-financiero-caja" id="contrato-resumen-financiero">' +
+                    '<div class="titulo"><i class="fas fa-chart-line"></i> Resumen financiero</div>' +
+                    '<div class="fila"><span class="lbl">Precio base (paquete + servicios)</span><span class="vlr" id="resumen-precio-base">$0</span></div>' +
+                    '<div class="fila"><span class="lbl">Cargos extras</span><span class="vlr" id="resumen-cargos-total">+$0</span></div>' +
+                    '<div class="fila desc"><span class="lbl">Descuento</span><span class="vlr" id="resumen-descuento">-$0</span></div>' +
+                    '<div class="fila total"><span class="lbl">Total a pagar</span><span class="vlr" id="resumen-total">$0</span></div>' +
+                    '<div class="fila pagado"><span class="lbl">Total pagado</span><span class="vlr" id="resumen-pagado">$0</span></div>' +
+                    '<div class="fila saldo"><span class="lbl">Saldo pendiente</span><span class="vlr" id="resumen-saldo">$0</span></div>' +
+                '</div>' +
+
+                // ─── Estado y notas ───
+                '<div class="form-grupo" style="margin-top:16px;"><label>Estado *</label><select id="contrato-estado" required>' + ESTADOS_CONTRATO.map(function(e) { return '<option value="' + e + '" ' + (contrato && contrato.estado === e ? 'selected' : '') + '>' + e + '</option>'; }).join('') + '</select></div>' +
                 '<div class="form-grupo"><label>Notas</label><textarea id="contrato-notas">' + (contrato ? contrato.notas : '') + '</textarea></div>' +
+
+                // ─── Botones ───
                 '<div class="form-acciones">' +
-                '<button type="button" class="btn-secundario" id="btn-contrato-cancelar">Cancelar</button>' +
-                '<button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar Contrato') + '</button>' +
-                '</div></form>';
+                    '<button type="button" class="btn-secundario" id="btn-contrato-cancelar">Cancelar</button>' +
+                    '<button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar Contrato') + '</button>' +
+                '</div>' +
+            '</form>';
 
-            abrirModal(titulo, html);
+            abrirModal(titulo, html, true);
 
+            // ─── Estado interno del formulario ───
             let pagosArr = contrato && contrato.pagos ? contrato.pagos.slice() : [];
             let cargosArr = contrato && contrato.cargos ? contrato.cargos.slice() : [];
             let pagosRecientes = [];
 
             const el = function(id) { return document.getElementById(id); };
 
-            // ─────── @JS-CONTRATOS-RENDER-MOVIMIENTOS ───────
-            // Dibuja pagos y cargos en la lista de movimientos
-            function renderizarMovimientos() {
-                const lista = el('movimientos-lista');
-                if (!lista) return;
-                const movimientos = [];
-                pagosArr.forEach(function(p, idx) {
-                    movimientos.push({ tipo: 'pago', index: idx, item: p, fecha: p.fecha || '', esEliminado: p.eliminado === true, esNota: p.esNotaEliminacion === true });
-                });
-                cargosArr.forEach(function(c, idx) {
-                    movimientos.push({ tipo: 'cargo', index: idx, item: c, fecha: c.fecha || '', esEliminado: c.eliminado === true, esNota: c.esNotaEliminacion === true });
-                });
-                movimientos.sort(function(a, b) { return (b.fecha || '').localeCompare(a.fecha || ''); });
+            // ─── Inicializar buscador de cliente ───
+            inicializarBuscadorClienteContrato(opcionesClientes, clienteActualId);
 
-                if (movimientos.length === 0) {
-                    lista.innerHTML = '<p style="color:var(--color-texto-secundario);font-size:13px;text-align:center;padding:12px;">Sin movimientos registrados</p>';
-                    actualizarResumen();
+            // ─── Inicializar dropdown de servicios ───
+            function renderizarChipsServicios() {
+                const chips = el('servicios-chips');
+                const checks = document.querySelectorAll('.servicio-check-form:checked');
+                const label = el('servicios-dropdown-label');
+
+                if (checks.length === 0) {
+                    chips.innerHTML = '';
+                    label.innerHTML = '<i class="fas fa-plus-circle"></i> Seleccionar servicios';
                     return;
                 }
 
-                lista.innerHTML = movimientos.map(function(m) {
-                    const item = m.item;
-                    const claseEliminado = m.esEliminado ? 'pago-eliminado' : '';
-                    const textoEliminado = m.esEliminado ? ' (Eliminado)' : '';
-                    const colorTipo = m.tipo === 'pago' ? 'var(--color-verde)' : 'var(--color-naranja)';
-                    const etiquetaTipo = m.tipo === 'pago' ? 'PAGO' : 'CARGO';
-                    const botonEliminar = (!m.esEliminado && !m.esNota)
-                        ? '<button type="button" class="btn-eliminar-item" onclick="PDA.eliminarMovimiento(\'' + m.tipo + '\',' + m.index + ')" title="Eliminar"><i class="fas fa-trash"></i></button>'
-                        : '';
-                    const codigo = item.codigo ? '<span class="pago-codigo"><i class="fas fa-fingerprint"></i> ' + item.codigo + '</span>' : '';
-                    const regPor = item.registradoPor ? '<span class="pago-registrado-por"><i class="fas fa-user"></i> ' + item.registradoPor + '</span>' : '';
-                    const elimPor = item.eliminadoPor ? '<span class="pago-registrado-por" style="color:var(--color-rojo);"><i class="fas fa-user-times"></i> Eliminado por: ' + item.eliminadoPor + '</span>' : '';
+                let html = '';
+                let totalServicios = 0;
+                checks.forEach(function(cb) {
+                    const precio = parseFloat(cb.dataset.precio) || 0;
+                    totalServicios += precio;
+                    html += '<span class="chip-servicio" data-id="' + cb.value + '">' +
+                        cb.dataset.nombre +
+                        ' <span class="precio">' + formatearMoneda(precio) + '</span>' +
+                        '<button type="button" class="quitar-chip-servicio">&times;</button>' +
+                    '</span>';
+                });
+                chips.innerHTML = html;
+                label.innerHTML = '<i class="fas fa-plus-circle"></i> ' + checks.length + ' servicio' + (checks.length === 1 ? '' : 's') + ' seleccionado' + (checks.length === 1 ? '' : 's');
 
-                    return '<div class="pago-item ' + claseEliminado + '">' +
+                // Listeners para quitar chip
+                chips.querySelectorAll('.quitar-chip-servicio').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const chip = this.closest('.chip-servicio');
+                        const id = chip.dataset.id;
+                        const cb = document.querySelector('.servicio-check-form[value="' + id + '"]');
+                        if (cb) {
+                            cb.checked = false;
+                            renderizarChipsServicios();
+                            calcularPrecioBaseContrato();
+                        }
+                    });
+                });
+            }
+
+            // Toggle del dropdown
+            el('servicios-dropdown-toggle').addEventListener('click', function(e) {
+                e.stopPropagation();
+                el('servicios-dropdown').classList.toggle('abierto');
+            });
+            // Cerrar dropdown al hacer clic afuera
+            document.addEventListener('click', function cerrarDropdown(e) {
+                const dd = document.getElementById('servicios-dropdown');
+                if (dd && !dd.contains(e.target)) dd.classList.remove('abierto');
+            });
+
+            // Listeners de checkboxes de servicios
+            document.querySelectorAll('.servicio-check-form').forEach(function(cb) {
+                cb.addEventListener('change', function() {
+                    renderizarChipsServicios();
+                    calcularPrecioBaseContrato();
+                });
+            });
+
+            // ─── Función: Calcular precio base ───
+            function calcularPrecioBaseContrato() {
+                const tipo = el('contrato-tipo').value;
+                let pb = 0;
+                let filas = '';
+
+                if (tipo === 'paquete') {
+                    const ps = el('contrato-paquete');
+                    const optSel = ps.options[ps.selectedIndex];
+                    const pNombre = optSel ? optSel.dataset.nombre : '';
+                    const pPrecio = optSel ? parseFloat(optSel.dataset.precio) || 0 : 0;
+                    if (pPrecio > 0) {
+                        pb += pPrecio;
+                        filas += '<div class="fila-resumen"><span>Paquete: ' + pNombre + '</span><span class="valor">' + formatearMoneda(pPrecio) + '</span></div>';
+                    }
+                    document.querySelectorAll('.servicio-check-form:checked').forEach(function(cb) {
+                        const precio = parseFloat(cb.dataset.precio) || 0;
+                        pb += precio;
+                        filas += '<div class="fila-resumen"><span>' + cb.dataset.nombre + '</span><span class="valor">' + formatearMoneda(precio) + '</span></div>';
+                    });
+                } else {
+                    const ss = el('contrato-servicio');
+                    const optSel = ss.options[ss.selectedIndex];
+                    const sNombre = optSel ? optSel.dataset.nombre : '';
+                    const sPrecio = optSel ? parseFloat(optSel.dataset.precio) || 0 : 0;
+                    if (sPrecio > 0) {
+                        pb += sPrecio;
+                        filas += '<div class="fila-resumen"><span>' + sNombre + '</span><span class="valor">' + formatearMoneda(sPrecio) + '</span></div>';
+                    }
+                }
+
+                el('resumen-precios-filas').innerHTML = filas || '<div class="fila-resumen"><span style="font-style:italic;">Sin ítems seleccionados</span><span></span></div>';
+                el('resumen-precios-total').textContent = formatearMoneda(pb);
+                actualizarResumenFinanciero();
+            }
+
+            // ─── Renderizar movimientos (pagos + cargos) ───
+            function renderizarPagos() {
+                const lista = el('pagos-lista');
+                const pagosValidos = pagosArr.filter(function(p) { return !p.eliminado && !p.esNotaEliminacion; });
+                const pagosNotas = pagosArr.filter(function(p) { return p.esNotaEliminacion; });
+
+                if (pagosValidos.length === 0 && pagosNotas.length === 0) {
+                    lista.innerHTML = '<p style="color:var(--color-texto-secundario);font-size:13px;text-align:center;padding:12px;">Sin pagos registrados</p>';
+                    return;
+                }
+
+                let html = '';
+                pagosArr.forEach(function(p, idx) {
+                    if (p.eliminado) return;
+                    const claseEliminado = p.esNotaEliminacion ? 'pago-eliminado' : '';
+                    const badge = p.esNotaEliminacion ? 'NOTA' : 'PAGO';
+                    const monto = p.monto || 0;
+                    const codigo = p.codigo ? '<span class="pago-codigo"><i class="fas fa-fingerprint"></i> ' + p.codigo + '</span>' : '';
+                    const regPor = p.registradoPor ? '<span class="pago-registrado-por"><i class="fas fa-user"></i> ' + p.registradoPor + '</span>' : '';
+                    const btnEliminar = !p.esNotaEliminacion ? '<button type="button" class="btn-eliminar-item" onclick="PDA.eliminarMovimientoContrato(\'pago\',' + idx + ')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '';
+
+                    html += '<div class="pago-item ' + claseEliminado + '">' +
                         '<div class="pago-info">' +
-                        '<span class="tarjeta-etiqueta" style="background:' + colorTipo + ';color:#fff;font-size:10px;padding:2px 8px;">' + etiquetaTipo + '</span>' +
-                        '<span class="pago-monto" style="' + (m.tipo === 'cargo' ? 'color:var(--color-naranja);' : '') + '">' + formatearMoneda(item.monto) + textoEliminado + '</span>' +
-                        '<span class="pago-fecha">' + formatearFechaHora(item.fecha) + '</span>' +
-                        codigo +
+                        '<span class="tarjeta-etiqueta" style="background:var(--color-verde);color:#fff;font-size:10px;padding:2px 8px;">' + badge + '</span>' +
+                        '<span class="pago-monto">' + formatearMoneda(monto) + '</span>' +
+                        '<span class="pago-fecha">' + formatearFechaHora(p.fecha) + '</span>' +
+                        codigo + regPor +
+                        (p.nota ? '<span style="font-size:11px;color:var(--color-texto-secundario);width:100%;">' + p.nota + '</span>' : '') +
+                        '</div>' + btnEliminar + '</div>';
+                });
+                lista.innerHTML = html || '<p style="color:var(--color-texto-secundario);font-size:13px;text-align:center;padding:12px;">Sin pagos registrados</p>';
+            }
+
+            function renderizarCargos() {
+                const lista = el('cargos-lista');
+                const cargosValidos = cargosArr.filter(function(c) { return !c.eliminado && !c.esNotaEliminacion; });
+
+                if (cargosValidos.length === 0) {
+                    lista.innerHTML = '<p style="color:var(--color-texto-secundario);font-size:13px;text-align:center;padding:12px;">Sin cargos registrados</p>';
+                    return;
+                }
+
+                let html = '';
+                cargosArr.forEach(function(c, idx) {
+                    if (c.eliminado) return;
+                    const claseEliminado = c.esNotaEliminacion ? 'pago-eliminado' : '';
+                    const badge = c.esNotaEliminacion ? 'NOTA' : 'CARGO';
+                    const monto = c.monto || 0;
+                    const regPor = c.registradoPor ? '<span class="pago-registrado-por"><i class="fas fa-user"></i> ' + c.registradoPor + '</span>' : '';
+                    const btnEliminar = !c.esNotaEliminacion ? '<button type="button" class="btn-eliminar-item" onclick="PDA.eliminarMovimientoContrato(\'cargo\',' + idx + ')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '';
+
+                    html += '<div class="cargo-item ' + claseEliminado + '">' +
+                        '<div class="cargo-info">' +
+                        '<span class="tarjeta-etiqueta" style="background:var(--color-naranja);color:#fff;font-size:10px;padding:2px 8px;">' + badge + '</span>' +
+                        '<span class="cargo-monto">' + formatearMoneda(monto) + '</span>' +
+                        '<span class="cargo-fecha">' + formatearFechaHora(c.fecha) + '</span>' +
                         regPor +
-                        elimPor +
-                        (item.nota ? '<span style="font-size:11px;color:var(--color-texto-secundario);width:100%;">' + item.nota + '</span>' : '') +
-                        '</div>' + botonEliminar + '</div>';
-                }).join('');
-                actualizarResumen();
+                        (c.nota ? '<span style="font-size:11px;color:var(--color-texto-secundario);width:100%;">' + c.nota + '</span>' : '') +
+                        '</div>' + btnEliminar + '</div>';
+                });
+                lista.innerHTML = html;
             }
-            // ─────── FIN @JS-CONTRATOS-RENDER-MOVIMIENTOS ───────
 
-            // ─────── @JS-CONTRATOS-ACTUALIZAR-RESUMEN ───────
-            // Actualiza el resumen financiero del formulario de contrato
-            function actualizarResumen() {
-                const pv = pagosArr.filter(function(p) { return !p.eliminado; });
+            // ─── Renderizar descuento ───
+            function renderizarDescuento() {
+                const cont = el('descuento-contenedor');
+                const form = el('descuento-form');
+                if (descuentoTemporal) {
+                    cont.innerHTML = '<div class="descuento-activo">' +
+                        '<div class="desc-info"><strong>Descuento aplicado</strong>' +
+                        '<div class="motivo">' + descuentoTemporal.descripcion + '</div></div>' +
+                        '<div class="desc-monto">-' + formatearMoneda(descuentoTemporal.monto) + '</div>' +
+                        '<button type="button" class="btn-quitar-desc" id="btn-quitar-descuento" title="Quitar descuento">&times;</button>' +
+                        '</div>';
+                    form.style.display = 'none';
+                    el('btn-quitar-descuento').addEventListener('click', function() {
+                        descuentoTemporal = null;
+                        renderizarDescuento();
+                        actualizarResumenFinanciero();
+                    });
+                } else {
+                    cont.innerHTML = '';
+                    form.style.display = 'flex';
+                }
+            }
+
+            // ─── Actualizar resumen financiero ───
+            function actualizarResumenFinanciero() {
+                const tipo = el('contrato-tipo').value;
+                let pb = 0;
+                if (tipo === 'paquete') {
+                    const ps = el('contrato-paquete');
+                    const optSel = ps.options[ps.selectedIndex];
+                    pb += optSel ? parseFloat(optSel.dataset.precio) || 0 : 0;
+                    document.querySelectorAll('.servicio-check-form:checked').forEach(function(cb) {
+                        pb += parseFloat(cb.dataset.precio) || 0;
+                    });
+                } else {
+                    const ss = el('contrato-servicio');
+                    const optSel = ss.options[ss.selectedIndex];
+                    pb += optSel ? parseFloat(optSel.dataset.precio) || 0 : 0;
+                }
+
                 const cv = cargosArr.filter(function(c) { return !c.eliminado; });
-                const pf = parseFloat(el('contrato-precio-final').value) || 0;
-                const tc = cv.reduce(function(s, c) { return s + (c.monto || 0); }, 0);
-                const tp = pv.reduce(function(s, p) { return s + (p.monto || 0); }, 0);
-                const tap = pf + tc;
-                const sa = tap - tp;
-                el('resumen-precio-final').textContent = formatearMoneda(pf);
-                el('resumen-cargos').textContent = formatearMoneda(tc);
-                el('resumen-total').textContent = formatearMoneda(tap);
-                el('resumen-pagado').textContent = formatearMoneda(tp);
-                const se = el('resumen-saldo');
-                se.textContent = formatearMoneda(sa);
-                se.style.color = sa === 0 ? 'var(--color-verde)' : 'var(--color-naranja)';
-            }
-            // ─────── FIN @JS-CONTRATOS-ACTUALIZAR-RESUMEN ───────
+                const pv = pagosArr.filter(function(p) { return !p.eliminado; });
+                const totalCargos = cv.reduce(function(s, c) { return s + (c.monto || 0); }, 0);
+                const totalPagos = pv.reduce(function(s, p) { return s + (p.monto || 0); }, 0);
+                const descMonto = descuentoTemporal ? descuentoTemporal.monto : 0;
+                const totalAPagar = pb + totalCargos - descMonto;
+                const saldo = totalAPagar - totalPagos;
 
-            // ─────── @JS-CONTRATOS-ELIMINAR-MOVIMIENTO ───────
-            // Marca un pago o cargo como eliminado (soft delete con auditoría)
+                el('resumen-precio-base').textContent = formatearMoneda(pb);
+                el('resumen-cargos-total').textContent = '+' + formatearMoneda(totalCargos);
+                el('resumen-descuento').textContent = '-' + formatearMoneda(descMonto);
+                el('resumen-total').textContent = formatearMoneda(totalAPagar);
+                el('resumen-pagado').textContent = formatearMoneda(totalPagos);
+                el('resumen-saldo').textContent = formatearMoneda(saldo);
+                el('resumen-saldo').style.color = saldo === 0 ? 'var(--color-verde)' : 'var(--color-naranja)';
+            }
+
+            // ─── Listeners de tipo/paquete/servicio ───
+            el('contrato-tipo').addEventListener('change', function() {
+                if (this.value === 'paquete') {
+                    el('seccion-paquete').style.display = '';
+                    el('seccion-solo-servicio').style.display = 'none';
+                    el('contrato-paquete').required = true;
+                    el('contrato-servicio').required = false;
+                    el('contrato-servicio').value = '';
+                } else {
+                    el('seccion-paquete').style.display = 'none';
+                    el('seccion-solo-servicio').style.display = '';
+                    el('contrato-paquete').required = false;
+                    el('contrato-paquete').value = '';
+                    el('contrato-servicio').required = true;
+                }
+                calcularPrecioBaseContrato();
+            });
+            el('contrato-paquete').addEventListener('change', calcularPrecioBaseContrato);
+            el('contrato-servicio').addEventListener('change', calcularPrecioBaseContrato);
+
+            // ─── Aplicar descuento ───
+            el('btn-aplicar-descuento').addEventListener('click', function() {
+                const desc = el('descuento-descripcion').value.trim();
+                const monto = parseFloat(el('descuento-monto').value);
+                if (!desc) { mostrarNotificacion('Ingresa una descripción del descuento', 'warning'); return; }
+                if (!monto || monto <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
+                descuentoTemporal = { monto: monto, descripcion: desc };
+                el('descuento-descripcion').value = '';
+                el('descuento-monto').value = '';
+                renderizarDescuento();
+                actualizarResumenFinanciero();
+                mostrarNotificacion('Descuento aplicado', 'success');
+            });
+
+            // ─── Agregar cargo ───
+            el('btn-agregar-cargo').addEventListener('click', function() {
+                const d = el('cargo-descripcion').value.trim();
+                const m = parseFloat(el('cargo-monto').value);
+                if (!m || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
+                if (!d) { mostrarNotificacion('Ingresa una descripción', 'warning'); return; }
+                const nuevoCargo = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Cargo extra: ' + d, registradoPor: nombreUsuarioActual() };
+                cargosArr.push(nuevoCargo);
+                el('cargo-descripcion').value = '';
+                el('cargo-monto').value = '';
+                renderizarCargos();
+                actualizarResumenFinanciero();
+                mostrarNotificacion('Cargo agregado', 'success');
+            });
+
+            // ─── Agregar pago ───
+            el('btn-agregar-pago').addEventListener('click', function() {
+                const mi = el('contrato-nuevo-pago');
+                const m = parseFloat(mi.value);
+                if (!m || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
+                const nuevoPago = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Pago registrado', codigo: generarHuellaPago(), registradoPor: nombreUsuarioActual() };
+                pagosArr.push(nuevoPago);
+                pagosRecientes.push(nuevoPago);
+                mi.value = '';
+                renderizarPagos();
+                actualizarResumenFinanciero();
+                mostrarNotificacion('Pago agregado', 'success');
+            });
+
+            // ─── API global para eliminar movimientos desde la lista ───
             window.PDA = window.PDA || {};
-            window.PDA.eliminarMovimiento = function(tipo, index) {
+            window.PDA.eliminarMovimientoContrato = function(tipo, index) {
                 const esPago = tipo === 'pago';
                 const item = esPago ? pagosArr[index] : cargosArr[index];
                 if (!item) return;
@@ -4495,147 +5304,101 @@ var DATOS_EMISOR = {
                         item.eliminado = true;
                         item.eliminadoPor = nombreUsuarioActual();
                         item.fechaEliminacion = obtenerFechaHoraActual();
-                        item.nota = (item.nota || '') + ' | ELIMINADO por ' + nombreUsuarioActual() + ' el ' + obtenerFechaHoraActual();
-                        const nota = { 
-                            monto: 0, 
-                            fecha: obtenerFechaHoraActual(), 
-                            nota: (esPago ? 'Pago de ' : 'Cargo de ') + formatearMoneda(item.monto) + ' eliminado por ' + nombreUsuarioActual(), 
-                            eliminado: false, 
+                        const nota = {
+                            monto: 0,
+                            fecha: obtenerFechaHoraActual(),
+                            nota: (esPago ? 'Pago de ' : 'Cargo de ') + formatearMoneda(item.monto) + ' eliminado',
+                            eliminado: false,
                             esNotaEliminacion: true,
                             registradoPor: nombreUsuarioActual()
                         };
                         if (esPago) pagosArr.push(nota);
                         else cargosArr.push(nota);
-                        registrarHistorial(esPago ? 'pago' : 'cargo', 'eliminar', 
-                            'Se eliminó ' + (esPago ? 'pago' : 'cargo extra') + ' de ' + formatearMoneda(item.monto) + ' (' + nombreUsuarioActual() + ')', 
+                        registrarHistorial(esPago ? 'pago' : 'cargo', 'eliminar',
+                            'Se eliminó ' + (esPago ? 'pago' : 'cargo extra') + ' de ' + formatearMoneda(item.monto),
                             { nombre: formatearMoneda(item.monto) });
-                        renderizarMovimientos();
+                        if (esPago) renderizarPagos(); else renderizarCargos();
+                        actualizarResumenFinanciero();
                         mostrarNotificacion('Movimiento eliminado', 'success');
                     }
                 });
             };
-            // ─────── FIN @JS-CONTRATOS-ELIMINAR-MOVIMIENTO ───────
 
-            // ─────── @JS-CONTRATOS-CALCULAR-PRECIOS ───────
-            // Calcula automáticamente el precio base según paquete/servicios
-            const ts = el('contrato-tipo');
-            const sp = el('seccion-paquete');
-            const ss = el('seccion-solo-servicio');
-            const ps = el('contrato-paquete');
-            const ssr = el('contrato-servicio');
-            const pbi = el('contrato-precio-base');
-            const pfi = el('contrato-precio-final');
-
-            function calcularPrecios() {
-                let pb = 0;
-                if (ts.value === 'paquete') {
-                    const pq = obtenerPaquete(ps.value);
-                    if (pq) pb = pq.precio - (pq.descuento || 0);
-                    document.querySelectorAll('.servicio-check').forEach(function(cb) {
-                        if (cb.checked) {
-                            const s = obtenerServicio(cb.value);
-                            if (s) pb += s.precio - (s.descuento || 0);
-                        }
+            // ─── Botón "Nuevo cliente" ───
+            el('btn-nuevo-cliente-contrato').addEventListener('click', function() {
+                abrirModalNuevoClienteRapido(function(nuevoCliente) {
+                    // Refrescar lista de clientes del buscador
+                    const opcionesActualizadas = [];
+                    clientes.forEach(function(c) {
+                        opcionesActualizadas.push({
+                            id: c.id,
+                            nombre: c.nombre,
+                            telefono: c.telefono || '',
+                            email: c.email || '',
+                            estado: c.estado || 'Activo',
+                            faseOrigen: c.faseOrigen || 'No especificado'
+                        });
                     });
-                } else {
-                    const s = obtenerServicio(ssr.value);
-                    if (s) pb = s.precio - (s.descuento || 0);
-                }
-                pbi.value = pb;
-                const pfa = parseFloat(pfi.value);
-                if (!pfa || pfa === 0) pfi.value = pb;
-                actualizarResumen();
-            }
-            // ─────── FIN @JS-CONTRATOS-CALCULAR-PRECIOS ───────
-
-            // ─────── @JS-CONTRATOS-LISTENERS-FORM ───────
-            // Listeners de los campos del formulario
-            ts.addEventListener('change', function() {
-                if (this.value === 'paquete') {
-                    sp.style.display = ''; ss.style.display = 'none';
-                    ps.required = true; ssr.required = false; ssr.value = '';
-                } else {
-                    sp.style.display = 'none'; ss.style.display = '';
-                    ps.required = false; ps.value = ''; ssr.required = true;
-                }
-                calcularPrecios();
-            });
-            ps.addEventListener('change', calcularPrecios);
-            ssr.addEventListener('change', calcularPrecios);
-            document.querySelectorAll('.servicio-check').forEach(function(cb) { cb.addEventListener('change', calcularPrecios); });
-            pfi.addEventListener('input', actualizarResumen);
-
-            el('contrato-anticipo').addEventListener('change', function() {
-                const a = parseFloat(this.value) || 0;
-                if (a > 0) {
-                    const ea = pagosArr.some(function(p) { return p.nota && p.nota.indexOf('Anticipo') !== -1 && !p.eliminado; });
-                    if (!ea) {
-                        const pagoAnticipo = { id: generarId(), monto: a, fecha: obtenerFechaHoraActual(), nota: 'Anticipo registrado por ' + formatearMoneda(a), codigo: generarHuellaPago(), registradoPor: nombreUsuarioActual() };
-                        pagosArr.push(pagoAnticipo);
-                        pagosRecientes.push(pagoAnticipo);
-                        renderizarMovimientos();
+                    // Actualizar buscador
+                    inicializarBuscadorClienteContrato(opcionesActualizadas, nuevoCliente.id);
+                    // Actualizar info del cliente
+                    const infoCont = document.getElementById('contrato-info-cliente');
+                    const htmlInfo = '<div style="background-color:var(--color-bg-terciario);padding:12px;border-radius:var(--border-radius);border-left:3px solid var(--color-acento);">' +
+                        '<p style="margin:4px 0;font-size:14px;color:var(--color-texto-primario);"><strong>' + nuevoCliente.nombre + '</strong></p>' +
+                        '<p style="margin:4px 0;font-size:13px;color:var(--color-texto-secundario);">Tel: ' + nuevoCliente.telefono + (nuevoCliente.email ? ' | ' + nuevoCliente.email : '') + '</p>' +
+                        '<p style="margin:4px 0;font-size:13px;color:var(--color-texto-secundario);">Estado: Activo</p>' +
+                        '</div>';
+                    if (infoCont) {
+                        infoCont.innerHTML = htmlInfo;
+                    } else {
+                        // Insertar antes del campo festejado
+                        const festeja = document.getElementById('contrato-festejado');
+                        if (festeja) {
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'form-grupo';
+                            wrapper.id = 'contrato-info-cliente';
+                            wrapper.innerHTML = htmlInfo;
+                            festeja.closest('.form-grupo').before(wrapper);
+                        }
                     }
-                }
-                actualizarResumen();
+                });
             });
 
-            el('btn-agregar-pago').addEventListener('click', function() {
-                const mi = el('contrato-nuevo-pago');
-                const m = parseFloat(mi.value);
-                if (!m || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
-                const nuevoPago = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Pago registrado por ' + formatearMoneda(m), codigo: generarHuellaPago(), registradoPor: nombreUsuarioActual() };
-                pagosArr.push(nuevoPago);
-                pagosRecientes.push(nuevoPago);
-                renderizarMovimientos();
-                mi.value = '';
-                mi.focus();
-                mostrarNotificacion('Pago agregado', 'success');
-            });
-
-            el('btn-agregar-cargo').addEventListener('click', function() {
-                const di = el('cargo-descripcion');
-                const mi = el('cargo-monto');
-                const d = di.value.trim();
-                const m = parseFloat(mi.value);
-                if (!m || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
-                if (!d) { mostrarNotificacion('Ingresa una descripción', 'warning'); return; }
-                const nuevoCargo = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Cargo extra: ' + d + ' - ' + formatearMoneda(m), registradoPor: nombreUsuarioActual() };
-                cargosArr.push(nuevoCargo);
-                renderizarMovimientos();
-                di.value = '';
-                mi.value = '';
-                di.focus();
-                mostrarNotificacion('Cargo extra agregado', 'success');
-            });
-            // ─────── FIN @JS-CONTRATOS-LISTENERS-FORM ───────
-
-            if (contrato) {
-                if (contrato.horaEvento) el('contrato-hora-evento').value = contrato.horaEvento;
-                if (contrato.horaRecepcion) el('contrato-hora-recepcion').value = contrato.horaRecepcion;
-            }
-
-            calcularPrecios();
-            if (!pfi.value || parseFloat(pfi.value) === 0) pfi.value = parseFloat(pbi.value) || 0;
-            renderizarMovimientos();
-
+            // ─── Botón Cancelar ───
             el('btn-contrato-cancelar').addEventListener('click', function(ev) {
-                ev.preventDefault(); cerrarModal();
+                ev.preventDefault();
+                descuentoTemporal = null;
+                cerrarModal();
             });
 
+            // ─── Submit ───
             el('form-contrato').addEventListener('submit', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 guardarContrato(ee, contrato, pagosArr, cargosArr, pagosRecientes);
             });
+
+            // ─── Inicialización de la vista ───
+            if (contrato) {
+                if (contrato.horaEvento) el('contrato-hora-evento').value = contrato.horaEvento;
+                if (contrato.horaRecepcion) el('contrato-hora-recepcion').value = contrato.horaRecepcion;
+            }
+
+            renderizarChipsServicios();
+            renderizarDescuento();
+            renderizarPagos();
+            renderizarCargos();
+            calcularPrecioBaseContrato();
+            actualizarResumenFinanciero();
         }
         // ─────── FIN @JS-CONTRATOS-FORMULARIO ───────
 
         // ─────── @JS-CONTRATOS-GUARDAR ───────
         // Persiste un contrato nuevo o editado
-        function guardarContrato(ee, contratoOriginal, pagosArr, cargosArr, pagosRecientes) {
+                function guardarContrato(ee, contratoOriginal, pagosArr, cargosArr, pagosRecientes) {
             const el = function(id) { return document.getElementById(id); };
             const ci = el('contrato-id').value;
-            let clid = el('contrato-cliente-id') ? el('contrato-cliente-id').value : el('contrato-cliente').value;
+            const clid = el('contrato-cliente-id').value;
             const tipo = el('contrato-tipo').value;
             const fest = el('contrato-festejado').value.trim();
             const fe = el('contrato-fecha-evento').value;
@@ -4643,44 +5406,67 @@ var DATOS_EMISOR = {
             const de = el('contrato-direccion-evento').value.trim();
             const hr = el('contrato-hora-recepcion').value;
             const dr = el('contrato-direccion-recepcion').value.trim();
-            const pb = parseFloat(el('contrato-precio-base').value) || 0;
-            const pf = parseFloat(el('contrato-precio-final').value) || 0;
             const est = el('contrato-estado').value;
             const not = el('contrato-notas').value.trim();
-            const ant = parseFloat(el('contrato-anticipo').value) || 0;
 
             let pid = null, sid = null, sids = [];
             if (tipo === 'paquete') {
                 pid = el('contrato-paquete').value;
-                document.querySelectorAll('.servicio-check:checked').forEach(function(cb) { sids.push(cb.value); });
+                document.querySelectorAll('.servicio-check-form:checked').forEach(function(cb) { sids.push(cb.value); });
             } else {
                 sid = el('contrato-servicio').value;
             }
 
-            if (!clid || !fest || !fe || !pf || !est) { mostrarNotificacion('Campos obligatorios faltantes', 'warning'); return; }
+            if (!clid) { mostrarNotificacion('Selecciona un cliente', 'warning'); return; }
+            if (!fest || !fe || !est) { mostrarNotificacion('Campos obligatorios faltantes', 'warning'); return; }
             if (tipo === 'paquete' && !pid) { mostrarNotificacion('Selecciona paquete', 'warning'); return; }
             if (tipo === 'solo-servicio' && !sid) { mostrarNotificacion('Selecciona servicio', 'warning'); return; }
 
             const c = obtenerCliente(clid);
             if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
 
+            // Calcular precio base
+            let pb = 0;
+            if (tipo === 'paquete') {
+                const pq = obtenerPaquete(pid);
+                if (pq) pb = pq.precio - (pq.descuento || 0);
+                sids.forEach(function(id) {
+                    const s = obtenerServicio(id);
+                    if (s) pb += s.precio - (s.descuento || 0);
+                });
+            } else {
+                const s = obtenerServicio(sid);
+                if (s) pb = s.precio - (s.descuento || 0);
+            }
+
             const pagosFinales = pagosArr.filter(function(p) { return !p.eliminado; });
             const cargosFinales = cargosArr.filter(function(c) { return !c.eliminado; });
 
-            if (ant > 0) {
-                const ea = pagosFinales.some(function(p) { return p.nota && p.nota.indexOf('Anticipo') !== -1; });
-                if (!ea) {
-                    const pagoAnticipo = { id: generarId(), monto: ant, fecha: obtenerFechaHoraActual(), nota: 'Anticipo registrado por ' + formatearMoneda(ant), codigo: generarHuellaPago(), registradoPor: nombreUsuarioActual() };
-                    pagosFinales.push(pagoAnticipo);
-                    if (pagosRecientes) pagosRecientes.push(pagoAnticipo);
-                }
-            }
+            // Descuento
+            const descMonto = descuentoTemporal ? descuentoTemporal.monto : 0;
+            const descDesc = descuentoTemporal ? descuentoTemporal.descripcion : '';
 
             const nc = {
-                id: ci || generarId(), tipo: tipo, festejado: fest, paqueteId: pid, servicioId: sid, serviciosIds: sids,
-                fechaEvento: fe, horaEvento: he || null, direccionEvento: de, horaRecepcion: hr || null, direccionRecepcion: dr,
-                precioBase: pb, precioFinal: pf, descuentoAplicado: pb - pf, anticipo: ant,
-                pagos: pagosFinales, cargos: cargosFinales, notas: not, fechaContrato: obtenerFechaActual(), estado: est
+                id: ci || generarId(),
+                tipo: tipo,
+                festejado: fest,
+                paqueteId: pid,
+                servicioId: sid,
+                serviciosIds: sids,
+                fechaEvento: fe,
+                horaEvento: he || null,
+                direccionEvento: de,
+                horaRecepcion: hr || null,
+                direccionRecepcion: dr,
+                precioBase: pb,
+                precioFinal: pb, // se mantiene igual al base ahora
+                descuentoMonto: descMonto,
+                descuentoDescripcion: descDesc,
+                pagos: pagosFinales,
+                cargos: cargosFinales,
+                notas: not,
+                fechaContrato: obtenerFechaActual(),
+                estado: est
             };
 
             if (ee) {
@@ -4700,16 +5486,19 @@ var DATOS_EMISOR = {
                 });
             }
 
+            descuentoTemporal = null;
             guardarDatos();
             cerrarModal();
             renderizarContratos();
             renderizarClientes();
             renderizarInformes();
-            mostrarNotificacion('Contrato guardado', 'success');
 
             if (pagosRecientes && pagosRecientes.length > 0) {
                 const ultimoPago = pagosRecientes[pagosRecientes.length - 1];
+                mostrarNotificacion('Contrato guardado', 'success');
                 setTimeout(function() { abrirSelectorComprobante(clid, nc.id, ultimoPago.id); }, 300);
+            } else {
+                mostrarNotificacion('Contrato guardado', 'success');
             }
         }
         // ─────── FIN @JS-CONTRATOS-GUARDAR ───────
