@@ -2653,7 +2653,13 @@ var DATOS_EMISOR = {
         var esPrimerLoginAdmin = false;
         var historialVerTodos = false;
         // ─────── FIN @JS-STATE-USER ───────
-
+        // ─────── @JS-STATE-LOGO-PRECARGADO ───────
+        // Precarga el logo una sola vez al iniciar la app para que
+        // los comprobantes lo dibujen al instante sin esperar descarga
+        var LOGO_PRECARGADO = new Image();
+        LOGO_PRECARGADO.crossOrigin = 'anonymous';
+        LOGO_PRECARGADO.src = 'https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg';
+        // ─────── FIN @JS-STATE-LOGO-PRECARGADO ───────
         // ─────── @JS-STATE-HORAS ───────
         // Generación de opciones de hora (00:00 a 23:30 cada 30min)
         var OPCIONES_HORA = '';
@@ -4797,16 +4803,12 @@ var DATOS_EMISOR = {
             ctx.fillStyle = gradLineaTop;
             ctx.fillRect(0, 180, W, 6);
 
-            // ─── Logo circular (120px) con borde lila ───
+                       // ─── Logo circular (120px) con borde lila ───
+            // Usa el logo precargado en @JS-STATE-LOGO-PRECARGADO
             const logoX = 100; // centro del logo
             const logoY = 90;  // centro del logo
             const logoRadio = 60;
-            const logoImg = new Image();
-            logoImg.crossOrigin = 'anonymous';
-            let logoCargado = false;
-            logoImg.onload = function() { logoCargado = true; };
-            logoImg.onerror = function() { console.warn('No se pudo cargar el logo'); };
-            logoImg.src = 'https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg';
+            const logoImg = LOGO_PRECARGADO;
 
             // Fondo del logo (círculo negro)
             ctx.beginPath();
@@ -5122,31 +5124,76 @@ var DATOS_EMISOR = {
         // ─────── FIN @JS-COMPROBANTES-CANVAS ───────
 
         // ─────── @JS-COMPROBANTES-DESCARGAR ───────
-        function descargarComprobante(clienteId, contratoId, pagoId) {
+             function descargarComprobante(clienteId, contratoId, pagoId) {
             const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
             if (!datos) return;
-            const canvas = generarCanvasComprobante(datos);
-            const dataURL = canvas.toDataURL('image/png');
-            const a = document.createElement('a');
-            a.href = dataURL;
-            a.download = 'comprobante_' + datos.cliente.nombre.replace(/\s+/g, '_') + '_' + datos.pago.codigo + '.png';
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            mostrarNotificacion('Comprobante descargado', 'success');
+            
+            // Espera a que el logo esté cargado (máximo 3 segundos)
+            function esperarLogo() {
+                return new Promise(function(resolve) {
+                    if (LOGO_PRECARGADO.complete && LOGO_PRECARGADO.naturalWidth > 0) {
+                        resolve();
+                        return;
+                    }
+                    const timeout = setTimeout(resolve, 3000);
+                    LOGO_PRECARGADO.addEventListener('load', function() {
+                        clearTimeout(timeout);
+                        resolve();
+                    }, { once: true });
+                    LOGO_PRECARGADO.addEventListener('error', function() {
+                        clearTimeout(timeout);
+                        resolve();
+                    }, { once: true });
+                });
+            }
+            
+            esperarLogo().then(function() {
+                const canvas = generarCanvasComprobante(datos);
+                const dataURL = canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = dataURL;
+                a.download = 'comprobante_' + datos.cliente.nombre.replace(/\s+/g, '_') + '_' + datos.pago.codigo + '.png';
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                mostrarNotificacion('Comprobante descargado', 'success');
+            });
         }
         // ─────── FIN @JS-COMPROBANTES-DESCARGAR ───────
 
         // ─────── @JS-COMPROBANTES-VER ───────
-        function verComprobantePago(clienteId, contratoId, pagoId) {
+            function verComprobantePago(clienteId, contratoId, pagoId) {
             const datos = obtenerDatosComprobante(clienteId, contratoId, pagoId);
             if (!datos) { mostrarNotificacion('Datos no encontrados', 'error'); return; }
-            const canvas = generarCanvasComprobante(datos);
-            const dataURL = canvas.toDataURL('image/png');
-            const html = '<div class="comprobante-preview"><img src="' + dataURL + '" alt="Comprobante"></div>' +
-                '<div class="comprobante-acciones">' +
-                '<button class="btn-secundario" onclick="descargarComprobante(\'' + clienteId + '\',\'' + contratoId + '\',\'' + pagoId + '\')"><i class="fas fa-download"></i> Descargar</button>' +
-                '<button class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cerrar</button>' +
-                '</div>';
-            abrirModal('Comprobante de pago', html, true);
+            
+            // Espera a que el logo esté cargado (máximo 3 segundos)
+            function esperarLogo() {
+                return new Promise(function(resolve) {
+                    if (LOGO_PRECARGADO.complete && LOGO_PRECARGADO.naturalWidth > 0) {
+                        resolve();
+                        return;
+                    }
+                    const timeout = setTimeout(resolve, 3000);
+                    LOGO_PRECARGADO.addEventListener('load', function() {
+                        clearTimeout(timeout);
+                        resolve();
+                    }, { once: true });
+                    LOGO_PRECARGADO.addEventListener('error', function() {
+                        clearTimeout(timeout);
+                        console.warn('El logo no pudo cargarse, se generará comprobante sin logo');
+                        resolve();
+                    }, { once: true });
+                });
+            }
+            
+            esperarLogo().then(function() {
+                const canvas = generarCanvasComprobante(datos);
+                const dataURL = canvas.toDataURL('image/png');
+                const html = '<div class="comprobante-preview"><img src="' + dataURL + '" alt="Comprobante"></div>' +
+                    '<div class="comprobante-acciones">' +
+                    '<button class="btn-secundario" onclick="descargarComprobante(\'' + clienteId + '\',\'' + contratoId + '\',\'' + pagoId + '\')"><i class="fas fa-download"></i> Descargar</button>' +
+                    '<button class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cerrar</button>' +
+                    '</div>';
+                abrirModal('Comprobante de pago', html, true);
+            });
         }
         // ─────── FIN @JS-COMPROBANTES-VER ───────
 
