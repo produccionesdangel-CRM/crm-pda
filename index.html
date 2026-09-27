@@ -2605,6 +2605,176 @@ var DATOS_EMISOR = {
             firebaseListo = false;
         }
         // ─────── FIN @JS-FIREBASE-INIT ───────
+                // ─────── @JS-FIREBASE-SYNC-INDICADOR ───────
+        // Actualiza el indicador visual de conexión (rojo/verde/naranja)
+        function actualizarEstadoSync(estado, texto) {
+            const dot = document.getElementById('sync-dot');
+            const text = document.getElementById('sync-text');
+            if (!dot || !text) return;
+            dot.className = 'sync-dot';
+            if (estado === 'online') {
+                dot.classList.add('online');
+                text.textContent = texto || 'Conectado';
+                estadoSync.conectado = true;
+            } else if (estado === 'offline') {
+                dot.classList.add('offline');
+                text.textContent = texto || 'Modo local';
+                estadoSync.conectado = false;
+            } else if (estado === 'syncing') {
+                dot.classList.add('syncing');
+                text.textContent = texto || 'Sincronizando...';
+            }
+        }
+        // ─────── FIN @JS-FIREBASE-SYNC-INDICADOR ───────
+
+        // ─────── @JS-FIREBASE-GUARDAR ───────
+        // Sube todos los datos locales a Firebase
+        async function guardarEnFirebase(esForzado) {
+            if (!database || sincronizandoFirebase) return false;
+            if (!usuarioActual) return false;
+            try {
+                sincronizandoFirebase = true;
+                actualizarEstadoSync('syncing', 'Verificando...');
+                const snap = await database.ref('datos/ultimaActualizacion').once('value');
+                const remoto = snap.val();
+                if (!esForzado && remoto && ultimaActualizacionRemota && remoto > ultimaActualizacionRemota) {
+                    sincronizandoFirebase = false;
+                    actualizarEstadoSync('online', 'Conflicto');
+                    return false;
+                }
+                actualizarEstadoSync('syncing', 'Guardando...');
+                const ahora = new Date().toISOString();
+                await database.ref('datos').set({
+                    paquetes: paquetes,
+                    serviciosAdicionales: serviciosAdicionales,
+                    prospectos: prospectos,
+                    clientes: clientes,
+                    tareas: tareas,
+                    historial: historial,
+                    usuarios: usuarios,
+                    ultimaActualizacion: ahora,
+                    ultimoUsuario: usuarioActual.nombre,
+                    version: VERSION
+                });
+                ultimaActualizacionRemota = ahora;
+                cambiosPendientes = false;
+                actualizarEstadoSync('online', 'Guardado');
+                return true;
+            } catch (error) {
+                console.error('Error Firebase:', error);
+                actualizarEstadoSync('offline', 'Error');
+                return false;
+            } finally {
+                sincronizandoFirebase = false;
+            }
+        }
+        // ─────── FIN @JS-FIREBASE-GUARDAR ───────
+
+        // ─────── @JS-FIREBASE-CARGAR ───────
+        // Descarga los datos de Firebase y reemplaza los locales
+        async function cargarDesdeFirebase() {
+            if (!database) return false;
+            try {
+                actualizarEstadoSync('syncing', 'Cargando...');
+                const snap = await database.ref('datos').once('value');
+                const datos = snap.val();
+                if (datos) {
+                    if (datos.paquetes) paquetes = datos.paquetes;
+                    if (datos.serviciosAdicionales) serviciosAdicionales = datos.serviciosAdicionales;
+                    if (datos.prospectos) prospectos = datos.prospectos;
+                    if (datos.clientes) clientes = datos.clientes;
+                    if (datos.tareas) tareas = datos.tareas;
+                    if (datos.historial) historial = datos.historial;
+                    if (datos.usuarios && datos.usuarios.length > 0) {
+                        const fusionados = datos.usuarios.slice();
+                        usuarios.forEach(function(lu) {
+                            if (!fusionados.some(function(ru) { return ru.username === lu.username; })) {
+                                fusionados.push(lu);
+                            }
+                        });
+                        usuarios = fusionados;
+                        guardarUsuarios();
+                    }
+                    ultimaActualizacionRemota = datos.ultimaActualizacion || null;
+                    cambiosPendientes = false;
+                    guardarDatosLocal();
+                    renderizarTodo();
+                    actualizarEstadoSync('online', 'Cargado');
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Error cargando:', error);
+                actualizarEstadoSync('offline', 'Error');
+                return false;
+            }
+        }
+        // ─────── FIN @JS-FIREBASE-CARGAR ───────
+
+        // ─────── @JS-FIREBASE-ESCUCHAR ───────
+        // Escucha cambios remotos y actualiza si otro usuario modificó datos
+        function escucharCambiosFirebase() {
+            if (!database) return;
+            database.ref('datos').on('value', function(snap) {
+                const datos = snap.val();
+                if (!datos || sincronizandoFirebase) return;
+                if (primerCarga) { primerCarga = false; return; }
+                const remoto = datos.ultimaActualizacion;
+                if (remoto && ultimaActualizacionRemota && remoto > ultimaActualizacionRemota) {
+                    if (cambiosPendientes) {
+                        mostrarNotificacion('Otro usuario modificó datos', 'warning');
+                    } else {
+                        if (datos.paquetes) paquetes = datos.paquetes;
+                        if (datos.serviciosAdicionales) serviciosAdicionales = datos.serviciosAdicionales;
+                        if (datos.prospectos) prospectos = datos.prospectos;
+                        if (datos.clientes) clientes = datos.clientes;
+                        if (datos.tareas) tareas = datos.tareas;
+                        if (datos.historial) historial = datos.historial;
+                        ultimaActualizacionRemota = remoto;
+                        guardarDatosLocal();
+                        renderizarTodo();
+                        mostrarNotificacion('Datos actualizados desde la nube', 'success');
+                    }
+                }
+            });
+        }
+        // ─────── FIN @JS-FIREBASE-ESCUCHAR ───────
+
+        // ─────── @JS-FIREBASE-INICIALIZAR ───────
+        // Función principal que arranca la conexión con Firebase
+        async function inicializarFirebase() {
+            if (!database) {
+                actualizarEstadoSync('offline', 'Firebase no disponible');
+                estadoSync.modo = 'local';
+                return false;
+            }
+            if (firebaseInicializado) return true;
+            try {
+                actualizarEstadoSync('syncing', 'Conectando...');
+                await database.ref('test').set('testing');
+                await database.ref('test').remove();
+                estadoSync.modo = 'firebase';
+                actualizarEstadoSync('online', 'Conectado');
+                await cargarDesdeFirebase();
+                escucharCambiosFirebase();
+                if (firebaseIntervalId) clearInterval(firebaseIntervalId);
+                firebaseIntervalId = setInterval(async function() {
+                    if (!sincronizandoFirebase && estadoSync.modo === 'firebase' && cambiosPendientes) {
+                        await guardarEnFirebase();
+                    }
+                }, 30000);
+                firebaseInicializado = true;
+                mostrarNotificacion('Conexión con Firebase establecida', 'success');
+                return true;
+            } catch (error) {
+                console.error('Error Firebase:', error);
+                estadoSync.modo = 'local';
+                actualizarEstadoSync('offline', 'Modo local');
+                mostrarNotificacion('Sin conexión a Firebase', 'warning');
+                return false;
+            }
+        }
+        // ─────── FIN @JS-FIREBASE-INICIALIZAR ───────
 
         /* ═══════════════════════════════════════════════════════════ */
         /* @JS-STATE — Estado global y preferencias                     */
