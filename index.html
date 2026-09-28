@@ -544,56 +544,45 @@
         .sync-status .sync-dot.offline { background-color: var(--color-rojo); animation: none; }
         .sync-status .sync-dot.syncing { background-color: var(--color-naranja); animation: pulse-fast 0.5s infinite; }
         .sync-status .sync-text { color: var(--color-texto-secundario); white-space: nowrap; }
-                /* ─────── @CSS-LAYOUT-PANEL-LATERAL ─────── */
-        /* Panel lateral derecho para mostrar detalles en PC sin perder contexto */
+                       /* ─────── @CSS-LAYOUT-PANEL-LATERAL ─────── */
+        /* Panel lateral derecho pegado al top (como el sidebar izquierdo) */
         
-        /* ─── Contenedor principal (contratos + panel) ─── */
-        .seccion-con-panel {
-            display: flex;
-            gap: 0;
-            position: relative;
-        }
-        .seccion-con-panel .contenido-principal {
-            flex: 1;
-            min-width: 0;
-            transition: flex 0.3s ease;
-        }
+        /* El panel es hermano del main-content dentro del app-container.
+           Se inyecta dinámicamente cuando el usuario abre un contrato en PC. */
 
-        /* ─── Panel lateral derecho ─── */
         .panel-lateral {
-            width: 0;
-            overflow: hidden;
+            width: 480px;
+            min-width: 480px;
             background-color: var(--color-bg-secundario);
             border-left: 1px solid var(--color-borde);
-            transition: width 0.3s ease;
             display: flex;
             flex-direction: column;
-            position: sticky;
-            top: 0;
-            height: calc(100vh - 48px);
+            height: 100vh;
+            overflow: hidden;
             flex-shrink: 0;
+            animation: slideInPanel 0.25s ease;
         }
-        .panel-lateral.abierto {
-            width: 480px;
+
+        @keyframes slideInPanel {
+            from { transform: translateX(30px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
         .panel-lateral-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 20px;
+            padding: 20px 24px;
             border-bottom: 1px solid var(--color-borde);
-            background-color: var(--color-bg-primario);
+            background-color: var(--color-bg-terciario);
             flex-shrink: 0;
         }
         .panel-lateral-header h2 {
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--color-texto-primario);
             margin: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            letter-spacing: 0.3px;
         }
         .panel-lateral-cerrar {
             background: none;
@@ -614,7 +603,7 @@
         .panel-lateral-body {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 20px 24px;
         }
 
         /* ─── Estado seleccionado de la tarjeta de contrato ─── */
@@ -625,13 +614,10 @@
             background-color: var(--color-bg-card-hover);
         }
 
-        /* ─── Ocultar el panel en móvil (siempre) ─── */
+        /* ─── Ocultar el panel en móvil ─── */
         @media (max-width: 768px) {
             .panel-lateral {
                 display: none !important;
-            }
-            .seccion-con-panel {
-                display: block;
             }
         }
         /* ─────── FIN @CSS-LAYOUT-PANEL-LATERAL ─────── */
@@ -3030,18 +3016,7 @@
                     </div>
                     <div class="filtro-grupo"><label>Buscar por</label><input type="text" id="buscar-contrato" placeholder="Cliente o festejado..."></div>
                 </div>
-                               <div class="seccion-con-panel">
-                    <div class="contenido-principal">
-                        <div id="lista-contratos" class="mosaico-grid"><p class="mensaje-vacio">No hay contratos registrados</p></div>
-                    </div>
-                    <aside class="panel-lateral" id="panel-lateral-contrato">
-                        <div class="panel-lateral-header">
-                            <h2 id="panel-lateral-titulo">Detalle del contrato</h2>
-                            <button class="panel-lateral-cerrar" id="panel-lateral-cerrar">&times;</button>
-                        </div>
-                        <div class="panel-lateral-body" id="panel-lateral-body"></div>
-                    </aside>
-                </div>
+                                              <div id="lista-contratos" class="mosaico-grid"><p class="mensaje-vacio">No hay contratos registrados</p></div>
             </section>
             <!-- FIN @HTML-SECTION-CONTRATOS -->
 
@@ -3350,7 +3325,19 @@
             </section>
             <!-- FIN @HTML-SECTION-CONFIGURACION -->
 
-        </main>
+               </main>
+
+        <!-- ─────── @HTML-PANEL-LATERAL ─────── -->
+        <!-- Panel lateral derecho para detalle de contratos en PC -->
+        <aside class="panel-lateral" id="panel-lateral-contrato" style="display:none;">
+            <div class="panel-lateral-header">
+                <h2 id="panel-lateral-titulo">Detalle del contrato</h2>
+                <button class="panel-lateral-cerrar" id="panel-lateral-cerrar">&times;</button>
+            </div>
+            <div class="panel-lateral-body" id="panel-lateral-body"></div>
+        </aside>
+        <!-- ─────── FIN @HTML-PANEL-LATERAL ─────── -->
+
     </div>
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- FIN @HTML-APP                                                -->
@@ -4168,8 +4155,10 @@ var DATOS_EMISOR = {
             btn.innerHTML = '<i class="fas fa-bars"></i>';
         }
         // ─────── FIN @JS-UI-SIDEBAR-MOVIL ───────
-        // ─────── @JS-UI-PANEL-LATERAL ───────
+                // ─────── @JS-UI-PANEL-LATERAL ───────
         // Panel lateral derecho para mostrar detalle de contratos en PC
+        // El panel vive dentro del app-container como hermano del main-content,
+        // por eso ocupa toda la altura desde el top de la ventana.
         function abrirPanelLateral(titulo, contenidoHTML) {
             const panel = document.getElementById('panel-lateral-contrato');
             const tituloEl = document.getElementById('panel-lateral-titulo');
@@ -4177,6 +4166,7 @@ var DATOS_EMISOR = {
             if (!panel || !tituloEl || !bodyEl) return;
             tituloEl.textContent = titulo;
             bodyEl.innerHTML = contenidoHTML;
+            panel.style.display = 'flex';
             panel.classList.add('abierto');
         }
 
@@ -4185,6 +4175,7 @@ var DATOS_EMISOR = {
             const bodyEl = document.getElementById('panel-lateral-body');
             if (!panel) return;
             panel.classList.remove('abierto');
+            panel.style.display = 'none';
             if (bodyEl) bodyEl.innerHTML = '';
             // Quitar estado seleccionado de todas las tarjetas
             document.querySelectorAll('.mosaico-card.seleccionado').forEach(function(c) {
