@@ -6487,6 +6487,51 @@ var DATOS_EMISOR = {
                             '</div><span class="monto naranja">' + formatearMoneda(c.monto) + '</span></div>';
                     }).join('') + '</div></div>';
             }
+                        // ─── Tareas vinculadas al cliente ───
+            const tareasCliente = tareas.filter(function(t) { return t.clienteId === clienteId; });
+            let tareasHTML = '';
+            if (tareasCliente.length > 0) {
+                const completadas = tareasCliente.filter(function(t) { return t.completada; }).length;
+                const pendientes = tareasCliente.length - completadas;
+                // Ordenar: pendientes primero, luego por fecha descendente
+                const tareasOrdenadas = tareasCliente.slice().sort(function(a, b) {
+                    if (a.completada !== b.completada) return a.completada ? 1 : -1;
+                    return (b.fecha || '').localeCompare(a.fecha || '');
+                });
+                const filasTareas = tareasOrdenadas.map(function(t) {
+                    const cl = t.completada ? 'tarea-completada' : 'tarea-pendiente';
+                    const fechaProg = formatearFecha(t.fecha);
+                    const fechaCreacion = t.fechaCreacion ? formatearFechaHora(t.fechaCreacion) : '—';
+                    const fechaCompletada = t.fechaCompletada ? formatearFechaHora(t.fechaCompletada) : null;
+                    return '<div class="tarea-vinculada ' + cl + '">' +
+                        '<div class="tarea-check">' +
+                            '<input type="checkbox" ' + (t.completada ? 'checked' : '') + 
+                                ' onchange="toggleTareaDesdeDetalle(\'' + t.id + '\', this.checked)">' +
+                        '</div>' +
+                        '<div class="tarea-info">' +
+                            '<div class="tarea-tipo">' + (t.tipo || 'Tarea') + '</div>' +
+                            '<div class="tarea-desc">' + (t.descripcion || 'Sin descripción') + '</div>' +
+                            (t.notas ? '<div class="tarea-notas"><i class="fas fa-sticky-note"></i> ' + t.notas + '</div>' : '') +
+                            '<div class="tarea-fechas">' +
+                                '<span><i class="fas fa-calendar-plus"></i> Creada: ' + fechaCreacion + '</span>' +
+                                '<span><i class="fas fa-calendar-check"></i> Programada: ' + fechaProg + '</span>' +
+                                (fechaCompletada ? '<span style="color:var(--color-verde);"><i class="fas fa-check-circle"></i> Completada: ' + fechaCompletada + '</span>' : '') +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="tarea-acciones">' +
+                            '<button onclick="cerrarModal(); cerrarPanelLateral(); editarTarea(\'' + t.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button onclick="cerrarModal(); cerrarPanelLateral(); eliminarTarea(\'' + t.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+                tareasHTML = '<div class="detalle-seccion detalle-seccion-tareas">' +
+                    '<div class="detalle-seccion-titulo">' +
+                        '<i class="fas fa-tasks"></i> Tareas del cliente (' + tareasCliente.length + ')' +
+                        ' <span class="contador-tareas">· ' + pendientes + ' pendiente' + (pendientes === 1 ? '' : 's') + ' · ' + completadas + ' completada' + (completadas === 1 ? '' : 's') + '</span>' +
+                    '</div>' +
+                    '<div class="tareas-lista">' + filasTareas + '</div>' +
+                '</div>';
+            }
 
             const html = '<div class="detalle-acciones">' +
                 '<button class="btn-primario" onclick="editarContrato(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-edit"></i> Editar</button>' +
