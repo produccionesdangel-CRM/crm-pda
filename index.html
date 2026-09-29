@@ -1141,8 +1141,105 @@
             font-size: 11.5px; color: var(--color-texto-secundario); margin-top: 2px;
         }
         .historial-item-meta span { display: inline-flex; align-items: center; gap: 4px; }
-        .historial-item-meta i { font-size: 10px; }
+                .historial-item-meta i { font-size: 10px; }
         .historial-vacio { text-align: center; padding: 40px 20px; color: var(--color-texto-secundario); font-size: 14px; }
+
+        /* ─────── @CSS-SECTIONS-HISTORIAL-CAMBIOS ─────── */
+        /* Badge "+N cambios" y lista expandible de diff */
+        .badge-cambios {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            background-color: rgba(58, 134, 255, 0.15);
+            color: var(--color-azul);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+        .badge-cambios:hover {
+            background-color: rgba(58, 134, 255, 0.25);
+        }
+        .badge-cambios i {
+            font-size: 10px;
+            transition: transform 0.2s ease;
+        }
+        .badge-cambios.abierto i {
+            transform: rotate(90deg);
+        }
+
+        .cambios-lista {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 8px;
+            padding: 10px 12px;
+            background-color: var(--color-bg-terciario);
+            border-radius: 6px;
+            border-left: 3px solid var(--color-azul);
+        }
+        .cambios-lista.abierto {
+            display: flex;
+        }
+
+        .cambio-fila {
+            display: flex;
+            gap: 8px;
+            align-items: baseline;
+            font-size: 12.5px;
+            padding: 4px 0;
+            border-bottom: 1px solid var(--color-borde-suave);
+            flex-wrap: wrap;
+        }
+        .cambio-fila:last-child { border-bottom: none; }
+
+        .cambio-campo {
+            font-weight: 700;
+            color: var(--color-texto-primario);
+            font-size: 12px;
+            min-width: 120px;
+            flex-shrink: 0;
+        }
+        .cambio-valores {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: baseline;
+            flex: 1;
+            min-width: 0;
+        }
+        .cambio-antes {
+            color: var(--color-rojo);
+            text-decoration: line-through;
+            opacity: 0.75;
+            font-size: 12px;
+            word-break: break-word;
+        }
+        .cambio-despues {
+            color: var(--color-verde);
+            font-weight: 600;
+            font-size: 12px;
+            word-break: break-word;
+        }
+        .cambio-flecha {
+            color: var(--color-texto-secundario);
+            font-size: 11px;
+        }
+        .cambio-vacio {
+            color: var(--color-texto-secundario);
+            font-style: italic;
+            font-size: 11.5px;
+        }
+        .cambio-nota {
+            font-size: 11.5px;
+            color: var(--color-texto-secundario);
+            font-style: italic;
+            padding-top: 4px;
+        }
+        /* ─────── FIN @CSS-SECTIONS-HISTORIAL-CAMBIOS ─────── */
         .historial-acciones {
             display: flex; justify-content: space-between;
             align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 12px;
@@ -1377,6 +1474,23 @@
             padding: 12px; border-radius: var(--border-radius);
             border: 1px solid var(--color-borde-suave);
         }
+                /* ─────── @CSS-MODALS-DETALLE-TAREAS ─────── */
+        /* Sección de tareas vinculadas dentro del detalle del contrato */
+        .detalle-seccion-tareas {
+            border-left: 3px solid var(--color-azul) !important;
+        }
+        .detalle-seccion-tareas .detalle-seccion-titulo {
+            color: var(--color-azul);
+            flex-wrap: wrap;
+        }
+        .contador-tareas {
+            font-weight: 400;
+            color: var(--color-texto-secundario);
+            font-size: 11px;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        /* ─────── FIN @CSS-MODALS-DETALLE-TAREAS ─────── */
         /* ─────── FIN @CSS-MODALS-DETALLE ─────── */
 
         /* ─────── @CSS-MODALS-TAREAS-VINCULADAS ─────── */
@@ -3781,7 +3895,76 @@ var DATOS_EMISOR = {
             }, 3500);
         }
         // ─────── FIN @JS-UTILS-FORMATO ───────
+        // ─────── @JS-UTILS-DIFF ───────
+        // Compara dos objetos y devuelve la lista de campos que cambiaron
+        // Uso: calcularDiff(objetoAntes, objetoDespues, { camposIgnorados: ['notas'], etiquetas: {...} })
+        function calcularDiff(antes, despues, opciones) {
+            if (!opciones) opciones = {};
+            const camposIgnorados = opciones.camposIgnorados || [];
+            const etiquetas = opciones.etiquetas || {};
+            const formatters = opciones.formatters || {};
+            const cambios = [];
 
+            // Recorrer todos los campos del objeto "despues"
+            Object.keys(despues).forEach(function(campo) {
+                if (camposIgnorados.indexOf(campo) !== -1) return;
+                if (campo === 'id') return;
+                if (campo === 'fechaRegistro') return;
+                if (campo === 'historialFases') return;
+                if (campo.indexOf('fechaModificacion') !== -1) return;
+                if (campo.indexOf('fechaCreacion') !== -1) return;
+
+                const valorAntes = antes ? antes[campo] : undefined;
+                const valorDespues = despues[campo];
+
+                // Comparar valores (con manejo especial para arrays y objetos)
+                let sonIguales = false;
+                if (Array.isArray(valorAntes) && Array.isArray(valorDespues)) {
+                    sonIguales = JSON.stringify(valorAntes) === JSON.stringify(valorDespues);
+                } else if (valorAntes === valorDespues) {
+                    sonIguales = true;
+                } else if (valorAntes === null && valorDespues === undefined) {
+                    sonIguales = true;
+                } else if (valorAntes === undefined && valorDespues === null) {
+                    sonIguales = true;
+                } else if (valorAntes === '' && valorDespues === undefined) {
+                    sonIguales = true;
+                } else if (valorAntes === undefined && valorDespues === '') {
+                    sonIguales = true;
+                }
+
+                if (!sonIguales) {
+                    let textoAntes = valorAntes;
+                    let textoDespues = valorDespues;
+
+                    // Aplicar formatter si existe
+                    if (formatters[campo]) {
+                        textoAntes = formatters[campo](valorAntes);
+                        textoDespues = formatters[campo](valorDespues);
+                    } else {
+                        if (textoAntes === undefined || textoAntes === null || textoAntes === '') textoAntes = '(vacío)';
+                        if (textoDespues === undefined || textoDespues === null || textoDespues === '') textoDespues = '(vacío)';
+                        if (typeof textoAntes === 'object') textoAntes = JSON.stringify(textoAntes);
+                        if (typeof textoDespues === 'object') textoDespues = JSON.stringify(textoDespues);
+                        // Truncar a 100 caracteres
+                        textoAntes = String(textoAntes);
+                        textoDespues = String(textoDespues);
+                        if (textoAntes.length > 100) textoAntes = textoAntes.substring(0, 100) + '...';
+                        if (textoDespues.length > 100) textoDespues = textoDespues.substring(0, 100) + '...';
+                    }
+
+                    cambios.push({
+                        campo: campo,
+                        label: etiquetas[campo] || campo,
+                        antes: textoAntes,
+                        despues: textoDespues
+                    });
+                }
+            });
+
+            return cambios;
+        }
+        // ─────── FIN @JS-UTILS-DIFF ───────
         // ─────── @JS-UTILS-TELEFONO ───────
         // Normalización de teléfonos para WhatsApp
         function normalizarTelefonoWhatsApp(telefono) {
@@ -3873,14 +4056,16 @@ var DATOS_EMISOR = {
 
         // ─────── @JS-USERS-HISTORIAL ───────
         // Registro de eventos en el historial general
-        function registrarHistorial(entidad, accion, descripcion, meta) {
+               function registrarHistorial(entidad, accion, descripcion, meta) {
             if (!meta) meta = {};
             const evento = {
                 id: generarId(), fecha: obtenerFechaHoraActual(),
                 usuario: usuarioActual ? usuarioActual.nombre : 'Sistema',
                 usuarioUsername: usuarioActual ? usuarioActual.username : 'system',
                 entidad: entidad, accion: accion, descripcion: descripcion,
-                meta: { id: meta.id || null, nombre: meta.nombre || null, detalle: meta.detalle || null }
+                meta: { id: meta.id || null, nombre: meta.nombre || null, detalle: meta.detalle || null },
+                cambios: (meta.cambios && meta.cambios.length > 0) ? meta.cambios : null,
+                cambiosOmitidos: meta.cambiosOmitidos || null
             };
             historial.unshift(evento);
             if (historial.length > MAX_HISTORIAL_MOVIMIENTOS) historial = historial.slice(0, MAX_HISTORIAL_MOVIMIENTOS);
@@ -4278,14 +4463,41 @@ var DATOS_EMISOR = {
                             return;
                         }
 
-                        if (id) {
+                                               if (id) {
                             const idx = lista.findIndex(function(x) { return x.id === id; });
                             if (idx !== -1) {
                                 const ant = lista[idx];
-                                lista[idx] = Object.assign({}, ant, datos);
+                                const copiaAnt = JSON.parse(JSON.stringify(ant));
+                                const fusion = Object.assign({}, ant, datos);
+                                lista[idx] = fusion;
+                                // Calcular diff ignorando notas
+                                const cambios = calcularDiff(copiaAnt, fusion, {
+                                    camposIgnorados: ['notasGenerales', 'descripcion', 'notas'],
+                                    etiquetas: {
+                                        nombre: 'Nombre',
+                                        telefono: 'Teléfono',
+                                        email: 'Email',
+                                        estado: 'Estado',
+                                        precio: 'Precio',
+                                        descuento: 'Descuento',
+                                        vigencia: 'Vigencia'
+                                    },
+                                    formatters: {
+                                        precio: function(v) { return v !== undefined ? formatearMoneda(v) : ''; },
+                                        descuento: function(v) { return v !== undefined ? formatearMoneda(v) : ''; },
+                                        vigencia: function(v) { return v ? formatearFecha(v) : ''; }
+                                    }
+                                });
+                                const camposTexto = ['notasGenerales', 'descripcion'];
+                                const cambioTexto = camposTexto.some(function(c) { return copiaAnt[c] !== fusion[c]; });
                                 registrarHistorial(entidadHistorial, 'editar',
                                     'Se editó ' + titulo.toLowerCase() + ': "' + (datos.nombre || ant.nombre || 'sin nombre') + '"',
-                                    { id: id, nombre: datos.nombre || ant.nombre });
+                                    { 
+                                        id: id, 
+                                        nombre: datos.nombre || ant.nombre,
+                                        cambios: cambios,
+                                        cambiosOmitidos: cambioTexto ? 'Los campos de texto largo (descripción o notas) también cambiaron pero no se registra su contenido.' : null
+                                    });
                             }
                         } else {
                             const nuevo = Object.assign({ id: generarId() }, datos, { fechaRegistro: obtenerFechaActual() });
@@ -4591,14 +4803,30 @@ var DATOS_EMISOR = {
                 const faseActual = document.getElementById('prospecto-fase').value;
                 const notasGenerales = document.getElementById('prospecto-notas').value.trim();
                 if (!nombre || !faseActual) { mostrarNotificacion('Campos obligatorios faltantes', 'warning'); return; }
-                if (ee) {
+                               if (ee) {
                     const idx = prospectos.findIndex(function(p) { return p.id === id; });
                     if (idx !== -1) {
                         const p = prospectos[idx];
+                        const copiaAnt = JSON.parse(JSON.stringify(p));
                         const cf = p.faseActual !== faseActual;
                         if (cf) p.historialFases.push({ fase: faseActual, fecha: obtenerFechaActual(), notas: 'Cambio de fase' });
                         Object.assign(p, { nombre: nombre, telefono: telefono, email: email, faseActual: faseActual, notasGenerales: notasGenerales });
-                        registrarHistorial('prospecto', 'editar', 'Se editó prospecto: "' + nombre + '"', { id: id, nombre: nombre });
+                        const cambios = calcularDiff(copiaAnt, p, {
+                            camposIgnorados: ['notasGenerales', 'historialFases', 'clienteId'],
+                            etiquetas: {
+                                nombre: 'Nombre',
+                                telefono: 'Teléfono',
+                                email: 'Email',
+                                faseActual: 'Fase'
+                            }
+                        });
+                        const cambioTexto = copiaAnt.notasGenerales !== p.notasGenerales;
+                        registrarHistorial('prospecto', 'editar', 'Se editó prospecto: "' + nombre + '"', { 
+                            id: id, 
+                            nombre: nombre,
+                            cambios: cambios,
+                            cambiosOmitidos: cambioTexto ? 'El campo Notas también cambió pero no se registra su contenido.' : null
+                        });
                     }
                 } else {
                     const nuevo = { id: generarId(), nombre: nombre, telefono: telefono, email: email, faseActual: faseActual, historialFases: [{ fase: faseActual, fecha: obtenerFechaActual(), notas: 'Registro inicial' }], notasGenerales: notasGenerales, clienteId: null, fechaRegistro: obtenerFechaActual() };
@@ -5079,15 +5307,36 @@ var DATOS_EMISOR = {
                 const not = document.getElementById('tarea-notas').value.trim();
                 const comp = document.getElementById('tarea-completada').checked;
                 if (!tipo || !fecha || !desc) { mostrarNotificacion('Campos obligatorios faltantes', 'warning'); return; }
-                if (ee2) {
+                               if (ee2) {
                     const idx = tareas.findIndex(function(t) { return t.id === id; });
                     if (idx !== -1) {
                         const prev = tareas[idx];
+                        const copiaAnt = JSON.parse(JSON.stringify(prev));
                         const ta = Object.assign({}, prev, { tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, fechaModificacion: obtenerFechaHoraActual() });
                         if (comp && !prev.fechaCompletada) ta.fechaCompletada = obtenerFechaHoraActual();
                         else if (!comp) ta.fechaCompletada = null;
                         tareas[idx] = ta;
-                        registrarHistorial('tarea', 'editar', 'Se editó tarea: "' + tipo + '"', { id: id, nombre: tipo });
+                        const cambios = calcularDiff(copiaAnt, ta, {
+                            camposIgnorados: ['descripcion', 'notas', 'fechaModificacion', 'fechaCompletada'],
+                            etiquetas: {
+                                tipo: 'Tipo',
+                                clienteId: 'Cliente vinculado',
+                                fecha: 'Fecha programada',
+                                completada: 'Completada'
+                            },
+                            formatters: {
+                                clienteId: function(v) { return v ? obtenerNombreCliente(v) : '(sin vincular)'; },
+                                fecha: function(v) { return v ? formatearFecha(v) : ''; },
+                                completada: function(v) { return v ? 'Sí' : 'No'; }
+                            }
+                        });
+                        const cambioTexto = copiaAnt.descripcion !== ta.descripcion || copiaAnt.notas !== ta.notas;
+                        registrarHistorial('tarea', 'editar', 'Se editó tarea: "' + tipo + '"', { 
+                            id: id, 
+                            nombre: tipo,
+                            cambios: cambios,
+                            cambiosOmitidos: cambioTexto ? 'Los campos Descripción o Notas también cambiaron pero no se registra su contenido.' : null
+                        });
                     }
                 } else {
                     const nt = { id: generarId(), tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, fechaCreacion: obtenerFechaHoraActual(), fechaModificacion: obtenerFechaHoraActual(), creadaPor: nombreUsuarioActual() };
@@ -5993,16 +6242,57 @@ var DATOS_EMISOR = {
                 estado: est
             };
 
-            if (ee) {
+                       if (ee) {
                 const idx = c.contratos.findIndex(function(x) { return x.id === ci; });
-                if (idx !== -1) c.contratos[idx] = nc;
-                registrarHistorial('contrato', 'editar', 'Se editó contrato de "' + c.nombre + '"', { id: ci, nombre: c.nombre });
+                if (idx !== -1) {
+                    const contratoAnt = JSON.parse(JSON.stringify(c.contratos[idx]));
+                    c.contratos[idx] = nc;
+                    // Calcular diff ignorando arrays grandes y notas
+                    const cambios = calcularDiff(contratoAnt, nc, {
+                        camposIgnorados: ['notas', 'pagos', 'cargos', 'id', 'fechaContrato'],
+                        etiquetas: {
+                            tipo: 'Tipo',
+                            festejado: 'Festejado',
+                            paqueteId: 'Paquete',
+                            servicioId: 'Servicio',
+                            serviciosIds: 'Servicios adicionales',
+                            fechaEvento: 'Fecha del evento',
+                            horaEvento: 'Hora del evento',
+                            direccionEvento: 'Dirección evento',
+                            direccionRecepcion: 'Dirección recepción',
+                            horaRecepcion: 'Hora recepción',
+                            precioBase: 'Precio base',
+                            precioFinal: 'Precio final',
+                            descuentoMonto: 'Descuento (monto)',
+                            descuentoDescripcion: 'Descuento (descripción)',
+                            estado: 'Estado'
+                        },
+                        formatters: {
+                            paqueteId: function(v) { return v ? obtenerNombrePaquete(v) : '(ninguno)'; },
+                            servicioId: function(v) { return v ? obtenerNombreServicio(v) : '(ninguno)'; },
+                            serviciosIds: function(v) {
+                                if (!Array.isArray(v) || v.length === 0) return '(ninguno)';
+                                return v.map(function(id) { return obtenerNombreServicio(id); }).join(', ');
+                            },
+                            fechaEvento: function(v) { return v ? formatearFecha(v) : ''; },
+                            precioBase: function(v) { return v !== undefined ? formatearMoneda(v) : ''; },
+                            precioFinal: function(v) { return v !== undefined ? formatearMoneda(v) : ''; },
+                            descuentoMonto: function(v) { return v !== undefined ? formatearMoneda(v) : ''; }
+                        }
+                    });
+                    const cambioTexto = contratoAnt.notas !== nc.notas;
+                    registrarHistorial('contrato', 'editar', 'Se editó contrato de "' + c.nombre + '"', { 
+                        id: ci, 
+                        nombre: c.nombre,
+                        cambios: cambios,
+                        cambiosOmitidos: cambioTexto ? 'El campo Notas también cambió pero no se registra su contenido.' : null
+                    });
+                }
             } else {
                 if (!c.contratos) c.contratos = [];
                 c.contratos.push(nc);
                 registrarHistorial('contrato', 'crear', 'Se creó contrato para "' + c.nombre + '"', { id: nc.id, nombre: c.nombre });
             }
-
             if (pagosRecientes) {
                 pagosRecientes.forEach(function(p) {
                     if (p.eliminado) return;
@@ -6226,13 +6516,19 @@ var DATOS_EMISOR = {
                 '</div></div>' +
                 '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-coins"></i> Pagos (' + tot.pagosValidos.length + ')</div>' +
                 '<div class="detalle-lista">' + pagosHTML + '</div></div>' +
-                cargosHTML +
-                (contrato.notas ? '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas</div><div class="detalle-notas">' + contrato.notas + '</div></div>' : '');
+                               cargosHTML +
+             (contrato.notas ? '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas</div><div class="detalle-notas">' + contrato.notas + '</div></div>' : '') +
+                tareasHTML;
 
-                      // ─── Decidir modal vs panel según dispositivo ───
+            // ─── Decidir modal vs panel según dispositivo ───
             const esMobil = window.innerWidth <= 768;
             if (esMobil) {
                 abrirModal('Detalle del contrato', html, true);
+            } else {
+                abrirPanelLateral('Detalle del contrato', html);
+                marcarContratoSeleccionado(contratoId);
+            }
+        }
             } else {
                 abrirPanelLateral('Detalle del contrato', html);
                 marcarContratoSeleccionado(contratoId);
@@ -7124,12 +7420,42 @@ var DATOS_EMISOR = {
                 if (info) info.textContent = 'Mostrando 0 de ' + historial.length;
                 return;
             }
-            const am = historialVerTodos ? ev : ev.slice(0, 20);
+                       const am = historialVerTodos ? ev : ev.slice(0, 20);
             lista.innerHTML = am.map(function(e) {
                 const ac = 'accion-' + e.accion;
+                const eventId = e.id || (e.fecha + '_' + Math.random().toString(36).substr(2, 5));
+
+                // ─── Badge de cambios (si aplica) ───
+                let badgeCambios = '';
+                if (e.cambios && e.cambios.length > 0) {
+                    const nCambios = e.cambios.length;
+                    badgeCambios = '<span class="badge-cambios" data-evento-id="' + eventId + '" onclick="toggleCambiosHistorial(\'' + eventId + '\')">' +
+                        '<i class="fas fa-chevron-right"></i> ' + nCambios + ' cambio' + (nCambios === 1 ? '' : 's') +
+                        '</span>';
+                }
+
+                // ─── Lista de cambios (oculta por defecto) ───
+                let listaCambios = '';
+                if (e.cambios && e.cambios.length > 0) {
+                    const filas = e.cambios.map(function(c) {
+                        return '<div class="cambio-fila">' +
+                            '<span class="cambio-campo">' + c.label + ':</span>' +
+                            '<div class="cambio-valores">' +
+                            '<span class="cambio-antes">' + c.antes + '</span>' +
+                            '<span class="cambio-flecha">→</span>' +
+                            '<span class="cambio-despues">' + c.despues + '</span>' +
+                            '</div></div>';
+                    }).join('');
+                    const notaOmitidos = e.cambiosOmitidos 
+                        ? '<div class="cambio-nota"><i class="fas fa-info-circle"></i> ' + e.cambiosOmitidos + '</div>' 
+                        : '';
+                    listaCambios = '<div class="cambios-lista" id="cambios-' + eventId + '">' + filas + notaOmitidos + '</div>';
+                }
+
                 return '<div class="historial-item ' + ac + '"><div class="historial-item-contenido">' +
-                    '<div class="historial-item-titulo">' + (e.entidad || '') + ' <span class="badge-accion ' + e.accion + '">' + e.accion + '</span></div>' +
+                    '<div class="historial-item-titulo">' + (e.entidad || '') + ' <span class="badge-accion ' + e.accion + '">' + e.accion + '</span>' + badgeCambios + '</div>' +
                     '<div class="historial-item-detalle">' + (e.descripcion || '') + '</div>' +
+                    listaCambios +
                     '<div class="historial-item-meta"><span>' + formatearFechaHora(e.fecha) + '</span><span>' + (e.usuario || 'Sistema') + '</span></div>' +
                     '</div></div>';
             }).join('');
@@ -7139,6 +7465,21 @@ var DATOS_EMISOR = {
 
         // ─────── @JS-HISTORIAL-BOTON-VER-TODOS ───────
         // Alterna el texto del botón "Ver todos / Ver últimos 20"
+                // ─────── @JS-HISTORIAL-TOGGLE-CAMBIOS ───────
+        // Expande o colapsa la lista de cambios de un evento
+        function toggleCambiosHistorial(eventoId) {
+            const lista = document.getElementById('cambios-' + eventoId);
+            const badge = document.querySelector('.badge-cambios[data-evento-id="' + eventoId + '"]');
+            if (!lista) return;
+            if (lista.classList.contains('abierto')) {
+                lista.classList.remove('abierto');
+                if (badge) badge.classList.remove('abierto');
+            } else {
+                lista.classList.add('abierto');
+                if (badge) badge.classList.add('abierto');
+            }
+        }
+        // ─────── FIN @JS-HISTORIAL-TOGGLE-CAMBIOS ───────
         function actualizarBotonHistorial() {
             const b = document.getElementById('historial-toggle-ver-todos'); if (!b) return;
             b.innerHTML = historialVerTodos ? 'Ver solo los últimos 20' : 'Ver todos los movimientos';
@@ -7385,6 +7726,51 @@ var DATOS_EMISOR = {
                     }).join('') +
                     '</tbody></table></div>';
             }
+                        // ─── Tareas vinculadas al cliente ───
+            const tareasCliente = tareas.filter(function(t) { return t.clienteId === clienteId; });
+            let tareasHTML = '';
+            if (tareasCliente.length > 0) {
+                const completadas = tareasCliente.filter(function(t) { return t.completada; }).length;
+                const pendientes = tareasCliente.length - completadas;
+                // Ordenar: pendientes primero, luego por fecha descendente
+                const tareasOrdenadas = tareasCliente.slice().sort(function(a, b) {
+                    if (a.completada !== b.completada) return a.completada ? 1 : -1;
+                    return (b.fecha || '').localeCompare(a.fecha || '');
+                });
+                const filasTareas = tareasOrdenadas.map(function(t) {
+                    const cl = t.completada ? 'tarea-completada' : 'tarea-pendiente';
+                    const fechaProg = formatearFecha(t.fecha);
+                    const fechaCreacion = t.fechaCreacion ? formatearFechaHora(t.fechaCreacion) : '—';
+                    const fechaCompletada = t.fechaCompletada ? formatearFechaHora(t.fechaCompletada) : null;
+                    return '<div class="tarea-vinculada ' + cl + '">' +
+                        '<div class="tarea-check">' +
+                            '<input type="checkbox" ' + (t.completada ? 'checked' : '') + 
+                                ' onchange="toggleTareaDesdeDetalle(\'' + t.id + '\', this.checked)">' +
+                        '</div>' +
+                        '<div class="tarea-info">' +
+                            '<div class="tarea-tipo">' + (t.tipo || 'Tarea') + '</div>' +
+                            '<div class="tarea-desc">' + (t.descripcion || 'Sin descripción') + '</div>' +
+                            (t.notas ? '<div class="tarea-notas"><i class="fas fa-sticky-note"></i> ' + t.notas + '</div>' : '') +
+                            '<div class="tarea-fechas">' +
+                                '<span><i class="fas fa-calendar-plus"></i> Creada: ' + fechaCreacion + '</span>' +
+                                '<span><i class="fas fa-calendar-check"></i> Programada: ' + fechaProg + '</span>' +
+                                (fechaCompletada ? '<span style="color:var(--color-verde);"><i class="fas fa-check-circle"></i> Completada: ' + fechaCompletada + '</span>' : '') +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="tarea-acciones">' +
+                            '<button onclick="cerrarModal(); cerrarPanelLateral(); editarTarea(\'' + t.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button onclick="cerrarModal(); cerrarPanelLateral(); eliminarTarea(\'' + t.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+                tareasHTML = '<div class="detalle-seccion detalle-seccion-tareas">' +
+                    '<div class="detalle-seccion-titulo">' +
+                        '<i class="fas fa-tasks"></i> Tareas del cliente (' + tareasCliente.length + ')' +
+                        ' <span class="contador-tareas">· ' + pendientes + ' pendiente' + (pendientes === 1 ? '' : 's') + ' · ' + completadas + ' completada' + (completadas === 1 ? '' : 's') + '</span>' +
+                    '</div>' +
+                    '<div class="tareas-lista">' + filasTareas + '</div>' +
+                '</div>';
+            }       
 
             // ─── Bloque de descuento (si hay) ───
             let descuentoFila = '';
