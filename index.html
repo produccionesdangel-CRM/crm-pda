@@ -6520,14 +6520,10 @@ var DATOS_EMISOR = {
              (contrato.notas ? '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas</div><div class="detalle-notas">' + contrato.notas + '</div></div>' : '') +
                 tareasHTML;
 
-            // ─── Decidir modal vs panel según dispositivo ───
+                     // ─── Decidir modal vs panel según dispositivo ───
             const esMobil = window.innerWidth <= 768;
             if (esMobil) {
                 abrirModal('Detalle del contrato', html, true);
-            } else {
-                abrirPanelLateral('Detalle del contrato', html);
-                marcarContratoSeleccionado(contratoId);
-            }
             } else {
                 abrirPanelLateral('Detalle del contrato', html);
                 marcarContratoSeleccionado(contratoId);
