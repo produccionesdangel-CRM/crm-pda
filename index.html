@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ╔══════════════════════════════════════════════════════════════════════╗
-║  REGISTRO PDA — v4.0                                                 ║
+║  REGISTRO PDA — v4.4                                                 ║
 ║  Estudio Fotográfico · JFR MEDIA                                     ║
 ║                                                                      ║
 ║  ─────────────────────────────────────────────────────────────────   ║
@@ -57,7 +57,7 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Registro PDA v4.3 - Estudio Fotografía</title>
+    <title>Registro PDA v4.4 - Estudio Fotografía</title>
     <link rel="icon" type="image/jpeg" href="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -942,6 +942,289 @@
         .config-boton.exportar i { background-color: var(--color-naranja); }
         .config-boton.importar i { background-color: var(--color-morado); }
         .config-boton.peligro i { background-color: var(--color-rojo); }
+        /* ─────── @CSS-SECTIONS-PAPELERA ─────── */
+        .papelera-card {
+            background-color: var(--color-bg-secundario);
+            border: 1px solid var(--color-borde);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            margin-top: 24px;
+        }
+        .papelera-card h3 {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--color-texto-primario);
+            margin: 0 0 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .papelera-card h3 i { color: var(--color-rojo); }
+        .papelera-card .config-descripcion {
+            font-size: 13px;
+            color: var(--color-texto-secundario);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .papelera-card .config-descripcion strong {
+            color: var(--color-texto-primario);
+        }
+
+        /* Aviso de retención */
+        .papelera-aviso {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background-color: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--color-amarillo);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--color-texto-primario);
+        }
+        .papelera-aviso i {
+            color: var(--color-amarillo);
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        /* Stats de papelera */
+        .papelera-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .papelera-stat {
+            background-color: var(--color-bg-terciario);
+            padding: 10px 14px;
+            border-radius: var(--border-radius);
+            border-left: 3px solid var(--color-rojo);
+        }
+        .papelera-stat .lbl {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--color-texto-secundario);
+            font-weight: 600;
+        }
+        .papelera-stat .val {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-texto-primario);
+            margin-top: 2px;
+        }
+
+        /* Botones superiores */
+        .papelera-acciones-top {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .btn-papelera-vaciar {
+            background-color: transparent;
+            color: var(--color-rojo);
+            border: 1px solid var(--color-rojo);
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-papelera-vaciar:hover {
+            background-color: var(--color-rojo);
+            color: #ffffff;
+        }
+
+        /* Filtros de papelera */
+        .papelera-filtros {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            background-color: var(--color-bg-terciario);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-borde);
+            align-items: flex-end;
+        }
+        .papelera-filtros .filtro-grupo { min-width: 140px; flex: 0 1 auto; }
+
+        /* Lista de la papelera */
+        .papelera-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .papelera-item {
+            display: flex;
+            gap: 12px;
+            padding: 14px 16px;
+            background-color: var(--color-bg-primario);
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--color-rojo);
+            border-top: 1px solid var(--color-borde-suave);
+            border-right: 1px solid var(--color-borde-suave);
+            border-bottom: 1px solid var(--color-borde-suave);
+            transition: all 0.2s ease;
+        }
+        .papelera-item:hover { background-color: var(--color-bg-terciario); }
+        .papelera-item.papelera-proxima-expirar { border-left-color: var(--color-naranja); }
+
+        .papelera-item-icono {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--color-rojo);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .papelera-item.papelera-proxima-expirar .papelera-item-icono {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: var(--color-naranja);
+        }
+
+        .papelera-item-contenido {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .papelera-item-titulo {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-texto-primario);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+        .badge-tipo-papelera {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background-color: rgba(107, 85, 128, 0.15);
+            color: var(--color-texto-secundario);
+        }
+        .papelera-item-detalle {
+            font-size: 13px;
+            color: var(--color-texto-secundario);
+            line-height: 1.5;
+            word-break: break-word;
+        }
+        .papelera-item-detalle strong { color: var(--color-texto-primario); }
+        .papelera-item-motivo {
+            font-size: 12px;
+            color: var(--color-texto-secundario);
+            font-style: italic;
+            padding: 4px 8px;
+            background-color: var(--color-bg-terciario);
+            border-radius: 4px;
+            margin-top: 2px;
+        }
+        .papelera-item-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 11.5px;
+            color: var(--color-texto-secundario);
+            margin-top: 4px;
+        }
+        .papelera-item-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .papelera-item-meta .dias-restantes {
+            color: var(--color-naranja);
+            font-weight: 600;
+        }
+        .papelera-item-meta .dias-restantes.urgente {
+            color: var(--color-rojo);
+            font-weight: 700;
+        }
+
+        .papelera-item-acciones {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .btn-papelera-restaurar {
+            background-color: var(--color-verde);
+            color: #ffffff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        .btn-papelera-restaurar:hover { filter: brightness(1.1); }
+
+        .btn-papelera-eliminar {
+            background: none;
+            border: 1px solid var(--color-rojo);
+            color: var(--color-rojo);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        .btn-papelera-eliminar:hover {
+            background-color: var(--color-rojo);
+            color: #ffffff;
+        }
+
+        .papelera-vacia {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--color-texto-secundario);
+        }
+        .papelera-vacia i {
+            font-size: 48px;
+            opacity: 0.3;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .papelera-vacia p { font-size: 14px; }
+
+        .papelera-info {
+            font-size: 12px;
+            color: var(--color-texto-secundario);
+            text-align: right;
+            margin-top: 12px;
+        }
+        /* ─────── FIN @CSS-SECTIONS-PAPELERA ─────── */
         /* ─────── FIN @CSS-SECTIONS-CONFIG ─────── */
 
         /* ─────── @CSS-SECTIONS-USUARIOS-LISTA ─────── */
@@ -2917,7 +3200,7 @@
             <!-- ─────── FIN @HTML-LOGIN-PASO-NUEVO-PIN ─────── -->
             
             <div class="login-footer">
-                v4.3 · Software diseñado por <strong>JFR MEDIA</strong><br>
+                v4.4 · Software diseñado por <strong>JFR MEDIA</strong><br>
                 Acceso restringido a personal autorizado
             </div>
         </div>
@@ -2957,7 +3240,7 @@
             <div class="sidebar-footer">
                 <button class="btn-colapsar" id="btn-colapsar" title="Colapsar menú"><i class="fas fa-chevron-left"></i><span>Colapsar</span></button>
                 <button class="btn-logout" id="btn-logout" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></button>
-                <div class="version">v4.3</div>
+                <div class="version">v4.4</div>
             </div>
         </nav>
         <!-- ─────── FIN @HTML-SIDEBAR ─────── -->
@@ -3274,6 +3557,60 @@
                 <!-- ─────── FIN @HTML-CONFIG-GESTION-USUARIOS ─────── -->
 
                 <!-- ─────── @HTML-CONFIG-HISTORIAL ─────── -->
+                <!-- ─────── @HTML-CONFIG-PAPELERA ─────── -->
+                <div class="papelera-card" id="papelera-card" style="display:none;">
+                    <h3><i class="fas fa-trash-alt"></i> Papelera de reciclaje</h3>
+                    <p class="config-descripcion">
+                        Los elementos eliminados se conservan aquí por <strong>30 días</strong>. 
+                        Puedes restaurarlos para recuperarlos o eliminarlos definitivamente antes de ese plazo.
+                    </p>
+
+                    <div class="papelera-aviso">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Los elementos se purgan automáticamente después de 30 días. Verifica periódicamente si necesitas conservar alguno.</span>
+                    </div>
+
+                    <div class="papelera-stats" id="papelera-stats"></div>
+
+                    <div class="papelera-acciones-top">
+                        <button class="btn-secundario" id="btn-purgar-vencidos">
+                            <i class="fas fa-broom"></i> Purgar vencidos
+                        </button>
+                        <button class="btn-papelera-vaciar" id="btn-vaciar-papelera">
+                            <i class="fas fa-trash"></i> Vaciar toda la papelera
+                        </button>
+                    </div>
+
+                    <div class="papelera-filtros">
+                        <div class="filtro-grupo">
+                            <label>Tipo de elemento</label>
+                            <select id="papelera-filtro-tipo">
+                                <option value="todos">Todos</option>
+                                <option value="cliente">Clientes</option>
+                                <option value="contrato">Contratos</option>
+                                <option value="prospecto">Prospectos</option>
+                                <option value="tarea">Tareas</option>
+                                <option value="usuario">Usuarios</option>
+                                <option value="paquete">Paquetes</option>
+                                <option value="servicio">Servicios</option>
+                            </select>
+                        </div>
+                        <div class="filtro-grupo">
+                            <label>Eliminado por</label>
+                            <input type="text" id="papelera-filtro-usuario" placeholder="Nombre...">
+                        </div>
+                        <div class="filtro-grupo">
+                            <label>Buscar</label>
+                            <input type="text" id="papelera-filtro-buscar" placeholder="Texto libre...">
+                        </div>
+                        <button class="btn-limpiar" id="papelera-limpiar-filtros"><i class="fas fa-undo"></i> Limpiar</button>
+                    </div>
+
+                    <div class="papelera-lista" id="papelera-lista"></div>
+                    <div class="papelera-info" id="papelera-info"></div>
+                </div>
+                <!-- ─────── FIN @HTML-CONFIG-PAPELERA ─────── -->
+
                 <div class="historial-card">
                     <h3><i class="fas fa-history"></i> Historial de actividad</h3>
                     <p class="config-descripcion">Consulta todos los movimientos. Cada evento registra al usuario que lo realizó.</p>
@@ -3320,12 +3657,47 @@
 
                 <!-- ─────── @HTML-CONFIG-VERSION-CARD ─────── -->
                                <div class="version-card">
-                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v4.3</span></h3>
+                                       <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v4.4</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">4.3</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">4.4</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
+                    </div>
+                    <div class="changelog-section">
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v4.4)</h4>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-trash-alt"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Papelera de reciclaje</div>
+                                <div class="changelog-desc">
+                                    Todos los elementos eliminados (clientes, contratos, prospectos, tareas, paquetes y servicios)
+                                    ahora se mueven a una papelera en lugar de borrarse. Los elementos permanecen 30 días
+                                    y luego se purgan automáticamente. Solo el administrador puede ver y gestionar la papelera.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-undo"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Restaurar y eliminar definitivamente</div>
+                                <div class="changelog-desc">
+                                    Cada elemento de la papelera se puede restaurar a su sección original o eliminarse
+                                    definitivamente. Al eliminar algo se guarda quién lo hizo, cuándo y el motivo opcional.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-broom"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Purga automática</div>
+                                <div class="changelog-desc">
+                                    Cada vez que se abre el CRM se verifican los elementos de la papelera y se eliminan
+                                    automáticamente los que cumplieron los 30 días de retención. También hay un botón para
+                                    forzar la purga manualmente.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                                                        <div class="changelog-section">
                         <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v4.3)</h4>
@@ -3480,7 +3852,7 @@
         /* ═══════════════════════════════════════════════════════════ */
 
         // ─────── @JS-CONFIG-VERSION ───────
-        var VERSION = '4.3';
+        var VERSION = '4.4';
         // ─────── FIN @JS-CONFIG-VERSION ───────
 
         // ─────── @JS-CONFIG-CONSTANTES ───────
@@ -3505,6 +3877,8 @@ var DATOS_EMISOR = {
         var TIPOS_TAREA = ['Llamar', 'Enviar mensaje', 'Confirmar', 'Resolver dudas', 'Sesión de fotos', 'Visita', 'Escoger fotos', 'Recoger material', 'Entrega de fotos', 'Otro'];
         var MAX_HISTORIAL_MOVIMIENTOS = 2000;
         var DURACION_SESION_MS = 12 * 60 * 60 * 1000;
+        var DIAS_RETENCION_PAPELERA = 30;
+        var MAX_PAPELERA = 500;
         // ─────── FIN @JS-CONFIG-CONSTANTES ───────
 
         // ─────── @JS-CONFIG-FIREBASE-CREDENTIALS ───────
@@ -3583,6 +3957,7 @@ var DATOS_EMISOR = {
                     tareas: tareas,
                     historial: historial,
                     usuarios: usuarios,
+                    papelera: papelera,
                     ultimaActualizacion: ahora,
                     ultimoUsuario: usuarioActual.nombre,
                     version: VERSION
@@ -3616,6 +3991,7 @@ var DATOS_EMISOR = {
                     if (datos.clientes) clientes = datos.clientes;
                     if (datos.tareas) tareas = datos.tareas;
                     if (datos.historial) historial = datos.historial;
+                    if (datos.papelera) papelera = datos.papelera;
                     if (datos.usuarios && datos.usuarios.length > 0) {
                         const fusionados = datos.usuarios.slice();
                         usuarios.forEach(function(lu) {
@@ -3661,6 +4037,7 @@ var DATOS_EMISOR = {
                         if (datos.clientes) clientes = datos.clientes;
                         if (datos.tareas) tareas = datos.tareas;
                         if (datos.historial) historial = datos.historial;
+                        if (datos.papelera) papelera = datos.papelera;
                         ultimaActualizacionRemota = remoto;
                         guardarDatosLocal();
                         renderizarTodo();
@@ -3720,6 +4097,7 @@ var DATOS_EMISOR = {
         var tareas = [];
         var historial = [];
         var usuarios = [];
+        var papelera = [];
         // ─────── FIN @JS-STATE-COLLECTIONS ───────
 
         // ─────── @JS-STATE-SYNC ───────
@@ -3977,6 +4355,110 @@ var DATOS_EMISOR = {
             if (limpio.length > 13) return null;
             return limpio;
         }
+        // ─────── @JS-UTILS-PAPELERA ───────
+        // Funciones de soft delete: mueven elementos a la papelera en vez de borrarlos
+        
+        // Agrega un elemento a la papelera con metadata
+        function agregarAPapelera(tipo, item, motivo) {
+            const ahora = new Date();
+            const expira = new Date(ahora.getTime() + (DIAS_RETENCION_PAPELERA * 24 * 60 * 60 * 1000));
+            const entrada = {
+                id: 'pap_' + generarId(),
+                tipo: tipo, // 'cliente', 'contrato', 'prospecto', 'tarea', 'usuario', 'paquete', 'servicio'
+                item: JSON.parse(JSON.stringify(item)), // copia profunda para evitar referencias
+                fechaEliminacion: formatearFechaHoraLocal(ahora),
+                fechaExpiracion: formatearFechaHoraLocal(expira),
+                eliminadoPor: nombreUsuarioActual(),
+                eliminadoPorUsername: usuarioActual ? usuarioActual.username : 'system',
+                motivo: motivo || '(sin motivo especificado)',
+                contexto: {}
+            };
+            papelera.unshift(entrada);
+            if (papelera.length > MAX_PAPELERA) papelera = papelera.slice(0, MAX_PAPELERA);
+        }
+
+        // Purga los elementos que ya cumplieron los días de retención
+        function purgarPapeleraVencida(silencioso) {
+            const ahora = new Date();
+            const antes = papelera.length;
+            const purgados = [];
+            papelera = papelera.filter(function(entrada) {
+                if (!entrada.fechaExpiracion) return true;
+                const expira = new Date(entrada.fechaExpiracion.replace(' ', 'T'));
+                if (ahora > expira) {
+                    purgados.push(entrada);
+                    return false;
+                }
+                return true;
+            });
+            const cantidad = antes - papelera.length;
+            if (cantidad > 0 && !silencioso) {
+                registrarHistorial('papelera', 'eliminar', 'Se purgaron ' + cantidad + ' elemento' + (cantidad === 1 ? '' : 's') + ' vencido' + (cantidad === 1 ? '' : 's') + ' de la papelera', { id: null, nombre: null });
+                mostrarNotificacion('Se purgaron ' + cantidad + ' elemento' + (cantidad === 1 ? '' : 's') + ' vencido' + (cantidad === 1 ? '' : 's'), 'info');
+            }
+            return cantidad;
+        }
+
+        // Calcula los días restantes antes de que expire una entrada
+        function diasRestantesPapelera(entrada) {
+            if (!entrada.fechaExpiracion) return DIAS_RETENCION_PAPELERA;
+            const expira = new Date(entrada.fechaExpiracion.replace(' ', 'T'));
+            const ahora = new Date();
+            const diff = expira - ahora;
+            const dias = Math.ceil(diff / (24 * 60 * 60 * 1000));
+            return Math.max(0, dias);
+        }
+
+        // Etiqueta legible por tipo de entidad
+        function etiquetaTipoPapelera(tipo) {
+            const etiquetas = {
+                cliente: 'Cliente',
+                contrato: 'Contrato',
+                prospecto: 'Prospecto',
+                tarea: 'Tarea',
+                usuario: 'Usuario',
+                paquete: 'Paquete',
+                servicio: 'Servicio'
+            };
+            return etiquetas[tipo] || tipo;
+        }
+
+        // Ícono por tipo
+        function iconoTipoPapelera(tipo) {
+            const iconos = {
+                cliente: 'fa-user',
+                contrato: 'fa-file-contract',
+                prospecto: 'fa-users',
+                tarea: 'fa-tasks',
+                usuario: 'fa-user-cog',
+                paquete: 'fa-box',
+                servicio: 'fa-tools'
+            };
+            return iconos[tipo] || 'fa-archive';
+        }
+
+        // Describe un item de la papelera para mostrarlo en la lista
+        function describirItemPapelera(entrada) {
+            const it = entrada.item;
+            switch (entrada.tipo) {
+                case 'cliente':
+                    return '<strong>' + (it.nombre || 'Sin nombre') + '</strong> · Tel: ' + (it.telefono || 'N/A') + ' · ' + ((it.contratos || []).length) + ' contrato(s)';
+                case 'contrato':
+                    return 'Festejado: <strong>' + (it.festejado || 'Sin festejado') + '</strong> · ' + (it.tipo === 'paquete' ? 'Paquete' : 'Solo Servicio') + ' · ' + formatearMoneda(it.precioFinal || 0);
+                case 'prospecto':
+                    return '<strong>' + (it.nombre || 'Sin nombre') + '</strong> · Fase: ' + (it.faseActual || 'N/A');
+                case 'tarea':
+                    return '<strong>' + (it.tipo || 'Tarea') + '</strong> · ' + (it.descripcion || 'Sin descripción');
+                case 'usuario':
+                    return '<strong>' + (it.nombre || 'Sin nombre') + '</strong> · Usuario: ' + (it.username || 'N/A') + ' · Rol: ' + (it.rol || 'N/A');
+                case 'paquete':
+                case 'servicio':
+                    return '<strong>' + (it.nombre || 'Sin nombre') + '</strong> · ' + formatearMoneda(it.precio || 0);
+                default:
+                    return it.nombre || 'Elemento';
+            }
+        }
+        // ─────── FIN @JS-UTILS-PAPELERA ───────
         // ─────── FIN @JS-UTILS-TELEFONO ───────
 
         /* ═══════════════════════════════════════════════════════════ */
@@ -4175,6 +4657,7 @@ var DATOS_EMISOR = {
                 localStorage.setItem('tareas', JSON.stringify(tareas || []));
                 localStorage.setItem('historial', JSON.stringify(historial || []));
                 localStorage.setItem('usuarios', JSON.stringify(usuarios || []));
+                localStorage.setItem('papelera', JSON.stringify(papelera || []));
             } catch (error) {
                 console.error('Error guardando:', error);
                 if (error.name === 'QuotaExceededError') mostrarNotificacion('Almacenamiento lleno', 'error');
@@ -4192,6 +4675,7 @@ var DATOS_EMISOR = {
                 tareas = JSON.parse(localStorage.getItem('tareas')) || [];
                 historial = JSON.parse(localStorage.getItem('historial')) || [];
                 usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+                papelera = JSON.parse(localStorage.getItem('papelera')) || [];
             } catch (error) { console.error('Error cargando:', error); }
         }
         // ─────── FIN @JS-PERSIST-CARGAR-LOCAL ───────
@@ -4277,6 +4761,41 @@ var DATOS_EMISOR = {
                 if (typeof onConfirmar === 'function') onConfirmar();
             });
         }
+        // ─────── @JS-UI-CONFIRMAR-ACCION ───────
+        // Modal de confirmación para acciones NO destructivas (restaurar, aplicar, etc.)
+        function confirmarAccion(opciones) {
+            const titulo = opciones.titulo || 'Confirmar acción';
+            const entidad = opciones.entidad || 'elemento';
+            const nombre = opciones.nombre || '';
+            const detalle = opciones.detalle || '';
+            const textoConfirmar = opciones.textoConfirmar || 'Confirmar';
+            const icono = opciones.icono || 'fa-check-circle';
+            const colorBoton = opciones.colorBoton || 'btn-primario';
+            const onConfirmar = opciones.onConfirmar;
+            let detalleHTML = '';
+            if (nombre || detalle) {
+                detalleHTML = '<div class="detalle-entidad">';
+                if (nombre) detalleHTML += '<div><strong>' + nombre + '</strong></div>';
+                if (detalle) detalleHTML += '<div>' + detalle + '</div>';
+                detalleHTML += '</div>';
+            }
+            const html = '<div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:8px;background-color:var(--color-bg-terciario);border-left:4px solid var(--color-acento);margin-bottom:16px;">' +
+                '<i class="fas ' + icono + '" style="color:var(--color-acento);font-size:20px;flex-shrink:0;margin-top:2px;"></i>' +
+                '<div style="flex:1;font-size:13px;line-height:1.5;color:var(--color-texto-primario);">' +
+                '<strong style="display:block;margin-bottom:4px;font-size:14px;">' + titulo + '</strong>' +
+                'El ' + entidad + ' será restaurado a su sección correspondiente.' + detalleHTML +
+                '</div></div>' +
+                '<div class="form-acciones">' +
+                '<button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button>' +
+                '<button type="button" class="' + colorBoton + '" id="btn-confirmar-accion"><i class="fas ' + icono + '"></i> ' + textoConfirmar + '</button>' +
+                '</div>';
+            abrirModal(titulo, html);
+            document.getElementById('btn-confirmar-accion').addEventListener('click', function() {
+                cerrarModal();
+                if (typeof onConfirmar === 'function') onConfirmar();
+            });
+        }
+        // ─────── FIN @JS-UI-CONFIRMAR-ACCION ───────
         // ─────── FIN @JS-UI-CONFIRMAR-ELIMINAR ───────
 
         // ─────── @JS-UI-TEMA-APLICAR ───────
@@ -4536,7 +5055,7 @@ var DATOS_EMISOR = {
                     if (item) mostrarFormulario(item);
                     else mostrarNotificacion('Registro no encontrado', 'warning');
                 },
-                eliminar: function(id) {
+                               eliminar: function(id) {
                     if (soloAdmin && !esAdmin()) {
                         mostrarNotificacion('Solo administradores pueden eliminar ' + titulo.toLowerCase() + 's.', 'warning');
                         return;
@@ -4545,21 +5064,40 @@ var DATOS_EMISOR = {
                     if (!Array.isArray(lista)) return;
                     const item = lista.find(function(x) { return x.id === id; });
                     if (!item) return;
-                    confirmarEliminacion({
-                        titulo: 'Eliminar ' + titulo.toLowerCase(),
-                        entidad: titulo.toLowerCase(),
-                        nombre: item.nombre || 'Sin nombre',
-                        detalle: item.descripcion || '',
-                        onConfirmar: function() {
-                            window[coleccion] = lista.filter(function(x) { return x.id !== id; });
-                            registrarHistorial(entidadHistorial, 'eliminar',
-                                'Se eliminó ' + titulo.toLowerCase() + ': "' + (item.nombre || 'sin nombre') + '"',
-                                { id: id, nombre: item.nombre });
-                            guardarDatos();
-                            renderizar();
-                            if (onEliminar) onEliminar(id);
-                            mostrarNotificacion(titulo + ' eliminado', 'success');
-                        }
+                    
+                    // Paquetes y servicios usan soft delete también
+                    abrirModal('Eliminar ' + titulo.toLowerCase(),
+                        '<div class="advertencia-eliminar">' +
+                            '<i class="fas fa-exclamation-triangle"></i>' +
+                            '<div class="texto">' +
+                                '<strong>Esta acción moverá el ' + titulo.toLowerCase() + ' a la papelera</strong>' +
+                                'Podrá restaurarse en los próximos 30 días.' +
+                                '<div class="detalle-entidad">' +
+                                    '<div><strong>' + (item.nombre || 'Sin nombre') + '</strong></div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="form-grupo">' +
+                            '<label>Motivo de eliminación (opcional)</label>' +
+                            '<textarea id="papelera-motivo-input" placeholder="Ej: Descontinuado, error de captura, etc." style="min-height:60px;"></textarea>' +
+                        '</div>' +
+                        '<div class="form-acciones">' +
+                            '<button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button>' +
+                            '<button type="button" class="btn-peligro" id="btn-confirmar-papelera"><i class="fas fa-trash"></i> Mover a papelera</button>' +
+                        '</div>');
+                    document.getElementById('btn-confirmar-papelera').addEventListener('click', function() {
+                        const motivo = document.getElementById('papelera-motivo-input').value.trim();
+                        agregarAPapelera(entidadHistorial, item, motivo);
+                        window[coleccion] = lista.filter(function(x) { return x.id !== id; });
+                        registrarHistorial(entidadHistorial, 'eliminar',
+                            'Se movió ' + titulo.toLowerCase() + ' a papelera: "' + (item.nombre || 'sin nombre') + '"' + (motivo ? ' — Motivo: ' + motivo : ''),
+                            { id: id, nombre: item.nombre });
+                        guardarDatos();
+                        renderizar();
+                        if (onEliminar) onEliminar(id);
+                        renderizarPapelera();
+                        cerrarModal();
+                        mostrarNotificacion(titulo + ' movido a papelera', 'success');
                     });
                 }
             };
@@ -4846,20 +5384,47 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-PROSPECTOS-EDITAR ───────
 
-        // ─────── @JS-PROSPECTOS-ELIMINAR ───────
-        // Operadores SÍ pueden eliminar prospectos (queda registro en historial)
+               // ─────── @JS-PROSPECTOS-ELIMINAR ───────
+        // Operadores SÍ pueden eliminar prospectos. Usa soft delete (papelera).
         function eliminarProspecto(id) {
             const p = obtenerProspecto(id); if (!p) return;
-            confirmarEliminacion({
-                titulo: 'Eliminar prospecto', entidad: 'prospecto', nombre: p.nombre,
-                detalle: 'Se eliminarán también sus tareas vinculadas',
-                onConfirmar: function() {
-                    prospectos = prospectos.filter(function(x) { return x.id !== id; });
-                    tareas = tareas.filter(function(t) { return t.clienteId !== 'pro_' + id; });
-                    registrarHistorial('prospecto', 'eliminar', 'Se eliminó prospecto: "' + p.nombre + '" (por ' + nombreUsuarioActual() + ')', { id: id, nombre: p.nombre });
-                    guardarDatos(); renderizarProspectos(); renderizarCalendario();
-                    mostrarNotificacion('Prospecto eliminado', 'success');
-                }
+
+            abrirModal('Eliminar prospecto',
+                '<div class="advertencia-eliminar">' +
+                    '<i class="fas fa-exclamation-triangle"></i>' +
+                    '<div class="texto">' +
+                        '<strong>Esta acción moverá el prospecto a la papelera</strong>' +
+                        'Podrá restaurarse en los próximos 30 días.' +
+                        '<div class="detalle-entidad">' +
+                            '<div><strong>' + p.nombre + '</strong></div>' +
+                            '<div>Fase: ' + (p.faseActual || 'N/A') + (p.telefono ? ' · Tel: ' + p.telefono : '') + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="form-grupo">' +
+                    '<label>Motivo de eliminación (opcional)</label>' +
+                    '<textarea id="papelera-motivo-input" placeholder="Ej: No interesado, duplicado, etc." style="min-height:60px;"></textarea>' +
+                '</div>' +
+                '<div class="form-acciones">' +
+                    '<button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button>' +
+                    '<button type="button" class="btn-peligro" id="btn-confirmar-papelera"><i class="fas fa-trash"></i> Mover a papelera</button>' +
+                '</div>');
+            document.getElementById('btn-confirmar-papelera').addEventListener('click', function() {
+                const motivo = document.getElementById('papelera-motivo-input').value.trim();
+                // Mover tareas vinculadas a la papelera
+                tareas.filter(function(t) { return t.clienteId === 'pro_' + id; }).forEach(function(t) {
+                    agregarAPapelera('tarea', t, 'Tarea del prospecto eliminado: ' + p.nombre + (motivo ? ' — ' + motivo : ''));
+                });
+                agregarAPapelera('prospecto', p, motivo);
+                prospectos = prospectos.filter(function(x) { return x.id !== id; });
+                tareas = tareas.filter(function(t) { return t.clienteId !== 'pro_' + id; });
+                registrarHistorial('prospecto', 'eliminar', 'Se movió prospecto a papelera: "' + p.nombre + '" (por ' + nombreUsuarioActual() + ')' + (motivo ? ' — Motivo: ' + motivo : ''), { id: id, nombre: p.nombre });
+                guardarDatos();
+                renderizarProspectos();
+                renderizarCalendario();
+                renderizarPapelera();
+                cerrarModal();
+                mostrarNotificacion('Prospecto movido a papelera', 'success');
             });
         }
         // ─────── FIN @JS-PROSPECTOS-ELIMINAR ───────
@@ -4892,24 +5457,63 @@ var DATOS_EMISOR = {
         /* @JS-CLIENTES — Eliminación y WhatsApp de clientes            */
         /* ═══════════════════════════════════════════════════════════ */
 
-        // ─────── @JS-CLIENTES-ELIMINAR ───────
-        // Solo admin puede eliminar clientes
+               // ─────── @JS-CLIENTES-ELIMINAR ───────
+        // Solo admin puede eliminar clientes. Usa soft delete (papelera).
         function eliminarCliente(id) {
             if (bloquearSiNoEsAdmin('eliminar clientes')) return;
             const c = obtenerCliente(id); if (!c) return;
             const nc = c.contratos ? c.contratos.length : 0;
             const nt = tareas.filter(function(t) { return t.clienteId === id; }).length;
-            confirmarEliminacion({
-                titulo: 'Eliminar cliente', entidad: 'cliente', nombre: c.nombre,
-                detalle: 'Teléfono: ' + c.telefono + ' - ' + nc + ' contratos - ' + nt + ' tareas vinculadas',
-                onConfirmar: function() {
-                    clientes = clientes.filter(function(x) { return x.id !== id; });
-                    prospectos.forEach(function(p) { if (p && p.clienteId === id) p.clienteId = null; });
-                    tareas = tareas.filter(function(t) { return t.clienteId !== id; });
-                    registrarHistorial('cliente', 'eliminar', 'Se eliminó cliente: "' + c.nombre + '"', { id: id, nombre: c.nombre });
-                    guardarDatos(); renderizarClientes(); renderizarProspectos(); renderizarContratos(); renderizarInformes(); renderizarCalendario();
-                    mostrarNotificacion('Cliente eliminado', 'success');
-                }
+
+            // Pedir motivo opcional
+            abrirModal('Eliminar cliente',
+                '<div class="advertencia-eliminar">' +
+                    '<i class="fas fa-exclamation-triangle"></i>' +
+                    '<div class="texto">' +
+                        '<strong>Esta acción moverá el cliente a la papelera</strong>' +
+                        'El cliente podrá restaurarse en los próximos 30 días.' +
+                        '<div class="detalle-entidad">' +
+                            '<div><strong>' + c.nombre + '</strong></div>' +
+                            '<div>Teléfono: ' + c.telefono + ' · ' + nc + ' contratos · ' + nt + ' tareas vinculadas</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="form-grupo">' +
+                    '<label>Motivo de eliminación (opcional)</label>' +
+                    '<textarea id="papelera-motivo-input" placeholder="Ej: Cliente duplicado, cambio de giro, etc." style="min-height:60px;"></textarea>' +
+                '</div>' +
+                '<div class="form-acciones">' +
+                    '<button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button>' +
+                    '<button type="button" class="btn-peligro" id="btn-confirmar-papelera"><i class="fas fa-trash"></i> Mover a papelera</button>' +
+                '</div>');
+            document.getElementById('btn-confirmar-papelera').addEventListener('click', function() {
+                const motivo = document.getElementById('papelera-motivo-input').value.trim();
+                // Guardar también los contratos huérfanos en la papelera
+                (c.contratos || []).forEach(function(co) {
+                    const copiaCo = Object.assign({}, co, { _clienteId: id, _clienteNombre: c.nombre });
+                    agregarAPapelera('contrato', copiaCo, 'Contrato del cliente eliminado: ' + c.nombre + (motivo ? ' — ' + motivo : ''));
+                });
+                // Mover tareas a la papelera
+                tareas.filter(function(t) { return t.clienteId === id; }).forEach(function(t) {
+                    agregarAPapelera('tarea', t, 'Tarea del cliente eliminado: ' + c.nombre + (motivo ? ' — ' + motivo : ''));
+                });
+                // Mover cliente a papelera
+                agregarAPapelera('cliente', c, motivo);
+                // Eliminar de la colección activa
+                clientes = clientes.filter(function(x) { return x.id !== id; });
+                prospectos.forEach(function(p) { if (p && p.clienteId === id) p.clienteId = null; });
+                tareas = tareas.filter(function(t) { return t.clienteId !== id; });
+
+                registrarHistorial('cliente', 'eliminar', 'Se movió cliente a papelera: "' + c.nombre + '"' + (motivo ? ' — Motivo: ' + motivo : ''), { id: id, nombre: c.nombre });
+                guardarDatos();
+                renderizarClientes();
+                renderizarProspectos();
+                renderizarContratos();
+                renderizarInformes();
+                renderizarCalendario();
+                renderizarPapelera();
+                cerrarModal();
+                mostrarNotificacion('Cliente movido a papelera', 'success');
             });
         }
         // ─────── FIN @JS-CLIENTES-ELIMINAR ───────
@@ -5358,17 +5962,23 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-TAREAS-EDITAR ───────
 
-        // ─────── @JS-TAREAS-ELIMINAR ───────
+               // ─────── @JS-TAREAS-ELIMINAR ───────
         function eliminarTarea(id) {
             const t = tareas.find(function(x) { return x.id === id; }); if (!t) return;
             confirmarEliminacion({
                 titulo: 'Eliminar tarea', entidad: 'tarea', nombre: t.tipo,
+                detalle: 'La tarea se moverá a la papelera y podrá restaurarse en 30 días.',
                 onConfirmar: function() {
+                    agregarAPapelera('tarea', t, 'Eliminada por ' + nombreUsuarioActual());
                     tareas = tareas.filter(function(x) { return x.id !== id; });
-                    registrarHistorial('tarea', 'eliminar', 'Se eliminó tarea: "' + t.tipo + '"', { id: id, nombre: t.tipo });
-                    guardarDatos(); renderizarCalendario(); renderizarInformes();
-                    renderizarClientes(); renderizarProspectos();
-                    mostrarNotificacion('Tarea eliminada', 'success');
+                    registrarHistorial('tarea', 'eliminar', 'Se movió tarea a papelera: "' + t.tipo + '"', { id: id, nombre: t.tipo });
+                    guardarDatos();
+                    renderizarCalendario();
+                    renderizarInformes();
+                    renderizarClientes();
+                    renderizarProspectos();
+                    renderizarPapelera();
+                    mostrarNotificacion('Tarea movida a papelera', 'success');
                 }
             });
         }
@@ -6385,21 +6995,47 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-CONTRATOS-EDITAR ───────
 
-        // ─────── @JS-CONTRATOS-ELIMINAR ───────
-        // Solo admin puede eliminar contratos
+               // ─────── @JS-CONTRATOS-ELIMINAR ───────
+        // Solo admin puede eliminar contratos. Usa soft delete (papelera).
         function eliminarContrato(clienteId, contratoId) {
             if (bloquearSiNoEsAdmin('eliminar contratos')) return;
             const c = obtenerCliente(clienteId); if (!c) return;
             const co = c.contratos.find(function(x) { return x.id === contratoId; }); if (!co) return;
-            confirmarEliminacion({
-                titulo: 'Eliminar contrato', entidad: 'contrato', nombre: c.nombre,
-                detalle: 'Festejado: ' + co.festejado,
-                onConfirmar: function() {
-                    c.contratos = c.contratos.filter(function(x) { return x.id !== contratoId; });
-                    registrarHistorial('contrato', 'eliminar', 'Se eliminó contrato de "' + c.nombre + '"', { id: contratoId, nombre: c.nombre });
-                    guardarDatos(); renderizarContratos(); renderizarClientes(); renderizarInformes();
-                    mostrarNotificacion('Contrato eliminado', 'success');
-                }
+
+            abrirModal('Eliminar contrato',
+                '<div class="advertencia-eliminar">' +
+                    '<i class="fas fa-exclamation-triangle"></i>' +
+                    '<div class="texto">' +
+                        '<strong>Esta acción moverá el contrato a la papelera</strong>' +
+                        'Podrá restaurarse en los próximos 30 días.' +
+                        '<div class="detalle-entidad">' +
+                            '<div><strong>' + c.nombre + '</strong></div>' +
+                            '<div>Festejado: ' + (co.festejado || 'N/A') + ' · ' + formatearMoneda(co.precioFinal || 0) + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="form-grupo">' +
+                    '<label>Motivo de eliminación (opcional)</label>' +
+                    '<textarea id="papelera-motivo-input" placeholder="Ej: Cancelación del evento, error de captura, etc." style="min-height:60px;"></textarea>' +
+                '</div>' +
+                '<div class="form-acciones">' +
+                    '<button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button>' +
+                    '<button type="button" class="btn-peligro" id="btn-confirmar-papelera"><i class="fas fa-trash"></i> Mover a papelera</button>' +
+                '</div>');
+            document.getElementById('btn-confirmar-papelera').addEventListener('click', function() {
+                const motivo = document.getElementById('papelera-motivo-input').value.trim();
+                const copiaCo = Object.assign({}, co, { _clienteId: clienteId, _clienteNombre: c.nombre });
+                agregarAPapelera('contrato', copiaCo, motivo);
+                c.contratos = c.contratos.filter(function(x) { return x.id !== contratoId; });
+                registrarHistorial('contrato', 'eliminar', 'Se movió contrato a papelera de "' + c.nombre + '"' + (motivo ? ' — Motivo: ' + motivo : ''), { id: contratoId, nombre: c.nombre });
+                guardarDatos();
+                renderizarContratos();
+                renderizarClientes();
+                renderizarInformes();
+                renderizarPapelera();
+                cerrarModal();
+                cerrarPanelLateral();
+                mostrarNotificacion('Contrato movido a papelera', 'success');
             });
         }
         // ─────── FIN @JS-CONTRATOS-ELIMINAR ───────
@@ -7529,6 +8165,187 @@ var DATOS_EMISOR = {
         /* ═══════════════════════════════════════════════════════════ */
         /* @JS-ADMIN-USERS — Gestión de usuarios (solo admin)           */
         /* ═══════════════════════════════════════════════════════════ */
+        // ─────── @JS-ADMIN-USERS-PAPELERA ───────
+        // Funciones de la papelera de reciclaje (solo admin)
+
+        // Renderiza la lista completa de la papelera
+        function renderizarPapelera() {
+            const lista = document.getElementById('papelera-lista');
+            const stats = document.getElementById('papelera-stats');
+            const info = document.getElementById('papelera-info');
+            if (!lista) return;
+
+            // Primero purgar vencidos silenciosamente
+            purgarPapeleraVencida(true);
+
+            // Stats
+            if (stats) {
+                const total = papelera.length;
+                const proximosExpirar = papelera.filter(function(e) { return diasRestantesPapelera(e) <= 3; }).length;
+                const porTipo = {};
+                papelera.forEach(function(e) { porTipo[e.tipo] = (porTipo[e.tipo] || 0) + 1; });
+                stats.innerHTML = '<div class="papelera-stat"><div class="lbl">Total</div><div class="val">' + total + '</div></div>' +
+                    '<div class="papelera-stat"><div class="lbl">Se purgan pronto</div><div class="val" style="color:var(--color-naranja);">' + proximosExpirar + '</div></div>' +
+                    '<div class="papelera-stat"><div class="lbl">Clientes</div><div class="val">' + (porTipo.cliente || 0) + '</div></div>' +
+                    '<div class="papelera-stat"><div class="lbl">Contratos</div><div class="val">' + (porTipo.contrato || 0) + '</div></div>' +
+                    '<div class="papelera-stat"><div class="lbl">Otros</div><div class="val">' + (total - (porTipo.cliente || 0) - (porTipo.contrato || 0)) + '</div></div>';
+            }
+
+            // Filtros
+            const tipoFiltro = document.getElementById('papelera-filtro-tipo').value;
+            const usuarioFiltro = document.getElementById('papelera-filtro-usuario').value.toLowerCase().trim();
+            const buscarFiltro = document.getElementById('papelera-filtro-buscar').value.toLowerCase().trim();
+
+            let items = papelera.slice();
+            if (tipoFiltro !== 'todos') items = items.filter(function(e) { return e.tipo === tipoFiltro; });
+            if (usuarioFiltro) items = items.filter(function(e) { return (e.eliminadoPor || '').toLowerCase().indexOf(usuarioFiltro) !== -1; });
+            if (buscarFiltro) items = items.filter(function(e) {
+                const texto = JSON.stringify(e.item).toLowerCase() + ' ' + (e.motivo || '').toLowerCase();
+                return texto.indexOf(buscarFiltro) !== -1;
+            });
+
+            if (items.length === 0) {
+                lista.innerHTML = '<div class="papelera-vacia"><i class="fas fa-trash-alt"></i><p>No hay elementos en la papelera' + (papelera.length > 0 ? ' que coincidan con los filtros' : '') + '.</p></div>';
+                if (info) info.textContent = 'Total: ' + papelera.length + ' elemento' + (papelera.length === 1 ? '' : 's');
+                return;
+            }
+
+            lista.innerHTML = items.map(function(e) {
+                const dias = diasRestantesPapelera(e);
+                const proximaExpirar = dias <= 3;
+                return '<div class="papelera-item ' + (proximaExpirar ? 'papelera-proxima-expirar' : '') + '">' +
+                    '<div class="papelera-item-icono"><i class="fas ' + iconoTipoPapelera(e.tipo) + '"></i></div>' +
+                    '<div class="papelera-item-contenido">' +
+                        '<div class="papelera-item-titulo">' +
+                            '<span class="badge-tipo-papelera">' + etiquetaTipoPapelera(e.tipo) + '</span>' +
+                        '</div>' +
+                        '<div class="papelera-item-detalle">' + describirItemPapelera(e) + '</div>' +
+                        '<div class="papelera-item-motivo"><i class="fas fa-comment"></i> ' + (e.motivo || '(sin motivo)') + '</div>' +
+                        '<div class="papelera-item-meta">' +
+                            '<span><i class="fas fa-user"></i> ' + (e.eliminadoPor || 'Sistema') + '</span>' +
+                            '<span><i class="fas fa-calendar"></i> ' + (e.fechaEliminacion || 'N/A') + '</span>' +
+                            '<span class="dias-restantes ' + (proximaExpirar ? 'urgente' : '') + '"><i class="fas fa-clock"></i> ' + (dias === 0 ? '¡Expira hoy!' : (dias === 1 ? '1 día restante' : dias + ' días restantes')) + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="papelera-item-acciones">' +
+                        '<button class="btn-papelera-restaurar" onclick="restaurarDePapelera(\'' + e.id + '\')"><i class="fas fa-undo"></i> Restaurar</button>' +
+                        '<button class="btn-papelera-eliminar" onclick="eliminarDePapelera(\'' + e.id + '\')"><i class="fas fa-times"></i> Eliminar</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+
+            if (info) info.textContent = 'Mostrando ' + items.length + ' de ' + papelera.length + ' elemento' + (papelera.length === 1 ? '' : 's');
+        }
+
+        // Restaura un elemento de la papelera a su colección original
+        function restaurarDePapelera(entradaId) {
+            const entrada = papelera.find(function(e) { return e.id === entradaId; });
+            if (!entrada) return;
+
+                        // Pedir confirmación (no destructiva)
+            confirmarAccion({
+                titulo: 'Restaurar elemento',
+                entidad: etiquetaTipoPapelera(entrada.tipo).toLowerCase(),
+                nombre: (entrada.item.nombre || entrada.item.festejado || '(sin nombre)'),
+                detalle: 'Los datos volverán a estar disponibles en su sección original.',
+                textoConfirmar: 'Restaurar',
+                icono: 'fa-undo',
+                colorBoton: 'btn-verde',
+                onConfirmar: function() {
+                    // Reinsertar en la colección correcta
+                    if (entrada.tipo === 'cliente') {
+                        clientes.push(entrada.item);
+                    } else if (entrada.tipo === 'prospecto') {
+                        prospectos.push(entrada.item);
+                    } else if (entrada.tipo === 'tarea') {
+                        tareas.push(entrada.item);
+                    } else if (entrada.tipo === 'contrato') {
+                        // Buscar el cliente original y agregar el contrato
+                        const cl = clientes.find(function(c) { return c.id === entrada.item._clienteId || (c.contratos && c.contratos.some(function(co) { return co.id === entrada.item.id; })); });
+                        // Nota: los contratos se restauran al cliente especificado en el item
+                        if (entrada.item._clienteId) {
+                            const cli = obtenerCliente(entrada.item._clienteId);
+                            if (cli) {
+                                if (!cli.contratos) cli.contratos = [];
+                                const copia = Object.assign({}, entrada.item);
+                                delete copia._clienteId;
+                                cli.contratos.push(copia);
+                            }
+                        }
+                    } else if (entrada.tipo === 'usuario') {
+                        usuarios.push(entrada.item);
+                        guardarUsuarios();
+                    } else if (entrada.tipo === 'paquete') {
+                        paquetes.push(entrada.item);
+                    } else if (entrada.tipo === 'servicio') {
+                        serviciosAdicionales.push(entrada.item);
+                    }
+
+                    // Quitar de la papelera
+                    papelera = papelera.filter(function(e) { return e.id !== entradaId; });
+
+                    registrarHistorial('papelera', 'editar', 'Se restauró ' + etiquetaTipoPapelera(entrada.tipo).toLowerCase() + ': "' + (entrada.item.nombre || entrada.item.festejado || 'sin nombre') + '"', { id: entrada.item.id, nombre: entrada.item.nombre || entrada.item.festejado });
+                    guardarDatos();
+                    renderizarTodo();
+                    renderizarPapelera();
+                    mostrarNotificacion('Elemento restaurado', 'success');
+                }
+            });
+        }
+
+        // Elimina definitivamente un elemento de la papelera (sin posibilidad de recuperación)
+        function eliminarDePapelera(entradaId) {
+            const entrada = papelera.find(function(e) { return e.id === entradaId; });
+            if (!entrada) return;
+
+            confirmarEliminacion({
+                titulo: 'Eliminar definitivamente',
+                entidad: etiquetaTipoPapelera(entrada.tipo).toLowerCase(),
+                nombre: (entrada.item.nombre || entrada.item.festejado || '(sin nombre)'),
+                detalle: 'Esta acción NO se puede deshacer. El elemento será borrado permanentemente.',
+                onConfirmar: function() {
+                    papelera = papelera.filter(function(e) { return e.id !== entradaId; });
+                    registrarHistorial('papelera', 'eliminar', 'Se eliminó definitivamente ' + etiquetaTipoPapelera(entrada.tipo).toLowerCase() + ': "' + (entrada.item.nombre || entrada.item.festejado || 'sin nombre') + '"', { id: entrada.item.id, nombre: entrada.item.nombre || entrada.item.festejado });
+                    guardarDatos();
+                    renderizarPapelera();
+                    mostrarNotificacion('Elemento eliminado permanentemente', 'success');
+                }
+            });
+        }
+
+        // Vacía toda la papelera (purga manual completa)
+        function vaciarPapeleraCompleta() {
+            if (papelera.length === 0) {
+                mostrarNotificacion('La papelera ya está vacía', 'info');
+                return;
+            }
+            confirmarEliminacion({
+                titulo: 'Vaciar papelera',
+                entidad: 'papelera completa',
+                nombre: papelera.length + ' elemento' + (papelera.length === 1 ? '' : 's'),
+                detalle: 'Se eliminarán TODOS los elementos de la papelera de forma permanente. Esta acción no se puede deshacer.',
+                onConfirmar: function() {
+                    const cantidad = papelera.length;
+                    papelera = [];
+                    registrarHistorial('papelera', 'eliminar', 'Se vació la papelera (' + cantidad + ' elemento' + (cantidad === 1 ? '' : 's') + ')', { id: null, nombre: null });
+                    guardarDatos();
+                    renderizarPapelera();
+                    mostrarNotificacion('Papelera vaciada (' + cantidad + ' elemento' + (cantidad === 1 ? '' : 's') + ')', 'success');
+                }
+            });
+        }
+
+        // Purga manual de los vencidos
+        function purgarVencidosManual() {
+            const cantidad = purgarPapeleraVencida(false);
+            if (cantidad === 0) {
+                mostrarNotificacion('No hay elementos vencidos', 'info');
+            } else {
+                guardarDatos();
+                renderizarPapelera();
+            }
+        }
+        // ─────── FIN @JS-ADMIN-USERS-PAPELERA ───────
 
         // ─────── @JS-ADMIN-USERS-RENDER ───────
         function renderizarUsuarios() {
@@ -8109,7 +8926,12 @@ var DATOS_EMISOR = {
             const btnNuevoServ = document.getElementById('btn-nuevo-servicio');
             if (btnNuevoPaq) btnNuevoPaq.style.display = esAdmin() ? '' : 'none';
             if (btnNuevoServ) btnNuevoServ.style.display = esAdmin() ? '' : 'none';
-            
+             // Mostrar u ocultar la papelera según el rol
+            const papeleraCard = document.getElementById('papelera-card');
+            if (papeleraCard) {
+                papeleraCard.style.display = esAdmin() ? 'block' : 'none';
+                if (esAdmin()) renderizarPapelera();
+            }
             // Si el operador estaba viendo la sección de paquetes o servicios, redirigir a informes
             if (!esAdmin()) {
                 const seccionActiva = document.querySelector('.seccion.active');
@@ -8311,7 +9133,7 @@ var DATOS_EMISOR = {
             btn = document.getElementById('btn-exportar-datos');
             if (btn) btn.addEventListener('click', function() {
                 try {
-                    const json = JSON.stringify({ version: VERSION, fechaExportacion: obtenerFechaActual(), paquetes: paquetes, serviciosAdicionales: serviciosAdicionales, prospectos: prospectos, clientes: clientes, tareas: tareas, historial: historial, usuarios: usuarios }, null, 2);
+                    const json = JSON.stringify({ version: VERSION, fechaExportacion: obtenerFechaActual(), paquetes: paquetes, serviciosAdicionales: serviciosAdicionales, prospectos: prospectos, clientes: clientes, tareas: tareas,   historial: historial, usuarios: usuarios }, null, 2);
                     const blob = new Blob([json], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -8365,7 +9187,24 @@ var DATOS_EMISOR = {
                 actualizarBotonHistorial();
                 renderizarHistorial();
             });
-
+            // ─── Listeners de la papelera ───
+            btn = document.getElementById('btn-vaciar-papelera');
+            if (btn) btn.addEventListener('click', vaciarPapeleraCompleta);
+            btn = document.getElementById('btn-purgar-vencidos');
+            if (btn) btn.addEventListener('click', purgarVencidosManual);
+            btn = document.getElementById('papelera-filtro-tipo');
+            if (btn) btn.addEventListener('change', renderizarPapelera);
+            btn = document.getElementById('papelera-filtro-usuario');
+            if (btn) btn.addEventListener('input', renderizarPapelera);
+            btn = document.getElementById('papelera-filtro-buscar');
+            if (btn) btn.addEventListener('input', renderizarPapelera);
+            btn = document.getElementById('papelera-limpiar-filtros');
+            if (btn) btn.addEventListener('click', function() {
+                document.getElementById('papelera-filtro-tipo').value = 'todos';
+                document.getElementById('papelera-filtro-usuario').value = '';
+                document.getElementById('papelera-filtro-buscar').value = '';
+                renderizarPapelera();
+            });
             btn = document.getElementById('btn-colapsar');
             if (btn) btn.addEventListener('click', toggleSidebar);
 
@@ -8468,6 +9307,9 @@ var DATOS_EMISOR = {
                 const sg = localStorage.getItem(PREF_SIDEBAR) === '1';
                 aplicarSidebarColapsado(sg);
                 aplicarTema(temaInicial);
+                // Purgar papelera vencida al iniciar (silencioso)
+                purgarPapeleraVencida(true);
+                guardarDatosLocal();
                 const sesion = cargarSesion();
                 if (sesion) {
                     const u = encontrarUsuario(sesion.username);
@@ -8479,6 +9321,7 @@ var DATOS_EMISOR = {
                         localStorage.removeItem(PREF_SESION);
                     }
                 }
+                // (La papelera se muestra automáticamente si el usuario es admin, ver @JS-LOGIN-RESTRICCIONES-ROL)
                 mostrarPantallaLogin();
             } catch (err) {
                 console.error('❌ Error en boot:', err);
