@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ╔══════════════════════════════════════════════════════════════════════╗
-║  REGISTRO PDA — v4.5                                                ║
+║  REGISTRO PDA — v4.4                                                 ║
 ║  Estudio Fotográfico · JFR MEDIA                                     ║
 ║                                                                      ║
 ║  ─────────────────────────────────────────────────────────────────   ║
@@ -306,6 +306,141 @@
         .etiqueta-recoger-material { background-color: #795548; color: #ffffff; }
         .etiqueta-entrega-de-fotos { background-color: #607d8b; color: #ffffff; }
         .etiqueta-otro { background-color: #757575; color: #ffffff; }
+/* Etiquetas de estatus de paquete */
+.etiqueta-paquete-activo { background-color: #4caf50; color: #ffffff; }
+.etiqueta-paquete-proximo { background-color: #2196f3; color: #ffffff; }
+.etiqueta-paquete-especial { background-color: #9c27b0; color: #ffffff; }
+.etiqueta-paquete-inactivo { background-color: #757575; color: #ffffff; }
+.etiqueta-paquete-caducado { background-color: #f44336; color: #ffffff; }
+/* Ajuste tema Angel */
+html[data-theme="angel"] .etiqueta-paquete-activo { background-color: rgba(16, 185, 129, 0.15); color: #047857; }
+html[data-theme="angel"] .etiqueta-paquete-proximo { background-color: rgba(58, 134, 255, 0.15); color: #1e40af; }
+html[data-theme="angel"] .etiqueta-paquete-especial { background-color: rgba(168, 85, 247, 0.15); color: #6b21a8; }
+html[data-theme="angel"] .etiqueta-paquete-inactivo { background-color: rgba(107, 85, 128, 0.15); color: #4a3a5c; }
+html[data-theme="angel"] .etiqueta-paquete-caducado { background-color: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+/* Lista de items del paquete */
+.paquete-items-lista {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.paquete-items-lista li {
+    font-size: 12.5px;
+    color: var(--color-texto-secundario);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0;
+}
+.paquete-items-lista li i {
+    color: var(--color-verde);
+    font-size: 11px;
+    flex-shrink: 0;
+}
+/* Editor de items en el formulario */
+.paquete-items-editor {
+    background-color: var(--color-bg-terciario);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--border-radius);
+    padding: 12px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+.paquete-item-fila {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 8px;
+    background-color: var(--color-bg-primario);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+.paquete-item-fila .item-tipo-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+.paquete-item-fila .item-tipo-servicio { background-color: rgba(58, 134, 255, 0.15); color: #1e40af; }
+.paquete-item-fila .item-tipo-personalizado { background-color: rgba(168, 85, 247, 0.15); color: #6b21a8; }
+.paquete-item-fila .item-nombre { flex: 1; min-width: 0; color: var(--color-texto-primario); }
+.paquete-item-fila .item-cantidad {
+    width: 60px;
+    text-align: center;
+    background-color: var(--color-bg-secundario);
+    border: 1px solid var(--color-borde);
+    border-radius: 4px;
+    padding: 4px;
+    color: var(--color-texto-primario);
+    font-size: 13px;
+}
+.paquete-item-fila .btn-quitar-item {
+    background: none;
+    border: none;
+    color: var(--color-rojo);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+.paquete-item-fila .btn-quitar-item:hover { background-color: rgba(239, 68, 68, 0.15); }
+.paquete-items-add {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+.paquete-items-add input {
+    flex: 1;
+    min-width: 120px;
+    background-color: var(--color-bg-primario);
+    color: var(--color-texto-primario);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--border-radius);
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+}
+.paquete-items-add input:focus { outline: none; border-color: var(--color-acento); }
+.paquete-items-add .btn-add-item {
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    color: #ffffff;
+    background-color: var(--color-azul);
+}
+.paquete-items-add .btn-add-item:hover { filter: brightness(1.1); }
+.paquete-items-servicios-sugeridos {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.paquete-items-servicios-sugeridos .sugerido-chip {
+    background-color: var(--color-bg-primario);
+    border: 1px dashed var(--color-borde);
+    border-radius: 12px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--color-texto-secundario);
+    transition: all 0.2s ease;
+}
+.paquete-items-servicios-sugeridos .sugerido-chip:hover {
+    border-color: var(--color-acento);
+    color: var(--color-acento);
+    background-color: var(--color-bg-hover);
+}
         /* Ajuste de etiquetas para el tema Angel (versión suave) */
         html[data-theme="angel"] .etiqueta-interesado { background-color: rgba(16, 185, 129, 0.15); color: #047857; }
         html[data-theme="angel"] .etiqueta-cotizacion { background-color: rgba(58, 134, 255, 0.15); color: #1e40af; }
@@ -854,8 +989,12 @@
             background: var(--color-azul);
             border-radius: 10px;
         }
-        .lista-avatar.avatar-prospecto {
+         .lista-avatar.avatar-prospecto {
             background: var(--color-morado);
+        }
+        .lista-avatar.avatar-paquete {
+            background: var(--color-acento);
+            border-radius: 10px;
         }
         .lista-contenido {
             flex: 1;
@@ -3634,13 +3773,36 @@
             </section>
             <!-- FIN @HTML-SECTION-CONTRATOS -->
 
-            <!-- ═══════════════════════════════════════════════════════ -->
-            <!-- @HTML-SECTION-PAQUETES (solo admin)                      -->
+                        <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- @HTML-SECTION-PAQUETES (admin edita, operador solo lee)   -->
             <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-paquetes" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-box"></i> Paquetes</h1>
-                    <button class="btn-primario" id="btn-nuevo-paquete"><i class="fas fa-plus"></i> Nuevo Paquete</button>
+                    <div class="header-actions">
+                        <div class="btn-view-toggle" data-vista-seccion="paquetes">
+                            <button class="btn-vista-mosaico active" title="Vista mosaico"><i class="fas fa-th-large"></i> <span>Mosaico</span></button>
+                            <button class="btn-vista-lista" title="Vista lista"><i class="fas fa-list"></i> <span>Lista</span></button>
+                        </div>
+                        <button class="btn-primario solo-admin-btn" id="btn-nuevo-paquete"><i class="fas fa-plus"></i> Nuevo Paquete</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-toggle-filtros" data-target="filtros-paquetes">
+                    <span><i class="fas fa-filter"></i> Filtros <span class="btn-toggle-filtros-badge">activos</span></span>
+                    <i class="fas fa-chevron-down btn-toggle-filtros-icono"></i>
+                </button>
+                <div class="filtros-container" id="filtros-paquetes">
+                    <div class="filtro-grupo"><label>Estatus</label>
+                        <select id="filtro-estatus-paquete">
+                            <option value="todos">Todos</option>
+                            <option value="Activo">Activo</option>
+                            <option value="Próximo">Próximo</option>
+                            <option value="Especial de temporada">Especial de temporada</option>
+                            <option value="Inactivo">Inactivo</option>
+                            <option value="Caducado">Caducado</option>
+                        </select>
+                    </div>
+                    <div class="filtro-grupo"><label>Buscar</label><input type="text" id="buscar-paquete" placeholder="Nombre o descripción..."></div>
                 </div>
                 <div id="lista-paquetes" class="mosaico-grid"><p class="mensaje-vacio">No hay paquetes registrados</p></div>
             </section>
@@ -4116,6 +4278,8 @@ var DATOS_EMISOR = {
         var FASES_DISPONIBLES = ['Interesado', 'Cotización', 'Negociación', 'Contrato', 'Frecuente', 'Cancelado', 'Inactivo'];
         var ESTADOS_CONTRATO = ['Pendiente', 'Completado', 'Cancelado'];
         var ESTADOS_CLIENTE = ['Activo', 'Inactivo', 'Cancelado'];
+        var ESTATUS_PAQUETE = ['Activo', 'Próximo', 'Especial de temporada', 'Inactivo', 'Caducado'];
+        var ESTATUS_PAQUETE_VINCULABLES = ['Activo', 'Próximo', 'Especial de temporada'];
         var TIPOS_TAREA = ['Llamar', 'Enviar mensaje', 'Confirmar', 'Resolver dudas', 'Sesión de fotos', 'Visita', 'Escoger fotos', 'Recoger material', 'Entrega de fotos', 'Otro'];
         var MAX_HISTORIAL_MOVIMIENTOS = 2000;
         var DURACION_SESION_MS = 12 * 60 * 60 * 1000;
@@ -4651,6 +4815,30 @@ var DATOS_EMISOR = {
             const dias = Math.ceil(diff / (24 * 60 * 60 * 1000));
             return Math.max(0, dias);
         }
+        // ─────── @JS-UTILS-PAQUETE-CONTRATOS ───────
+        // Cuenta cuántos contratos usan un paquete (activos o no)
+        function contarContratosDePaquete(paqueteId) {
+            let total = 0;
+            const contratos = obtenerContratos();
+            contratos.forEach(function(c) {
+                if (c.tipo === 'paquete' && c.paqueteId === paqueteId) total++;
+            });
+            return total;
+        }
+
+        // Devuelve lista de contratos vinculados (resumen)
+        function obtenerContratosDePaquete(paqueteId) {
+            const lista = [];
+            const contratos = obtenerContratos();
+            contratos.forEach(function(c) {
+                if (c.tipo === 'paquete' && c.paqueteId === paqueteId) {
+                    lista.push(c);
+                }
+            });
+            return lista;
+        }
+        // ─────── FIN @JS-UTILS-PAQUETE-CONTRATOS ───────
+
 
         // Etiqueta legible por tipo de entidad
         function etiquetaTipoPapelera(tipo) {
@@ -5176,7 +5364,7 @@ var DATOS_EMISOR = {
             });
         }
 
-        function marcarItemSeleccionado(itemId) {
+              function marcarItemSeleccionado(itemId) {
             document.querySelectorAll('.mosaico-card.seleccionado, .lista-fila.seleccionado').forEach(function(card) {
                 card.classList.remove('seleccionado');
             });
@@ -5401,18 +5589,16 @@ var DATOS_EMISOR = {
         // ─────── @JS-CRUD-INSTANCIAS ───────
         // Instancias de CRUD para cada colección
         const CRUD = {
-            paquetes: crearCRUD({
-                coleccion: 'paquetes', titulo: 'Paquete', entidadHistorial: 'paquete',
-                soloAdmin: true,
-                campos: [
-                    { name: 'nombre', label: 'Nombre *', required: true },
-                    { name: 'descripcion', label: 'Descripción *', type: 'textarea', required: true },
-                    { name: 'precio', label: 'Precio *', type: 'number', required: true, min: 0 },
-                    { name: 'descuento', label: 'Descuento (pesos)', type: 'number', default: 0, min: 0 },
-                    { name: 'vigencia', label: 'Vigencia *', type: 'date', required: true }
-                ],
-                renderizar: renderizarPaquetes
-            }),
+                        paquetes: {
+                nuevo: function() { mostrarFormularioPaquete(null); },
+                editar: function(id) { 
+                    if (!esAdmin()) { mostrarNotificacion('Solo administradores pueden editar paquetes.', 'warning'); return; }
+                    const p = obtenerPaquete(id);
+                    if (p) mostrarFormularioPaquete(p);
+                    else mostrarNotificacion('Paquete no encontrado', 'warning');
+                },
+                eliminar: function(id) { eliminarPaqueteValidado(id); }
+            },
             servicios: crearCRUD({
                 coleccion: 'serviciosAdicionales', titulo: 'Servicio', entidadHistorial: 'servicio',
                 soloAdmin: true,
@@ -5470,28 +5656,557 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-RENDER-MOSAICOS ───────
 
-        // ─────── @JS-RENDER-PAQUETES ───────
-        // Vista de tarjetas de paquetes (solo admin ve los botones)
+               // ─────── @JS-RENDER-PAQUETES ───────
+        // Devuelve clase CSS del badge de estatus
+        function claseEstatusPaquete(estatus) {
+            const mapa = {
+                'Activo': 'etiqueta-paquete-activo',
+                'Próximo': 'etiqueta-paquete-proximo',
+                'Especial de temporada': 'etiqueta-paquete-especial',
+                'Inactivo': 'etiqueta-paquete-inactivo',
+                'Caducado': 'etiqueta-paquete-caducado'
+            };
+            return mapa[estatus] || 'etiqueta-paquete-inactivo';
+        }
+
+        // Devuelve estatus por defecto si el paquete no tiene
+        function estatusPaquete(p) {
+            if (p.estatus && ESTATUS_PAQUETE.indexOf(p.estatus) !== -1) return p.estatus;
+            // Compatibilidad con paquetes antiguos
+            if (p.vigencia && p.vigencia < obtenerFechaActual()) return 'Caducado';
+            return 'Activo';
+        }
+
+        // ¿El paquete puede vincularse a contratos?
+        function paqueteEsVinculable(p) {
+            return ESTATUS_PAQUETE_VINCULABLES.indexOf(estatusPaquete(p)) !== -1;
+        }
+
+        // Vista de paquetes (soporta modo mosaico y lista)
         function renderizarPaquetes() {
-            renderizarMosaicos({
-                contenedorId: 'lista-paquetes', items: paquetes, textoVacio: 'No hay paquetes registrados',
-                renderContenido: function(p) {
-                    const pf = (p.precio || 0) - (p.descuento || 0);
-                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + (p.nombre || 'Sin nombre') + '</div></div>' +
-                        '<div class="mosaico-detalle">' + (p.descripcion || '') + '</div>' +
-                        '<div class="mosaico-separador"></div>' +
-                        '<div class="mosaico-detalle"><div><strong>Precio:</strong> ' + formatearMoneda(p.precio || 0) + '</div>' +
-                        (p.descuento ? '<div><strong>Descuento:</strong> ' + formatearMoneda(p.descuento) + '</div>' : '') +
-                        '<div><strong>Final:</strong> ' + formatearMoneda(pf) + '</div></div>' +
-                        '<div class="mosaico-summary"><span><i class="fas fa-calendar"></i> Vigencia</span><span class="monto">' + formatearFecha(p.vigencia) + '</span></div>';
-                },
-                renderAcciones: function(p) {
-                    return '<button class="btn-editar" onclick="CRUD.paquetes.editar(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
-                        '<button class="btn-eliminar" onclick="CRUD.paquetes.eliminar(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
-                }
+            const cont = document.getElementById('lista-paquetes');
+            if (!cont) return;
+
+            const filtroEstatus = document.getElementById('filtro-estatus-paquete') ? document.getElementById('filtro-estatus-paquete').value : 'todos';
+            const busqueda = document.getElementById('buscar-paquete') ? document.getElementById('buscar-paquete').value.toLowerCase().trim() : '';
+
+            let f = paquetes.slice();
+            if (filtroEstatus !== 'todos') f = f.filter(function(p) { return p && estatusPaquete(p) === filtroEstatus; });
+            if (busqueda) f = f.filter(function(p) {
+                return p && ((p.nombre || '').toLowerCase().indexOf(busqueda) !== -1 || (p.descripcion || '').toLowerCase().indexOf(busqueda) !== -1);
             });
+
+            actualizarToggleVista('paquetes');
+            const vistaLista = esVistaLista('paquetes');
+            const esAdminUser = esAdmin();
+
+            if (vistaLista) {
+                // ─── VISTA LISTA ───
+                if (f.length === 0) {
+                    cont.className = 'lista-registros';
+                    cont.innerHTML = '<p class="mensaje-vacio">No hay paquetes</p>';
+                    return;
+                }
+                cont.className = 'lista-registros';
+                cont.innerHTML = f.map(function(p) {
+                    const est = estatusPaquete(p);
+                    const ce = claseEstatusPaquete(est);
+                    const pf = (p.precio || 0) - (p.descuento || 0);
+                    const numItems = (p.items || []).length;
+                    const inicial = (p.nombre || 'P').charAt(0).toUpperCase();
+
+                    return '<div class="lista-fila" onclick="verDetallePaquete(\'' + p.id + '\')">' +
+                        '<div class="lista-avatar avatar-paquete">' + inicial + '</div>' +
+                        '<div class="lista-contenido">' +
+                            '<div class="lista-titulo-linea">' +
+                                '<span class="lista-titulo">' + (p.nombre || 'Sin nombre') + '</span>' +
+                                '<span class="tarjeta-etiqueta ' + ce + '">' + est + '</span>' +
+                            '</div>' +
+                            '<div class="lista-datos">' +
+                                '<span><i class="fas fa-align-left"></i> ' + ((p.descripcion || '').substring(0, 80)) + ((p.descripcion || '').length > 80 ? '...' : '') + '</span>' +
+                            '</div>' +
+                            '<div class="lista-meta">' +
+                                '<span><i class="fas fa-list"></i> <strong>' + numItems + '</strong> item' + (numItems === 1 ? '' : 's') + '</span>' +
+                                '<span><i class="fas fa-tag"></i> <strong>' + formatearMoneda(pf) + '</strong></span>' +
+                                '<span><i class="fas fa-calendar"></i> Caduca: ' + formatearFecha(p.vigencia) + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        (esAdminUser ? '<div class="lista-acciones" onclick="event.stopPropagation()">' +
+                            '<button class="btn-editar" onclick="CRUD.paquetes.editar(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button class="btn-eliminar" onclick="CRUD.paquetes.eliminar(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
+                        '</div>' : '') +
+                    '</div>';
+                }).join('');
+            } else {
+                // ─── VISTA MOSAICO ───
+                if (cont.className !== 'mosaico-grid') cont.className = 'mosaico-grid';
+                if (f.length === 0) {
+                    cont.innerHTML = '<p class="mensaje-vacio">No hay paquetes registrados</p>';
+                    return;
+                }
+                cont.innerHTML = f.map(function(p) {
+                    const est = estatusPaquete(p);
+                    const ce = claseEstatusPaquete(est);
+                    const pf = (p.precio || 0) - (p.descuento || 0);
+                    const items = p.items || [];
+                    let itemsHTML = '';
+                    if (items.length > 0) {
+                        itemsHTML = '<ul class="paquete-items-lista">' +
+                            items.slice(0, 4).map(function(it) {
+                                return '<li><i class="fas fa-check"></i> ' + (it.nombre || 'Item') + (it.cantidad && it.cantidad > 1 ? ' (x' + it.cantidad + ')' : '') + '</li>';
+                            }).join('') +
+                            (items.length > 4 ? '<li style="font-style:italic;"><i class="fas fa-ellipsis-h"></i> y ' + (items.length - 4) + ' más...</li>' : '') +
+                            '</ul>';
+                    }
+
+                    return '<div class="mosaico-card clickeable" onclick="verDetallePaquete(\'' + p.id + '\')">' +
+                        '<div class="mosaico-card-header"><div class="mosaico-titulo">' + (p.nombre || 'Sin nombre') + '</div></div>' +
+                        '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + ce + '">' + est + '</span></div>' +
+                        '<div class="mosaico-detalle">' + (p.descripcion || '') + '</div>' +
+                        itemsHTML +
+                        '<div class="mosaico-separador"></div>' +
+                        '<div class="mosaico-detalle">' +
+                            '<div><strong>Precio:</strong> ' + formatearMoneda(p.precio || 0) + '</div>' +
+                            (p.descuento ? '<div><strong>Descuento:</strong> ' + formatearMoneda(p.descuento) + '</div>' : '') +
+                            '<div><strong>Final:</strong> ' + formatearMoneda(pf) + '</div>' +
+                        '</div>' +
+                        '<div class="mosaico-summary"><span><i class="fas fa-calendar"></i> Caduca</span><span class="monto">' + formatearFecha(p.vigencia) + '</span></div>' +
+                        (esAdminUser ? '<div class="mosaico-footer" onclick="event.stopPropagation()">' +
+                            '<button class="btn-editar" onclick="CRUD.paquetes.editar(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button class="btn-eliminar" onclick="CRUD.paquetes.eliminar(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
+                        '</div>' : '') +
+                    '</div>';
+                }).join('');
+            }
         }
         // ─────── FIN @JS-RENDER-PAQUETES ───────
+        // ─────── @JS-PAQUETES-FORMULARIO ───────
+        // Formulario completo de paquete con editor de items y estatus
+        function mostrarFormularioPaquete(paquete) {
+            if (!esAdmin()) {
+                mostrarNotificacion('Solo administradores pueden gestionar paquetes.', 'warning');
+                return;
+            }
+            const ee = paquete !== null && paquete !== undefined;
+            const itemsIniciales = ee && paquete.items ? JSON.parse(JSON.stringify(paquete.items)) : [];
+            const estatusInicial = ee ? estatusPaquete(paquete) : 'Activo';
+
+            let opcionesEstatus = '';
+            ESTATUS_PAQUETE.forEach(function(e) {
+                // No permitir seleccionar "Caducado" manualmente (es automático)
+                if (e === 'Caducado') return;
+                opcionesEstatus += '<option value="' + e + '" ' + (estatusInicial === e ? 'selected' : '') + '>' + e + '</option>';
+            });
+
+            // Sugerencias de servicios existentes
+            let sugeridosHTML = '';
+            if (serviciosAdicionales.length > 0) {
+                sugeridosHTML = '<div style="font-size:11px;color:var(--color-texto-secundario);margin-top:10px;margin-bottom:4px;">Sugerencias del catálogo de servicios:</div>' +
+                    '<div class="paquete-items-servicios-sugeridos" id="paquete-servicios-sugeridos">' +
+                    serviciosAdicionales.map(function(s) {
+                        return '<span class="sugerido-chip" data-id="' + s.id + '" data-nombre="' + s.nombre + '">+ ' + s.nombre + '</span>';
+                    }).join('') +
+                    '</div>';
+            }
+
+            const html = '<form id="form-paquete">' +
+                '<input type="hidden" id="paquete-id" value="' + (ee ? paquete.id : '') + '">' +
+
+                '<div class="form-grupo"><label>Nombre *</label><input type="text" id="paquete-nombre" required value="' + (ee ? paquete.nombre : '') + '"></div>' +
+                '<div class="form-grupo"><label>Descripción *</label><textarea id="paquete-descripcion" required>' + (ee ? paquete.descripcion : '') + '</textarea></div>' +
+
+                // ─── Editor de items ───
+                '<div class="form-grupo">' +
+                    '<label>Items incluidos (servicios, artículos, regalos)</label>' +
+                    '<div class="paquete-items-editor" id="paquete-items-editor"></div>' +
+                    '<div class="paquete-items-add">' +
+                        '<input type="text" id="paquete-item-nombre" placeholder="Nombre del item (ej: 10 fotos impresas)">' +
+                        '<input type="number" id="paquete-item-cantidad" placeholder="Cant." min="1" value="1" style="max-width:80px;">' +
+                        '<button type="button" class="btn-add-item" id="btn-add-item-personalizado"><i class="fas fa-plus"></i> Agregar</button>' +
+                    '</div>' +
+                    sugeridosHTML +
+                '</div>' +
+
+                '<div class="row-2col">' +
+                    '<div class="form-grupo"><label>Precio *</label><input type="number" id="paquete-precio" required min="0" step="0.01" value="' + (ee ? (paquete.precio || 0) : 0) + '"></div>' +
+                    '<div class="form-grupo"><label>Descuento (pesos)</label><input type="number" id="paquete-descuento" min="0" step="0.01" value="' + (ee ? (paquete.descuento || 0) : 0) + '"></div>' +
+                '</div>' +
+
+                '<div class="row-2col">' +
+                    '<div class="form-grupo"><label>Fecha de caducidad *</label><input type="date" id="paquete-vigencia" required value="' + (ee ? paquete.vigencia : '') + '"></div>' +
+                    '<div class="form-grupo"><label>Estatus *</label><select id="paquete-estatus" required>' + opcionesEstatus + '</select></div>' +
+                '</div>' +
+
+                '<div class="form-acciones">' +
+                    '<button type="button" class="btn-secundario" id="btn-paquete-cancelar">Cancelar</button>' +
+                    '<button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button>' +
+                '</div>' +
+            '</form>';
+
+            abrirModal(ee ? 'Editar Paquete' : 'Nuevo Paquete', html);
+
+            // ─── Estado interno del editor de items ───
+            let itemsActuales = itemsIniciales.slice();
+
+            const editor = document.getElementById('paquete-items-editor');
+
+            function renderizarItemsEditor() {
+                if (itemsActuales.length === 0) {
+                    editor.innerHTML = '<p style="color:var(--color-texto-secundario);font-size:13px;text-align:center;padding:12px;margin:0;">Aún no hay items agregados</p>';
+                    return;
+                }
+                editor.innerHTML = itemsActuales.map(function(it, idx) {
+                    const tipo = it.tipo || 'personalizado';
+                    const badgeClase = tipo === 'servicio' ? 'item-tipo-servicio' : 'item-tipo-personalizado';
+                    const badgeTexto = tipo === 'servicio' ? 'Catálogo' : 'Manual';
+                    return '<div class="paquete-item-fila">' +
+                        '<span class="item-tipo-badge ' + badgeClase + '">' + badgeTexto + '</span>' +
+                        '<span class="item-nombre">' + (it.nombre || 'Sin nombre') + '</span>' +
+                        '<input type="number" class="item-cantidad" data-idx="' + idx + '" min="1" value="' + (it.cantidad || 1) + '" title="Cantidad">' +
+                        '<button type="button" class="btn-quitar-item" data-idx="' + idx + '" title="Quitar"><i class="fas fa-times"></i></button>' +
+                    '</div>';
+                }).join('');
+
+                // Listener de cambio de cantidad
+                editor.querySelectorAll('.item-cantidad').forEach(function(inp) {
+                    inp.addEventListener('change', function() {
+                        const i = parseInt(this.dataset.idx);
+                        const v = parseInt(this.value) || 1;
+                        itemsActuales[i].cantidad = v;
+                    });
+                });
+                // Listener de quitar item
+                editor.querySelectorAll('.btn-quitar-item').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const i = parseInt(this.dataset.idx);
+                        itemsActuales.splice(i, 1);
+                        renderizarItemsEditor();
+                    });
+                });
+            }
+
+            renderizarItemsEditor();
+
+            // ─── Agregar item personalizado ───
+            document.getElementById('btn-add-item-personalizado').addEventListener('click', function() {
+                const nombreInput = document.getElementById('paquete-item-nombre');
+                const cantInput = document.getElementById('paquete-item-cantidad');
+                const nombre = nombreInput.value.trim();
+                const cant = parseInt(cantInput.value) || 1;
+                if (!nombre) { mostrarNotificacion('Escribe el nombre del item', 'warning'); return; }
+                itemsActuales.push({ tipo: 'personalizado', nombre: nombre, cantidad: cant });
+                nombreInput.value = '';
+                cantInput.value = 1;
+                nombreInput.focus();
+                renderizarItemsEditor();
+            });
+
+            // Enter en el campo de nombre también agrega
+            document.getElementById('paquete-item-nombre').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('btn-add-item-personalizado').click();
+                }
+            });
+
+            // ─── Sugerencias del catálogo ───
+            const sugeridos = document.getElementById('paquete-servicios-sugeridos');
+            if (sugeridos) {
+                sugeridos.querySelectorAll('.sugerido-chip').forEach(function(chip) {
+                    chip.addEventListener('click', function() {
+                        const nombre = this.dataset.nombre;
+                        // Verificar que no esté ya
+                        if (itemsActuales.some(function(it) { return it.nombre === nombre && it.tipo === 'servicio'; })) {
+                            mostrarNotificacion('Ese servicio ya está en la lista', 'info');
+                            return;
+                        }
+                        itemsActuales.push({ tipo: 'servicio', nombre: nombre, cantidad: 1 });
+                        renderizarItemsEditor();
+                    });
+                });
+            }
+
+            // ─── Cancelar ───
+            document.getElementById('btn-paquete-cancelar').addEventListener('click', function(ev) {
+                ev.preventDefault();
+                cerrarModal();
+            });
+
+            // ─── Submit ───
+            document.getElementById('form-paquete').addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const id = document.getElementById('paquete-id').value;
+                const nombre = document.getElementById('paquete-nombre').value.trim();
+                const descripcion = document.getElementById('paquete-descripcion').value.trim();
+                const precio = parseFloat(document.getElementById('paquete-precio').value) || 0;
+                const descuento = parseFloat(document.getElementById('paquete-descuento').value) || 0;
+                const vigencia = document.getElementById('paquete-vigencia').value;
+                const estatus = document.getElementById('paquete-estatus').value;
+
+                if (!nombre || !descripcion || !vigencia) {
+                    mostrarNotificacion('Completa los campos obligatorios', 'warning');
+                    return;
+                }
+
+                const datos = {
+                    nombre: nombre,
+                    descripcion: descripcion,
+                    items: itemsActuales.slice(),
+                    precio: precio,
+                    descuento: descuento,
+                    vigencia: vigencia,
+                    estatus: estatus
+                };
+
+                if (id) {
+                    const idx = paquetes.findIndex(function(p) { return p.id === id; });
+                    if (idx !== -1) {
+                        const ant = paquetes[idx];
+                        const copiaAnt = JSON.parse(JSON.stringify(ant));
+                        const fusion = Object.assign({}, ant, datos);
+                        paquetes[idx] = fusion;
+                        const cambios = calcularDiff(copiaAnt, fusion, {
+                            camposIgnorados: ['descripcion', 'items'],
+                            etiquetas: {
+                                nombre: 'Nombre',
+                                precio: 'Precio',
+                                descuento: 'Descuento',
+                                vigencia: 'Fecha de caducidad',
+                                estatus: 'Estatus'
+                            },
+                            formatters: {
+                                precio: function(v) { return v !== undefined ? formatearMoneda(v) : ''; },
+                                descuento: function(v) { return v !== undefined ? formatearMoneda(v) : ''; },
+                                vigencia: function(v) { return v ? formatearFecha(v) : ''; }
+                            }
+                        });
+                        const cambioTexto = copiaAnt.descripcion !== fusion.descripcion || JSON.stringify(copiaAnt.items) !== JSON.stringify(fusion.items);
+                        registrarHistorial('paquete', 'editar', 'Se editó paquete: "' + nombre + '"', {
+                            id: id, nombre: nombre,
+                            cambios: cambios,
+                            cambiosOmitidos: cambioTexto ? 'La descripción o la lista de items también cambiaron pero no se registra su contenido detallado.' : null
+                        });
+                    }
+                } else {
+                    const nuevo = Object.assign({ id: generarId() }, datos, { fechaRegistro: obtenerFechaActual() });
+                    paquetes.push(nuevo);
+                    registrarHistorial('paquete', 'crear', 'Se creó paquete: "' + nombre + '"', { id: nuevo.id, nombre: nombre });
+                }
+
+                guardarDatos();
+                cerrarModal();
+                renderizarPaquetes();
+                actualizarFiltrosInformes();
+                // Si el panel lateral estaba abierto con un paquete, refrescarlo
+                if (panelLateralContexto && panelLateralContexto.tipo === 'paquete') {
+                    verDetallePaquete(panelLateralContexto.itemId);
+                }
+                mostrarNotificacion('Paquete guardado', 'success');
+            });
+        }
+        // ─────── FIN @JS-PAQUETES-FORMULARIO ───────
+
+        // ─────── @JS-PAQUETES-DETALLE ───────
+        // Detalle de paquete: panel lateral en PC, modal en móvil
+        function verDetallePaquete(paqueteId) {
+            const p = obtenerPaquete(paqueteId);
+            if (!p) { mostrarNotificacion('Paquete no encontrado', 'error'); return; }
+
+            const est = estatusPaquete(p);
+            const ce = claseEstatusPaquete(est);
+            const pf = (p.precio || 0) - (p.descuento || 0);
+            const items = p.items || [];
+            const contratosVinculados = contarContratosDePaquete(paqueteId);
+            const esAdminUser = esAdmin();
+
+            const campo = function(l, v) {
+                return '<div class="detalle-campo"><span class="lbl">' + l + '</span><span class="val">' + (v || 'No especificado') + '</span></div>';
+            };
+
+            // ─── Lista de items ───
+            let itemsHTML = '';
+            if (items.length > 0) {
+                itemsHTML = '<div class="detalle-seccion">' +
+                    '<div class="detalle-seccion-titulo"><i class="fas fa-list-check"></i> Items incluidos (' + items.length + ')</div>' +
+                    '<ul class="paquete-items-lista" style="font-size:14px;">' +
+                    items.map(function(it) {
+                        return '<li style="padding:6px 0;"><i class="fas fa-check-circle" style="color:var(--color-verde);"></i> ' +
+                            (it.nombre || 'Item') +
+                            (it.cantidad && it.cantidad > 1 ? ' <span style="color:var(--color-texto-secundario);">(x' + it.cantidad + ')</span>' : '') +
+                            (it.tipo === 'servicio' ? ' <span class="tarjeta-etiqueta" style="background:var(--color-azul);color:#fff;font-size:9px;">Catálogo</span>' : '') +
+                            '</li>';
+                    }).join('') +
+                    '</ul></div>';
+            } else {
+                itemsHTML = '<div class="detalle-seccion">' +
+                    '<div class="detalle-seccion-titulo"><i class="fas fa-list-check"></i> Items incluidos</div>' +
+                    '<div class="detalle-lista-vacia">Este paquete no tiene items registrados.</div></div>';
+            }
+
+            // ─── Alerta de contratos vinculados ───
+            let contratosHTML = '';
+            if (contratosVinculados > 0) {
+                const contratos = obtenerContratosDePaquete(paqueteId);
+                contratosHTML = '<div class="detalle-seccion" style="border-left-color:var(--color-azul);">' +
+                    '<div class="detalle-seccion-titulo" style="color:var(--color-azul);"><i class="fas fa-link"></i> Contratos vinculados (' + contratosVinculados + ')</div>' +
+                    '<div class="detalle-lista">' +
+                    contratos.map(function(c) {
+                        return '<div class="detalle-lista-item">' +
+                            '<div class="izq">' +
+                            '<span class="nota"><strong>' + (c.clienteNombre || 'Cliente') + '</strong></span>' +
+                            '<span class="fecha">Festejado: ' + (c.festejado || 'N/A') + ' · ' + formatearFecha(c.fechaEvento) + '</span>' +
+                            '</div>' +
+                            '<span class="tarjeta-etiqueta ' + (c.estado === 'Completado' ? 'etiqueta-completado' : c.estado === 'Pendiente' ? 'etiqueta-pendiente' : 'etiqueta-cancelado') + '">' + c.estado + '</span>' +
+                            '</div>';
+                    }).join('') +
+                    '</div></div>';
+            }
+
+            // ─── Acciones ───
+            let accionesHTML = '';
+            if (esAdminUser) {
+                accionesHTML = '<div class="detalle-acciones">' +
+                    '<button class="btn-primario" onclick="CRUD.paquetes.editar(\'' + p.id + '\')"><i class="fas fa-edit"></i> Editar</button>' +
+                    (contratosVinculados === 0 ? '<button class="btn-peligro" onclick="cerrarPanelLateral(); CRUD.paquetes.eliminar(\'' + p.id + '\')"><i class="fas fa-trash"></i> Eliminar</button>' : '') +
+                    '</div>';
+            }
+
+            const html = accionesHTML +
+                '<div class="detalle-header">' +
+                '<div class="detalle-cliente">' + (p.nombre || 'Sin nombre') + '</div>' +
+                '<div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + ce + '">' + est + '</span></div>' +
+                '</div>' +
+
+                '<div class="detalle-seccion">' +
+                '<div class="detalle-seccion-titulo"><i class="fas fa-align-left"></i> Descripción</div>' +
+                '<div class="detalle-notas">' + (p.descripcion || 'Sin descripción') + '</div>' +
+                '</div>' +
+
+                itemsHTML +
+
+                '<div class="detalle-seccion">' +
+                '<div class="detalle-seccion-titulo"><i class="fas fa-chart-line"></i> Información comercial</div>' +
+                '<div class="detalle-resumen-financiero">' +
+                '<div class="detalle-financiero-card"><div class="lbl">Precio</div><div class="val">' + formatearMoneda(p.precio || 0) + '</div></div>' +
+                (p.descuento ? '<div class="detalle-financiero-card"><div class="lbl">Descuento</div><div class="val">' + formatearMoneda(p.descuento) + '</div></div>' : '') +
+                '<div class="detalle-financiero-card destacado"><div class="lbl">Precio final</div><div class="val">' + formatearMoneda(pf) + '</div></div>' +
+                '</div></div>' +
+
+                '<div class="detalle-seccion">' +
+                '<div class="detalle-seccion-titulo"><i class="fas fa-calendar"></i> Vigencia</div>' +
+                '<div class="detalle-grid">' +
+                campo('Fecha de caducidad', formatearFecha(p.vigencia)) +
+                campo('Estatus actual', est) +
+                (p.fechaRegistro ? campo('Fecha de registro', formatearFecha(p.fechaRegistro)) : '') +
+                '</div></div>' +
+
+                contratosHTML;
+
+            // ─── Decidir modal vs panel según dispositivo ───
+            const esMobil = window.innerWidth <= 768;
+            if (esMobil) {
+                abrirModal('Detalle del paquete', html, true);
+            } else {
+                abrirPanelLateral('Detalle del paquete', html, { tipo: 'paquete', itemId: paqueteId });
+                marcarItemSeleccionado(paqueteId);
+            }
+        }
+        // ─────── FIN @JS-PAQUETES-DETALLE ───────
+
+        // ─────── @JS-PAQUETES-ELIMINAR ───────
+        // Eliminación validada: solo admin y sin contratos vinculados
+        function eliminarPaqueteValidado(id) {
+            if (bloquearSiNoEsAdmin('eliminar paquetes')) return;
+            const p = obtenerPaquete(id);
+            if (!p) return;
+
+            const vinculados = contarContratosDePaquete(id);
+            if (vinculados > 0) {
+                const contratos = obtenerContratosDePaquete(id);
+                let listaHTML = '<div class="detalle-entidad" style="max-height:180px;overflow-y:auto;">';
+                contratos.slice(0, 10).forEach(function(c) {
+                    listaHTML += '<div><strong>' + (c.clienteNombre || 'Cliente') + '</strong> · ' + (c.festejado || 'N/A') + ' · ' + formatearFecha(c.fechaEvento) + '</div>';
+                });
+                if (vinculados > 10) listaHTML += '<div style="font-style:italic;">... y ' + (vinculados - 10) + ' más</div>';
+                listaHTML += '</div>';
+
+                abrirModal('No se puede eliminar',
+                    '<div class="advertencia-eliminar">' +
+                        '<i class="fas fa-ban"></i>' +
+                        '<div class="texto">' +
+                            '<strong>Este paquete tiene ' + vinculados + ' contrato' + (vinculados === 1 ? '' : 's') + ' vinculado' + (vinculados === 1 ? '' : 's') + '</strong>' +
+                            'Para poder eliminarlo, primero debes eliminar o reasignar esos contratos.' +
+                            listaHTML +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="form-acciones">' +
+                        '<button type="button" class="btn-secundario" onclick="cerrarModal()">Entendido</button>' +
+                    '</div>');
+                return;
+            }
+
+            // Sin contratos vinculados: proceder a mover a papelera
+            abrirModal('Eliminar paquete',
+                '<div class="advertencia-eliminar">' +
+                    '<i class="fas fa-exclamation-triangle"></i>' +
+                    '<div class="texto">' +
+                        '<strong>Esta acción moverá el paquete a la papelera</strong>' +
+                        'Podrá restaurarse en los próximos 30 días.' +
+                        '<div class="detalle-entidad">' +
+                            '<div><strong>' + (p.nombre || 'Sin nombre') + '</strong></div>' +
+                            '<div>Precio final: ' + formatearMoneda((p.precio || 0) - (p.descuento || 0)) + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="form-grupo">' +
+                    '<label>Motivo de eliminación (opcional)</label>' +
+                    '<textarea id="papelera-motivo-input" placeholder="Ej: Descontinuado, error de captura, etc." style="min-height:60px;"></textarea>' +
+                '</div>' +
+                '<div class="form-acciones">' +
+                    '<button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button>' +
+                    '<button type="button" class="btn-peligro" id="btn-confirmar-papelera"><i class="fas fa-trash"></i> Mover a papelera</button>' +
+                '</div>');
+            document.getElementById('btn-confirmar-papelera').addEventListener('click', function() {
+                const motivo = document.getElementById('papelera-motivo-input').value.trim();
+                agregarAPapelera('paquete', p, motivo);
+                paquetes = paquetes.filter(function(x) { return x.id !== id; });
+                registrarHistorial('paquete', 'eliminar', 'Se movió paquete a papelera: "' + (p.nombre || 'sin nombre') + '"' + (motivo ? ' — Motivo: ' + motivo : ''), { id: id, nombre: p.nombre });
+                guardarDatos();
+                renderizarPaquetes();
+                actualizarFiltrosInformes();
+                renderizarPapelera();
+                cerrarModal();
+                cerrarPanelLateral();
+                mostrarNotificacion('Paquete movido a papelera', 'success');
+            });
+        }
+        // ─────── FIN @JS-PAQUETES-ELIMINAR ───────
+
+        // ─────── @JS-PAQUETES-CADUCIDAD ───────
+        // Mueve automáticamente paquetes vencidos a Caducado
+        function procesarCaducidadPaquetes() {
+            const hoy = obtenerFechaActual();
+            let cambios = 0;
+            paquetes.forEach(function(p) {
+                if (!p || !p.vigencia) return;
+                const est = estatusPaquete(p);
+                // Si ya está Inactivo, no tocar (decisión manual del admin)
+                if (est === 'Inactivo') return;
+                // Si la fecha ya pasó y no está caducado, moverlo
+                if (p.vigencia < hoy && p.estatus !== 'Caducado') {
+                    p.estatus = 'Caducado';
+                    cambios++;
+                }
+            });
+            if (cambios > 0) {
+                registrarHistorial('paquete', 'editar', 'Caducidad automática: ' + cambios + ' paquete' + (cambios === 1 ? '' : 's') + ' pasaron a estado Caducado', { nombre: null });
+                guardarDatos();
+            }
+            return cambios;
+        }
+        // ─────── FIN @JS-PAQUETES-CADUCIDAD ───────
 
         // ─────── @JS-RENDER-SERVICIOS ───────
         // Vista de tarjetas de servicios adicionales (solo admin ve los botones)
@@ -6657,13 +7372,24 @@ var DATOS_EMISOR = {
                     '</div></div>';
             }
 
-            // ─── Opciones de paquetes ───
+                     // ─── Opciones de paquetes (solo vinculables) ───
             let op = '<option value="">Seleccionar...</option>';
+            let paquetesVinculables = 0;
             paquetes.forEach(function(p) {
+                // Solo mostrar paquetes con estatus Activo, Próximo o Especial de temporada
+                if (!paqueteEsVinculable(p)) return;
+                // Si estamos editando un contrato que ya usa un paquete no vinculable, mostrarlo igual
+                const esActual = contrato && contrato.paqueteId === p.id;
+                if (!paqueteEsVinculable(p) && !esActual) return;
+                paquetesVinculables++;
                 const sel = contrato && contrato.paqueteId === p.id ? 'selected' : '';
                 const pf = (p.precio || 0) - (p.descuento || 0);
-                op += '<option value="' + p.id + '" data-precio="' + pf + '" data-nombre="' + p.nombre + '" ' + sel + '>' + p.nombre + ' - ' + formatearMoneda(pf) + '</option>';
+                const est = estatusPaquete(p);
+                op += '<option value="' + p.id + '" data-precio="' + pf + '" data-nombre="' + p.nombre + '" ' + sel + '>' + p.nombre + ' - ' + formatearMoneda(pf) + ' (' + est + ')</option>';
             });
+            if (paquetesVinculables === 0) {
+                op += '<option value="" disabled>— No hay paquetes disponibles para vincular —</option>';
+            }
 
             // ─── Opciones de servicios para "solo servicio" ───
             let os = '<option value="">Seleccionar...</option>';
@@ -9385,10 +10111,15 @@ var DATOS_EMISOR = {
 
         // ─────── @JS-LOGIN-RESTRICCIONES-ROL ───────
         // Oculta menús y botones según el rol del usuario
-        function aplicarRestriccionesPorRol() {
-            // Ocultar menú Paquetes y Servicios para operadores
+                function aplicarRestriccionesPorRol() {
+            // Ocultar menú Servicios para operadores (Paquetes ahora SÍ es visible)
             document.querySelectorAll('.menu-item.solo-admin').forEach(function(el) {
-                el.style.display = esAdmin() ? '' : 'none';
+                // Solo ocultar Servicios, no Paquetes
+                if (el.dataset.seccion === 'servicios') {
+                    el.style.display = esAdmin() ? '' : 'none';
+                } else {
+                    el.style.display = '';
+                }
             });
             // Ocultar botones "Nuevo Paquete" y "Nuevo Servicio" para operadores
             const btnNuevoPaq = document.getElementById('btn-nuevo-paquete');
@@ -9401,10 +10132,11 @@ var DATOS_EMISOR = {
                 papeleraCard.style.display = esAdmin() ? 'block' : 'none';
                 if (esAdmin()) renderizarPapelera();
             }
-            // Si el operador estaba viendo la sección de paquetes o servicios, redirigir a informes
+                        // Si el operador estaba viendo la sección de servicios, redirigir a informes
+            // (Paquetes ahora es visible para operadores en modo lectura)
             if (!esAdmin()) {
                 const seccionActiva = document.querySelector('.seccion.active');
-                if (seccionActiva && (seccionActiva.id === 'seccion-paquetes' || seccionActiva.id === 'seccion-servicios')) {
+                if (seccionActiva && seccionActiva.id === 'seccion-servicios') {
                     cambiarSeccion('informes');
                     renderizarSeccion('informes');
                 }
@@ -9479,17 +10211,24 @@ var DATOS_EMISOR = {
                 const btnCont = document.querySelector('.btn-toggle-filtros[data-target="filtros-contratos"]');
                 if (btnCont) btnCont.classList.toggle('tiene-filtros', !!contActivo);
 
-                const calActivo =
+                                const calActivo =
                     (getVal('filtro-tareas-calendario') !== 'todas') ||
                     (getInputVal('buscar-calendario') !== '');
                 const btnCal = document.querySelector('.btn-toggle-filtros[data-target="filtros-calendario"]');
                 if (btnCal) btnCal.classList.toggle('tiene-filtros', !!calActivo);
+
+                const paqActivo =
+                    (getVal('filtro-estatus-paquete') !== 'todos') ||
+                    (getInputVal('buscar-paquete') !== '');
+                const btnPaq = document.querySelector('.btn-toggle-filtros[data-target="filtros-paquetes"]');
+                if (btnPaq) btnPaq.classList.toggle('tiene-filtros', !!paqActivo);
             }
 
-            ['filtro-fecha-inicio','filtro-fecha-fin','filtro-estado-cliente','filtro-estado-contrato',
+                        ['filtro-fecha-inicio','filtro-fecha-fin','filtro-estado-cliente','filtro-estado-contrato',
              'filtro-paquete','filtro-servicio','filtro-fase-prospecto','buscar-prospecto',
              'filtro-estado-cliente-lista','buscar-cliente','filtro-estado-contrato-lista',
-             'filtro-tipo-contrato','buscar-contrato','filtro-tareas-calendario','buscar-calendario']
+             'filtro-tipo-contrato','buscar-contrato','filtro-tareas-calendario','buscar-calendario',
+             'filtro-estatus-paquete','buscar-paquete']
                 .forEach(function(id) {
                     const el = document.getElementById(id);
                     if (el) {
@@ -9558,6 +10297,12 @@ var DATOS_EMISOR = {
             if (btn) btn.addEventListener('click', abrirCambiarMiPin);
             btn = document.getElementById('btn-nuevo-usuario');
             if (btn) btn.addEventListener('click', mostrarFormularioNuevoUsuario);
+            // ─── Listeners de filtros de paquetes ───
+            btn = document.getElementById('filtro-estatus-paquete');
+            if (btn) btn.addEventListener('change', renderizarPaquetes);
+            btn = document.getElementById('buscar-paquete');
+            if (btn) btn.addEventListener('input', renderizarPaquetes);
+
 
             btn = document.getElementById('filtro-fase-prospecto');
             if (btn) btn.addEventListener('change', renderizarProspectos);
@@ -9758,12 +10503,12 @@ var DATOS_EMISOR = {
         }
 
         function renderizarSeccion(seccion) {
-            switch(seccion) {
+               switch(seccion) {
                 case 'informes': renderizarInformes(); break;
                 case 'prospectos': renderizarProspectos(); break;
                 case 'clientes': renderizarClientes(); break;
                 case 'contratos': renderizarContratos(); break;
-                case 'paquetes': if (esAdmin()) renderizarPaquetes(); break;
+                case 'paquetes': renderizarPaquetes(); break; // Ahora visible para operadores
                 case 'servicios': if (esAdmin()) renderizarServicios(); break;
                 case 'calendario': renderizarCalendario(); break;
                 case 'configuracion': renderizarHistorial(); renderizarUsuarios(); break;
@@ -9789,6 +10534,8 @@ var DATOS_EMISOR = {
                 aplicarTema(temaInicial);
                 // Purgar papelera vencida al iniciar (silencioso)
                 purgarPapeleraVencida(true);
+                // Procesar caducidad automática de paquetes
+                procesarCaducidadPaquetes();
                 guardarDatosLocal();
                 const sesion = cargarSesion();
                 if (sesion) {
