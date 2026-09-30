@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ╔══════════════════════════════════════════════════════════════════════╗
-║  REGISTRO PDA — v4.4                                                 ║
+║  REGISTRO PDA — v4.5                                                ║
 ║  Estudio Fotográfico · JFR MEDIA                                     ║
 ║                                                                      ║
 ║  ─────────────────────────────────────────────────────────────────   ║
@@ -4921,7 +4921,7 @@ var DATOS_EMISOR = {
             }
         }
 
-        // Cambia la vista de una sección y re-renderiza
+               // Cambia la vista de una sección y re-renderiza
         function cambiarVista(seccion, vista) {
             guardarVista(seccion, vista);
             actualizarToggleVista(seccion);
@@ -4929,6 +4929,8 @@ var DATOS_EMISOR = {
             if (seccion === 'clientes') renderizarClientes();
             else if (seccion === 'prospectos') renderizarProspectos();
             else if (seccion === 'contratos') renderizarContratos();
+            else if (seccion === 'paquetes') renderizarPaquetes();
+            else if (seccion === 'servicios') renderizarServicios();
             // Cerrar el panel al cambiar de vista
             cerrarPanelLateral();
         }
