@@ -3570,7 +3570,7 @@ html[data-theme="angel"] .etiqueta-paquete-caducado { background-color: rgba(239
                 <li class="menu-item" data-seccion="prospectos" data-label="Prospectos"><i class="fas fa-users"></i><span>Prospectos</span></li>
                 <li class="menu-item" data-seccion="clientes" data-label="Clientes"><i class="fas fa-user-check"></i><span>Clientes</span></li>
                 <li class="menu-item" data-seccion="contratos" data-label="Contratos"><i class="fas fa-file-contract"></i><span>Contratos</span></li>
-                <li class="menu-item solo-admin" data-seccion="paquetes" data-label="Paquetes"><i class="fas fa-box"></i><span>Paquetes</span></li>
+               <li class="menu-item" data-seccion="paquetes" data-label="Paquetes"><i class="fas fa-box"></i><span>Paquetes</span></li>
                 <li class="menu-item solo-admin" data-seccion="servicios" data-label="Servicios"><i class="fas fa-tools"></i><span>Servicios</span></li>
                 <li class="menu-item" data-seccion="calendario" data-label="Calendario"><i class="fas fa-calendar-alt"></i><span>Calendario</span></li>
                 <li class="menu-item" data-seccion="configuracion" data-label="Configuración"><i class="fas fa-cog"></i><span>Configuración</span></li>
@@ -10111,15 +10111,10 @@ var DATOS_EMISOR = {
 
         // ─────── @JS-LOGIN-RESTRICCIONES-ROL ───────
         // Oculta menús y botones según el rol del usuario
-                function aplicarRestriccionesPorRol() {
-            // Ocultar menú Servicios para operadores (Paquetes ahora SÍ es visible)
+                        function aplicarRestriccionesPorRol() {
+            // Ocultar menú Servicios para operadores (sigue siendo solo admin)
             document.querySelectorAll('.menu-item.solo-admin').forEach(function(el) {
-                // Solo ocultar Servicios, no Paquetes
-                if (el.dataset.seccion === 'servicios') {
-                    el.style.display = esAdmin() ? '' : 'none';
-                } else {
-                    el.style.display = '';
-                }
+                el.style.display = esAdmin() ? '' : 'none';
             });
             // Ocultar botones "Nuevo Paquete" y "Nuevo Servicio" para operadores
             const btnNuevoPaq = document.getElementById('btn-nuevo-paquete');
@@ -10258,7 +10253,8 @@ var DATOS_EMISOR = {
             document.querySelectorAll('.menu-item').forEach(function(item) {
                 item.addEventListener('click', function() {
                     const seccion = this.dataset.seccion;
-                    if ((seccion === 'paquetes' || seccion === 'servicios') && !esAdmin()) {
+                    // Solo Servicios sigue restringido a admin. Paquetes ahora es visible para todos (solo lectura para operadores).
+                    if (seccion === 'servicios' && !esAdmin()) {
                         mostrarNotificacion('Solo administradores pueden acceder a esta sección.', 'warning');
                         return;
                     }
