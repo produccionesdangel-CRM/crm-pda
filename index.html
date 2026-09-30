@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ╔══════════════════════════════════════════════════════════════════════╗
-║  REGISTRO PDA — v4.4                                                 ║
+║  REGISTRO PDA — v4.5                                                ║
 ║  Estudio Fotográfico · JFR MEDIA                                     ║
 ║                                                                      ║
 ║  ─────────────────────────────────────────────────────────────────   ║
@@ -57,7 +57,7 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Registro PDA v4.4 - Estudio Fotografía</title>
+    <title>Registro PDA v4.5 - Estudio Fotografía</title>
     <link rel="icon" type="image/jpeg" href="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -776,6 +776,205 @@
         #lista-tareas .tarjeta-acciones .btn-editar:hover { color: var(--color-acento); }
         #lista-tareas .tarjeta-acciones .btn-eliminar:hover { color: var(--color-rojo); }
         #lista-tareas .tarjeta-acciones .btn-completar:hover { color: var(--color-verde); }
+        /* ─────── @CSS-SECTIONS-VISTA-TOGGLE ─────── */
+        /* Botón de cambio mosaico/lista */
+        .btn-view-toggle {
+            display: inline-flex;
+            background-color: var(--color-bg-secundario);
+            border: 1px solid var(--color-borde);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+        .btn-view-toggle button {
+            background: none;
+            border: none;
+            color: var(--color-texto-secundario);
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-view-toggle button:hover {
+            background-color: var(--color-bg-hover);
+            color: var(--color-texto-primario);
+        }
+        .btn-view-toggle button.active {
+            background-color: var(--color-acento);
+            color: var(--color-acento-contraste);
+        }
+
+        /* ─────── @CSS-SECTIONS-VISTA-LISTA ─────── */
+        /* Vista lista: filas expandidas */
+        .lista-registros {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .lista-fila {
+            background-color: var(--color-bg-card);
+            border: 1px solid var(--color-borde);
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .lista-fila:hover {
+            border-color: var(--color-acento);
+            background-color: var(--color-bg-card-hover);
+            box-shadow: 0 4px 12px var(--color-shadow);
+            transform: translateY(-1px);
+        }
+        .lista-fila.seleccionado {
+            border-color: var(--color-acento);
+            border-width: 2px;
+            box-shadow: 0 0 0 3px rgba(199, 125, 255, 0.15);
+            background-color: var(--color-bg-card-hover);
+        }
+        .lista-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--color-acento);
+            color: var(--color-acento-contraste);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .lista-avatar.avatar-contrato {
+            background: var(--color-azul);
+            border-radius: 10px;
+        }
+        .lista-avatar.avatar-prospecto {
+            background: var(--color-morado);
+        }
+        .lista-contenido {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .lista-titulo-linea {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+        .lista-titulo {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-texto-primario);
+            word-break: break-word;
+        }
+        .lista-datos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--color-texto-secundario);
+        }
+        .lista-datos span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            word-break: break-word;
+        }
+        .lista-datos i { font-size: 11px; opacity: 0.7; }
+        .lista-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--color-texto-secundario);
+            margin-top: 2px;
+        }
+        .lista-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .lista-meta i { font-size: 11px; opacity: 0.7; }
+        .lista-meta strong { color: var(--color-texto-primario); font-weight: 600; }
+        .lista-acciones {
+            display: flex;
+            gap: 2px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+        .lista-acciones button {
+            background: none;
+            border: none;
+            color: var(--color-texto-secundario);
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+        .lista-acciones button:hover {
+            background-color: var(--color-bg-hover);
+            color: var(--color-texto-primario);
+        }
+        .lista-acciones button.btn-editar:hover { color: var(--color-acento); }
+        .lista-acciones button.btn-eliminar:hover { color: var(--color-rojo); }
+        .lista-acciones button.btn-convertir:hover { color: var(--color-verde); }
+        .lista-acciones button.btn-pago:hover { color: var(--color-naranja); }
+        .lista-acciones button.btn-tarea:hover { color: var(--color-morado); }
+        .lista-acciones button.btn-whatsapp:hover { color: var(--color-whatsapp); }
+        .lista-acciones button.btn-imprimir:hover { color: #1a237e; }
+        .lista-acciones button.btn-calendar:hover { color: #4285f4; }
+
+        /* ─── Ajustes responsive para vista lista ─── */
+        @media (max-width: 768px) {
+            .btn-view-toggle button {
+                padding: 10px 12px;
+                font-size: 15px;
+                min-width: 44px;
+                min-height: 44px;
+                justify-content: center;
+            }
+            .btn-view-toggle button span {
+                display: none;
+            }
+            .lista-fila {
+                flex-wrap: wrap;
+                padding: 12px;
+            }
+            .lista-avatar {
+                width: 38px;
+                height: 38px;
+                font-size: 15px;
+            }
+            .lista-acciones {
+                width: 100%;
+                justify-content: flex-end;
+                padding-top: 8px;
+                border-top: 1px solid var(--color-borde-suave);
+                gap: 4px;
+            }
+            .lista-acciones button {
+                padding: 10px 12px;
+                font-size: 15px;
+                min-width: 44px;
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        /* ─────── FIN @CSS-SECTIONS-VISTA-TOGGLE ─────── */
+        /* ─────── FIN @CSS-SECTIONS-VISTA-LISTA ─────── */
         /* ─────── FIN @CSS-SECTIONS-TAREAS ─────── */
 
         /* ─────── @CSS-SECTIONS-CALENDARIO ─────── */
@@ -3200,7 +3399,7 @@
             <!-- ─────── FIN @HTML-LOGIN-PASO-NUEVO-PIN ─────── -->
             
             <div class="login-footer">
-                v4.4 · Software diseñado por <strong>JFR MEDIA</strong><br>
+                v4.5 · Software diseñado por <strong>JFR MEDIA</strong><br>
                 Acceso restringido a personal autorizado
             </div>
         </div>
@@ -3240,7 +3439,7 @@
             <div class="sidebar-footer">
                 <button class="btn-colapsar" id="btn-colapsar" title="Colapsar menú"><i class="fas fa-chevron-left"></i><span>Colapsar</span></button>
                 <button class="btn-logout" id="btn-logout" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></button>
-                <div class="version">v4.4</div>
+                <div class="version">v4.5</div>
             </div>
         </nav>
         <!-- ─────── FIN @HTML-SIDEBAR ─────── -->
@@ -3329,9 +3528,15 @@
             <!-- @HTML-SECTION-PROSPECTOS                                 -->
             <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-prospectos" class="seccion">
-                <div class="seccion-header">
+                                <div class="seccion-header">
                     <h1><i class="fas fa-users"></i> Prospectos</h1>
-                    <button class="btn-primario" id="btn-nuevo-prospecto"><i class="fas fa-plus"></i> Nuevo Prospecto</button>
+                    <div class="header-actions">
+                        <div class="btn-view-toggle" data-vista-seccion="prospectos">
+                            <button class="btn-vista-mosaico active" title="Vista mosaico"><i class="fas fa-th-large"></i> <span>Mosaico</span></button>
+                            <button class="btn-vista-lista" title="Vista lista"><i class="fas fa-list"></i> <span>Lista</span></button>
+                        </div>
+                        <button class="btn-primario" id="btn-nuevo-prospecto"><i class="fas fa-plus"></i> Nuevo Prospecto</button>
+                    </div>
                 </div>
                 <button type="button" class="btn-toggle-filtros" data-target="filtros-prospectos">
                     <span><i class="fas fa-filter"></i> Filtros <span class="btn-toggle-filtros-badge">activos</span></span>
@@ -3360,9 +3565,15 @@
             <!-- @HTML-SECTION-CLIENTES                                   -->
             <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-clientes" class="seccion">
-                <div class="seccion-header">
+                                <div class="seccion-header">
                     <h1><i class="fas fa-user-check"></i> Clientes</h1>
-                    <button class="btn-primario" id="btn-nuevo-cliente"><i class="fas fa-plus"></i> Nuevo Cliente</button>
+                    <div class="header-actions">
+                        <div class="btn-view-toggle" data-vista-seccion="clientes">
+                            <button class="btn-vista-mosaico active" title="Vista mosaico"><i class="fas fa-th-large"></i> <span>Mosaico</span></button>
+                            <button class="btn-vista-lista" title="Vista lista"><i class="fas fa-list"></i> <span>Lista</span></button>
+                        </div>
+                        <button class="btn-primario" id="btn-nuevo-cliente"><i class="fas fa-plus"></i> Nuevo Cliente</button>
+                    </div>
                 </div>
                 <button type="button" class="btn-toggle-filtros" data-target="filtros-clientes">
                     <span><i class="fas fa-filter"></i> Filtros <span class="btn-toggle-filtros-badge">activos</span></span>
@@ -3387,9 +3598,15 @@
             <!-- @HTML-SECTION-CONTRATOS                                  -->
             <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-contratos" class="seccion">
-                <div class="seccion-header">
+                                <div class="seccion-header">
                     <h1><i class="fas fa-file-contract"></i> Contratos</h1>
-                    <button class="btn-primario" id="btn-nuevo-contrato"><i class="fas fa-plus"></i> Nuevo Contrato</button>
+                    <div class="header-actions">
+                        <div class="btn-view-toggle" data-vista-seccion="contratos">
+                            <button class="btn-vista-mosaico active" title="Vista mosaico"><i class="fas fa-th-large"></i> <span>Mosaico</span></button>
+                            <button class="btn-vista-lista" title="Vista lista"><i class="fas fa-list"></i> <span>Lista</span></button>
+                        </div>
+                        <button class="btn-primario" id="btn-nuevo-contrato"><i class="fas fa-plus"></i> Nuevo Contrato</button>
+                    </div>
                 </div>
                 <button type="button" class="btn-toggle-filtros" data-target="filtros-contratos">
                     <span><i class="fas fa-filter"></i> Filtros <span class="btn-toggle-filtros-badge">activos</span></span>
@@ -3657,12 +3874,36 @@
 
                 <!-- ─────── @HTML-CONFIG-VERSION-CARD ─────── -->
                                <div class="version-card">
-                                       <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v4.4</span></h3>
+                               <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v4.5</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">4.4</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">4.5</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
+                    </div>
+                    <div class="changelog-section">
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v4.5)</h4>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-th-large"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Vista mosaico o lista</div>
+                                <div class="changelog-desc">
+                                    En Prospectos, Clientes y Contratos ahora puedes cambiar entre vista mosaico
+                                    y vista lista con un botón toggle. La preferencia se guarda por sección.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-columns"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Panel lateral unificado</div>
+                                <div class="changelog-desc">
+                                    El panel lateral derecho ahora se reutiliza para mostrar el detalle de contratos,
+                                    clientes y prospectos en PC. Al hacer clic en cualquier tarjeta/fila se abre
+                                    el panel con el detalle correspondiente.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="changelog-section">
                         <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v4.4)</h4>
@@ -3814,10 +4055,11 @@
                </main>
 
         <!-- ─────── @HTML-PANEL-LATERAL ─────── -->
-        <!-- Panel lateral derecho para detalle de contratos en PC -->
-        <aside class="panel-lateral" id="panel-lateral-contrato" style="display:none;">
+               <!-- ─────── @HTML-PANEL-LATERAL ─────── -->
+        <!-- Panel lateral derecho global para mostrar detalles en PC -->
+        <aside class="panel-lateral" id="panel-lateral-global" style="display:none;">
             <div class="panel-lateral-header">
-                <h2 id="panel-lateral-titulo">Detalle del contrato</h2>
+                <h2 id="panel-lateral-titulo">Detalle</h2>
                 <button class="panel-lateral-cerrar" id="panel-lateral-cerrar">&times;</button>
             </div>
             <div class="panel-lateral-body" id="panel-lateral-body"></div>
@@ -3852,7 +4094,7 @@
         /* ═══════════════════════════════════════════════════════════ */
 
         // ─────── @JS-CONFIG-VERSION ───────
-        var VERSION = '4.4';
+        var VERSION = '4.5';
         // ─────── FIN @JS-CONFIG-VERSION ───────
 
         // ─────── @JS-CONFIG-CONSTANTES ───────
@@ -4120,9 +4362,10 @@ var DATOS_EMISOR = {
 
         // ─────── @JS-STATE-PREFERENCES ───────
         // Claves de localStorage
-        var PREF_TEMA = 'pda_tema';
+                var PREF_TEMA = 'pda_tema';
         var PREF_SIDEBAR = 'pda_sidebar_colapsado';
         var PREF_SESION = 'pda_sesion';
+        var PREF_VISTA = 'pda_vista_';
         // ─────── FIN @JS-STATE-PREFERENCES ───────
 
         // ─────── @JS-STATE-USER ───────
@@ -4459,6 +4702,49 @@ var DATOS_EMISOR = {
             }
         }
         // ─────── FIN @JS-UTILS-PAPELERA ───────
+        // ─────── @JS-UTILS-VISTA ───────
+        // Control de vista mosaico/lista por sección
+        function obtenerVista(seccion) {
+            return localStorage.getItem(PREF_VISTA + seccion) || 'mosaico';
+        }
+
+        function guardarVista(seccion, vista) {
+            localStorage.setItem(PREF_VISTA + seccion, vista);
+        }
+
+        function esVistaLista(seccion) {
+            return obtenerVista(seccion) === 'lista';
+        }
+
+        // Actualiza los botones del toggle según la vista activa
+        function actualizarToggleVista(seccion) {
+            const toggle = document.querySelector('.btn-view-toggle[data-vista-seccion="' + seccion + '"]');
+            if (!toggle) return;
+            const vista = obtenerVista(seccion);
+            toggle.querySelectorAll('button').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            if (vista === 'lista') {
+                const btn = toggle.querySelector('.btn-vista-lista');
+                if (btn) btn.classList.add('active');
+            } else {
+                const btn = toggle.querySelector('.btn-vista-mosaico');
+                if (btn) btn.classList.add('active');
+            }
+        }
+
+        // Cambia la vista de una sección y re-renderiza
+        function cambiarVista(seccion, vista) {
+            guardarVista(seccion, vista);
+            actualizarToggleVista(seccion);
+            // Re-renderizar la sección correspondiente
+            if (seccion === 'clientes') renderizarClientes();
+            else if (seccion === 'prospectos') renderizarProspectos();
+            else if (seccion === 'contratos') renderizarContratos();
+            // Cerrar el panel al cambiar de vista
+            cerrarPanelLateral();
+        }
+        // ─────── FIN @JS-UTILS-VISTA ───────
         // ─────── FIN @JS-UTILS-TELEFONO ───────
 
         /* ═══════════════════════════════════════════════════════════ */
@@ -4859,12 +5145,13 @@ var DATOS_EMISOR = {
             btn.innerHTML = '<i class="fas fa-bars"></i>';
         }
         // ─────── FIN @JS-UI-SIDEBAR-MOVIL ───────
-                // ─────── @JS-UI-PANEL-LATERAL ───────
-        // Panel lateral derecho para mostrar detalle de contratos en PC
-        // El panel vive dentro del app-container como hermano del main-content,
-        // por eso ocupa toda la altura desde el top de la ventana.
-        function abrirPanelLateral(titulo, contenidoHTML) {
-            const panel = document.getElementById('panel-lateral-contrato');
+                       // ─────── @JS-UI-PANEL-LATERAL ───────
+        // Panel lateral derecho global para mostrar detalles en PC
+        // Se reutiliza para contratos, clientes y prospectos.
+        var panelLateralContexto = null; // { tipo: 'contrato'|'cliente'|'prospecto', itemId }
+
+        function abrirPanelLateral(titulo, contenidoHTML, contexto) {
+            const panel = document.getElementById('panel-lateral-global');
             const tituloEl = document.getElementById('panel-lateral-titulo');
             const bodyEl = document.getElementById('panel-lateral-body');
             if (!panel || !tituloEl || !bodyEl) return;
@@ -4872,32 +5159,38 @@ var DATOS_EMISOR = {
             bodyEl.innerHTML = contenidoHTML;
             panel.style.display = 'flex';
             panel.classList.add('abierto');
+            panelLateralContexto = contexto || null;
         }
 
         function cerrarPanelLateral() {
-            const panel = document.getElementById('panel-lateral-contrato');
+            const panel = document.getElementById('panel-lateral-global');
             const bodyEl = document.getElementById('panel-lateral-body');
             if (!panel) return;
             panel.classList.remove('abierto');
             panel.style.display = 'none';
             if (bodyEl) bodyEl.innerHTML = '';
-            // Quitar estado seleccionado de todas las tarjetas
-            document.querySelectorAll('.mosaico-card.seleccionado').forEach(function(c) {
+            panelLateralContexto = null;
+            // Quitar estado seleccionado de todas las tarjetas/filas
+            document.querySelectorAll('.mosaico-card.seleccionado, .lista-fila.seleccionado').forEach(function(c) {
                 c.classList.remove('seleccionado');
             });
         }
 
-        function marcarContratoSeleccionado(contratoId) {
-            document.querySelectorAll('#lista-contratos .mosaico-card').forEach(function(card) {
+        function marcarItemSeleccionado(itemId) {
+            document.querySelectorAll('.mosaico-card.seleccionado, .lista-fila.seleccionado').forEach(function(card) {
                 card.classList.remove('seleccionado');
             });
-            const cards = document.querySelectorAll('#lista-contratos .mosaico-card');
-            cards.forEach(function(card) {
+            document.querySelectorAll('.mosaico-card, .lista-fila').forEach(function(card) {
                 const onclick = card.getAttribute('onclick') || '';
-                if (onclick.indexOf(contratoId) !== -1) {
+                if (onclick.indexOf("'" + itemId + "'") !== -1) {
                     card.classList.add('seleccionado');
                 }
             });
+        }
+
+        // Compatibilidad con el nombre anterior (contratos)
+        function marcarContratoSeleccionado(contratoId) {
+            marcarItemSeleccionado(contratoId);
         }
         // ─────── FIN @JS-UI-PANEL-LATERAL ───────
         /* ═══════════════════════════════════════════════════════════ */
@@ -5221,10 +5514,10 @@ var DATOS_EMISOR = {
                 }
             });
         }
-        // ─────── FIN @JS-RENDER-SERVICIOS ───────
-
-        // ─────── @JS-RENDER-CLIENTES ───────
-        // Vista de tarjetas de clientes (con badge de tareas vinculadas)
+        // ─────── FIN @JS-RENDER-SERVICIOS ───────       
+      
+         // ─────── @JS-RENDER-CLIENTES ───────
+        // Vista de clientes (soporta modo mosaico y lista)
         function renderizarClientes() {
             const filtroEstado = document.getElementById('filtro-estado-cliente-lista').value;
             const busqueda = document.getElementById('buscar-cliente').value.toLowerCase().trim();
@@ -5232,35 +5525,89 @@ var DATOS_EMISOR = {
             if (filtroEstado !== 'todos') f = f.filter(function(c) { return c && c.estado === filtroEstado; });
             if (busqueda) f = f.filter(function(c) { return c && (c.nombre.toLowerCase().indexOf(busqueda) !== -1 || c.telefono.indexOf(busqueda) !== -1); });
 
-            renderizarMosaicos({
-                contenedorId: 'lista-clientes', items: f, textoVacio: 'No hay clientes',
-                renderContenido: function(c) {
+            // Aplicar vista según preferencia
+            actualizarToggleVista('clientes');
+            const vistaLista = esVistaLista('clientes');
+
+            if (vistaLista) {
+                // ─── VISTA LISTA ───
+                const cont = document.getElementById('lista-clientes');
+                if (!cont) return;
+                if (f.length === 0) {
+                    cont.innerHTML = '<p class="mensaje-vacio">No hay clientes</p>';
+                    return;
+                }
+                // Remover clases de mosaico y usar lista
+                cont.className = 'lista-registros';
+                cont.innerHTML = f.map(function(c) {
                     const ec = c.estado === 'Activo' ? 'etiqueta-interesado' : c.estado === 'Inactivo' ? 'etiqueta-inactivo' : 'etiqueta-cancelado';
                     const tc = c.contratos ? c.contratos.length : 0;
                     const uc = tc > 0 ? formatearFecha(c.contratos[c.contratos.length - 1].fechaContrato) : '';
                     const numTareas = tareas.filter(function(t) { return t.clienteId === c.id; }).length;
-                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + c.nombre + '</div></div>' +
-                        '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span>' +
-                        (c.faseOrigen ? '<span class="tarjeta-etiqueta" style="background:var(--color-azul);color:#fff;">' + c.faseOrigen + '</span>' : '') +
-                        (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') +
-                        '</div>' +
-                        '<div class="mosaico-separador"></div>' +
-                        '<div class="mosaico-detalle"><div><i class="fas fa-phone"></i> ' + c.telefono + '</div>' +
-                        (c.email ? '<div><i class="fas fa-envelope"></i> ' + c.email + '</div>' : '') +
-                        '<div><small>Registrado: ' + formatearFecha(c.fechaRegistro) + '</small></div></div>' +
-                        '<div class="mosaico-summary"><span><i class="fas fa-file-contract"></i> ' + tc + ' contrato' + (tc === 1 ? '' : 's') + '</span>' +
-                        (uc ? '<span class="monto">' + uc + '</span>' : '') + '</div>';
-                },
-                renderAcciones: function(c) {
                     const tieneTelefono = c.telefono && normalizarTelefonoWhatsApp(c.telefono);
-                    return '<button class="btn-ver-detalle" onclick="verDetalleCliente(\'' + c.id + '\')" title="Ver detalle"><i class="fas fa-eye"></i></button>' +
-                        '<button class="btn-editar" onclick="CRUD.clientes.editar(\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
-                        '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + c.id + '\', \'cliente\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
-                        '<button class="btn-convertir" onclick="mostrarFormularioContrato(\'' + c.id + '\')" title="Agregar contrato"><i class="fas fa-file-contract"></i></button>' +
-                        '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.id + '\')" title="Enviar WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button>' +
-                        (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarCliente(\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '');
-                }
-            });
+                    const inicial = (c.nombre || 'C').charAt(0).toUpperCase();
+
+                    return '<div class="lista-fila" onclick="verDetalleCliente(\'' + c.id + '\')">' +
+                        '<div class="lista-avatar">' + inicial + '</div>' +
+                        '<div class="lista-contenido">' +
+                            '<div class="lista-titulo-linea">' +
+                                '<span class="lista-titulo">' + c.nombre + '</span>' +
+                                '<span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span>' +
+                                (c.faseOrigen ? '<span class="tarjeta-etiqueta" style="background:var(--color-azul);color:#fff;">' + c.faseOrigen + '</span>' : '') +
+                            '</div>' +
+                            '<div class="lista-datos">' +
+                                (c.telefono ? '<span><i class="fas fa-phone"></i> ' + c.telefono + '</span>' : '') +
+                                (c.email ? '<span><i class="fas fa-envelope"></i> ' + c.email + '</span>' : '') +
+                            '</div>' +
+                            '<div class="lista-meta">' +
+                                '<span><i class="fas fa-file-contract"></i> <strong>' + tc + '</strong> contrato' + (tc === 1 ? '' : 's') + (uc ? ' · Último: ' + uc : '') + '</span>' +
+                                (numTareas > 0 ? '<span><i class="fas fa-tasks"></i> <strong>' + numTareas + '</strong> tarea' + (numTareas === 1 ? '' : 's') + '</span>' : '') +
+                                '<span><i class="fas fa-calendar"></i> Registrado: ' + formatearFecha(c.fechaRegistro) + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="lista-acciones" onclick="event.stopPropagation()">' +
+                            '<button class="btn-editar" onclick="CRUD.clientes.editar(\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + c.id + '\', \'cliente\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
+                            '<button class="btn-convertir" onclick="mostrarFormularioContrato(\'' + c.id + '\')" title="Agregar contrato"><i class="fas fa-file-contract"></i></button>' +
+                            '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.id + '\')" title="WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button>' +
+                            (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarCliente(\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '') +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            } else {
+                // ─── VISTA MOSAICO ───
+                const cont = document.getElementById('lista-clientes');
+                if (cont) cont.className = 'mosaico-grid';
+                renderizarMosaicos({
+                    contenedorId: 'lista-clientes', items: f, textoVacio: 'No hay clientes',
+                    onCardClick: function(c) { return 'verDetalleCliente(\'' + c.id + '\')'; },
+                    renderContenido: function(c) {
+                        const ec = c.estado === 'Activo' ? 'etiqueta-interesado' : c.estado === 'Inactivo' ? 'etiqueta-inactivo' : 'etiqueta-cancelado';
+                        const tc = c.contratos ? c.contratos.length : 0;
+                        const uc = tc > 0 ? formatearFecha(c.contratos[c.contratos.length - 1].fechaContrato) : '';
+                        const numTareas = tareas.filter(function(t) { return t.clienteId === c.id; }).length;
+                        return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + c.nombre + '</div></div>' +
+                            '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span>' +
+                            (c.faseOrigen ? '<span class="tarjeta-etiqueta" style="background:var(--color-azul);color:#fff;">' + c.faseOrigen + '</span>' : '') +
+                            (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') +
+                            '</div>' +
+                            '<div class="mosaico-separador"></div>' +
+                            '<div class="mosaico-detalle"><div><i class="fas fa-phone"></i> ' + c.telefono + '</div>' +
+                            (c.email ? '<div><i class="fas fa-envelope"></i> ' + c.email + '</div>' : '') +
+                            '<div><small>Registrado: ' + formatearFecha(c.fechaRegistro) + '</small></div></div>' +
+                            '<div class="mosaico-summary"><span><i class="fas fa-file-contract"></i> ' + tc + ' contrato' + (tc === 1 ? '' : 's') + '</span>' +
+                            (uc ? '<span class="monto">' + uc + '</span>' : '') + '</div>';
+                    },
+                    renderAcciones: function(c) {
+                        const tieneTelefono = c.telefono && normalizarTelefonoWhatsApp(c.telefono);
+                        return '<button class="btn-editar" onclick="CRUD.clientes.editar(\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + c.id + '\', \'cliente\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
+                            '<button class="btn-convertir" onclick="mostrarFormularioContrato(\'' + c.id + '\')" title="Agregar contrato"><i class="fas fa-file-contract"></i></button>' +
+                            '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.id + '\')" title="Enviar WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button>' +
+                            (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarCliente(\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '');
+                    }
+                });
+            }
         }
         // ─────── FIN @JS-RENDER-CLIENTES ───────
 
@@ -5268,8 +5615,8 @@ var DATOS_EMISOR = {
         /* @JS-PROSPECTOS — Gestión completa de prospectos              */
         /* ═══════════════════════════════════════════════════════════ */
 
-        // ─────── @JS-PROSPECTOS-RENDER ───────
-        // Vista de tarjetas de prospectos
+               // ─────── @JS-PROSPECTOS-RENDER ───────
+        // Vista de prospectos (soporta modo mosaico y lista)
         function renderizarProspectos() {
             const filtroFase = document.getElementById('filtro-fase-prospecto').value;
             const busqueda = document.getElementById('buscar-prospecto').value.toLowerCase().trim();
@@ -5277,31 +5624,79 @@ var DATOS_EMISOR = {
             if (filtroFase !== 'todas') f = f.filter(function(p) { return p && p.faseActual === filtroFase; });
             if (busqueda) f = f.filter(function(p) { return p && (p.nombre.toLowerCase().indexOf(busqueda) !== -1 || (p.telefono && p.telefono.indexOf(busqueda) !== -1)); });
 
-            renderizarMosaicos({
-                contenedorId: 'lista-prospectos', items: f, textoVacio: 'No hay prospectos',
-                renderContenido: function(p) {
+            actualizarToggleVista('prospectos');
+            const vistaLista = esVistaLista('prospectos');
+
+            if (vistaLista) {
+                // ─── VISTA LISTA ───
+                const cont = document.getElementById('lista-prospectos');
+                if (!cont) return;
+                if (f.length === 0) {
+                    cont.innerHTML = '<p class="mensaje-vacio">No hay prospectos</p>';
+                    return;
+                }
+                cont.className = 'lista-registros';
+                cont.innerHTML = f.map(function(p) {
                     const cf = 'etiqueta-' + p.faseActual.toLowerCase().replace('ó', 'o').replace('á', 'a').replace('é', 'e');
                     const ec = p.clienteId !== null && p.clienteId !== undefined;
                     const numTareas = tareas.filter(function(t) { return t.clienteId === 'pro_' + p.id; }).length;
-                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + p.nombre + '</div></div>' +
-                        '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + p.faseActual + '</span>' +
-                        (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') +
-                        (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') +
+                    const inicial = (p.nombre || 'P').charAt(0).toUpperCase();
+
+                    return '<div class="lista-fila" onclick="verDetalleProspecto(\'' + p.id + '\')">' +
+                        '<div class="lista-avatar avatar-prospecto">' + inicial + '</div>' +
+                        '<div class="lista-contenido">' +
+                            '<div class="lista-titulo-linea">' +
+                                '<span class="lista-titulo">' + p.nombre + '</span>' +
+                                '<span class="tarjeta-etiqueta ' + cf + '">' + p.faseActual + '</span>' +
+                                (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') +
+                            '</div>' +
+                            '<div class="lista-datos">' +
+                                (p.telefono ? '<span><i class="fas fa-phone"></i> ' + p.telefono + '</span>' : '') +
+                                (p.email ? '<span><i class="fas fa-envelope"></i> ' + p.email + '</span>' : '') +
+                            '</div>' +
+                            '<div class="lista-meta">' +
+                                (numTareas > 0 ? '<span><i class="fas fa-tasks"></i> <strong>' + numTareas + '</strong> tarea' + (numTareas === 1 ? '' : 's') + '</span>' : '') +
+                                '<span><i class="fas fa-calendar"></i> Registrado: ' + formatearFecha(p.fechaRegistro) + '</span>' +
+                            '</div>' +
                         '</div>' +
-                        '<div class="mosaico-separador"></div>' +
-                        '<div class="mosaico-detalle">' + (p.telefono ? '<div><i class="fas fa-phone"></i> ' + p.telefono + '</div>' : '') +
-                        (p.email ? '<div><i class="fas fa-envelope"></i> ' + p.email + '</div>' : '') +
-                        '<div><small>Registrado: ' + formatearFecha(p.fechaRegistro) + '</small></div></div>';
-                },
-                renderAcciones: function(p) {
-                    const ec = p.clienteId !== null && p.clienteId !== undefined;
-                    return '<button class="btn-ver-detalle" onclick="verDetalleProspecto(\'' + p.id + '\')" title="Ver detalle"><i class="fas fa-eye"></i></button>' +
-                        '<button class="btn-editar" onclick="editarProspecto(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
-                        '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + p.id + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
-                        (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + p.id + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') +
-                        '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
-                }
-            });
+                        '<div class="lista-acciones" onclick="event.stopPropagation()">' +
+                            '<button class="btn-editar" onclick="editarProspecto(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + p.id + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
+                            (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + p.id + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') +
+                            '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            } else {
+                // ─── VISTA MOSAICO ───
+                const cont = document.getElementById('lista-prospectos');
+                if (cont) cont.className = 'mosaico-grid';
+                renderizarMosaicos({
+                    contenedorId: 'lista-prospectos', items: f, textoVacio: 'No hay prospectos',
+                    onCardClick: function(p) { return 'verDetalleProspecto(\'' + p.id + '\')'; },
+                    renderContenido: function(p) {
+                        const cf = 'etiqueta-' + p.faseActual.toLowerCase().replace('ó', 'o').replace('á', 'a').replace('é', 'e');
+                        const ec = p.clienteId !== null && p.clienteId !== undefined;
+                        const numTareas = tareas.filter(function(t) { return t.clienteId === 'pro_' + p.id; }).length;
+                        return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + p.nombre + '</div></div>' +
+                            '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + p.faseActual + '</span>' +
+                            (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') +
+                            (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') +
+                            '</div>' +
+                            '<div class="mosaico-separador"></div>' +
+                            '<div class="mosaico-detalle">' + (p.telefono ? '<div><i class="fas fa-phone"></i> ' + p.telefono + '</div>' : '') +
+                            (p.email ? '<div><i class="fas fa-envelope"></i> ' + p.email + '</div>' : '') +
+                            '<div><small>Registrado: ' + formatearFecha(p.fechaRegistro) + '</small></div></div>';
+                    },
+                    renderAcciones: function(p) {
+                        const ec = p.clienteId !== null && p.clienteId !== undefined;
+                        return '<button class="btn-editar" onclick="editarProspecto(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + p.id + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' +
+                            (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + p.id + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') +
+                            '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
+                    }
+                });
+            }
         }
         // ─────── FIN @JS-PROSPECTOS-RENDER ───────
 
@@ -6026,7 +6421,8 @@ var DATOS_EMISOR = {
         // ─────── FIN @JS-TAREAS-TOGGLE-DESDE-DETALLE ───────
 
         // ─────── @JS-TAREAS-DETALLE-CLIENTE ───────
-        // Modal de detalle de cliente con lista de tareas vinculadas
+               // ─────── @JS-TAREAS-DETALLE-CLIENTE ───────
+        // Detalle de cliente: panel lateral en PC, modal en móvil
         function verDetalleCliente(clienteId) {
             const c = obtenerCliente(clienteId);
             if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
@@ -6039,12 +6435,18 @@ var DATOS_EMISOR = {
                 idParaTareas: clienteId,
                 subtitulo: contratos + ' contrato' + (contratos === 1 ? '' : 's') + ' · Estado: ' + c.estado
             });
-            abrirModal('Detalle del cliente', html, true);
+            const esMobil = window.innerWidth <= 768;
+            if (esMobil) {
+                abrirModal('Detalle del cliente', html, true);
+            } else {
+                abrirPanelLateral('Detalle del cliente', html, { tipo: 'cliente', itemId: clienteId });
+                marcarItemSeleccionado(clienteId);
+            }
         }
         // ─────── FIN @JS-TAREAS-DETALLE-CLIENTE ───────
 
-        // ─────── @JS-TAREAS-DETALLE-PROSPECTO ───────
-        // Modal de detalle de prospecto con lista de tareas vinculadas
+               // ─────── @JS-TAREAS-DETALLE-PROSPECTO ───────
+        // Detalle de prospecto: panel lateral en PC, modal en móvil
         function verDetalleProspecto(prospectoId) {
             const p = obtenerProspecto(prospectoId);
             if (!p) { mostrarNotificacion('Prospecto no encontrado', 'error'); return; }
@@ -6057,7 +6459,13 @@ var DATOS_EMISOR = {
                 idParaTareas: idVinculado,
                 subtitulo: 'Fase: ' + (p.faseActual || 'Sin fase')
             });
-            abrirModal('Detalle del prospecto', html, true);
+            const esMobil = window.innerWidth <= 768;
+            if (esMobil) {
+                abrirModal('Detalle del prospecto', html, true);
+            } else {
+                abrirPanelLateral('Detalle del prospecto', html, { tipo: 'prospecto', itemId: prospectoId });
+                marcarItemSeleccionado(prospectoId);
+            }
         }
         // ─────── FIN @JS-TAREAS-DETALLE-PROSPECTO ───────
 
@@ -6927,8 +7335,8 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-CONTRATOS-GUARDAR ───────
 
-        // ─────── @JS-CONTRATOS-RENDER-LISTA ───────
-        // Vista de tarjetas de contratos
+               // ─────── @JS-CONTRATOS-RENDER-LISTA ───────
+        // Vista de contratos (soporta modo mosaico y lista)
         function renderizarContratos() {
             const fe = document.getElementById('filtro-estado-contrato-lista').value;
             const ft = document.getElementById('filtro-tipo-contrato').value;
@@ -6938,10 +7346,19 @@ var DATOS_EMISOR = {
             if (ft !== 'todos') t = t.filter(function(c) { return c.tipo === ft; });
             if (b) t = t.filter(function(c) { return c.clienteNombre.toLowerCase().indexOf(b) !== -1 || (c.festejado && c.festejado.toLowerCase().indexOf(b) !== -1); });
 
-            renderizarMosaicos({
-                contenedorId: 'lista-contratos', items: t, textoVacio: 'No hay contratos',
-                onCardClick: function(c) { return 'verDetalleContrato(\'' + c.clienteId + '\',\'' + c.id + '\')'; },
-                renderContenido: function(c) {
+            actualizarToggleVista('contratos');
+            const vistaLista = esVistaLista('contratos');
+
+            if (vistaLista) {
+                // ─── VISTA LISTA ───
+                const cont = document.getElementById('lista-contratos');
+                if (!cont) return;
+                if (t.length === 0) {
+                    cont.innerHTML = '<p class="mensaje-vacio">No hay contratos</p>';
+                    return;
+                }
+                cont.className = 'lista-registros';
+                cont.innerHTML = t.map(function(c) {
                     const ec = c.estado === 'Completado' ? 'etiqueta-completado' : c.estado === 'Pendiente' ? 'etiqueta-pendiente' : 'etiqueta-cancelado';
                     const tc = c.tipo === 'paquete' ? 'etiqueta-paquete' : 'etiqueta-solo-servicio';
                     const tl = c.tipo === 'paquete' ? 'Paquete' : 'Solo Servicio';
@@ -6950,38 +7367,90 @@ var DATOS_EMISOR = {
                     const in_ = obtenerNombreItemContrato(c);
                     const he = c.horaEvento ? ' ' + c.horaEvento + ' hrs' : '';
                     const hr = c.horaRecepcion ? ' ' + c.horaRecepcion + ' hrs' : '';
-
-                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + c.clienteNombre + '</div></div>' +
-                        '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span><span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span>' +
-                        (liq ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Liquidado</span>' : '') + '</div>' +
-                        '<div class="mosaico-separador"></div>' +
-                        '<div class="mosaico-detalle"><div><strong>Festejado:</strong> ' + (c.festejado || 'Sin festejado') + '</div>' +
-                        '<div><small>' + in_ + '</small></div></div>' +
-                        '<div class="mosaico-detalle">' +
-                        '<div><i class="fas fa-calendar"></i> ' + formatearFecha(c.fechaEvento) + he + '</div>' +
-                        (c.direccionEvento ? '<div><small>' + c.direccionEvento + '</small></div>' : '') +
-                        (c.direccionRecepcion ? '<div><small>' + c.direccionRecepcion + hr + '</small></div>' : '') +
-                        '</div>' +
-                        '<div class="mosaico-separador"></div>' +
-                        '<div class="mosaico-detalle">' +
-                        '<div><strong>Base:</strong> ' + formatearMoneda(c.precioBase) + '</div>' +
-                        '<div><strong>Final:</strong> ' + formatearMoneda(c.precioFinal) +
-                        (c.cargos && c.cargos.length > 0 ? ' <small>+ ' + formatearMoneda(tot.totalCargos) + '</small>' : '') + '</div></div>' +
-                        '<div class="mosaico-summary"><span><i class="fas fa-coins"></i> ' + formatearMoneda(tot.totalPagos) + '</span>' +
-                        '<span class="' + (tot.saldoPendiente === 0 ? 'saldo-ok' : 'saldo-pendiente') + ' monto">' +
-                        (tot.saldoPendiente === 0 ? 'Liquidado' : formatearMoneda(tot.saldoPendiente)) + '</span></div>';
-                },
-                renderAcciones: function(c) {
                     const cl = obtenerCliente(c.clienteId);
                     const tieneTelefono = cl && cl.telefono && normalizarTelefonoWhatsApp(cl.telefono);
-                    return '<button class="btn-editar" onclick="editarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
-                        '<button class="btn-pago" onclick="agregarPagoRapido(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Agregar pago"><i class="fas fa-coins"></i></button>' +
-                        '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.clienteId + '\')" title="WhatsApp al cliente"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button>' +
-                        '<button class="btn-calendar" onclick="crearEventoGoogleCalendar(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Google Calendar"><i class="fab fa-google"></i></button>' +
-                        '<button class="btn-imprimir" onclick="generarVistaImpresion(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Imprimir"><i class="fas fa-print"></i></button>' +
-                        (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '');
-                }
-            });
+                    const inicial = (c.clienteNombre || 'C').charAt(0).toUpperCase();
+
+                    return '<div class="lista-fila" onclick="verDetalleContrato(\'' + c.clienteId + '\',\'' + c.id + '\')">' +
+                        '<div class="lista-avatar avatar-contrato">' + inicial + '</div>' +
+                        '<div class="lista-contenido">' +
+                            '<div class="lista-titulo-linea">' +
+                                '<span class="lista-titulo">' + c.clienteNombre + '</span>' +
+                                '<span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span>' +
+                                '<span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span>' +
+                                (liq ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Liquidado</span>' : '') +
+                            '</div>' +
+                            '<div class="lista-datos">' +
+                                '<span><i class="fas fa-star"></i> ' + (c.festejado || 'Sin festejado') + '</span>' +
+                                '<span><i class="fas fa-calendar"></i> ' + formatearFecha(c.fechaEvento) + he + '</span>' +
+                            '</div>' +
+                            '<div class="lista-meta">' +
+                                '<span><i class="fas fa-box"></i> <strong>' + in_ + '</strong></span>' +
+                                '<span><i class="fas fa-coins"></i> Pagado: <strong>' + formatearMoneda(tot.totalPagos) + '</strong></span>' +
+                                '<span style="color:' + (tot.saldoPendiente === 0 ? 'var(--color-verde)' : 'var(--color-naranja)') + ';">' +
+                                    '<i class="fas fa-wallet"></i> ' + (tot.saldoPendiente === 0 ? 'Liquidado' : 'Saldo: ' + formatearMoneda(tot.saldoPendiente)) +
+                                '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="lista-acciones" onclick="event.stopPropagation()">' +
+                            '<button class="btn-editar" onclick="editarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button class="btn-pago" onclick="agregarPagoRapido(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Agregar pago"><i class="fas fa-coins"></i></button>' +
+                            '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.clienteId + '\')" title="WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button>' +
+                            '<button class="btn-calendar" onclick="crearEventoGoogleCalendar(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Google Calendar"><i class="fab fa-google"></i></button>' +
+                            '<button class="btn-imprimir" onclick="generarVistaImpresion(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Imprimir"><i class="fas fa-print"></i></button>' +
+                            (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '') +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            } else {
+                // ─── VISTA MOSAICO ───
+                const cont = document.getElementById('lista-contratos');
+                if (cont) cont.className = 'mosaico-grid';
+                renderizarMosaicos({
+                    contenedorId: 'lista-contratos', items: t, textoVacio: 'No hay contratos',
+                    onCardClick: function(c) { return 'verDetalleContrato(\'' + c.clienteId + '\',\'' + c.id + '\')'; },
+                    renderContenido: function(c) {
+                        const ec = c.estado === 'Completado' ? 'etiqueta-completado' : c.estado === 'Pendiente' ? 'etiqueta-pendiente' : 'etiqueta-cancelado';
+                        const tc = c.tipo === 'paquete' ? 'etiqueta-paquete' : 'etiqueta-solo-servicio';
+                        const tl = c.tipo === 'paquete' ? 'Paquete' : 'Solo Servicio';
+                        const tot = calcularTotalesContrato(c);
+                        const liq = tot.saldoPendiente === 0 && c.estado === 'Completado';
+                        const in_ = obtenerNombreItemContrato(c);
+                        const he = c.horaEvento ? ' ' + c.horaEvento + ' hrs' : '';
+                        const hr = c.horaRecepcion ? ' ' + c.horaRecepcion + ' hrs' : '';
+
+                        return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + c.clienteNombre + '</div></div>' +
+                            '<div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span><span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span>' +
+                            (liq ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Liquidado</span>' : '') + '</div>' +
+                            '<div class="mosaico-separador"></div>' +
+                            '<div class="mosaico-detalle"><div><strong>Festejado:</strong> ' + (c.festejado || 'Sin festejado') + '</div>' +
+                            '<div><small>' + in_ + '</small></div></div>' +
+                            '<div class="mosaico-detalle">' +
+                            '<div><i class="fas fa-calendar"></i> ' + formatearFecha(c.fechaEvento) + he + '</div>' +
+                            (c.direccionEvento ? '<div><small>' + c.direccionEvento + '</small></div>' : '') +
+                            (c.direccionRecepcion ? '<div><small>' + c.direccionRecepcion + hr + '</small></div>' : '') +
+                            '</div>' +
+                            '<div class="mosaico-separador"></div>' +
+                            '<div class="mosaico-detalle">' +
+                            '<div><strong>Base:</strong> ' + formatearMoneda(c.precioBase) + '</div>' +
+                            '<div><strong>Final:</strong> ' + formatearMoneda(c.precioFinal) +
+                            (c.cargos && c.cargos.length > 0 ? ' <small>+ ' + formatearMoneda(tot.totalCargos) + '</small>' : '') + '</div></div>' +
+                            '<div class="mosaico-summary"><span><i class="fas fa-coins"></i> ' + formatearMoneda(tot.totalPagos) + '</span>' +
+                            '<span class="' + (tot.saldoPendiente === 0 ? 'saldo-ok' : 'saldo-pendiente') + ' monto">' +
+                            (tot.saldoPendiente === 0 ? 'Liquidado' : formatearMoneda(tot.saldoPendiente)) + '</span></div>';
+                    },
+                    renderAcciones: function(c) {
+                        const cl = obtenerCliente(c.clienteId);
+                        const tieneTelefono = cl && cl.telefono && normalizarTelefonoWhatsApp(cl.telefono);
+                        return '<button class="btn-editar" onclick="editarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button class="btn-pago" onclick="agregarPagoRapido(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Agregar pago"><i class="fas fa-coins"></i></button>' +
+                            '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.clienteId + '\')" title="WhatsApp al cliente"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button>' +
+                            '<button class="btn-calendar" onclick="crearEventoGoogleCalendar(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Google Calendar"><i class="fab fa-google"></i></button>' +
+                            '<button class="btn-imprimir" onclick="generarVistaImpresion(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Imprimir"><i class="fas fa-print"></i></button>' +
+                            (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '');
+                    }
+                });
+            }
         }
         // ─────── FIN @JS-CONTRATOS-RENDER-LISTA ───────
 
@@ -7201,13 +7670,13 @@ var DATOS_EMISOR = {
              (contrato.notas ? '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas</div><div class="detalle-notas">' + contrato.notas + '</div></div>' : '') +
                 tareasHTML;
 
-                     // ─── Decidir modal vs panel según dispositivo ───
+            // ─── Decidir modal vs panel según dispositivo ───
             const esMobil = window.innerWidth <= 768;
             if (esMobil) {
                 abrirModal('Detalle del contrato', html, true);
             } else {
-                abrirPanelLateral('Detalle del contrato', html);
-                marcarContratoSeleccionado(contratoId);
+                abrirPanelLateral('Detalle del contrato', html, { tipo: 'contrato', itemId: contratoId });
+                marcarItemSeleccionado(contratoId);
             }
         }
         // ─────── FIN @JS-CONTRATOS-DETALLE ───────
@@ -9036,6 +9505,17 @@ var DATOS_EMISOR = {
         // ─────── @JS-LISTENERS-APP ───────
         // Conecta todos los listeners de la aplicación
         function conectarEventListenersApp() {
+        // ─── Listeners del toggle de vista (mosaico/lista) ───
+            document.querySelectorAll('.btn-view-toggle').forEach(function(toggle) {
+                const seccion = toggle.dataset.vistaSeccion;
+                if (!seccion) return;
+                toggle.querySelectorAll('button').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const esLista = btn.classList.contains('btn-vista-lista');
+                        cambiarVista(seccion, esLista ? 'lista' : 'mosaico');
+                    });
+                });
+            });
             document.querySelectorAll('.menu-item').forEach(function(item) {
                 item.addEventListener('click', function() {
                     const seccion = this.dataset.seccion;
