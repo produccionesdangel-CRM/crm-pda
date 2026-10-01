@@ -1400,42 +1400,356 @@
                     </div>
                 </div>
                 <div class="version-card">
-                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v4.7</span></h3>
+                                   <div class="version-card">
+                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v4.7.2</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">4.7</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">4.7.2</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
                     </div>
+
+                    <!-- ═══ CHANGELOG v4.7.2 ═══ -->
                     <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v4.7)</h4>
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v4.7.2)</h4>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-bug"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Corrección de errores críticos en sincronización</div>
+                                <div class="changelog-desc">
+                                    Se corrigieron errores que impedían completar la sincronización con la nube tras ciertos cambios.
+                                    Esto causaba conflictos fantasma con datos inexistentes y algunos registros no se actualizaban
+                                    correctamente al eliminar. La sincronización ahora es estable y silenciosa.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-filter"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Detección inteligente de conflictos reales</div>
+                                <div class="changelog-desc">
+                                    El sistema ahora distingue entre conflictos reales (entre dos usuarios editando el mismo registro)
+                                    y residuos de sincronizaciones antiguas. Los conflictos fantasma se descartan automáticamente
+                                    sin molestar al usuario.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-shield-alt"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Mayor tolerancia con datos antiguos</div>
+                                <div class="changelog-desc">
+                                    Los registros creados en versiones anteriores (sin sistema de versiones) ya no generan
+                                    conflictos al editarlos o eliminarlos. La migración es transparente.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ CHANGELOG v4.7 ═══ -->
+                    <div class="changelog-section">
+                        <h4><i class="fas fa-code-branch"></i> Novedades en la versión (v4.7)</h4>
                         <div class="changelog-item">
                             <div class="changelog-icono"><i class="fas fa-shield-alt"></i></div>
                             <div class="changelog-contenido">
                                 <div class="changelog-titulo">Sincronización a prueba de conflictos</div>
-                                <div class="changelog-desc">Cada guardado a la nube ahora se hace con transacciones atómicas por entidad. Si dos usuarios editan el mismo registro al mismo tiempo, el sistema detecta el conflicto y te permite elegir cómo resolverlo sin perder información.</div>
+                                <div class="changelog-desc">
+                                    Cada guardado a la nube ahora se hace con transacciones atómicas por entidad.
+                                    Si dos usuarios editan el mismo registro al mismo tiempo, el sistema detecta
+                                    el conflicto y te permite elegir cómo resolverlo sin perder información.
+                                </div>
                             </div>
                         </div>
                         <div class="changelog-item">
                             <div class="changelog-icono"><i class="fas fa-history"></i></div>
                             <div class="changelog-contenido">
                                 <div class="changelog-titulo">Protección contra "resurrección" de datos</div>
-                                <div class="changelog-desc">Cuando eliminas un cliente, contrato o prospecto, la información se conserva en la nube marcada como eliminada. Esto evita que versiones antiguas de la aplicación puedan recrear por error un registro que ya habías borrado.</div>
+                                <div class="changelog-desc">
+                                    Cuando eliminas un cliente, contrato o prospecto, la información se conserva
+                                    en la nube marcada como eliminada. Esto evita que versiones antiguas de la
+                                    aplicación puedan recrear por error un registro que ya habías borrado.
+                                </div>
                             </div>
                         </div>
                         <div class="changelog-item">
                             <div class="changelog-icono"><i class="fas fa-cloud-upload-alt"></i></div>
                             <div class="changelog-contenido">
                                 <div class="changelog-titulo">Sincronización sin duplicados</div>
-                                <div class="changelog-desc">Si la conexión a internet falla a mitad de una sincronización, los eventos del historial y la papelera ya no se duplican al reintentar.</div>
+                                <div class="changelog-desc">
+                                    Si la conexión a internet falla a mitad de una sincronización, los eventos
+                                    del historial y la papelera ya no se duplican al reintentar. Cada operación
+                                    tiene un identificador único y estable que la hace segura de reintentar.
+                                </div>
                             </div>
                         </div>
                         <div class="changelog-item">
                             <div class="changelog-icono"><i class="fas fa-trash-restore"></i></div>
                             <div class="changelog-contenido">
                                 <div class="changelog-titulo">Papelera sincronizada correctamente</div>
-                                <div class="changelog-desc">Se corrigió un problema en el que restaurar, eliminar definitivamente o purgar elementos de la papelera no se sincronizaba bien con la nube.</div>
+                                <div class="changelog-desc">
+                                    Se corrigió un problema en el que restaurar, eliminar definitivamente o
+                                    purgar elementos de la papelera no se sincronizaba bien con la nube.
+                                    Ahora todas las operaciones de papelera se reflejan correctamente
+                                    en todos los dispositivos.
+                                </div>
                             </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-lock"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Validaciones de seguridad en la nube</div>
+                                <div class="changelog-desc">
+                                    Se agregaron reglas de validación en Firebase que garantizan la estructura
+                                    correcta de los datos. Cualquier intento de escritura con formato inválido
+                                    es rechazado automáticamente antes de corromper la base de datos.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ CHANGELOG v4.6 ═══ -->
+                    <div class="changelog-section">
+                        <h4><i class="fas fa-code-branch"></i> Novedades en la versión (v4.6)</h4>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-box"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Sección Paquetes rediseñada</div>
+                                <div class="changelog-desc">
+                                    Los paquetes ahora tienen lista de items incluidos (servicios, artículos,
+                                    regalos), estatus (Activo, Próximo, Especial de temporada, Inactivo, Caducado),
+                                    vista mosaico o lista, panel lateral de detalle, y caducidad automática.
+                                    Los operadores pueden verlos pero no editarlos.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-database"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Almacenamiento migrado a IndexedDB</div>
+                                <div class="changelog-desc">
+                                    Todos los datos se guardan ahora en IndexedDB en lugar de localStorage.
+                                    Esto elimina el límite de 5MB, mejora la velocidad de guardado y
+                                    prepara la aplicación para años de crecimiento sin problemas.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Sincronización granular con la nube</div>
+                                <div class="changelog-desc">
+                                    Antes se subía toda la base de datos en cada guardado. Ahora solo se envían
+                                    las entidades que cambiaron. Esto reduce drásticamente el consumo de datos
+                                    y permite trabajar mejor con conexiones lentas.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-smile"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Selector de emojis (solo escritorio)</div>
+                                <div class="changelog-desc">
+                                    Los campos de texto en la versión de escritorio ahora incluyen un botón
+                                    para insertar emojis con categorías y búsqueda. En móvil se desactivó
+                                    para mantener la fluidez (los teclados móviles ya tienen emojis).
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-sort"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Orden y búsqueda en Servicios</div>
+                                <div class="changelog-desc">
+                                    Los servicios adicionales ahora se pueden ordenar por nombre o precio,
+                                    y tienen filtro de búsqueda. Los servicios con precio $0 se marcan
+                                    como "Solo para paquetes" y no aparecen en contratos.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-mobile-alt"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Optimización para móvil</div>
+                                <div class="changelog-desc">
+                                    Se redujo significativamente el bloqueo de la interfaz en celulares.
+                                    Ahora la pantalla responde más rápido y las operaciones se sienten
+                                    más fluidas, incluso con conexiones débiles.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ CHANGELOG v4.5 ═══ -->
+                    <div class="changelog-section">
+                        <h4><i class="fas fa-code-branch"></i> Novedades en la versión (v4.5)</h4>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-th-large"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Vista mosaico o lista</div>
+                                <div class="changelog-desc">
+                                    En Prospectos, Clientes y Contratos ahora puedes cambiar entre vista mosaico
+                                    y vista lista con un botón toggle. La preferencia se guarda por sección.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-columns"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Panel lateral unificado</div>
+                                <div class="changelog-desc">
+                                    El panel lateral derecho ahora se reutiliza para mostrar el detalle de contratos,
+                                    clientes y prospectos en PC. Al hacer clic en cualquier tarjeta/fila se abre
+                                    el panel con el detalle correspondiente.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ CHANGELOG v4.4 ═══ -->
+                    <div class="changelog-section">
+                        <h4><i class="fas fa-code-branch"></i> Novedades en la versión (v4.4)</h4>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-trash-alt"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Papelera de reciclaje</div>
+                                <div class="changelog-desc">
+                                    Todos los elementos eliminados (clientes, contratos, prospectos, tareas, paquetes y servicios)
+                                    ahora se mueven a una papelera en lugar de borrarse. Los elementos permanecen 30 días
+                                    y luego se purgan automáticamente. Solo el administrador puede ver y gestionar la papelera.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-undo"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Restaurar y eliminar definitivamente</div>
+                                <div class="changelog-desc">
+                                    Cada elemento de la papelera se puede restaurar a su sección original o eliminarse
+                                    definitivamente. Al eliminar algo se guarda quién lo hizo, cuándo y el motivo opcional.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-broom"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Purga automática</div>
+                                <div class="changelog-desc">
+                                    Cada vez que se abre el CRM se verifican los elementos de la papelera y se eliminan
+                                    automáticamente los que cumplieron los 30 días de retención. También hay un botón para
+                                    forzar la purga manualmente.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ CHANGELOG v4.3 ═══ -->
+                    <div class="changelog-section">
+                        <h4><i class="fas fa-code-branch"></i> Novedades en la versión (v4.3)</h4>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-columns"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Panel lateral para contratos en PC</div>
+                                <div class="changelog-desc">
+                                    En la versión completa para PC, el detalle de un contrato ya no se abre en una ventana centrada.
+                                    Ahora se muestra en un panel lateral derecho que se queda visible mientras navegas entre contratos.
+                                    La tarjeta seleccionada se resalta para saber cuál estás viendo.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-mobile-alt"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Móvil sin cambios</div>
+                                <div class="changelog-desc">
+                                    En dispositivos móviles el detalle del contrato sigue abriéndose como modal de pantalla
+                                    completa para aprovechar mejor el espacio reducido.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-print"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Nuevo diseño del contrato imprimible</div>
+                                <div class="changelog-desc">
+                                    El contrato impreso ahora tiene un diseño similar al comprobante de pago, con barras
+                                    superior e inferior de gradiente lila/rosa/azul, logo en la barra superior, datos de
+                                    contacto del emisor, y solo 2 colores de texto (negro y gris) para que se lea bien
+                                    incluso en escala de grises. Optimizado para ahorrar tinta.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-tag"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Nuevo formulario de contratos</div>
+                                <div class="changelog-desc">
+                                    Formulario rediseñado con: buscador de cliente con filtro, botón "Nuevo cliente"
+                                    para crear sin salir del contrato, servicios adicionales como dropdown con chips,
+                                    campo de descuento (monto + descripción), y resumen financiero completo que
+                                    calcula el total automáticamente.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-palette"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Tema Angel</div>
+                                <div class="changelog-desc">
+                                    Nuevo tema visual con fondo beige claro y acentos en lila, rosa y negro
+                                    inspirados en el logo. Se suma a los temas Oscuro, Claro y Otoño.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ CHANGELOG v4.0 ═══ -->
+                    <div class="changelog-section">
+                        <h4><i class="fas fa-code-branch"></i> Novedades en la versión (v4.0)</h4>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-bookmark"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Reorganización interna completa</div>
+                                <div class="changelog-desc">
+                                    El código ahora está organizado en bloques con marcadores @BOOKMARK navegables.
+                                    Cada función tiene su propio marcador para facilitar futuras ediciones.
+                                    Sin cambios funcionales respecto a v3.9.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-file-alt"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">CHANGELOG separado</div>
+                                <div class="changelog-desc">
+                                    El historial de cambios ahora vive en un archivo CHANGELOG.md separado,
+                                    útil como contexto para análisis futuros con o sin IA.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ FUNCIONALIDADES PRINCIPALES ═══ -->
+                    <div class="changelog-section">
+                        <h4><i class="fas fa-check-double"></i> Funcionalidades principales</h4>
+                        <div class="funcionalidades-grid">
+                            <div class="funcionalidad-item"><i class="fas fa-user-shield"></i> Admin con PIN</div>
+                            <div class="funcionalidad-item"><i class="fas fa-users-cog"></i> Gestión de usuarios</div>
+                            <div class="funcionalidad-item"><i class="fas fa-users"></i> Prospectos</div>
+                            <div class="funcionalidad-item"><i class="fas fa-user-check"></i> Clientes</div>
+                            <div class="funcionalidad-item"><i class="fas fa-file-contract"></i> Contratos</div>
+                            <div class="funcionalidad-item"><i class="fas fa-box"></i> Paquetes</div>
+                            <div class="funcionalidad-item"><i class="fas fa-tools"></i> Servicios</div>
+                            <div class="funcionalidad-item"><i class="fas fa-tasks"></i> Tareas vinculadas</div>
+                            <div class="funcionalidad-item"><i class="fas fa-receipt"></i> Comprobantes</div>
+                            <div class="funcionalidad-item"><i class="fas fa-fingerprint"></i> Huella de pago</div>
+                            <div class="funcionalidad-item"><i class="fab fa-whatsapp"></i> WhatsApp</div>
+                            <div class="funcionalidad-item"><i class="fas fa-envelope"></i> Email</div>
+                            <div class="funcionalidad-item"><i class="fas fa-calendar-alt"></i> Calendario</div>
+                            <div class="funcionalidad-item"><i class="fas fa-chart-pie"></i> Informes</div>
+                            <div class="funcionalidad-item"><i class="fas fa-trash-alt"></i> Papelera</div>
+                            <div class="funcionalidad-item"><i class="fas fa-history"></i> Historial</div>
+                            <div class="funcionalidad-item"><i class="fas fa-cloud-upload-alt"></i> Sincronización Firebase</div>
+                            <div class="funcionalidad-item"><i class="fas fa-database"></i> IndexedDB local</div>
                         </div>
                     </div>
                 </div>
@@ -1912,9 +2226,15 @@
                 motivo: motivo || '(sin motivo especificado)',
                 contexto: {}
             };
-            papelera.unshift(entrada);
+                        papelera.unshift(entrada);
             if (papelera.length > MAX_PAPELERA) papelera = papelera.slice(0, MAX_PAPELERA);
             encolarEventoAppendOnly('papelera', entrada);
+            // Subir a Firebase INMEDIATAMENTE (idempotente con set())
+            if (estadoSync.modo === 'firebase' && database) {
+                database.ref('papelera/' + entrada.id).set(entrada).catch(function(err) {
+                    console.warn('No se pudo subir entrada de papelera:', err);
+                });
+            }
         }
         function purgarPapeleraVencida(silencioso) {
             const ahora = new Date();
@@ -2164,8 +2484,15 @@
         var timeoutGuardadoFirebase = null;
         function guardarDatos() {
             guardarDatosLocal();
+
+          // 5. Subir historial INMEDIATAMENTE (append-only, no necesita debounce)
             marcarCambiosPendientes();
             if (estadoSync.modo === 'firebase' && database) {
+                // Subir el evento directo a Firebase sin esperar
+                database.ref('historial/' + evento.id).set(evento).catch(function(err) {
+                    console.warn('No se pudo subir evento de historial:', err);
+                });
+                // También disparar sincronización general con debounce (para otras entidades)
                 if (timeoutGuardadoFirebase) clearTimeout(timeoutGuardadoFirebase);
                 timeoutGuardadoFirebase = setTimeout(function() { guardarEnFirebase(); }, 800);
             }
@@ -2404,13 +2731,63 @@
                     return true;
                 }
 
+                                // ─── Historial: FUSIONAR (no reemplazar) ───
+                // Los eventos son append-only e inmutables. Los eventos locales que no estén
+                // en Firebase se suben; los remotos que no estén en local se agregan.
                 const snapHist = await database.ref('historial').once('value');
                 const historialObj = snapHist.val() || {};
-                historial = Object.keys(historialObj).map(function(k) { return historialObj[k]; }).filter(Boolean).sort(function(a, b) { return (b.fecha || '').localeCompare(a.fecha || ''); });
+                const historialRemoto = Object.keys(historialObj).map(function(k) { return historialObj[k]; }).filter(Boolean);
+                const idsRemotos = {};
+                historialRemoto.forEach(function(e) { idsRemotos[e.id] = true; });
+                const idsLocales = {};
+                historial.forEach(function(e) { idsLocales[e.id] = true; });
+                // Eventos remotos que no tengo → agregar
+                historialRemoto.forEach(function(e) {
+                    if (!idsLocales[e.id]) historial.unshift(e);
+                });
+                // Eventos locales que no están remotos → subir
+                const eventosASubir = [];
+                historial.forEach(function(e) {
+                    if (!idsRemotos[e.id]) eventosASubir.push(e);
+                });
+                // Reordenar por fecha descendente
+                historial.sort(function(a, b) { return (b.fecha || '').localeCompare(a.fecha || ''); });
+                if (historial.length > MAX_HISTORIAL_MOVIMIENTOS) historial = historial.slice(0, MAX_HISTORIAL_MOVIMIENTOS);
+                // Subir los eventos que faltaban (en background)
+                if (eventosASubir.length > 0) {
+                    console.log('📤 Subiendo ' + eventosASubir.length + ' eventos de historial que faltaban en Firebase');
+                    setTimeout(function() {
+                        eventosASubir.forEach(function(e) {
+                            database.ref('historial/' + e.id).set(e).catch(function(err) {
+                                console.warn('No se pudo subir evento histórico:', err);
+                            });
+                        });
+                    }, 2000);
+                }
 
+                                // ─── Papelera: FUSIONAR (no reemplazar) ───
                 const snapPap = await database.ref('papelera').once('value');
                 const papeleraObj = snapPap.val() || {};
-                papelera = Object.keys(papeleraObj).map(function(k) { const item = papeleraObj[k]; if (item && !item.id) item.id = k; return item; }).filter(Boolean).sort(function(a, b) { return (b.fechaEliminacion || '').localeCompare(a.fechaEliminacion || ''); });
+                const papeleraRemota = Object.keys(papeleraObj).map(function(k) { const item = papeleraObj[k]; if (item && !item.id) item.id = k; return item; }).filter(Boolean);
+                const idsPapRemotos = {};
+                papeleraRemota.forEach(function(e) { idsPapRemotos[e.id] = true; });
+                const idsPapLocales = {};
+                papelera.forEach(function(e) { idsPapLocales[e.id] = true; });
+                papeleraRemota.forEach(function(e) { if (!idsPapLocales[e.id]) papelera.unshift(e); });
+                const papeleraASubir = [];
+                papelera.forEach(function(e) { if (!idsPapRemotos[e.id]) papeleraASubir.push(e); });
+                papelera.sort(function(a, b) { return (b.fechaEliminacion || '').localeCompare(a.fechaEliminacion || ''); });
+                if (papelera.length > MAX_PAPELERA) papelera = papelera.slice(0, MAX_PAPELERA);
+                if (papeleraASubir.length > 0) {
+                    console.log('📤 Subiendo ' + papeleraASubir.length + ' entradas de papelera que faltaban en Firebase');
+                    setTimeout(function() {
+                        papeleraASubir.forEach(function(e) {
+                            database.ref('papelera/' + e.id).set(e).catch(function(err) {
+                                console.warn('No se pudo subir entrada de papelera:', err);
+                            });
+                        });
+                    }, 2000);
+                }
 
                 paquetes = paquetesR; serviciosAdicionales = serviciosR; prospectos = prospectosR; clientes = clientesR; tareas = tareasR;
                 ultimaActualizacionRemota = versionData && versionData.ultimaActualizacion ? versionData.ultimaActualizacion : null;
