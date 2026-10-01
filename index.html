@@ -11168,49 +11168,90 @@ var DATOS_EMISOR = {
                 textoConfirmar: 'Restaurar',
                 icono: 'fa-undo',
                 colorBoton: 'btn-verde',
-                onConfirmar: function() {
-                    // Reinsertar en la colección correcta
+                               onConfirmar: function() {
+                    // ─── Helper: verifica si ya existe un registro con ese id ───
+                    function existeConId(lista, id) {
+                        return lista.some(function(x) { return x && x.id === id; });
+                    }
+
+                    // ─── Reinsertar en la colección correcta con verificación de duplicados ───
                     if (entrada.tipo === 'cliente') {
+                        if (existeConId(clientes, entrada.item.id)) {
+                            const original = clientes.find(function(x) { return x.id === entrada.item.id; });
+                            mostrarNotificacion('Ya existe un cliente con ese ID ("' + (original.nombre || '') + '"). Se restaurará con un ID nuevo.', 'warning');
+                            entrada.item.id = generarId();
+                            entrada.item.nombre = (entrada.item.nombre || 'Cliente') + ' (restaurado)';
+                        }
                         clientes.push(entrada.item);
+                        marcarSucia('clientes', entrada.item.id);
                     } else if (entrada.tipo === 'prospecto') {
+                        if (existeConId(prospectos, entrada.item.id)) {
+                            const original = prospectos.find(function(x) { return x.id === entrada.item.id; });
+                            mostrarNotificacion('Ya existe un prospecto con ese ID ("' + (original.nombre || '') + '"). Se restaurará con un ID nuevo.', 'warning');
+                            entrada.item.id = generarId();
+                            entrada.item.nombre = (entrada.item.nombre || 'Prospecto') + ' (restaurado)';
+                        }
                         prospectos.push(entrada.item);
+                        marcarSucia('prospectos', entrada.item.id);
                     } else if (entrada.tipo === 'tarea') {
+                        if (existeConId(tareas, entrada.item.id)) {
+                            entrada.item.id = generarId();
+                        }
                         tareas.push(entrada.item);
+                        marcarSucia('tareas', entrada.item.id);
                     } else if (entrada.tipo === 'contrato') {
-                        // Buscar el cliente original y agregar el contrato
-                        const cl = clientes.find(function(c) { return c.id === entrada.item._clienteId || (c.contratos && c.contratos.some(function(co) { return co.id === entrada.item.id; })); });
-                        // Nota: los contratos se restauran al cliente especificado en el item
+                        // Buscar el cliente original
                         if (entrada.item._clienteId) {
                             const cli = obtenerCliente(entrada.item._clienteId);
-                            if (cli) {
-                                if (!cli.contratos) cli.contratos = [];
-                                const copia = Object.assign({}, entrada.item);
-                                delete copia._clienteId;
-                                cli.contratos.push(copia);
+                            if (!cli) {
+                                mostrarNotificacion('El cliente original ya no existe. No se puede restaurar el contrato.', 'error');
+                                return; // No quitar de papelera
                             }
+                            if (!cli.contratos) cli.contratos = [];
+                            const copia = Object.assign({}, entrada.item);
+                            delete copia._clienteId;
+                            // Verificar duplicado en el cliente
+                            if (cli.contratos.some(function(co) { return co && co.id === copia.id; })) {
+                                copia.id = generarId();
+                            }
+                            cli.contratos.push(copia);
+                            marcarSucia('clientes', cli.id);
+                        } else {
+                            mostrarNotificacion('El contrato no tiene cliente asociado, no se puede restaurar.', 'error');
+                            return;
                         }
                     } else if (entrada.tipo === 'usuario') {
+                        if (existeConId(usuarios, entrada.item.id) || usuarios.some(function(u) { return u.username === entrada.item.username; })) {
+                            mostrarNotificacion('Ya existe un usuario con ese nombre de usuario.', 'error');
+                            return;
+                        }
                         usuarios.push(entrada.item);
                         guardarUsuarios();
                     } else if (entrada.tipo === 'paquete') {
+                        if (existeConId(paquetes, entrada.item.id)) {
+                            entrada.item.id = generarId();
+                        }
                         paquetes.push(entrada.item);
+                        marcarSucia('paquetes', entrada.item.id);
                     } else if (entrada.tipo === 'servicio') {
+                        if (existeConId(serviciosAdicionales, entrada.item.id)) {
+                            entrada.item.id = generarId();
+                        }
                         serviciosAdicionales.push(entrada.item);
+                        marcarSucia('serviciosAdicionales', entrada.item.id);
                     }
 
-                    // Quitar de la papelera LOCAL
+                                       // Quitar de la papelera
                     papelera = papelera.filter(function(e) { return e.id !== entradaId; });
 
-                    // Propagar borrado a Firebase (usando el ID local como clave)
+                    // Propagar eliminación de papelera a Firebase
                     if (estadoSync.modo === 'firebase' && database) {
                         database.ref('papelera/' + entradaId).remove().catch(function(err) {
                             console.warn('No se pudo eliminar de papelera remota:', err);
                         });
                     }
 
-                    // Registrar historial (se encola automáticamente)
                     registrarHistorial('papelera', 'editar', 'Se restauró ' + etiquetaTipoPapelera(entrada.tipo).toLowerCase() + ': "' + (entrada.item.nombre || entrada.item.festejado || 'sin nombre') + '"', { id: entrada.item.id, nombre: entrada.item.nombre || entrada.item.festejado });
-
                     guardarDatos();
                     renderizarTodo();
                     renderizarPapelera();
