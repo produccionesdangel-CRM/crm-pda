@@ -6275,11 +6275,14 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-EMOJIS-PANEL ───────
 
-        // ─────── @JS-EMOJIS-ADJUNTAR ───────
+               // ─────── @JS-EMOJIS-ADJUNTAR ───────
         // Adjunta el botón + panel a un campo individual
         function adjuntarEmojiPicker(campo) {
             // Evitar duplicados
             if (campo.dataset.emojiAdjuntado === '1') return;
+            // Guard adicional: no adjuntar en móvil
+            if (window.innerWidth <= 768 ||
+                (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) return;
             // Evitar en inputs que no son de texto
             const tipo = (campo.getAttribute('type') || '').toLowerCase();
             if (campo.tagName === 'INPUT' && tipo !== 'text' && tipo !== 'email' && tipo !== 'search') return;
@@ -6336,31 +6339,88 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-EMOJIS-ESCANEAR ───────
 
-        // ─────── @JS-EMOJIS-INICIALIZAR ───────
-        // Inicializa el sistema: escucha cambios en el DOM y cierra paneles
+               // ─────── @JS-EMOJIS-INICIALIZAR ───────
+        // Inicializa el sistema de emojis SOLO en escritorio.
+        // En móvil se desactiva completamente porque los teclados nativos ya tienen emojis.
         function inicializarSistemaEmojis() {
+            // ─── Detección de móvil ───
+            // Criterios combinados para mayor precisión:
+            //   - Ancho de pantalla ≤ 768px (coincide con tus media queries)
+            //   - Coarse pointer (dedo, no mouse) — característico de táctil
+            //   - User agent móvil (fallback)
+            const esMobil = window.innerWidth <= 768 ||
+                            (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+                            /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+            if (esMobil) {
+                console.log('📱 Sistema de emojis DESACTIVADO en móvil (teclado nativo disponible)');
+                return;
+            }
+
+            console.log('💻 Sistema de emojis activado (escritorio)');
+
+            // ═══ A partir de aquí, solo se ejecuta en escritorio ═══
+
             // 1. Escanear campos existentes
             escanearCamposEmoji();
 
-            // 2. Observar cambios en el DOM (nuevos modales, formularios dinámicos, etc.)
+            // 2. Observar cambios en el DOM — optimizado (agrupación + contenedores específicos)
+            let escaneoProgramado = false;
+            let escaneoTimeout = null;
+
             const observer = new MutationObserver(function(mutations) {
+                if (escaneoProgramado) return;
+
                 let debeEscanear = false;
-                mutations.forEach(function(m) {
-                    m.addedNodes.forEach(function(node) {
-                        if (node.nodeType !== 1) return;
-                        // Si el nodo es un campo o contiene campos, escanear
-                        if (node.matches && (node.matches('textarea, input[type="text"], input[type="email"], input[type="search"]') ||
-                            node.querySelector && node.querySelector('textarea, input[type="text"], input[type="email"], input[type="search"]'))) {
+                for (let i = 0; i < mutations.length && !debeEscanear; i++) {
+                    const m = mutations[i];
+                    if (m.type !== 'childList' || !m.addedNodes || m.addedNodes.length === 0) continue;
+
+                    for (let j = 0; j < m.addedNodes.length; j++) {
+                        const node = m.addedNodes[j];
+                        if (node.nodeType !== 1) continue;
+                        if (node.matches && node.matches('textarea, input[type="text"], input[type="email"], input[type="search"]')) {
                             debeEscanear = true;
+                            break;
                         }
-                    });
-                });
+                        if (node.getElementsByTagName) {
+                            if (node.getElementsByTagName('textarea').length > 0 ||
+                                node.getElementsByTagName('input').length > 0) {
+                                debeEscanear = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 if (debeEscanear) {
-                    // Usar setTimeout para agrupar múltiples mutaciones
-                    setTimeout(escanearCamposEmoji, 50);
+                    escaneoProgramado = true;
+                    if (escaneoTimeout) clearTimeout(escaneoTimeout);
+                    escaneoTimeout = setTimeout(function() {
+                        escaneoProgramado = false;
+                        escaneoTimeout = null;
+                        escanearCamposEmoji();
+                    }, 150);
                 }
             });
-            observer.observe(document.body, { childList: true, subtree: true });
+
+            // Observar solo los contenedores relevantes (no todo el body)
+            const contenedoresAObservar = [
+                document.getElementById('modal'),
+                document.querySelector('.main-content')
+            ].filter(Boolean);
+
+            contenedoresAObservar.forEach(function(el) {
+                observer.observe(el, { childList: true, subtree: true });
+            });
+
+            // Escanear al abrir un modal nuevo (fallback)
+            const observerModal = new MutationObserver(function() {
+                if (document.getElementById('modal').classList.contains('active')) {
+                    setTimeout(escanearCamposEmoji, 100);
+                }
+            });
+            observerModal.observe(document.getElementById('modal'), { attributes: true, attributeFilter: ['class'] });
 
             // 3. Cerrar paneles al hacer clic fuera
             document.addEventListener('click', function(e) {
