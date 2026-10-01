@@ -4721,7 +4721,7 @@ var DATOS_EMISOR = {
                 // ═══════════════════════════════════════════════════════
                 // BLOQUE 1: Colecciones versionadas con transacciones
                 // ═══════════════════════════════════════════════════════
-                for (const col of COLECCIONES_VERSIONADAS) {
+                            for (const col of COLECCIONES_VERSIONADAS) {
                     const ids = Object.keys(entidadesSucias[col] || {});
                     for (const id of ids) {
                         const marca = entidadesSucias[col][id];
@@ -4729,6 +4729,24 @@ var DATOS_EMISOR = {
                         const versionLocalEsperada = entidadLocal ? (entidadLocal._version || 0) : 0;
 
                         const refEntidad = database.ref(col + '/' + id);
+
+                        // ═══ FIX PREVENTIVO v4.7.1 ═══
+                        // Descartar residuos huérfanos del outbox que ya no
+                        // tienen correspondencia local ni remota.
+                        if (!entidadLocal && marca !== 'ELIMINAR') {
+                            console.log('🗑️ Descartando residuo del outbox:', col, id);
+                            delete entidadesSucias[col][id];
+                            continue;
+                        }
+
+                        if (marca === 'ELIMINAR' && !entidadLocal) {
+                            const snapCheck = await refEntidad.once('value');
+                            if (!snapCheck.exists()) {
+                                console.log('🗑️ Descartando eliminación obsoleta:', col, id);
+                                delete entidadesSucias[col][id];
+                                continue;
+                            }
+                        }
 
                         if (marca === 'ELIMINAR') {
                             // ─── ELIMINACIÓN CON TOMBSTONE ───
