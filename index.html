@@ -4857,7 +4857,7 @@ var DATOS_EMISOR = {
                     await Promise.all(promesas);
                 }
 
-                // ═══════════════════════════════════════════════════════
+              // ═══════════════════════════════════════════════════════
                 // BLOQUE 4: Si hay conflictos, mostrar modal y no limpiar
                 // ═══════════════════════════════════════════════════════
                 if (conflictos.length > 0) {
@@ -4876,8 +4876,7 @@ var DATOS_EMISOR = {
                             }
                         });
                     }
-                    persistirOutbox();
-                    actualizarEstadoSync('conflicto', '⚠️ Conflicto');
+                    actualizarEstadoSync('online', '⚠️ Conflicto');
                     sincronizandoFirebase = false;
                     mostrarModalConflicto(conflictos);
                     return false;
