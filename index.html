@@ -1921,6 +1921,187 @@ html[data-theme="angel"] .etiqueta-paquete-caducado { background-color: rgba(239
         .form-grupo input:focus, .form-grupo select:focus, .form-grupo textarea:focus { outline: none; border-color: var(--color-acento); }
         .form-grupo input:disabled { opacity: 0.6; cursor: not-allowed; }
         .form-grupo textarea { resize: vertical; min-height: 80px; }
+                .form-grupo textarea { resize: vertical; min-height: 80px; }
+
+        /* ─────── @CSS-MODALS-EMOJI-PICKER ─────── */
+        /* Contenedor relativo para el botón de emoji dentro de inputs/textarea */
+        .emoji-input-wrapper {
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+        .emoji-input-wrapper > textarea,
+        .emoji-input-wrapper > input {
+            padding-right: 44px !important;
+        }
+        .emoji-input-btn {
+            position: absolute;
+            right: 6px;
+            top: 6px;
+            background-color: var(--color-bg-terciario);
+            border: 1px solid var(--color-borde);
+            color: var(--color-texto-secundario);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            z-index: 5;
+            padding: 0;
+            font-family: inherit;
+            line-height: 1;
+        }
+        .emoji-input-btn:hover {
+            background-color: var(--color-bg-hover);
+            color: var(--color-acento);
+            border-color: var(--color-acento);
+            transform: scale(1.05);
+        }
+        .emoji-input-btn.activo {
+            background-color: var(--color-acento);
+            color: var(--color-acento-contraste);
+            border-color: var(--color-acento);
+        }
+
+        /* Panel de emojis */
+        .emoji-panel {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 4px);
+            width: 340px;
+            max-width: 92vw;
+            background-color: var(--color-bg-secundario);
+            border: 1px solid var(--color-borde);
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 24px var(--color-shadow-hover);
+            z-index: 500;
+            padding: 10px;
+            display: none;
+            animation: fadeIn 0.15s ease;
+        }
+        .emoji-panel.abierto {
+            display: block;
+        }
+
+        /* Barra de búsqueda de emojis */
+        .emoji-panel-buscar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .emoji-panel-buscar input {
+            flex: 1;
+            background-color: var(--color-bg-primario);
+            color: var(--color-texto-primario);
+            border: 1px solid var(--color-borde);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+            font-family: inherit;
+            min-width: 0;
+        }
+        .emoji-panel-buscar input:focus {
+            outline: none;
+            border-color: var(--color-acento);
+        }
+
+        /* Categorías */
+        .emoji-panel-categorias {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--color-borde-suave);
+        }
+        .emoji-panel-categorias::-webkit-scrollbar { height: 4px; }
+        .emoji-cat-btn {
+            background: none;
+            border: none;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 6px;
+            transition: background-color 0.15s ease;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .emoji-cat-btn:hover {
+            background-color: var(--color-bg-hover);
+        }
+        .emoji-cat-btn.activa {
+            background-color: var(--color-sidebar-active-bg);
+        }
+
+        /* Grid de emojis */
+        .emoji-panel-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 2px;
+            max-height: 220px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .emoji-panel-grid::-webkit-scrollbar { width: 6px; }
+        .emoji-item {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            font-size: 20px;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1;
+        }
+        .emoji-item:hover {
+            background-color: var(--color-bg-hover);
+            transform: scale(1.2);
+        }
+        .emoji-panel-vacio {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            color: var(--color-texto-secundario);
+            font-size: 13px;
+        }
+
+        /* Recientes (categoría especial) */
+        .emoji-panel-recientes-titulo {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--color-texto-secundario);
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        /* Responsive móvil */
+        @media (max-width: 768px) {
+            .emoji-panel {
+                width: 100%;
+                max-width: 100%;
+                right: 0;
+                left: 0;
+            }
+            .emoji-panel-grid {
+                grid-template-columns: repeat(7, 1fr);
+                max-height: 180px;
+            }
+            .emoji-input-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+        }
+        /* ─────── FIN @CSS-MODALS-EMOJI-PICKER ─────── */
         .form-grupo .info-cliente {
             background-color: var(--color-bg-terciario); padding: 12px;
             border-radius: var(--border-radius); border-left: 3px solid var(--color-acento);
@@ -5383,6 +5564,332 @@ var DATOS_EMISOR = {
             marcarItemSeleccionado(contratoId);
         }
         // ─────── FIN @JS-UI-PANEL-LATERAL ───────
+                /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-EMOJIS — Sistema global de selector de emojis            */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-EMOJIS-DATOS ───────
+        // Categorías de emojis. Agrega más si quieres.
+        var EMOJIS_CATEGORIAS = {
+            'Recientes': [],
+            'Caritas': [
+                '😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩',
+                '😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐',
+                '🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒',
+                '🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕',
+                '😟','🙁','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖',
+                '😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','💩','🤡','👹',
+                '👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾'
+            ],
+            'Gestos': [
+                '👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆',
+                '🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️',
+                '💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🧠','🫀','🫁','🦷','🦴','👀',
+                '👁️','👅','👄','💋','🩸'
+            ],
+            'Corazones': [
+                '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖',
+                '💘','💝','💟','♥️','💌','💋','😻','💐','🌹','🌷','🌺','🌸','🌼','🌻','💐','🎁'
+            ],
+            'Animales': [
+                '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐽','🐸','🐵',
+                '🙈','🙉','🙊','🐒','🐔','🐧','🐦','🐤','🐣','🐥','🦆','🦅','🦉','🦇','🐺','🐗',
+                '🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🕷️','🦂','🐢','🐍','🦎','🦖',
+                '🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆',
+                '🦓','🦍','🦧','🦣','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🦬','🐃','🐂','🐄','🐎',
+                '🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐕‍🦺','🐈','🐈‍⬛','🪶','🐓','🦃','🦤'
+            ],
+            'Comida': [
+                '🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥',
+                '🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🫑','🌽','🥕','🫒','🧄','🧅','🥔','🍠',
+                '🥐','🥯','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🦴',
+                '🌭','🍔','🍟','🍕','🫓','🥪','🥙','🧆','🌮','🌯','🫔','🥗','🥘','🫕','🥫','🍝',
+                '🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍚','🍘','🍥','🥠','🥮','🍢','🍡',
+                '🍧','🍨','🍦','🥧','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜',
+                '🍯','🥛','🍼','☕','🫖','🍵','🧃','🥤','🧋','🍶','🍺','🍻','🥂','🍷','🥃','🍸',
+                '🍹','🧉','🍾','🧊'
+            ],
+            'Objetos': [
+                '⌚','📱','💻','⌨️','🖥️','🖨️','🖱️','🖲️','🕹️','🗜️','💽','💾','💿','📀','📼','📷',
+                '📸','📹','🎥','📽️','🎞️','📞','☎️','📟','📠','📺','📻','🎙️','🎚️','🎛️','🧭','⏱️',
+                '⏲️','⏰','🕰️','⌛','⏳','📡','🔋','🔌','💡','🔦','🕯️','🪔','🧯','🛢️','💸','💵',
+                '💴','💶','💷','🪙','💰','💳','💎','⚖️','🪜','🧰','🪛','🔧','🔨','⚒️','🛠️','⛏️',
+                '🪚','🔩','⚙️','🪤','🧱','⛓️','🧲','🔫','💣','🧨','🪓','🔪','🗡️','⚔️','🛡️','🚬',
+                '⚰️','🪦','⚱️','🏺','🔮','📿','🧿','💈','⚗️','🔭','🔬','🕳️','🩹','🩺','💊','💉'
+            ],
+            'Símbolos': [
+                '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖',
+                '💘','💝','💟','♥️','💯','💢','💥','💫','💦','💨','🕳️','💬','💭','🗯️','♨️','💤',
+                '✅','❌','❎','✔️','☑️','🔘','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺',
+                '🔻','🔸','🔹','🔶','🔷','🔳','🔲','▪️','▫️','◾','◽','◼️','◻️','🟥','🟧','🟨',
+                '🟩','🟦','🟪','⬛','⬜','🟫','🔈','🔇','🔉','🔊','🔔','🔕','📢','📣','💬','⭐',
+                '🌟','✨','⚡','🔥','💥','☄️','💫','⭐','🌙','☀️','⛅','☁️','🌧️','⛈️','🌩️','🌨️',
+                '❄️','☃️','⛄','🌬️','💨','🌪️','🌫️','🌈','☂️','☔','💧','💦','🌊'
+            ],
+            'Naturaleza': [
+                '🌸','💮','🏵️','🌹','🥀','🌺','🌻','🌼','🌷','🌱','🪴','🌲','🌳','🌴','🌵','🌾',
+                '🌿','☘️','🍀','🎍','🎋','🍃','🍂','🍁','🍄','🐚','🪨','🌎','🌍','🌏','🌕','🌖',
+                '🌗','🌘','🌑','🌒','🌓','🌔','🌚','🌝','🌞','🪐','⭐','🌟','✨','⚡','☄️','💫'
+            ],
+            'Fiestas': [
+                '🎉','🎊','🎈','🎁','🎀','🎗️','🎟️','🎫','🎖️','🏆','🏅','🥇','🥈','🥉','⚽','🏀',
+                '🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🥅',
+                '⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂',
+                '🪂','🏋️','🤼','🤸','⛹️','🤺','🤾','🏌️','🏇','🧘','🏄','🏊','🤽','🚣','🧗','🚵',
+                '🚴','🏆','🥇','🎪','🎭','🎨','🎬','🎤','🎧','🎼','🎹','🥁','🎷','🎺','🎸','🪕',
+                '🎻','🎲','♟️','🎯','🎳','🎮','🎰','🧩','🎁','🎂','🎈','🎉','🎊','🪅','🪆','🎃',
+                '🎄','🎋','🎍','🎎','🎏','🎐','🎑','🧧','🎀','🎗️','🎟️','🎫','🎖️','🏆','🏅','🥇'
+            ]
+        };
+
+        var PREF_EMOJIS_RECIENTES = 'pda_emojis_recientes';
+        var MAX_EMOJIS_RECIENTES = 24;
+        // ─────── FIN @JS-EMOJIS-DATOS ───────
+
+        // ─────── @JS-EMOJIS-RECIENTES ───────
+        function obtenerEmojisRecientes() {
+            try {
+                return JSON.parse(localStorage.getItem(PREF_EMOJIS_RECIENTES)) || [];
+            } catch (e) { return []; }
+        }
+        function guardarEmojiReciente(emoji) {
+            let recientes = obtenerEmojisRecientes();
+            recientes = recientes.filter(function(e) { return e !== emoji; });
+            recientes.unshift(emoji);
+            if (recientes.length > MAX_EMOJIS_RECIENTES) recientes = recientes.slice(0, MAX_EMOJIS_RECIENTES);
+            try {
+                localStorage.setItem(PREF_EMOJIS_RECIENTES, JSON.stringify(recientes));
+            } catch (e) {}
+        }
+        // ─────── FIN @JS-EMOJIS-RECIENTES ───────
+
+        // ─────── @JS-EMOJIS-INSERTAR ───────
+        // Inserta un emoji en la posición del cursor del input/textarea
+        function insertarEmojiEnCampo(campo, emoji) {
+            const start = campo.selectionStart || 0;
+            const end = campo.selectionEnd || 0;
+            const valor = campo.value || '';
+            const nuevo = valor.substring(0, start) + emoji + valor.substring(end);
+            campo.value = nuevo;
+            // Colocar el cursor después del emoji
+            const pos = start + emoji.length;
+            campo.setSelectionRange(pos, pos);
+            campo.focus();
+            // Disparar evento input para que otros listeners reaccionen
+            campo.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        // ─────── FIN @JS-EMOJIS-INSERTAR ───────
+
+        // ─────── @JS-EMOJIS-PANEL ───────
+        // Crea el panel de emojis para un campo específico
+        function crearPanelEmojis(campo) {
+            const panel = document.createElement('div');
+            panel.className = 'emoji-panel';
+
+            let catActual = 'Recientes';
+            let busqueda = '';
+
+            function renderizarPanel() {
+                const recientes = obtenerEmojisRecientes();
+                let listaEmojis = [];
+
+                if (busqueda) {
+                    // Buscar en todas las categorías
+                    Object.keys(EMOJIS_CATEGORIAS).forEach(function(cat) {
+                        if (cat === 'Recientes') return;
+                        listaEmojis = listaEmojis.concat(EMOJIS_CATEGORIAS[cat]);
+                    });
+                    // Filtrar duplicados
+                    listaEmojis = listaEmojis.filter(function(e, i, arr) { return arr.indexOf(e) === i; });
+                } else if (catActual === 'Recientes') {
+                    listaEmojis = recientes;
+                } else {
+                    listaEmojis = EMOJIS_CATEGORIAS[catActual] || [];
+                }
+
+                // Categorías
+                let catsHTML = '';
+                const nombresCats = {
+                    'Recientes': '🕒',
+                    'Caritas': '😀',
+                    'Gestos': '👍',
+                    'Corazones': '❤️',
+                    'Animales': '🐶',
+                    'Comida': '🍕',
+                    'Objetos': '💡',
+                    'Símbolos': '⭐',
+                    'Naturaleza': '🌸',
+                    'Fiestas': '🎉'
+                };
+                Object.keys(EMOJIS_CATEGORIAS).forEach(function(cat) {
+                    const activa = (cat === catActual && !busqueda) ? 'activa' : '';
+                    catsHTML += '<button type="button" class="emoji-cat-btn ' + activa + '" data-cat="' + cat + '" title="' + cat + '">' + (nombresCats[cat] || '•') + '</button>';
+                });
+
+                // Grid
+                let gridHTML = '';
+                if (catActual === 'Recientes' && !busqueda && listaEmojis.length === 0) {
+                    gridHTML = '<div class="emoji-panel-vacio">Aún no has usado emojis. ¡Empieza a usarlos!</div>';
+                } else if (listaEmojis.length === 0) {
+                    gridHTML = '<div class="emoji-panel-vacio">Sin resultados</div>';
+                } else {
+                    gridHTML = listaEmojis.map(function(e) {
+                        return '<button type="button" class="emoji-item" data-emoji="' + e + '">' + e + '</button>';
+                    }).join('');
+                }
+
+                panel.innerHTML =
+                    '<div class="emoji-panel-buscar">' +
+                        '<input type="text" placeholder="Buscar emoji..." class="emoji-buscar-input" value="' + busqueda + '">' +
+                    '</div>' +
+                    '<div class="emoji-panel-categorias">' + catsHTML + '</div>' +
+                    '<div class="emoji-panel-grid">' + gridHTML + '</div>';
+
+                // Listeners
+                const inputBuscar = panel.querySelector('.emoji-buscar-input');
+                inputBuscar.addEventListener('input', function() {
+                    busqueda = this.value;
+                    renderizarPanel();
+                    // Mantener el foco y cursor en el input de búsqueda
+                    setTimeout(function() {
+                        const newInput = panel.querySelector('.emoji-buscar-input');
+                        if (newInput) {
+                            newInput.focus();
+                            newInput.setSelectionRange(busqueda.length, busqueda.length);
+                        }
+                    }, 0);
+                });
+                // Prevenir que Enter cierre el modal
+                inputBuscar.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') e.preventDefault();
+                });
+
+                panel.querySelectorAll('.emoji-cat-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        catActual = this.dataset.cat;
+                        busqueda = '';
+                        renderizarPanel();
+                    });
+                });
+
+                panel.querySelectorAll('.emoji-item').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const emoji = this.dataset.emoji;
+                        insertarEmojiEnCampo(campo, emoji);
+                        guardarEmojiReciente(emoji);
+                    });
+                });
+            }
+
+            renderizarPanel();
+            return panel;
+        }
+        // ─────── FIN @JS-EMOJIS-PANEL ───────
+
+        // ─────── @JS-EMOJIS-ADJUNTAR ───────
+        // Adjunta el botón + panel a un campo individual
+        function adjuntarEmojiPicker(campo) {
+            // Evitar duplicados
+            if (campo.dataset.emojiAdjuntado === '1') return;
+            // Evitar en inputs que no son de texto
+            const tipo = (campo.getAttribute('type') || '').toLowerCase();
+            if (campo.tagName === 'INPUT' && tipo !== 'text' && tipo !== 'email' && tipo !== 'search') return;
+            if (campo.tagName !== 'TEXTAREA' && campo.tagName !== 'INPUT') return;
+            // Saltar campos específicos que no quieren emojis (password, number, date, etc.)
+            if (['password', 'number', 'date', 'time', 'tel', 'url', 'color', 'range'].indexOf(tipo) !== -1) return;
+
+            campo.dataset.emojiAdjuntado = '1';
+
+            // Envolver el campo
+            const wrapper = document.createElement('div');
+            wrapper.className = 'emoji-input-wrapper';
+            campo.parentNode.insertBefore(wrapper, campo);
+            wrapper.appendChild(campo);
+
+            // Crear botón
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'emoji-input-btn';
+            btn.title = 'Insertar emoji';
+            btn.innerHTML = '😀';
+            wrapper.appendChild(btn);
+
+            // Crear panel
+            const panel = crearPanelEmojis(campo);
+            wrapper.appendChild(panel);
+
+            // Toggle del panel
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const abierto = panel.classList.contains('abierto');
+                // Cerrar otros paneles
+                document.querySelectorAll('.emoji-panel.abierto').forEach(function(p) { p.classList.remove('abierto'); });
+                document.querySelectorAll('.emoji-input-btn.activo').forEach(function(b) { b.classList.remove('activo'); });
+                if (!abierto) {
+                    panel.classList.add('abierto');
+                    btn.classList.add('activo');
+                }
+            });
+
+            // Prevenir que clicks dentro del panel cierren el modal o el panel
+            panel.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+        // ─────── FIN @JS-EMOJIS-ADJUNTAR ───────
+
+        // ─────── @JS-EMOJIS-ESCANEAR ───────
+        // Escanea el DOM buscando campos y les adjunta el picker
+        function escanearCamposEmoji() {
+            document.querySelectorAll('textarea, input[type="text"], input[type="email"], input[type="search"]').forEach(function(campo) {
+                adjuntarEmojiPicker(campo);
+            });
+        }
+        // ─────── FIN @JS-EMOJIS-ESCANEAR ───────
+
+        // ─────── @JS-EMOJIS-INICIALIZAR ───────
+        // Inicializa el sistema: escucha cambios en el DOM y cierra paneles
+        function inicializarSistemaEmojis() {
+            // 1. Escanear campos existentes
+            escanearCamposEmoji();
+
+            // 2. Observar cambios en el DOM (nuevos modales, formularios dinámicos, etc.)
+            const observer = new MutationObserver(function(mutations) {
+                let debeEscanear = false;
+                mutations.forEach(function(m) {
+                    m.addedNodes.forEach(function(node) {
+                        if (node.nodeType !== 1) return;
+                        // Si el nodo es un campo o contiene campos, escanear
+                        if (node.matches && (node.matches('textarea, input[type="text"], input[type="email"], input[type="search"]') ||
+                            node.querySelector && node.querySelector('textarea, input[type="text"], input[type="email"], input[type="search"]'))) {
+                            debeEscanear = true;
+                        }
+                    });
+                });
+                if (debeEscanear) {
+                    // Usar setTimeout para agrupar múltiples mutaciones
+                    setTimeout(escanearCamposEmoji, 50);
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // 3. Cerrar paneles al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.emoji-input-wrapper')) {
+                    document.querySelectorAll('.emoji-panel.abierto').forEach(function(p) { p.classList.remove('abierto'); });
+                    document.querySelectorAll('.emoji-input-btn.activo').forEach(function(b) { b.classList.remove('activo'); });
+                }
+            });
+
+            // 4. Cerrar paneles con Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.emoji-panel.abierto').forEach(function(p) { p.classList.remove('abierto'); });
+                    document.querySelectorAll('.emoji-input-btn.activo').forEach(function(b) { b.classList.remove('activo'); });
+                }
+            });
+        }
+        // ─────── FIN @JS-EMOJIS-INICIALIZAR ───────
         /* ═══════════════════════════════════════════════════════════ */
         /* @JS-CRUD — CRUD Factory genérico para paquetes/servicios/clientes */
         /* ═══════════════════════════════════════════════════════════ */
@@ -10530,10 +11037,12 @@ var DATOS_EMISOR = {
                 const sg = localStorage.getItem(PREF_SIDEBAR) === '1';
                 aplicarSidebarColapsado(sg);
                 aplicarTema(temaInicial);
-                // Purgar papelera vencida al iniciar (silencioso)
+              // Purgar papelera vencida al iniciar (silencioso)
                 purgarPapeleraVencida(true);
                 // Procesar caducidad automática de paquetes
                 procesarCaducidadPaquetes();
+                // Inicializar sistema global de emojis
+                inicializarSistemaEmojis();
                 guardarDatosLocal();
                 const sesion = cargarSesion();
                 if (sesion) {
