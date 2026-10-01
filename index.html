@@ -4495,8 +4495,16 @@ var DATOS_EMISOR = {
         var TIPOS_TAREA = ['Llamar', 'Enviar mensaje', 'Confirmar', 'Resolver dudas', 'Sesión de fotos', 'Visita', 'Escoger fotos', 'Recoger material', 'Entrega de fotos', 'Otro'];
         var MAX_HISTORIAL_MOVIMIENTOS = 2000;
         var DURACION_SESION_MS = 12 * 60 * 60 * 1000;
-        var DIAS_RETENCION_PAPELERA = 30;
+                var DIAS_RETENCION_PAPELERA = 30;
         var MAX_PAPELERA = 500;
+        // Versión del esquema de datos en Firebase
+        // v1 = estructura plana (todo en 'datos/'), SIN versionado (versión antigua)
+        // v2 = estructura por entidad + optimistic locking + historial append-only
+        var SCHEMA_VERSION = 2;
+        // Colecciones que se sincronizan con versionado
+        var COLECCIONES_VERSIONADAS = ['paquetes', 'serviciosAdicionales', 'prospectos', 'clientes', 'tareas'];
+        // Colecciones append-only (nunca se editan, solo se agregan)
+        var COLECCIONES_APPEND_ONLY = ['historial', 'papelera'];
         // ─────── FIN @JS-CONFIG-CONSTANTES ───────
 
         // ─────── @JS-CONFIG-FIREBASE-CREDENTIALS ───────
@@ -4550,43 +4558,134 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-FIREBASE-SYNC-INDICADOR ───────
 
-        // ─────── @JS-FIREBASE-GUARDAR ───────
-        // Sube todos los datos locales a Firebase
+                      // ─────── @JS-FIREBASE-GUARDAR ───────
+        // Guardado granular con optimistic locking.
+        //
+        // Estrategia:
+        // 1. Leer versiones remotas (liviano, solo los metadatos).
+        // 2. Comparar con versiones locales.
+        // 3. Si alguien editó algo que yo también edité → conflicto → abortar.
+        // 4. Si no → subir SOLO las entidades sucias con `.update()`.
+        // 5. Historial y papelera van con `.push()` (append-only, nunca choca).
+        //
+        // Parámetros:
+        //   esForzado = true → ignora la validación de versiones (sobrescribe).
         async function guardarEnFirebase(esForzado) {
             if (!database || sincronizandoFirebase) return false;
             if (!usuarioActual) return false;
+            if (!hayEntidadesSucias()) {
+                // Nada pendiente, pero igual actualizamos timestamp si es forzado
+                if (!esForzado) return true;
+            }
+
             try {
                 sincronizandoFirebase = true;
                 actualizarEstadoSync('syncing', 'Verificando...');
-                const snap = await database.ref('datos/ultimaActualizacion').once('value');
-                const remoto = snap.val();
-                if (!esForzado && remoto && ultimaActualizacionRemota && remoto > ultimaActualizacionRemota) {
+
+                // ─── 1. Leer versiones remotas ───
+                const idsSucios = {};
+                COLECCIONES_VERSIONADAS.forEach(function(col) {
+                    const ids = Object.keys(entidadesSucias[col] || {});
+                    if (ids.length > 0) idsSucios[col] = ids;
+                });
+
+                let versionesRemotas = {};
+                if (!esForzado && Object.keys(idsSucios).length > 0) {
+                    const snap = await database.ref('versiones').once('value');
+                    versionesRemotas = snap.val() || {};
+                }
+
+                // ─── 2. Detectar conflictos ───
+                const conflictos = [];
+                const actualizaciones = {};
+
+                COLECCIONES_VERSIONADAS.forEach(function(col) {
+                    const idsCol = idsSucios[col] || [];
+                    idsCol.forEach(function(id) {
+                        const marca = entidadesSucias[col][id];
+                        const versionRemota = versionesRemotas[col] && versionesRemotas[col][id] ? versionesRemotas[col][id] : 0;
+                        const entidadLocal = window[col].find(function(x) { return x && x.id === id; });
+                        const versionLocal = entidadLocal ? (entidadLocal._version || 0) : 0;
+
+                        // Si la versión remota es MAYOR que la local → alguien más editó
+                        if (!esForzado && versionRemota > versionLocal && marca !== 'ELIMINAR') {
+                            // Excepción: si yo no toqué el campo desde la última sincronización, no es conflicto real.
+                            // Pero como ya lo marqué como sucio, sí lo toqué. Es conflicto.
+                            conflictos.push({
+                                tipo: col,
+                                id: id,
+                                nombre: entidadLocal ? (entidadLocal.nombre || entidadLocal.festejado || id) : id,
+                                versionLocal: versionLocal,
+                                versionRemota: versionRemota
+                            });
+                            return;
+                        }
+
+                        if (marca === 'ELIMINAR') {
+                            actualizaciones[col + '/' + id] = null;
+                            actualizaciones['versiones/' + col + '/' + id] = null;
+                        } else if (entidadLocal) {
+                            // Bump de versión
+                            entidadLocal._version = versionLocal + 1;
+                            entidadLocal._editadoPor = usuarioActual.nombre;
+                            entidadLocal._fechaEdicion = obtenerFechaHoraActual();
+                            actualizaciones[col + '/' + id] = entidadLocal;
+                            actualizaciones['versiones/' + col + '/' + id] = entidadLocal._version;
+                        }
+                    });
+                });
+
+                // ─── 3. Si hay conflictos, abortar y notificar ───
+                if (conflictos.length > 0) {
                     sincronizandoFirebase = false;
-                    actualizarEstadoSync('online', 'Conflicto');
+                    actualizarEstadoSync('online', '⚠️ Conflicto');
+                    // Guardar copia de seguridad local de los cambios pendientes
+                    guardarCopiaConflictoLocal(conflictos);
+                    // Mostrar modal con opciones
+                    mostrarModalConflicto(conflictos);
                     return false;
                 }
+
+                // ─── 4. Aplicar actualizaciones granulares ───
                 actualizarEstadoSync('syncing', 'Guardando...');
+
+                // Subir entidades sucias
+                if (Object.keys(actualizaciones).length > 0) {
+                    await database.ref().update(actualizaciones);
+                }
+
+                // ─── 5. Append-only: historial y papelera con push() ───
+                for (const col of COLECCIONES_APPEND_ONLY) {
+                    const pendientes = eventosAppendOnlyPendientes[col] || [];
+                    if (pendientes.length === 0) continue;
+
+                    // Subir en paralelo (push genera IDs únicos, no choca)
+                    const promesas = pendientes.map(function(item) {
+                        return database.ref(col).push(item);
+                    });
+                    await Promise.all(promesas);
+                }
+
+                // ─── 6. Metadata global ───
                 const ahora = new Date().toISOString();
-                await database.ref('datos').set({
-                    paquetes: paquetes,
-                    serviciosAdicionales: serviciosAdicionales,
-                    prospectos: prospectos,
-                    clientes: clientes,
-                    tareas: tareas,
-                    historial: historial,
-                    usuarios: usuarios,
-                    papelera: papelera,
+                await database.ref('version').update({
                     ultimaActualizacion: ahora,
                     ultimoUsuario: usuarioActual.nombre,
-                    version: VERSION
+                    schemaVersion: SCHEMA_VERSION,
+                    appVersion: VERSION
                 });
+
+                // ─── 7. Limpiar estado ───
                 ultimaActualizacionRemota = ahora;
                 cambiosPendientes = false;
+                limpiarEntidadesSucias();
                 actualizarEstadoSync('online', 'Guardado');
                 return true;
+
             } catch (error) {
                 console.error('Error Firebase:', error);
-                actualizarEstadoSync('offline', 'Error');
+                actualizarEstadoSync('offline', 'Error de red');
+                // NO limpiamos entidades sucias: se reintentará
                 return false;
             } finally {
                 sincronizandoFirebase = false;
@@ -4594,24 +4693,60 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-FIREBASE-GUARDAR ───────
 
-        // ─────── @JS-FIREBASE-CARGAR ───────
-        // Descarga los datos de Firebase y reemplaza los locales
+                // ─────── @JS-FIREBASE-CARGAR ───────
+        // Descarga los datos de Firebase (estructura plana por entidad).
+        // Detecta si está en formato antiguo (datos/) o nuevo (paquetes/, clientes/, etc.)
+        // y migra automáticamente.
         async function cargarDesdeFirebase() {
             if (!database) return false;
             try {
                 actualizarEstadoSync('syncing', 'Cargando...');
-                const snap = await database.ref('datos').once('value');
-                const datos = snap.val();
-                if (datos) {
-                    if (datos.paquetes) paquetes = datos.paquetes;
-                    if (datos.serviciosAdicionales) serviciosAdicionales = datos.serviciosAdicionales;
-                    if (datos.prospectos) prospectos = datos.prospectos;
-                    if (datos.clientes) clientes = datos.clientes;
-                    if (datos.tareas) tareas = datos.tareas;
-                    if (datos.historial) historial = datos.historial;
-                    if (datos.papelera) papelera = datos.papelera;
-                    if (datos.usuarios && datos.usuarios.length > 0) {
-                        const fusionados = datos.usuarios.slice();
+
+                // ─── 1. Detectar si existe la estructura antigua ───
+                const snapAntiguo = await database.ref('datos').once('value');
+                const datosAntiguos = snapAntiguo.val();
+
+                const snapVersion = await database.ref('version').once('value');
+                const versionData = snapVersion.val();
+
+                // ─── 2. Cargar cada colección desde su nodo ───
+                // Helper: convierte objeto de Firebase a array
+                function objetosAArray(obj) {
+                    if (!obj) return [];
+                    if (Array.isArray(obj)) return obj.filter(Boolean);
+                    return Object.keys(obj).map(function(k) { return obj[k]; }).filter(Boolean);
+                }
+
+                const [snapPaq, snapServ, snapPros, snapCli, snapTar] = await Promise.all([
+                    database.ref('paquetes').once('value'),
+                    database.ref('serviciosAdicionales').once('value'),
+                    database.ref('prospectos').once('value'),
+                    database.ref('clientes').once('value'),
+                    database.ref('tareas').once('value')
+                ]);
+
+                let paquetesR = objetosAArray(snapPaq.val());
+                let serviciosR = objetosAArray(snapServ.val());
+                let prospectosR = objetosAArray(snapPros.val());
+                let clientesR = objetosAArray(snapCli.val());
+                let tareasR = objetosAArray(snapTar.val());
+
+                // ─── 3. Fallback a estructura antigua si está vacía la nueva ───
+                if (datosAntiguos && paquetesR.length === 0 && clientesR.length === 0) {
+                    console.warn('📦 Detectada estructura antigua en datos/. Migrando...');
+                    paquetesR = objetosAArray(datosAntiguos.paquetes);
+                    serviciosR = objetosAArray(datosAntiguos.serviciosAdicionales);
+                    prospectosR = objetosAArray(datosAntiguos.prospectos);
+                    clientesR = objetosAArray(datosAntiguos.clientes);
+                    tareasR = objetosAArray(datosAntiguos.tareas);
+
+                    // Historial y papelera: los cargamos como arrays (vienen del árbol viejo)
+                    if (datosAntiguos.historial) historial = objetosAArray(datosAntiguos.historial);
+                    if (datosAntiguos.papelera) papelera = objetosAArray(datosAntiguos.papelera);
+
+                    // Cargar usuarios si vienen
+                    if (datosAntiguos.usuarios && datosAntiguos.usuarios.length > 0) {
+                        const fusionados = datosAntiguos.usuarios.slice();
                         usuarios.forEach(function(lu) {
                             if (!fusionados.some(function(ru) { return ru.username === lu.username; })) {
                                 fusionados.push(lu);
@@ -4620,14 +4755,73 @@ var DATOS_EMISOR = {
                         usuarios = fusionados;
                         guardarUsuarios();
                     }
-                    ultimaActualizacionRemota = datos.ultimaActualizacion || null;
+
+                    // Asignar los datos migrados
+                    paquetes = paquetesR;
+                    serviciosAdicionales = serviciosR;
+                    prospectos = prospectosR;
+                    clientes = clientesR;
+                    tareas = tareasR;
+
+                    ultimaActualizacionRemota = datosAntiguos.ultimaActualizacion || null;
                     cambiosPendientes = false;
                     guardarDatosLocal();
                     renderizarTodo();
-                    actualizarEstadoSync('online', 'Cargado');
+                    actualizarEstadoSync('online', 'Migrado');
+
+                    // Marcar todo como sucio para reescribir en estructura nueva
+                    paquetes.forEach(function(p) { if (p) marcarSucia('paquetes', p.id); });
+                    serviciosAdicionales.forEach(function(s) { if (s) marcarSucia('serviciosAdicionales', s.id); });
+                    prospectos.forEach(function(p) { if (p) marcarSucia('prospectos', p.id); });
+                    clientes.forEach(function(c) { if (c) marcarSucia('clientes', c.id); });
+                    tareas.forEach(function(t) { if (t) marcarSucia('tareas', t.id); });
+
+                    // Subir migración en background
+                    setTimeout(function() { guardarEnFirebase(true); }, 1500);
+
+                    mostrarNotificacion('Datos migrados a nueva estructura', 'success');
                     return true;
                 }
-                return false;
+
+                // ─── 4. Carga normal (estructura nueva) ───
+
+                // Historial: leer, ordenar por fecha desc (los más nuevos primero)
+                const snapHist = await database.ref('historial').once('value');
+                const historialObj = snapHist.val() || {};
+                historial = Object.keys(historialObj).map(function(k) {
+                    return historialObj[k];
+                }).filter(Boolean).sort(function(a, b) {
+                    return (b.fecha || '').localeCompare(a.fecha || '');
+                });
+
+                // Papelera: igual
+                const snapPap = await database.ref('papelera').once('value');
+                const papeleraObj = snapPap.val() || {};
+                papelera = Object.keys(papeleraObj).map(function(k) {
+                    const item = papeleraObj[k];
+                    if (item && !item.id) item.id = k; // asegurar id
+                    return item;
+                }).filter(Boolean).sort(function(a, b) {
+                    return (b.fechaEliminacion || '').localeCompare(a.fechaEliminacion || '');
+                });
+
+                // Asignar colecciones versionadas
+                paquetes = paquetesR;
+                serviciosAdicionales = serviciosR;
+                prospectos = prospectosR;
+                clientes = clientesR;
+                tareas = tareasR;
+
+                // Usuarios (aún viven en localStorage y se sincronizan desde 'usuarios')
+                // (por ahora mantenemos usuarios solo en local; si en el futuro quieres sync, se agrega)
+
+                ultimaActualizacionRemota = versionData && versionData.ultimaActualizacion ? versionData.ultimaActualizacion : null;
+                cambiosPendientes = false;
+                limpiarEntidadesSucias();
+                guardarDatosLocal();
+                renderizarTodo();
+                actualizarEstadoSync('online', 'Cargado');
+                return true;
             } catch (error) {
                 console.error('Error cargando:', error);
                 actualizarEstadoSync('offline', 'Error');
@@ -4636,32 +4830,50 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-FIREBASE-CARGAR ───────
 
-        // ─────── @JS-FIREBASE-ESCUCHAR ───────
-        // Escucha cambios remotos y actualiza si otro usuario modificó datos
+                // ─────── @JS-FIREBASE-ESCUCHAR ───────
+        // Escucha cambios remotos a nivel de entidad, sin sobrescribir cambios locales.
+        //
+        // Comportamiento:
+        // - Si un usuario remoto modifica una entidad que NO tocaste → actualización silenciosa.
+        // - Si modifica algo que SÍ tocaste → se mantiene tu versión local y se avisa.
+        // - Historial y papelera: solo se AGREGAN nuevos eventos, nunca se reescriben.
         function escucharCambiosFirebase() {
             if (!database) return;
-            database.ref('datos').on('value', function(snap) {
-                const datos = snap.val();
-                if (!datos || sincronizandoFirebase) return;
+
+            // ─── Escuchar metadata global ───
+            database.ref('version').on('value', function(snap) {
+                const v = snap.val();
+                if (!v || sincronizandoFirebase) return;
                 if (primerCarga) { primerCarga = false; return; }
-                const remoto = datos.ultimaActualizacion;
+                const remoto = v.ultimaActualizacion;
                 if (remoto && ultimaActualizacionRemota && remoto > ultimaActualizacionRemota) {
-                    if (cambiosPendientes) {
-                        mostrarNotificacion('Otro usuario modificó datos', 'warning');
+                    if (hayEntidadesSucias()) {
+                        mostrarNotificacion('Otro usuario guardó cambios. Los tuyos se mantienen.', 'warning');
                     } else {
-                        if (datos.paquetes) paquetes = datos.paquetes;
-                        if (datos.serviciosAdicionales) serviciosAdicionales = datos.serviciosAdicionales;
-                        if (datos.prospectos) prospectos = datos.prospectos;
-                        if (datos.clientes) clientes = datos.clientes;
-                        if (datos.tareas) tareas = datos.tareas;
-                        if (datos.historial) historial = datos.historial;
-                        if (datos.papelera) papelera = datos.papelera;
-                        ultimaActualizacionRemota = remoto;
-                        guardarDatosLocal();
-                        renderizarTodo();
-                        mostrarNotificacion('Datos actualizados desde la nube', 'success');
+                        // Nadie tiene cambios locales pendientes: recargar silenciosamente
+                        cargarDesdeFirebase().then(function() {
+                            mostrarNotificacion('Datos actualizados desde la nube', 'success');
+                        });
                     }
                 }
+            });
+
+            // ─── Escuchar historial (append-only) ───
+            // Cuando llega un nuevo evento remoto, se agrega localmente sin recargar todo.
+            database.ref('historial').limitToLast(1).on('child_added', function(snap) {
+                if (primerCarga) return;
+                const nuevo = snap.val();
+                if (!nuevo || !nuevo.id) return;
+                // Verificar si ya lo tenemos
+                if (historial.some(function(e) { return e.id === nuevo.id; })) return;
+                historial.unshift(nuevo);
+                if (historial.length > MAX_HISTORIAL_MOVIMIENTOS) {
+                    historial = historial.slice(0, MAX_HISTORIAL_MOVIMIENTOS);
+                }
+                guardarDatosLocal();
+                // Refrescar historial solo si está visible
+                const sc = document.getElementById('seccion-configuracion');
+                if (sc && sc.classList.contains('active')) renderizarHistorial();
             });
         }
         // ─────── FIN @JS-FIREBASE-ESCUCHAR ───────
@@ -4682,6 +4894,7 @@ var DATOS_EMISOR = {
                 estadoSync.modo = 'firebase';
                 actualizarEstadoSync('online', 'Conectado');
                 await cargarDesdeFirebase();
+                primerCarga = false;
                 escucharCambiosFirebase();
                 if (firebaseIntervalId) clearInterval(firebaseIntervalId);
                 firebaseIntervalId = setInterval(async function() {
@@ -4772,6 +4985,60 @@ var DATOS_EMISOR = {
             }
         })();
         // ─────── FIN @JS-STATE-HORAS ───────
+
+        // ─────── @JS-STATE-DIRTY ───────
+        // Rastreo de entidades que cambiaron desde el último guardado a Firebase.
+        // En vez de subir todo el árbol, subimos solo lo que cambió.
+        var entidadesSucias = {
+            paquetes: {},
+            serviciosAdicionales: {},
+            prospectos: {},
+            clientes: {},
+            tareas: {}
+        };
+        // Cola de eventos append-only pendientes (historial/papelera)
+        var eventosAppendOnlyPendientes = {
+            historial: [],
+            papelera: []
+        };
+
+        // Marca una entidad como sucia (modificada)
+        function marcarSucia(coleccion, id) {
+            if (!entidadesSucias[coleccion]) entidadesSucias[coleccion] = {};
+            entidadesSucias[coleccion][id] = true;
+        }
+
+        // Marca una entidad como eliminada (para propagar el borrado a Firebase)
+        function marcarEliminada(coleccion, id) {
+            if (!entidadesSucias[coleccion]) entidadesSucias[coleccion] = {};
+            entidadesSucias[coleccion][id] = 'ELIMINAR';
+        }
+
+        // Verifica si hay algo sucio pendiente
+        function hayEntidadesSucias() {
+            for (var col in entidadesSucias) {
+                if (Object.keys(entidadesSucias[col]).length > 0) return true;
+            }
+            if (eventosAppendOnlyPendientes.historial.length > 0) return true;
+            if (eventosAppendOnlyPendientes.papelera.length > 0) return true;
+            return false;
+        }
+
+        // Limpia el estado sucio tras un guardado exitoso
+        function limpiarEntidadesSucias() {
+            Object.keys(entidadesSucias).forEach(function(col) {
+                entidadesSucias[col] = {};
+            });
+            eventosAppendOnlyPendientes.historial = [];
+            eventosAppendOnlyPendientes.papelera = [];
+        }
+
+        // Encola un evento append-only (historial/papelera)
+        function encolarEventoAppendOnly(coleccion, item) {
+            if (!eventosAppendOnlyPendientes[coleccion]) eventosAppendOnlyPendientes[coleccion] = [];
+            eventosAppendOnlyPendientes[coleccion].push(item);
+        }
+        // ─────── FIN @JS-STATE-DIRTY ───────
 
         /* ═══════════════════════════════════════════════════════════ */
         /* @JS-UTILS — Permisos, IDs, fechas, formato y utilidades      */
@@ -4978,7 +5245,7 @@ var DATOS_EMISOR = {
         // Funciones de soft delete: mueven elementos a la papelera en vez de borrarlos
         
         // Agrega un elemento a la papelera con metadata
-        function agregarAPapelera(tipo, item, motivo) {
+               function agregarAPapelera(tipo, item, motivo) {
             const ahora = new Date();
             const expira = new Date(ahora.getTime() + (DIAS_RETENCION_PAPELERA * 24 * 60 * 60 * 1000));
             const entrada = {
@@ -4994,10 +5261,12 @@ var DATOS_EMISOR = {
             };
             papelera.unshift(entrada);
             if (papelera.length > MAX_PAPELERA) papelera = papelera.slice(0, MAX_PAPELERA);
+            // Encolar para subir a Firebase con push() (append-only)
+            encolarEventoAppendOnly('papelera', entrada);
         }
 
         // Purga los elementos que ya cumplieron los días de retención
-        function purgarPapeleraVencida(silencioso) {
+               function purgarPapeleraVencida(silencioso) {
             const ahora = new Date();
             const antes = papelera.length;
             const purgados = [];
@@ -5011,6 +5280,14 @@ var DATOS_EMISOR = {
                 return true;
             });
             const cantidad = antes - papelera.length;
+            // Propagar borrados a Firebase (los purgados ya no deben existir)
+            purgados.forEach(function(entrada) {
+                if (estadoSync.modo === 'firebase' && database) {
+                    database.ref('papelera/' + entrada.id).remove().catch(function(err) {
+                        console.warn('No se pudo purgar remoto:', err);
+                    });
+                }
+            });
             if (cantidad > 0 && !silencioso) {
                 registrarHistorial('papelera', 'eliminar', 'Se purgaron ' + cantidad + ' elemento' + (cantidad === 1 ? '' : 's') + ' vencido' + (cantidad === 1 ? '' : 's') + ' de la papelera', { id: null, nombre: null });
                 mostrarNotificacion('Se purgaron ' + cantidad + ' elemento' + (cantidad === 1 ? '' : 's') + ' vencido' + (cantidad === 1 ? '' : 's'), 'info');
@@ -5260,25 +5537,50 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-USERS-CERRAR-SESION ───────
 
-        // ─────── @JS-USERS-HISTORIAL ───────
-        // Registro de eventos en el historial general
-               function registrarHistorial(entidad, accion, descripcion, meta) {
+                // ─────── @JS-USERS-HISTORIAL ───────
+        // Registro de eventos en el historial general.
+        // El historial es append-only: se encola para subir con push() a Firebase.
+        function registrarHistorial(entidad, accion, descripcion, meta) {
             if (!meta) meta = {};
             const evento = {
-                id: generarId(), fecha: obtenerFechaHoraActual(),
+                id: generarId(),
+                fecha: obtenerFechaHoraActual(),
                 usuario: usuarioActual ? usuarioActual.nombre : 'Sistema',
                 usuarioUsername: usuarioActual ? usuarioActual.username : 'system',
-                entidad: entidad, accion: accion, descripcion: descripcion,
-                meta: { id: meta.id || null, nombre: meta.nombre || null, detalle: meta.detalle || null },
+                entidad: entidad,
+                accion: accion,
+                descripcion: descripcion,
+                meta: {
+                    id: meta.id || null,
+                    nombre: meta.nombre || null,
+                    detalle: meta.detalle || null
+                },
                 cambios: (meta.cambios && meta.cambios.length > 0) ? meta.cambios : null,
                 cambiosOmitidos: meta.cambiosOmitidos || null
             };
+
+            // 1. Agregar localmente (arriba del array)
             historial.unshift(evento);
-            if (historial.length > MAX_HISTORIAL_MOVIMIENTOS) historial = historial.slice(0, MAX_HISTORIAL_MOVIMIENTOS);
+            if (historial.length > MAX_HISTORIAL_MOVIMIENTOS) {
+                historial = historial.slice(0, MAX_HISTORIAL_MOVIMIENTOS);
+            }
+
+            // 2. Encolar para subir a Firebase con push() (append-only, no choca)
+            encolarEventoAppendOnly('historial', evento);
+
+            // 3. Persistir local
             try { localStorage.setItem('historial', JSON.stringify(historial)); } catch (e) {}
+
+            // 4. Refrescar UI si la sección está visible
             const sc = document.getElementById('seccion-configuracion');
             if (sc && sc.classList.contains('active')) renderizarHistorial();
+
+            // 5. Disparar guardado con debounce
             marcarCambiosPendientes();
+            if (estadoSync.modo === 'firebase' && database) {
+                if (timeoutGuardadoFirebase) clearTimeout(timeoutGuardadoFirebase);
+                timeoutGuardadoFirebase = setTimeout(function() { guardarEnFirebase(); }, 800);
+            }
         }
         // ─────── FIN @JS-USERS-HISTORIAL ───────
 
@@ -5404,11 +5706,19 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-PERSIST-CARGAR-LOCAL ───────
 
-        // ─────── @JS-PERSIST-GUARDAR ───────
+               // ─────── @JS-PERSIST-GUARDAR ───────
+        // Guarda localmente (siempre) y programa un guardado a Firebase con debounce.
+        // El debounce evita ráfagas de escrituras cuando se hacen varios cambios seguidos.
+        var timeoutGuardadoFirebase = null;
         function guardarDatos() {
             guardarDatosLocal();
             marcarCambiosPendientes();
-            if (estadoSync.modo === 'firebase' && database) guardarEnFirebase();
+            if (estadoSync.modo === 'firebase' && database) {
+                if (timeoutGuardadoFirebase) clearTimeout(timeoutGuardadoFirebase);
+                timeoutGuardadoFirebase = setTimeout(function() {
+                    guardarEnFirebase();
+                }, 800);
+            }
         }
         // ─────── FIN @JS-PERSIST-GUARDAR ───────
 
@@ -5520,6 +5830,118 @@ var DATOS_EMISOR = {
             });
         }
         // ─────── FIN @JS-UI-CONFIRMAR-ACCION ───────
+        // ─────── @JS-UI-MODAL-CONFLICTO ───────
+        // Modal para resolver conflictos de sincronización
+        function mostrarModalConflicto(conflictos) {
+            let listaHTML = '<ul style="margin:8px 0 0 0;padding-left:20px;font-size:13px;">';
+            conflictos.forEach(function(c) {
+                listaHTML += '<li style="margin-bottom:4px;"><strong>' + etiquetaTipoPapelera(c.tipo) + '</strong>: ' + c.nombre + ' <span style="color:var(--color-texto-secundario);font-size:11px;">(v' + c.versionLocal + ' local vs v' + c.versionRemota + ' nube)</span></li>';
+            });
+            listaHTML += '</ul>';
+
+            const html = 
+                '<div class="advertencia-eliminar" style="background-color:rgba(255, 152, 0, 0.1);border-color:var(--color-naranja);border-left-color:var(--color-naranja);">' +
+                    '<i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i>' +
+                    '<div class="texto">' +
+                        '<strong style="color:var(--color-naranja);">Otro usuario editó estos registros</strong>' +
+                        'Tus cambios locales no se han subido para evitar sobrescribir los de la nube. ' +
+                        'Elige cómo quieres proceder:' +
+                        listaHTML +
+                    '</div>' +
+                '</div>' +
+                '<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">' +
+                    '<button class="btn-peligro" id="btn-conflicto-sobrescribir" style="justify-content:center;padding:12px;">' +
+                        '<i class="fas fa-cloud-upload-alt"></i> Sobrescribir con MIS cambios' +
+                    '</button>' +
+                    '<button class="btn-secundario" id="btn-conflicto-descartar" style="justify-content:center;padding:12px;">' +
+                        '<i class="fas fa-cloud-download-alt"></i> Descartar mis cambios y recargar' +
+                    '</button>' +
+                    '<button class="btn-secundario" id="btn-conflicto-copia" style="justify-content:center;padding:12px;">' +
+                        '<i class="fas fa-download"></i> Guardar copia local (JSON)' +
+                    '</button>' +
+                    '<button class="btn-secundario" id="btn-conflicto-esperar" style="justify-content:center;padding:12px;">' +
+                        '<i class="fas fa-clock"></i> Decidir después (mantener cambios locales)' +
+                    '</button>' +
+                '</div>';
+
+            abrirModal('⚠️ Conflicto de sincronización', html);
+
+            document.getElementById('btn-conflicto-sobrescribir').addEventListener('click', function() {
+                cerrarModal();
+                if (!confirm('Esto sobreescribirá los cambios del otro usuario en la nube. ¿Continuar?')) return;
+                guardarEnFirebase(true); // forzado
+            });
+
+            document.getElementById('btn-conflicto-descartar').addEventListener('click', function() {
+                cerrarModal();
+                if (!confirm('¿Descartar tus cambios locales y recargar desde la nube?')) return;
+                limpiarEntidadesSucias();
+                cargarDesdeFirebase().then(function() {
+                    mostrarNotificacion('Datos recargados desde la nube', 'success');
+                });
+            });
+
+            document.getElementById('btn-conflicto-copia').addEventListener('click', function() {
+                exportarCopiaConflicto();
+                cerrarModal();
+            });
+
+            document.getElementById('btn-conflicto-esperar').addEventListener('click', function() {
+                cerrarModal();
+                mostrarNotificacion('Tus cambios se mantienen en local. Resuelve el conflicto pronto.', 'warning');
+            });
+        }
+
+        // Guarda automáticamente una copia de seguridad en localStorage
+        function guardarCopiaConflictoLocal(conflictos) {
+            try {
+                const copia = {
+                    fecha: obtenerFechaHoraActual(),
+                    usuario: usuarioActual ? usuarioActual.nombre : 'desconocido',
+                    conflictos: conflictos,
+                    datos: {
+                        paquetes: paquetes,
+                        serviciosAdicionales: serviciosAdicionales,
+                        prospectos: prospectos,
+                        clientes: clientes,
+                        tareas: tareas
+                    }
+                };
+                localStorage.setItem('pda_conflicto_backup', JSON.stringify(copia));
+            } catch (e) {
+                console.warn('No se pudo guardar backup de conflicto:', e);
+            }
+        }
+
+        // Descarga la copia de conflicto como JSON
+        function exportarCopiaConflicto() {
+            try {
+                const copia = {
+                    fecha: obtenerFechaHoraActual(),
+                    usuario: usuarioActual ? usuarioActual.nombre : 'desconocido',
+                    paquetes: paquetes,
+                    serviciosAdicionales: serviciosAdicionales,
+                    prospectos: prospectos,
+                    clientes: clientes,
+                    tareas: tareas
+                };
+                const json = JSON.stringify(copia, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'conflicto_' + obtenerFechaActual() + '_' + (usuarioActual ? usuarioActual.username : 'user') + '.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                mostrarNotificacion('Copia de conflicto descargada', 'success');
+            } catch (e) {
+                mostrarNotificacion('Error al descargar copia: ' + e.message, 'error');
+            }
+        }
+        // ─────── FIN @JS-UI-MODAL-CONFLICTO ───────
+
         // ─────── FIN @JS-UI-CONFIRMAR-ELIMINAR ───────
 
         // ─────── @JS-UI-TEMA-APLICAR ───────
@@ -6083,6 +6505,15 @@ var DATOS_EMISOR = {
                                 { id: nuevo.id, nombre: nuevo.nombre });
                         }
 
+                       // Marcar la entidad como sucia para sincronización granular
+                        if (id) {
+                            marcarSucia(coleccion, id);
+                        } else {
+                            // Al crear: el nuevo id está en el último elemento
+                            const ultimo = lista[lista.length - 1];
+                            if (ultimo && ultimo.id) marcarSucia(coleccion, ultimo.id);
+                        }
+
                         guardarDatos();
                         cerrarModal();
                         renderizar();
@@ -6142,10 +6573,12 @@ var DATOS_EMISOR = {
                             '<button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button>' +
                             '<button type="button" class="btn-peligro" id="btn-confirmar-papelera"><i class="fas fa-trash"></i> Mover a papelera</button>' +
                         '</div>');
-                    document.getElementById('btn-confirmar-papelera').addEventListener('click', function() {
+                          document.getElementById('btn-confirmar-papelera').addEventListener('click', function() {
                         const motivo = document.getElementById('papelera-motivo-input').value.trim();
                         agregarAPapelera(entidadHistorial, item, motivo);
                         window[coleccion] = lista.filter(function(x) { return x.id !== id; });
+                        // Marcar como eliminada para propagar el borrado a Firebase
+                        marcarEliminada(coleccion, id);
                         registrarHistorial(entidadHistorial, 'eliminar',
                             'Se movió ' + titulo.toLowerCase() + ' a papelera: "' + (item.nombre || 'sin nombre') + '"' + (motivo ? ' — Motivo: ' + motivo : ''),
                             { id: id, nombre: item.nombre });
@@ -6576,11 +7009,14 @@ var DATOS_EMISOR = {
                     registrarHistorial('paquete', 'crear', 'Se creó paquete: "' + nombre + '"', { id: nuevo.id, nombre: nombre });
                 }
 
+                 // Marcar sucio
+                const idGuardado = id || (paquetes[paquetes.length - 1] && paquetes[paquetes.length - 1].id);
+                if (idGuardado) marcarSucia('paquetes', idGuardado);
+
                 guardarDatos();
                 cerrarModal();
                 renderizarPaquetes();
                 actualizarFiltrosInformes();
-                // Si el panel lateral estaba abierto con un paquete, refrescarlo
                 if (panelLateralContexto && panelLateralContexto.tipo === 'paquete') {
                     verDetallePaquete(panelLateralContexto.itemId);
                 }
@@ -6749,10 +7185,11 @@ var DATOS_EMISOR = {
                     '<button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button>' +
                     '<button type="button" class="btn-peligro" id="btn-confirmar-papelera"><i class="fas fa-trash"></i> Mover a papelera</button>' +
                 '</div>');
-            document.getElementById('btn-confirmar-papelera').addEventListener('click', function() {
+                       document.getElementById('btn-confirmar-papelera').addEventListener('click', function() {
                 const motivo = document.getElementById('papelera-motivo-input').value.trim();
                 agregarAPapelera('paquete', p, motivo);
                 paquetes = paquetes.filter(function(x) { return x.id !== id; });
+                marcarEliminada('paquetes', id);
                 registrarHistorial('paquete', 'eliminar', 'Se movió paquete a papelera: "' + (p.nombre || 'sin nombre') + '"' + (motivo ? ' — Motivo: ' + motivo : ''), { id: id, nombre: p.nombre });
                 guardarDatos();
                 renderizarPaquetes();
@@ -6776,8 +7213,9 @@ var DATOS_EMISOR = {
                 // Si ya está Inactivo, no tocar (decisión manual del admin)
                 if (est === 'Inactivo') return;
                 // Si la fecha ya pasó y no está caducado, moverlo
-                if (p.vigencia < hoy && p.estatus !== 'Caducado') {
+                 if (p.vigencia < hoy && p.estatus !== 'Caducado') {
                     p.estatus = 'Caducado';
+                    marcarSucia('paquetes', p.id);
                     cambios++;
                 }
             });
@@ -7130,6 +7568,10 @@ var DATOS_EMISOR = {
                     prospectos.push(nuevo);
                     registrarHistorial('prospecto', 'crear', 'Se creó prospecto: "' + nombre + '"', { id: nuevo.id, nombre: nombre });
                 }
+                  // Marcar sucio
+                const idGuardado = id || (prospectos[prospectos.length - 1] && prospectos[prospectos.length - 1].id);
+                if (idGuardado) marcarSucia('prospectos', idGuardado);
+
                 guardarDatos(); cerrarModal(); renderizarProspectos();
                 mostrarNotificacion('Prospecto guardado', 'success');
             });
@@ -7174,8 +7616,13 @@ var DATOS_EMISOR = {
                 tareas.filter(function(t) { return t.clienteId === 'pro_' + id; }).forEach(function(t) {
                     agregarAPapelera('tarea', t, 'Tarea del prospecto eliminado: ' + p.nombre + (motivo ? ' — ' + motivo : ''));
                 });
-                agregarAPapelera('prospecto', p, motivo);
+                                agregarAPapelera('prospecto', p, motivo);
                 prospectos = prospectos.filter(function(x) { return x.id !== id; });
+                marcarEliminada('prospectos', id);
+                // Marcar tareas vinculadas como eliminadas
+                tareas.filter(function(t) { return t.clienteId === 'pro_' + id; }).forEach(function(t) {
+                    marcarEliminada('tareas', t.id);
+                });
                 tareas = tareas.filter(function(t) { return t.clienteId !== 'pro_' + id; });
                 registrarHistorial('prospecto', 'eliminar', 'Se movió prospecto a papelera: "' + p.nombre + '" (por ' + nombreUsuarioActual() + ')' + (motivo ? ' — Motivo: ' + motivo : ''), { id: id, nombre: p.nombre });
                 guardarDatos();
@@ -7206,6 +7653,9 @@ var DATOS_EMISOR = {
                     tareasMigradas++;
                 }
             });
+            marcarSucia('prospectos', p.id);
+            marcarSucia('clientes', nc.id);
+            tareas.forEach(function(t) { if (t.clienteId === nc.id) marcarSucia('tareas', t.id); });
             registrarHistorial('cliente', 'crear', 'Prospecto "' + p.nombre + '" convertido a cliente' + (tareasMigradas > 0 ? ' (' + tareasMigradas + ' tareas migradas)' : ''), { id: nc.id, nombre: nc.nombre });
             guardarDatos(); renderizarProspectos(); renderizarClientes(); renderizarCalendario();
             mostrarNotificacion('Prospecto convertido a cliente' + (tareasMigradas > 0 ? ' · ' + tareasMigradas + ' tareas migradas' : ''), 'success');
@@ -7257,10 +7707,20 @@ var DATOS_EMISOR = {
                     agregarAPapelera('tarea', t, 'Tarea del cliente eliminado: ' + c.nombre + (motivo ? ' — ' + motivo : ''));
                 });
                 // Mover cliente a papelera
-                agregarAPapelera('cliente', c, motivo);
+                               agregarAPapelera('cliente', c, motivo);
                 // Eliminar de la colección activa
                 clientes = clientes.filter(function(x) { return x.id !== id; });
-                prospectos.forEach(function(p) { if (p && p.clienteId === id) p.clienteId = null; });
+                marcarEliminada('clientes', id);
+                // Marcar tareas eliminadas
+                tareas.filter(function(t) { return t.clienteId === id; }).forEach(function(t) {
+                    marcarEliminada('tareas', t.id);
+                });
+                prospectos.forEach(function(p) {
+                    if (p && p.clienteId === id) {
+                        p.clienteId = null;
+                        marcarSucia('prospectos', p.id);
+                    }
+                });
                 tareas = tareas.filter(function(t) { return t.clienteId !== id; });
 
                 registrarHistorial('cliente', 'eliminar', 'Se movió cliente a papelera: "' + c.nombre + '"' + (motivo ? ' — Motivo: ' + motivo : ''), { id: id, nombre: c.nombre });
@@ -7707,6 +8167,10 @@ var DATOS_EMISOR = {
                     tareas.push(nt);
                     registrarHistorial('tarea', 'crear', 'Se creó tarea: "' + tipo + '"' + (clid ? ' vinculada' : ''), { id: nt.id, nombre: tipo });
                 }
+                               // Marcar sucia
+                const idGuardado = id || (tareas[tareas.length - 1] && tareas[tareas.length - 1].id);
+                if (idGuardado) marcarSucia('tareas', idGuardado);
+
                 guardarDatos(); cerrarModal(); renderizarCalendario(); renderizarInformes();
                 renderizarClientes(); renderizarProspectos();
                 mostrarNotificacion(ee2 ? 'Tarea actualizada' : 'Tarea creada', 'success');
@@ -7730,6 +8194,7 @@ var DATOS_EMISOR = {
                 onConfirmar: function() {
                     agregarAPapelera('tarea', t, 'Eliminada por ' + nombreUsuarioActual());
                     tareas = tareas.filter(function(x) { return x.id !== id; });
+                    marcarEliminada('tareas', id);
                     registrarHistorial('tarea', 'eliminar', 'Se movió tarea a papelera: "' + t.tipo + '"', { id: id, nombre: t.tipo });
                     guardarDatos();
                     renderizarCalendario();
@@ -7749,7 +8214,8 @@ var DATOS_EMISOR = {
             t.completada = !t.completada;
             if (t.completada) { t.fechaCompletada = obtenerFechaHoraActual(); mostrarNotificacion('Tarea completada', 'success'); }
             else { t.fechaCompletada = null; mostrarNotificacion('Tarea reabierta', 'info'); }
-            t.fechaModificacion = obtenerFechaHoraActual();
+                       t.fechaModificacion = obtenerFechaHoraActual();
+            marcarSucia('tareas', id);
             guardarDatos(); renderizarCalendario(); renderizarInformes();
             renderizarClientes(); renderizarProspectos();
         }
@@ -7769,6 +8235,7 @@ var DATOS_EMISOR = {
                 mostrarNotificacion('Tarea reabierta', 'info');
             }
             t.fechaModificacion = obtenerFechaHoraActual();
+            marcarSucia('tareas', id);
             guardarDatos();
             renderizarCalendario();
             renderizarInformes();
@@ -8703,7 +9170,9 @@ var DATOS_EMISOR = {
                 });
             }
 
-            descuentoTemporal = null;
+             descuentoTemporal = null;
+            // El contrato vive dentro del cliente: marcar al cliente como sucio
+            marcarSucia('clientes', clid);
             guardarDatos();
             cerrarModal();
             renderizarContratos();
@@ -8878,9 +9347,10 @@ var DATOS_EMISOR = {
                 '</div>');
             document.getElementById('btn-confirmar-papelera').addEventListener('click', function() {
                 const motivo = document.getElementById('papelera-motivo-input').value.trim();
-                const copiaCo = Object.assign({}, co, { _clienteId: clienteId, _clienteNombre: c.nombre });
+                                const copiaCo = Object.assign({}, co, { _clienteId: clienteId, _clienteNombre: c.nombre });
                 agregarAPapelera('contrato', copiaCo, motivo);
                 c.contratos = c.contratos.filter(function(x) { return x.id !== contratoId; });
+                marcarSucia('clientes', clienteId);
                 registrarHistorial('contrato', 'eliminar', 'Se movió contrato a papelera de "' + c.nombre + '"' + (motivo ? ' — Motivo: ' + motivo : ''), { id: contratoId, nombre: c.nombre });
                 guardarDatos();
                 renderizarContratos();
@@ -8916,7 +9386,8 @@ var DATOS_EMISOR = {
                 if (isNaN(m) || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
                 if (!co.pagos) co.pagos = [];
                 const nuevoPago = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: n ? 'Pago: ' + n + ' - ' + formatearMoneda(m) : 'Pago de ' + formatearMoneda(m), codigo: generarHuellaPago(), registradoPor: nombreUsuarioActual() };
-                co.pagos.push(nuevoPago);
+                 co.pagos.push(nuevoPago);
+                marcarSucia('clientes', clienteId);
                 registrarHistorial('pago', 'crear', 'Pago de ' + formatearMoneda(m) + ' para "' + c.nombre + '" - Código: ' + nuevoPago.codigo, { id: nuevoPago.id, nombre: c.nombre });
                 guardarDatos();
                 cerrarModal();
