@@ -6717,14 +6717,19 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-PAQUETES-CADUCIDAD ───────
 
-        // ─────── @JS-RENDER-SERVICIOS ───────
+                // ─────── @JS-RENDER-SERVICIOS ───────
         // Vista de tarjetas de servicios adicionales (solo admin ve los botones)
         function renderizarServicios() {
             renderizarMosaicos({
                 contenedorId: 'lista-servicios', items: serviciosAdicionales, textoVacio: 'No hay servicios registrados',
                 renderContenido: function(s) {
                     const pf = (s.precio || 0) - (s.descuento || 0);
+                    // Badge para servicios de precio 0
+                    const badgePrecioCero = pf <= 0
+                        ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;font-size:10px;" title="Este servicio solo puede agregarse como item de un paquete"><i class="fas fa-box"></i> Solo para paquetes</span>'
+                        : '';
                     return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + (s.nombre || 'Sin nombre') + '</div></div>' +
+                        (badgePrecioCero ? '<div class="mosaico-etiquetas">' + badgePrecioCero + '</div>' : '') +
                         '<div class="mosaico-detalle">' + (s.descripcion || '') + '</div>' +
                         '<div class="mosaico-separador"></div>' +
                         '<div class="mosaico-detalle"><div><strong>Precio:</strong> ' + formatearMoneda(s.precio || 0) + '</div>' +
@@ -6738,7 +6743,7 @@ var DATOS_EMISOR = {
                 }
             });
         }
-        // ─────── FIN @JS-RENDER-SERVICIOS ───────       
+        // ─────── FIN @JS-RENDER-SERVICIOS ───────    
       
          // ─────── @JS-RENDER-CLIENTES ───────
         // Vista de clientes (soporta modo mosaico y lista)
@@ -7862,11 +7867,13 @@ var DATOS_EMISOR = {
             const clienteActual = clienteActualId ? obtenerCliente(clienteActualId) : null;
             const nombreClienteActual = clienteActual ? clienteActual.nombre : '';
 
-            // ─── Opciones del dropdown de servicios ───
+                      // ─── Opciones del dropdown de servicios (solo precio final > 0) ───
             let serviciosCheckboxes = '';
             serviciosAdicionales.forEach(function(s) {
-                const ck = contrato && contrato.serviciosIds && contrato.serviciosIds.indexOf(s.id) !== -1 ? 'checked' : '';
                 const pf = (s.precio || 0) - (s.descuento || 0);
+                // Solo mostrar servicios con precio final > 0
+                if (pf <= 0) return;
+                const ck = contrato && contrato.serviciosIds && contrato.serviciosIds.indexOf(s.id) !== -1 ? 'checked' : '';
                 serviciosCheckboxes += '<label class="servicio-item"><input type="checkbox" class="servicio-check-form" value="' + s.id + '" data-nombre="' + s.nombre + '" data-precio="' + pf + '" ' + ck + '><span class="nombre-servicio">' + s.nombre + '</span><span class="precio-servicio">' + formatearMoneda(pf) + '</span></label>';
             });
 
@@ -7900,13 +7907,21 @@ var DATOS_EMISOR = {
                 op += '<option value="" disabled>— No hay paquetes disponibles para vincular —</option>';
             }
 
-            // ─── Opciones de servicios para "solo servicio" ───
+                       // ─── Opciones de servicios para "solo servicio" (solo precio final > 0) ───
             let os = '<option value="">Seleccionar...</option>';
+            let serviciosIndividualesDisponibles = 0;
             serviciosAdicionales.forEach(function(s) {
-                const sel = contrato && contrato.servicioId === s.id ? 'selected' : '';
                 const pf = (s.precio || 0) - (s.descuento || 0);
+                // Si el servicio no tiene precio y NO es el actual del contrato, omitirlo
+                const esActual = contrato && contrato.servicioId === s.id;
+                if (pf <= 0 && !esActual) return;
+                serviciosIndividualesDisponibles++;
+                const sel = contrato && contrato.servicioId === s.id ? 'selected' : '';
                 os += '<option value="' + s.id + '" data-precio="' + pf + '" data-nombre="' + s.nombre + '" ' + sel + '>' + s.nombre + ' - ' + formatearMoneda(pf) + '</option>';
             });
+            if (serviciosIndividualesDisponibles === 0) {
+                os += '<option value="" disabled>— No hay servicios con precio disponibles —</option>';
+            }
 
             // ─── HTML del formulario ───
             const html = '<form id="form-contrato">' +
@@ -9649,11 +9664,16 @@ var DATOS_EMISOR = {
         function actualizarFiltrosInformes() {
             const fp = document.getElementById('filtro-paquete');
             const fs = document.getElementById('filtro-servicio');
-            if (fp) {
-                const v = fp.value;
+                        if (fs) {
+                const v = fs.value;
                 let html = '<option value="todos">Todos</option>';
-                paquetes.forEach(function(p) { html += '<option value="' + p.id + '">' + p.nombre + '</option>'; });
-                fp.innerHTML = html; fp.value = v;
+                serviciosAdicionales.forEach(function(s) {
+                    // Solo mostrar servicios con precio final > 0 (los de 0 son items de paquete)
+                    const pf = (s.precio || 0) - (s.descuento || 0);
+                    if (pf <= 0) return;
+                    html += '<option value="' + s.id + '">' + s.nombre + '</option>';
+                });
+                fs.innerHTML = html; fs.value = v;
             }
             if (fs) {
                 const v = fs.value;
