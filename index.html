@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ╔══════════════════════════════════════════════════════════════════════╗
-║  REGISTRO PDA — v4.7                                                ║
+║  REGISTRO PDA — v4.5                                                ║
 ║  Estudio Fotográfico · JFR MEDIA                                     ║
 ║                                                                      ║
 ║  ─────────────────────────────────────────────────────────────────   ║
@@ -57,7 +57,7 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Registro PDA v4.7 - Estudio Fotografía</title>
+    <title>Registro PDA v4.5 - Estudio Fotografía</title>
     <link rel="icon" type="image/jpeg" href="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -3719,7 +3719,7 @@ html[data-theme="angel"] .etiqueta-paquete-caducado { background-color: rgba(239
             <!-- ─────── FIN @HTML-LOGIN-PASO-NUEVO-PIN ─────── -->
             
             <div class="login-footer">
-                v4.7 · Software diseñado por <strong>JFR MEDIA</strong><br>
+                v4.5 · Software diseñado por <strong>JFR MEDIA</strong><br>
                 Acceso restringido a personal autorizado
             </div>
         </div>
@@ -3759,7 +3759,7 @@ html[data-theme="angel"] .etiqueta-paquete-caducado { background-color: rgba(239
             <div class="sidebar-footer">
                 <button class="btn-colapsar" id="btn-colapsar" title="Colapsar menú"><i class="fas fa-chevron-left"></i><span>Colapsar</span></button>
                 <button class="btn-logout" id="btn-logout" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></button>
-                <div class="version">v4.7</div>
+                <div class="version">v4.5</div>
             </div>
         </nav>
         <!-- ─────── FIN @HTML-SIDEBAR ─────── -->
@@ -4248,151 +4248,15 @@ html[data-theme="angel"] .etiqueta-paquete-caducado { background-color: rgba(239
 
                 <!-- ─────── @HTML-CONFIG-VERSION-CARD ─────── -->
                                <div class="version-card">
-                               <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v4.7</span></h3>
-                        <div class="version-info">
+                               <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v4.5</span></h3>
+                    <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">4.7</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">4.5</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
                     </div>
-                                       <!-- ═══ CHANGELOG v4.7 ═══ -->
                     <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v4.7)</h4>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-shield-alt"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Sincronización a prueba de conflictos</div>
-                                <div class="changelog-desc">
-                                    Cada guardado a la nube ahora se hace con transacciones atómicas por entidad.
-                                    Si dos usuarios editan el mismo registro al mismo tiempo, el sistema detecta
-                                    el conflicto y te permite elegir cómo resolverlo sin perder información.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-history"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Protección contra "resurrección" de datos</div>
-                                <div class="changelog-desc">
-                                    Cuando eliminas un cliente, contrato o prospecto, la información se conserva
-                                    en la nube marcada como eliminada. Esto evita que versiones antiguas de la
-                                    aplicación puedan recrear por error un registro que ya habías borrado.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Sincronización sin duplicados</div>
-                                <div class="changelog-desc">
-                                    Si la conexión a internet falla a mitad de una sincronización, los eventos
-                                    del historial y la papelera ya no se duplican al reintentar. Cada operación
-                                    tiene un identificador único y estable que la hace segura de reintentar.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-trash-restore"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Papelera sincronizada correctamente</div>
-                                <div class="changelog-desc">
-                                    Se corrigió un problema en el que restaurar, eliminar definitivamente o
-                                    purgar elementos de la papelera no se sincronizaba bien con la nube.
-                                    Ahora todas las operaciones de papelera se reflejan correctamente
-                                    en todos los dispositivos.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-lock"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Validaciones de seguridad en la nube</div>
-                                <div class="changelog-desc">
-                                    Se agregaron reglas de validación en Firebase que garantizan la estructura
-                                    correcta de los datos. Cualquier intento de escritura con formato inválido
-                                    es rechazado automáticamente antes de corromper la base de datos.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- FIN CHANGELOG v4.7 -->
-
-                    <!-- ═══ CHANGELOG v4.6 ═══ -->
-                    <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en la versión (v4.6)</h4>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-box"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Sección Paquetes rediseñada</div>
-                                <div class="changelog-desc">
-                                    Los paquetes ahora tienen lista de items incluidos (servicios, artículos,
-                                    regalos), estatus (Activo, Próximo, Especial de temporada, Inactivo, Caducado),
-                                    vista mosaico o lista, panel lateral de detalle, y caducidad automática.
-                                    Los operadores pueden verlos pero no editarlos.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-database"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Almacenamiento migrado a IndexedDB</div>
-                                <div class="changelog-desc">
-                                    Todos los datos se guardan ahora en IndexedDB en lugar de localStorage.
-                                    Esto elimina el límite de 5MB, mejora la velocidad de guardado y
-                                    prepara la aplicación para años de crecimiento sin problemas.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Sincronización granular con la nube</div>
-                                <div class="changelog-desc">
-                                    Antes se subía toda la base de datos en cada guardado. Ahora solo se envían
-                                    las entidades que cambiaron. Esto reduce drásticamente el consumo de datos
-                                    y permite trabajar mejor con conexiones lentas.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-smile"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Selector de emojis (solo escritorio)</div>
-                                <div class="changelog-desc">
-                                    Los campos de texto en la versión de escritorio ahora incluyen un botón
-                                    para insertar emojis con categorías y búsqueda. En móvil se desactivó
-                                    para mantener la fluidez (los teclados móviles ya tienen emojis).
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-sort"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Orden y búsqueda en Servicios</div>
-                                <div class="changelog-desc">
-                                    Los servicios adicionales ahora se pueden ordenar por nombre o precio,
-                                    y tienen filtro de búsqueda. Los servicios con precio $0 se marcan
-                                    como "Solo para paquetes" y no aparecen en contratos.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="changelog-item">
-                            <div class="changelog-icono"><i class="fas fa-mobile-alt"></i></div>
-                            <div class="changelog-contenido">
-                                <div class="changelog-titulo">Optimización para móvil</div>
-                                <div class="changelog-desc">
-                                    Se redujo significativamente el bloqueo de la interfaz en celulares.
-                                    Ahora la pantalla responde más rápido y las operaciones se sienten
-                                    más fluidas, incluso con conexiones débiles.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- FIN CHANGELOG v4.6 -->
-
-                    <!-- ═══ CHANGELOG v4.5 ═══ -->
-                    <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en la versión (v4.5)</h4>
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v4.5)</h4>
                         <div class="changelog-item">
                             <div class="changelog-icono"><i class="fas fa-th-large"></i></div>
                             <div class="changelog-contenido">
@@ -4604,7 +4468,7 @@ html[data-theme="angel"] .etiqueta-paquete-caducado { background-color: rgba(239
         /* ═══════════════════════════════════════════════════════════ */
 
         // ─────── @JS-CONFIG-VERSION ───────
-        var VERSION = '4.7';
+        var VERSION = '4.5';
         // ─────── FIN @JS-CONFIG-VERSION ───────
 
         // ─────── @JS-CONFIG-CONSTANTES ───────
@@ -4694,14 +4558,15 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-FIREBASE-SYNC-INDICADOR ───────
 
-                              // ─────── @JS-FIREBASE-GUARDAR ───────
-        // Guardado granular con optimistic locking + transacciones + tombstones.
+                      // ─────── @JS-FIREBASE-GUARDAR ───────
+        // Guardado granular con optimistic locking.
         //
-        // Flujo:
-        // 1. Para cada entidad sucia, se hace una transacción individual.
-        // 2. La transacción valida la versión esperada y aborta si hay conflicto.
-        // 3. Las eliminaciones dejan un tombstone en Firebase (no borran la entidad).
-        // 4. Historial y papelera se suben con set() usando IDs locales (idempotente).
+        // Estrategia:
+        // 1. Leer versiones remotas (liviano, solo los metadatos).
+        // 2. Comparar con versiones locales.
+        // 3. Si alguien editó algo que yo también edité → conflicto → abortar.
+        // 4. Si no → subir SOLO las entidades sucias con `.update()`.
+        // 5. Historial y papelera van con `.push()` (append-only, nunca choca).
         //
         // Parámetros:
         //   esForzado = true → ignora la validación de versiones (sobrescribe).
@@ -4709,215 +4574,108 @@ var DATOS_EMISOR = {
             if (!database || sincronizandoFirebase) return false;
             if (!usuarioActual) return false;
             if (!hayEntidadesSucias()) {
+                // Nada pendiente, pero igual actualizamos timestamp si es forzado
                 if (!esForzado) return true;
             }
 
             try {
                 sincronizandoFirebase = true;
-                actualizarEstadoSync('syncing', 'Guardando...');
+                actualizarEstadoSync('syncing', 'Verificando...');
 
-                const conflictos = [];
-
-                // ═══════════════════════════════════════════════════════
-                // BLOQUE 1: Colecciones versionadas con transacciones
-                // ═══════════════════════════════════════════════════════
-                            for (const col of COLECCIONES_VERSIONADAS) {
+                // ─── 1. Leer versiones remotas ───
+                const idsSucios = {};
+                COLECCIONES_VERSIONADAS.forEach(function(col) {
                     const ids = Object.keys(entidadesSucias[col] || {});
-                    for (const id of ids) {
+                    if (ids.length > 0) idsSucios[col] = ids;
+                });
+
+                let versionesRemotas = {};
+                if (!esForzado && Object.keys(idsSucios).length > 0) {
+                    const snap = await database.ref('versiones').once('value');
+                    versionesRemotas = snap.val() || {};
+                }
+
+                // ─── 2. Detectar conflictos ───
+                const conflictos = [];
+                const actualizaciones = {};
+
+                COLECCIONES_VERSIONADAS.forEach(function(col) {
+                    const idsCol = idsSucios[col] || [];
+                    idsCol.forEach(function(id) {
                         const marca = entidadesSucias[col][id];
+                        const versionRemota = versionesRemotas[col] && versionesRemotas[col][id] ? versionesRemotas[col][id] : 0;
                         const entidadLocal = window[col].find(function(x) { return x && x.id === id; });
-                        const versionLocalEsperada = entidadLocal ? (entidadLocal._version || 0) : 0;
+                        const versionLocal = entidadLocal ? (entidadLocal._version || 0) : 0;
 
-                        const refEntidad = database.ref(col + '/' + id);
-
-                        // ═══ FIX PREVENTIVO v4.7.1 ═══
-                        // Descartar residuos huérfanos del outbox que ya no
-                        // tienen correspondencia local ni remota.
-                        if (!entidadLocal && marca !== 'ELIMINAR') {
-                            console.log('🗑️ Descartando residuo del outbox:', col, id);
-                            delete entidadesSucias[col][id];
-                            continue;
-                        }
-
-                        if (marca === 'ELIMINAR' && !entidadLocal) {
-                            const snapCheck = await refEntidad.once('value');
-                            if (!snapCheck.exists()) {
-                                console.log('🗑️ Descartando eliminación obsoleta:', col, id);
-                                delete entidadesSucias[col][id];
-                                continue;
-                            }
+                        // Si la versión remota es MAYOR que la local → alguien más editó
+                        if (!esForzado && versionRemota > versionLocal && marca !== 'ELIMINAR') {
+                            // Excepción: si yo no toqué el campo desde la última sincronización, no es conflicto real.
+                            // Pero como ya lo marqué como sucio, sí lo toqué. Es conflicto.
+                            conflictos.push({
+                                tipo: col,
+                                id: id,
+                                nombre: entidadLocal ? (entidadLocal.nombre || entidadLocal.festejado || id) : id,
+                                versionLocal: versionLocal,
+                                versionRemota: versionRemota
+                            });
+                            return;
                         }
 
                         if (marca === 'ELIMINAR') {
-                            // ─── ELIMINACIÓN CON TOMBSTONE ───
-                            const tombstone = {
-                                id: id,
-                                _eliminado: true,
-                                _eliminadoPor: usuarioActual.nombre,
-                                _fechaEliminacion: obtenerFechaHoraActual(),
-                                _version: versionLocalEsperada + 1,
-                                _nombreOriginal: entidadLocal ? (entidadLocal.nombre || entidadLocal.festejado || id) : id
-                            };
-
-                            const resultado = await refEntidad.transaction(function(actual) {
-                                // Si no existe remoto, dejar el tombstone igual
-                                if (actual === null) return tombstone;
-                                // Si ya está eliminado, no tocar
-                                if (actual._eliminado === true) return actual;
-                                // Validar versión
-                                const vRemota = actual._version || 0;
-                                if (vRemota !== versionLocalEsperada) {
-                                    return undefined; // abortar transacción por conflicto
-                                }
-                                return tombstone;
-                            });
-
-                            if (!resultado.committed) {
-                                conflictos.push({
-                                    tipo: col,
-                                    id: id,
-                                    nombre: entidadLocal ? (entidadLocal.nombre || entidadLocal.festejado || id) : id,
-                                    versionLocal: versionLocalEsperada,
-                                    motivo: 'el registro fue modificado remotamente antes de eliminarlo'
-                                });
-                            }
-
+                            actualizaciones[col + '/' + id] = null;
+                            actualizaciones['versiones/' + col + '/' + id] = null;
                         } else if (entidadLocal) {
-                            // ─── ACTUALIZACIÓN ───
-                            const nuevaVersion = versionLocalEsperada + 1;
-
-                            // Clonar para no modificar el original si falla
-                            const entidadParaSubir = JSON.parse(JSON.stringify(entidadLocal));
-                            entidadParaSubir._version = nuevaVersion;
-                            entidadParaSubir._editadoPor = usuarioActual.nombre;
-                            entidadParaSubir._fechaEdicion = obtenerFechaHoraActual();
-
-                            const resultado = await refEntidad.transaction(function(actual) {
-                                // Si no existe remoto: crear
-                                if (actual === null) {
-                                    return entidadParaSubir;
-                                }
-                                // Si está eliminado remoto: no resucitar
-                                if (actual._eliminado === true) {
-                                    return undefined;
-                                }
-                                // Validar versión
-                                const vRemota = actual._version || 0;
-                                if (vRemota !== versionLocalEsperada) {
-                                    return undefined;
-                                }
-                                return entidadParaSubir;
-                            });
-
-                            if (resultado.committed) {
-                                // Actualizar la versión local también (éxito)
-                                if (esForzado) {
-                                    // En modo forzado, subimos nuestra versión sin validar
-                                    // y actualizamos el local
-                                }
-                                entidadLocal._version = nuevaVersion;
-                                entidadLocal._editadoPor = usuarioActual.nombre;
-                                entidadLocal._fechaEdicion = obtenerFechaHoraActual();
-                            } else {
-                                conflictos.push({
-                                    tipo: col,
-                                    id: id,
-                                    nombre: entidadLocal.nombre || entidadLocal.festejado || id,
-                                    versionLocal: versionLocalEsperada,
-                                    motivo: 'modificado simultáneamente por otro usuario'
-                                });
-                            }
+                            // Bump de versión
+                            entidadLocal._version = versionLocal + 1;
+                            entidadLocal._editadoPor = usuarioActual.nombre;
+                            entidadLocal._fechaEdicion = obtenerFechaHoraActual();
+                            actualizaciones[col + '/' + id] = entidadLocal;
+                            actualizaciones['versiones/' + col + '/' + id] = entidadLocal._version;
                         }
-                    }
-                }
-
-                // ═══════════════════════════════════════════════════════
-                // BLOQUE 2: Sincronizar versiones separadamente
-                // ═══════════════════════════════════════════════════════
-                if (conflictos.length === 0) {
-                    const updatesVersiones = {};
-                    for (const col of COLECCIONES_VERSIONADAS) {
-                        const ids = Object.keys(entidadesSucias[col] || {});
-                        for (const id of ids) {
-                            const entidadLocal = window[col].find(function(x) { return x && x.id === id; });
-                            if (entidadLocal && !entidadesSucias[col][id] === 'ELIMINAR') {
-                                updatesVersiones['versiones/' + col + '/' + id] = entidadLocal._version || 0;
-                            } else if (entidadesSucias[col][id] === 'ELIMINAR') {
-                                // La versión del tombstone está en +1
-                                const entidad = window[col].find(function(x) { return x && x.id === id; });
-                                const v = entidad ? (entidad._version || 0) : 0;
-                                updatesVersiones['versiones/' + col + '/' + id] = v + 1;
-                            }
-                        }
-                    }
-                    if (Object.keys(updatesVersiones).length > 0) {
-                        try {
-                            await database.ref().update(updatesVersiones);
-                        } catch (e) {
-                            console.warn('Error subiendo versiones:', e);
-                        }
-                    }
-                }
-
-                // ═══════════════════════════════════════════════════════
-                // BLOQUE 3: Historial y papelera con IDs locales (idempotente)
-                // ═══════════════════════════════════════════════════════
-                for (const col of COLECCIONES_APPEND_ONLY) {
-                    const pendientes = eventosAppendOnlyPendientes[col] || [];
-                    if (pendientes.length === 0) continue;
-
-                    const promesas = pendientes.map(function(item) {
-                        // Usar el ID del item como clave en Firebase (idempotente)
-                        return database.ref(col + '/' + item.id).set(item).catch(function(err) {
-                            console.warn('Error subiendo ' + col + '/' + item.id + ':', err);
-                        });
                     });
-                    await Promise.all(promesas);
-                }
+                });
 
-              // ═══════════════════════════════════════════════════════
-                // BLOQUE 4: Si hay conflictos, mostrar modal y no limpiar
-                // ═══════════════════════════════════════════════════════
+                // ─── 3. Si hay conflictos, abortar y notificar ───
                 if (conflictos.length > 0) {
-                    guardarCopiaConflictoLocal(conflictos);
-                    // Marcar solo como resueltas las que SÍ se subieron
-                    // (limpiar solo las que no están en conflicto)
-                    const idsEnConflicto = {};
-                    conflictos.forEach(function(c) {
-                        idsEnConflicto[c.tipo + '/' + c.id] = true;
-                    });
-                    for (const col of COLECCIONES_VERSIONADAS) {
-                        const ids = Object.keys(entidadesSucias[col] || {});
-                        ids.forEach(function(id) {
-                            if (!idsEnConflicto[col + '/' + id]) {
-                                delete entidadesSucias[col][id];
-                            }
-                        });
-                    }
-                    actualizarEstadoSync('online', '⚠️ Conflicto');
                     sincronizandoFirebase = false;
+                    actualizarEstadoSync('online', '⚠️ Conflicto');
+                    // Guardar copia de seguridad local de los cambios pendientes
+                    guardarCopiaConflictoLocal(conflictos);
+                    // Mostrar modal con opciones
                     mostrarModalConflicto(conflictos);
                     return false;
                 }
 
-                // ═══════════════════════════════════════════════════════
-                // BLOQUE 5: Metadata global
-                // ═══════════════════════════════════════════════════════
-                const ahora = new Date().toISOString();
-                try {
-                    await database.ref('version').update({
-                        ultimaActualizacion: ahora,
-                        ultimoUsuario: usuarioActual.nombre,
-                        schemaVersion: SCHEMA_VERSION,
-                        appVersion: VERSION
-                    });
-                } catch (e) {
-                    console.warn('Error actualizando metadata:', e);
+                // ─── 4. Aplicar actualizaciones granulares ───
+                actualizarEstadoSync('syncing', 'Guardando...');
+
+                // Subir entidades sucias
+                if (Object.keys(actualizaciones).length > 0) {
+                    await database.ref().update(actualizaciones);
                 }
 
-                // ═══════════════════════════════════════════════════════
-                // BLOQUE 6: Limpiar estado
-                // ═══════════════════════════════════════════════════════
+                // ─── 5. Append-only: historial y papelera con push() ───
+                for (const col of COLECCIONES_APPEND_ONLY) {
+                    const pendientes = eventosAppendOnlyPendientes[col] || [];
+                    if (pendientes.length === 0) continue;
+
+                    // Subir en paralelo (push genera IDs únicos, no choca)
+                    const promesas = pendientes.map(function(item) {
+                        return database.ref(col).push(item);
+                    });
+                    await Promise.all(promesas);
+                }
+
+                // ─── 6. Metadata global ───
+                const ahora = new Date().toISOString();
+                await database.ref('version').update({
+                    ultimaActualizacion: ahora,
+                    ultimoUsuario: usuarioActual.nombre,
+                    schemaVersion: SCHEMA_VERSION,
+                    appVersion: VERSION
+                });
+
+                // ─── 7. Limpiar estado ───
                 ultimaActualizacionRemota = ahora;
                 cambiosPendientes = false;
                 limpiarEntidadesSucias();
@@ -4926,7 +4684,7 @@ var DATOS_EMISOR = {
 
             } catch (error) {
                 console.error('Error Firebase:', error);
-                actualizarEstadoSync('error', 'Error de red');
+                actualizarEstadoSync('offline', 'Error de red');
                 // NO limpiamos entidades sucias: se reintentará
                 return false;
             } finally {
@@ -4953,15 +4711,10 @@ var DATOS_EMISOR = {
 
                 // ─── 2. Cargar cada colección desde su nodo ───
                 // Helper: convierte objeto de Firebase a array
-                   function objetosAArray(obj) {
+                function objetosAArray(obj) {
                     if (!obj) return [];
                     if (Array.isArray(obj)) return obj.filter(Boolean);
-                    return Object.keys(obj)
-                        .map(function(k) { return obj[k]; })
-                        .filter(function(x) {
-                            // Excluir tombstones (registros eliminados)
-                            return x && !x._eliminado;
-                        });
+                    return Object.keys(obj).map(function(k) { return obj[k]; }).filter(Boolean);
                 }
 
                 const [snapPaq, snapServ, snapPros, snapCli, snapTar] = await Promise.all([
@@ -4979,9 +4732,8 @@ var DATOS_EMISOR = {
                 let tareasR = objetosAArray(snapTar.val());
 
                 // ─── 3. Fallback a estructura antigua si está vacía la nueva ───
-                    if (datosAntiguos && paquetesR.length === 0 && clientesR.length === 0) {
+                if (datosAntiguos && paquetesR.length === 0 && clientesR.length === 0) {
                     console.warn('📦 Detectada estructura antigua en datos/. Migrando...');
-                    // Aplicar el mismo filtro de tombstones por consistencia
                     paquetesR = objetosAArray(datosAntiguos.paquetes);
                     serviciosR = objetosAArray(datosAntiguos.serviciosAdicionales);
                     prospectosR = objetosAArray(datosAntiguos.prospectos);
@@ -11186,88 +10938,38 @@ var DATOS_EMISOR = {
                 textoConfirmar: 'Restaurar',
                 icono: 'fa-undo',
                 colorBoton: 'btn-verde',
-                               onConfirmar: function() {
-                    // ─── Helper: verifica si ya existe un registro con ese id ───
-                    function existeConId(lista, id) {
-                        return lista.some(function(x) { return x && x.id === id; });
-                    }
-
-                    // ─── Reinsertar en la colección correcta con verificación de duplicados ───
+                onConfirmar: function() {
+                    // Reinsertar en la colección correcta
                     if (entrada.tipo === 'cliente') {
-                        if (existeConId(clientes, entrada.item.id)) {
-                            const original = clientes.find(function(x) { return x.id === entrada.item.id; });
-                            mostrarNotificacion('Ya existe un cliente con ese ID ("' + (original.nombre || '') + '"). Se restaurará con un ID nuevo.', 'warning');
-                            entrada.item.id = generarId();
-                            entrada.item.nombre = (entrada.item.nombre || 'Cliente') + ' (restaurado)';
-                        }
                         clientes.push(entrada.item);
-                        marcarSucia('clientes', entrada.item.id);
                     } else if (entrada.tipo === 'prospecto') {
-                        if (existeConId(prospectos, entrada.item.id)) {
-                            const original = prospectos.find(function(x) { return x.id === entrada.item.id; });
-                            mostrarNotificacion('Ya existe un prospecto con ese ID ("' + (original.nombre || '') + '"). Se restaurará con un ID nuevo.', 'warning');
-                            entrada.item.id = generarId();
-                            entrada.item.nombre = (entrada.item.nombre || 'Prospecto') + ' (restaurado)';
-                        }
                         prospectos.push(entrada.item);
-                        marcarSucia('prospectos', entrada.item.id);
                     } else if (entrada.tipo === 'tarea') {
-                        if (existeConId(tareas, entrada.item.id)) {
-                            entrada.item.id = generarId();
-                        }
                         tareas.push(entrada.item);
-                        marcarSucia('tareas', entrada.item.id);
                     } else if (entrada.tipo === 'contrato') {
-                        // Buscar el cliente original
+                        // Buscar el cliente original y agregar el contrato
+                        const cl = clientes.find(function(c) { return c.id === entrada.item._clienteId || (c.contratos && c.contratos.some(function(co) { return co.id === entrada.item.id; })); });
+                        // Nota: los contratos se restauran al cliente especificado en el item
                         if (entrada.item._clienteId) {
                             const cli = obtenerCliente(entrada.item._clienteId);
-                            if (!cli) {
-                                mostrarNotificacion('El cliente original ya no existe. No se puede restaurar el contrato.', 'error');
-                                return; // No quitar de papelera
+                            if (cli) {
+                                if (!cli.contratos) cli.contratos = [];
+                                const copia = Object.assign({}, entrada.item);
+                                delete copia._clienteId;
+                                cli.contratos.push(copia);
                             }
-                            if (!cli.contratos) cli.contratos = [];
-                            const copia = Object.assign({}, entrada.item);
-                            delete copia._clienteId;
-                            // Verificar duplicado en el cliente
-                            if (cli.contratos.some(function(co) { return co && co.id === copia.id; })) {
-                                copia.id = generarId();
-                            }
-                            cli.contratos.push(copia);
-                            marcarSucia('clientes', cli.id);
-                        } else {
-                            mostrarNotificacion('El contrato no tiene cliente asociado, no se puede restaurar.', 'error');
-                            return;
                         }
                     } else if (entrada.tipo === 'usuario') {
-                        if (existeConId(usuarios, entrada.item.id) || usuarios.some(function(u) { return u.username === entrada.item.username; })) {
-                            mostrarNotificacion('Ya existe un usuario con ese nombre de usuario.', 'error');
-                            return;
-                        }
                         usuarios.push(entrada.item);
                         guardarUsuarios();
                     } else if (entrada.tipo === 'paquete') {
-                        if (existeConId(paquetes, entrada.item.id)) {
-                            entrada.item.id = generarId();
-                        }
                         paquetes.push(entrada.item);
-                        marcarSucia('paquetes', entrada.item.id);
                     } else if (entrada.tipo === 'servicio') {
-                        if (existeConId(serviciosAdicionales, entrada.item.id)) {
-                            entrada.item.id = generarId();
-                        }
                         serviciosAdicionales.push(entrada.item);
-                        marcarSucia('serviciosAdicionales', entrada.item.id);
                     }
 
-                                       // Quitar de la papelera
+                    // Quitar de la papelera
                     papelera = papelera.filter(function(e) { return e.id !== entradaId; });
-
-                    // Propagar eliminación de papelera a Firebase
-                    if (estadoSync.modo === 'firebase' && database) {
-                        database.ref('papelera/' + entradaId).remove().catch(function(err) {
-                            console.warn('No se pudo eliminar de papelera remota:', err);
-                        });
-                    }
 
                     registrarHistorial('papelera', 'editar', 'Se restauró ' + etiquetaTipoPapelera(entrada.tipo).toLowerCase() + ': "' + (entrada.item.nombre || entrada.item.festejado || 'sin nombre') + '"', { id: entrada.item.id, nombre: entrada.item.nombre || entrada.item.festejado });
                     guardarDatos();
@@ -11288,16 +10990,8 @@ var DATOS_EMISOR = {
                 entidad: etiquetaTipoPapelera(entrada.tipo).toLowerCase(),
                 nombre: (entrada.item.nombre || entrada.item.festejado || '(sin nombre)'),
                 detalle: 'Esta acción NO se puede deshacer. El elemento será borrado permanentemente.',
-                  onConfirmar: function() {
+                onConfirmar: function() {
                     papelera = papelera.filter(function(e) { return e.id !== entradaId; });
-
-                    // Propagar borrado a Firebase
-                    if (estadoSync.modo === 'firebase' && database) {
-                        database.ref('papelera/' + entradaId).remove().catch(function(err) {
-                            console.warn('No se pudo eliminar de papelera remota:', err);
-                        });
-                    }
-
                     registrarHistorial('papelera', 'eliminar', 'Se eliminó definitivamente ' + etiquetaTipoPapelera(entrada.tipo).toLowerCase() + ': "' + (entrada.item.nombre || entrada.item.festejado || 'sin nombre') + '"', { id: entrada.item.id, nombre: entrada.item.nombre || entrada.item.festejado });
                     guardarDatos();
                     renderizarPapelera();
@@ -11317,16 +11011,8 @@ var DATOS_EMISOR = {
                 entidad: 'papelera completa',
                 nombre: papelera.length + ' elemento' + (papelera.length === 1 ? '' : 's'),
                 detalle: 'Se eliminarán TODOS los elementos de la papelera de forma permanente. Esta acción no se puede deshacer.',
-                  onConfirmar: function() {
+                onConfirmar: function() {
                     const cantidad = papelera.length;
-
-                    // Propagar vaciado a Firebase
-                    if (estadoSync.modo === 'firebase' && database) {
-                        database.ref('papelera').remove().catch(function(err) {
-                            console.warn('No se pudo vaciar papelera remota:', err);
-                        });
-                    }
-
                     papelera = [];
                     registrarHistorial('papelera', 'eliminar', 'Se vació la papelera (' + cantidad + ' elemento' + (cantidad === 1 ? '' : 's') + ')', { id: null, nombre: null });
                     guardarDatos();
