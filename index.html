@@ -3972,7 +3972,7 @@ html[data-theme="angel"] .etiqueta-paquete-caducado { background-color: rgba(239
                     <span><i class="fas fa-filter"></i> Filtros <span class="btn-toggle-filtros-badge">activos</span></span>
                     <i class="fas fa-chevron-down btn-toggle-filtros-icono"></i>
                 </button>
-                <div class="filtros-container" id="filtros-paquetes">
+                              <div class="filtros-container" id="filtros-paquetes">
                     <div class="filtro-grupo"><label>Estatus</label>
                         <select id="filtro-estatus-paquete">
                             <option value="todos">Todos</option>
@@ -3983,19 +3983,50 @@ html[data-theme="angel"] .etiqueta-paquete-caducado { background-color: rgba(239
                             <option value="Caducado">Caducado</option>
                         </select>
                     </div>
+                    <div class="filtro-grupo"><label>Ordenar por</label>
+                        <select id="orden-paquetes">
+                            <option value="nombre-asc">Nombre (A → Z)</option>
+                            <option value="nombre-desc">Nombre (Z → A)</option>
+                            <option value="precio-desc">Precio (mayor → menor)</option>
+                            <option value="precio-asc">Precio (menor → mayor)</option>
+                            <option value="fecha-desc">Más recientes primero</option>
+                        </select>
+                    </div>
                     <div class="filtro-grupo"><label>Buscar</label><input type="text" id="buscar-paquete" placeholder="Nombre o descripción..."></div>
                 </div>
                 <div id="lista-paquetes" class="mosaico-grid"><p class="mensaje-vacio">No hay paquetes registrados</p></div>
             </section>
             <!-- FIN @HTML-SECTION-PAQUETES -->
 
-            <!-- ═══════════════════════════════════════════════════════ -->
+                       <!-- ═══════════════════════════════════════════════════════ -->
             <!-- @HTML-SECTION-SERVICIOS (solo admin)                     -->
             <!-- ═══════════════════════════════════════════════════════ -->
             <section id="seccion-servicios" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-tools"></i> Servicios Adicionales</h1>
-                    <button class="btn-primario" id="btn-nuevo-servicio"><i class="fas fa-plus"></i> Nuevo Servicio</button>
+                    <div class="header-actions">
+                        <div class="btn-view-toggle" data-vista-seccion="servicios">
+                            <button class="btn-vista-mosaico active" title="Vista mosaico"><i class="fas fa-th-large"></i> <span>Mosaico</span></button>
+                            <button class="btn-vista-lista" title="Vista lista"><i class="fas fa-list"></i> <span>Lista</span></button>
+                        </div>
+                        <button class="btn-primario" id="btn-nuevo-servicio"><i class="fas fa-plus"></i> Nuevo Servicio</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-toggle-filtros" data-target="filtros-servicios">
+                    <span><i class="fas fa-filter"></i> Filtros y orden <span class="btn-toggle-filtros-badge">activos</span></span>
+                    <i class="fas fa-chevron-down btn-toggle-filtros-icono"></i>
+                </button>
+                <div class="filtros-container" id="filtros-servicios">
+                    <div class="filtro-grupo"><label>Ordenar por</label>
+                        <select id="orden-servicios">
+                            <option value="nombre-asc">Nombre (A → Z)</option>
+                            <option value="nombre-desc">Nombre (Z → A)</option>
+                            <option value="precio-desc">Precio (mayor → menor)</option>
+                            <option value="precio-asc">Precio (menor → mayor)</option>
+                            <option value="fecha-desc">Más recientes primero</option>
+                        </select>
+                    </div>
+                    <div class="filtro-grupo"><label>Buscar</label><input type="text" id="buscar-servicio" placeholder="Nombre o descripción..."></div>
                 </div>
                 <div id="lista-servicios" class="mosaico-grid"><p class="mensaje-vacio">No hay servicios adicionales registrados</p></div>
             </section>
@@ -5116,6 +5147,42 @@ var DATOS_EMISOR = {
             cerrarPanelLateral();
         }
         // ─────── FIN @JS-UTILS-VISTA ───────
+        // ─────── @JS-UTILS-ORDENAMIENTO ───────
+        // Aplica el orden seleccionado a un array de items
+        // tipo: 'nombre-asc' | 'nombre-desc' | 'precio-desc' | 'precio-asc' | 'fecha-desc'
+        function ordenarItems(items, tipo, obtenerPrecio) {
+            const copia = items.slice();
+            if (!tipo) tipo = 'nombre-asc';
+
+            copia.sort(function(a, b) {
+                switch (tipo) {
+                    case 'nombre-asc':
+                        return (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' });
+                    case 'nombre-desc':
+                        return (b.nombre || '').localeCompare(a.nombre || '', 'es', { sensitivity: 'base' });
+                    case 'precio-desc': {
+                        const pa = obtenerPrecio ? obtenerPrecio(a) : (a.precio || 0);
+                        const pb = obtenerPrecio ? obtenerPrecio(b) : (b.precio || 0);
+                        return pb - pa;
+                    }
+                    case 'precio-asc': {
+                        const pa = obtenerPrecio ? obtenerPrecio(a) : (a.precio || 0);
+                        const pb = obtenerPrecio ? obtenerPrecio(b) : (b.precio || 0);
+                        return pa - pb;
+                    }
+                    case 'fecha-desc': {
+                        const fa = a.fechaRegistro || '';
+                        const fb = b.fechaRegistro || '';
+                        return fb.localeCompare(fa);
+                    }
+                    default:
+                        return 0;
+                }
+            });
+            return copia;
+        }
+        // ─────── FIN @JS-UTILS-ORDENAMIENTO ───────
+        
         // ─────── FIN @JS-UTILS-TELEFONO ───────
 
         /* ═══════════════════════════════════════════════════════════ */
@@ -6196,7 +6263,8 @@ var DATOS_EMISOR = {
             const cont = document.getElementById('lista-paquetes');
             if (!cont) return;
 
-            const filtroEstatus = document.getElementById('filtro-estatus-paquete') ? document.getElementById('filtro-estatus-paquete').value : 'todos';
+                       const filtroEstatus = document.getElementById('filtro-estatus-paquete') ? document.getElementById('filtro-estatus-paquete').value : 'todos';
+            const orden = document.getElementById('orden-paquetes') ? document.getElementById('orden-paquetes').value : 'nombre-asc';
             const busqueda = document.getElementById('buscar-paquete') ? document.getElementById('buscar-paquete').value.toLowerCase().trim() : '';
 
             let f = paquetes.slice();
@@ -6204,6 +6272,10 @@ var DATOS_EMISOR = {
             if (busqueda) f = f.filter(function(p) {
                 return p && ((p.nombre || '').toLowerCase().indexOf(busqueda) !== -1 || (p.descripcion || '').toLowerCase().indexOf(busqueda) !== -1);
             });
+
+            // Ordenar
+            const precioFinalPaq = function(p) { return (p.precio || 0) - (p.descuento || 0); };
+            f = ordenarItems(f, orden, precioFinalPaq);
 
             actualizarToggleVista('paquetes');
             const vistaLista = esVistaLista('paquetes');
@@ -6717,33 +6789,96 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-PAQUETES-CADUCIDAD ───────
 
-                // ─────── @JS-RENDER-SERVICIOS ───────
-        // Vista de tarjetas de servicios adicionales (solo admin ve los botones)
+                        // ─────── @JS-RENDER-SERVICIOS ───────
+        // Vista de servicios (soporta modo mosaico y lista, orden y búsqueda)
         function renderizarServicios() {
-            renderizarMosaicos({
-                contenedorId: 'lista-servicios', items: serviciosAdicionales, textoVacio: 'No hay servicios registrados',
-                renderContenido: function(s) {
+            const cont = document.getElementById('lista-servicios');
+            if (!cont) return;
+
+            const orden = document.getElementById('orden-servicios') ? document.getElementById('orden-servicios').value : 'nombre-asc';
+            const busqueda = document.getElementById('buscar-servicio') ? document.getElementById('buscar-servicio').value.toLowerCase().trim() : '';
+
+            let f = serviciosAdicionales.slice();
+            if (busqueda) f = f.filter(function(s) {
+                return s && ((s.nombre || '').toLowerCase().indexOf(busqueda) !== -1 || (s.descripcion || '').toLowerCase().indexOf(busqueda) !== -1);
+            });
+
+            // Ordenar (usando el precio final para ordenar)
+            const precioFinalFn = function(s) { return (s.precio || 0) - (s.descuento || 0); };
+            f = ordenarItems(f, orden, precioFinalFn);
+
+            actualizarToggleVista('servicios');
+            const vistaLista = esVistaLista('servicios');
+            const esAdminUser = esAdmin();
+
+            if (vistaLista) {
+                // ─── VISTA LISTA ───
+                if (f.length === 0) {
+                    cont.className = 'lista-registros';
+                    cont.innerHTML = '<p class="mensaje-vacio">No hay servicios</p>';
+                    return;
+                }
+                cont.className = 'lista-registros';
+                cont.innerHTML = f.map(function(s) {
                     const pf = (s.precio || 0) - (s.descuento || 0);
-                    // Badge para servicios de precio 0
-                    const badgePrecioCero = pf <= 0
+                    const esSoloPaquete = pf <= 0;
+                    const inicial = (s.nombre || 'S').charAt(0).toUpperCase();
+
+                    return '<div class="lista-fila">' +
+                        '<div class="lista-avatar" style="background:var(--color-azul);border-radius:10px;">' + inicial + '</div>' +
+                        '<div class="lista-contenido">' +
+                            '<div class="lista-titulo-linea">' +
+                                '<span class="lista-titulo">' + (s.nombre || 'Sin nombre') + '</span>' +
+                                (esSoloPaquete ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;font-size:10px;" title="Solo puede agregarse como item de un paquete"><i class="fas fa-box"></i> Solo para paquetes</span>' : '') +
+                            '</div>' +
+                            '<div class="lista-datos">' +
+                                '<span><i class="fas fa-align-left"></i> ' + ((s.descripcion || '').substring(0, 80)) + ((s.descripcion || '').length > 80 ? '...' : '') + '</span>' +
+                            '</div>' +
+                            '<div class="lista-meta">' +
+                                '<span><i class="fas fa-tag"></i> Precio: <strong>' + formatearMoneda(s.precio || 0) + '</strong></span>' +
+                                (s.descuento ? '<span><i class="fas fa-percent"></i> Descuento: <strong>' + formatearMoneda(s.descuento) + '</strong></span>' : '') +
+                                '<span><i class="fas fa-dollar-sign"></i> Final: <strong style="color:var(--color-acento);">' + formatearMoneda(pf) + '</strong></span>' +
+                                '<span><i class="fas fa-calendar"></i> Vigencia: ' + formatearFecha(s.vigencia) + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="lista-acciones">' +
+                            '<button class="btn-editar" onclick="CRUD.servicios.editar(\'' + s.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button class="btn-eliminar" onclick="CRUD.servicios.eliminar(\'' + s.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            } else {
+                // ─── VISTA MOSAICO ───
+                if (cont.className !== 'mosaico-grid') cont.className = 'mosaico-grid';
+                if (f.length === 0) {
+                    cont.innerHTML = '<p class="mensaje-vacio">No hay servicios registrados</p>';
+                    return;
+                }
+                cont.innerHTML = f.map(function(s) {
+                    const pf = (s.precio || 0) - (s.descuento || 0);
+                    const esSoloPaquete = pf <= 0;
+                    const badgePrecioCero = esSoloPaquete
                         ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;font-size:10px;" title="Este servicio solo puede agregarse como item de un paquete"><i class="fas fa-box"></i> Solo para paquetes</span>'
                         : '';
-                    return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + (s.nombre || 'Sin nombre') + '</div></div>' +
+
+                    return '<div class="mosaico-card">' +
+                        '<div class="mosaico-card-header"><div class="mosaico-titulo">' + (s.nombre || 'Sin nombre') + '</div></div>' +
                         (badgePrecioCero ? '<div class="mosaico-etiquetas">' + badgePrecioCero + '</div>' : '') +
                         '<div class="mosaico-detalle">' + (s.descripcion || '') + '</div>' +
                         '<div class="mosaico-separador"></div>' +
                         '<div class="mosaico-detalle"><div><strong>Precio:</strong> ' + formatearMoneda(s.precio || 0) + '</div>' +
                         (s.descuento ? '<div><strong>Descuento:</strong> ' + formatearMoneda(s.descuento) + '</div>' : '') +
-                        '<div><strong>Final:</strong> ' + formatearMoneda(pf) + '</div></div>' +
-                        '<div class="mosaico-summary"><span><i class="fas fa-calendar"></i> Vigencia</span><span class="monto">' + formatearFecha(s.vigencia) + '</span></div>';
-                },
-                renderAcciones: function(s) {
-                    return '<button class="btn-editar" onclick="CRUD.servicios.editar(\'' + s.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
-                        '<button class="btn-eliminar" onclick="CRUD.servicios.eliminar(\'' + s.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
-                }
-            });
+                        '<div><strong>Final:</strong> <span style="color:var(--color-acento);font-weight:600;">' + formatearMoneda(pf) + '</span></div></div>' +
+                        '<div class="mosaico-summary"><span><i class="fas fa-calendar"></i> Vigencia</span><span class="monto">' + formatearFecha(s.vigencia) + '</span></div>' +
+                        (esAdminUser ? '<div class="mosaico-footer">' +
+                            '<button class="btn-editar" onclick="CRUD.servicios.editar(\'' + s.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>' +
+                            '<button class="btn-eliminar" onclick="CRUD.servicios.eliminar(\'' + s.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
+                        '</div>' : '') +
+                    '</div>';
+                }).join('');
+            }
         }
-        // ─────── FIN @JS-RENDER-SERVICIOS ───────    
+        // ─────── FIN @JS-RENDER-SERVICIOS ───────
       
          // ─────── @JS-RENDER-CLIENTES ───────
         // Vista de clientes (soporta modo mosaico y lista)
@@ -10743,16 +10878,24 @@ var DATOS_EMISOR = {
 
                 const paqActivo =
                     (getVal('filtro-estatus-paquete') !== 'todos') ||
-                    (getInputVal('buscar-paquete') !== '');
+                    (getInputVal('buscar-paquete') !== '') ||
+                    (getVal('orden-paquetes') !== 'nombre-asc');
                 const btnPaq = document.querySelector('.btn-toggle-filtros[data-target="filtros-paquetes"]');
                 if (btnPaq) btnPaq.classList.toggle('tiene-filtros', !!paqActivo);
+
+                const servActivo =
+                    (getVal('orden-servicios') !== 'nombre-asc') ||
+                    (getInputVal('buscar-servicio') !== '');
+                const btnServ = document.querySelector('.btn-toggle-filtros[data-target="filtros-servicios"]');
+                if (btnServ) btnServ.classList.toggle('tiene-filtros', !!servActivo);
             }
 
-                        ['filtro-fecha-inicio','filtro-fecha-fin','filtro-estado-cliente','filtro-estado-contrato',
+                         ['filtro-fecha-inicio','filtro-fecha-fin','filtro-estado-cliente','filtro-estado-contrato',
              'filtro-paquete','filtro-servicio','filtro-fase-prospecto','buscar-prospecto',
              'filtro-estado-cliente-lista','buscar-cliente','filtro-estado-contrato-lista',
              'filtro-tipo-contrato','buscar-contrato','filtro-tareas-calendario','buscar-calendario',
-             'filtro-estatus-paquete','buscar-paquete']
+             'filtro-estatus-paquete','buscar-paquete','orden-paquetes',
+             'orden-servicios','buscar-servicio']
                 .forEach(function(id) {
                     const el = document.getElementById(id);
                     if (el) {
@@ -10822,11 +10965,19 @@ var DATOS_EMISOR = {
             if (btn) btn.addEventListener('click', abrirCambiarMiPin);
             btn = document.getElementById('btn-nuevo-usuario');
             if (btn) btn.addEventListener('click', mostrarFormularioNuevoUsuario);
-            // ─── Listeners de filtros de paquetes ───
+                        // ─── Listeners de filtros de paquetes ───
             btn = document.getElementById('filtro-estatus-paquete');
+            if (btn) btn.addEventListener('change', renderizarPaquetes);
+            btn = document.getElementById('orden-paquetes');
             if (btn) btn.addEventListener('change', renderizarPaquetes);
             btn = document.getElementById('buscar-paquete');
             if (btn) btn.addEventListener('input', renderizarPaquetes);
+
+            // ─── Listeners de filtros de servicios ───
+            btn = document.getElementById('orden-servicios');
+            if (btn) btn.addEventListener('change', renderizarServicios);
+            btn = document.getElementById('buscar-servicio');
+            if (btn) btn.addEventListener('input', renderizarServicios);
 
 
             btn = document.getElementById('filtro-fase-prospecto');
