@@ -4986,6 +4986,328 @@ var DATOS_EMISOR = {
         })();
         // ─────── FIN @JS-STATE-HORAS ───────
 
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-ALMACEN — Capa de almacenamiento (IndexedDB + fallback) */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        // ─────── @JS-ALMACEN-CONFIG ───────
+        var ALMACEN_DB_NAME = 'pda_crm_db';
+        var ALMACEN_DB_VERSION = 1;
+        var ALMACEN_STORE_NAME = 'colecciones';
+        var almacenDB = null;              // Handle de IndexedDB
+        var almacenListo = false;
+        var almacenFallback = false;        // Si es true, usa localStorage
+        var almacenPromesaInit = null;      // Promesa de inicialización en curso
+        // ─────── FIN @JS-ALMACEN-CONFIG ───────
+
+        // ─────── @JS-ALMACEN-INIT ───────
+        // Inicializa IndexedDB. Devuelve una promesa.
+        // Si IndexedDB no está disponible, activa fallback a localStorage.
+        function inicializarAlmacen() {
+            if (almacenPromesaInit) return almacenPromesaInit;
+
+            almacenPromesaInit = new Promise(function(resolve) {
+                if (!window.indexedDB) {
+                    console.warn('⚠️ IndexedDB no disponible. Usando localStorage como fallback.');
+                    almacenFallback = true;
+                    almacenListo = true;
+                    resolve(false);
+                    return;
+                }
+
+                let request;
+                try {
+                    request = indexedDB.open(ALMACEN_DB_NAME, ALMACEN_DB_VERSION);
+                } catch (e) {
+                    console.warn('⚠️ Error abriendo IndexedDB:', e);
+                    almacenFallback = true;
+                    almacenListo = true;
+                    resolve(false);
+                    return;
+                }
+
+                request.onerror = function(ev) {
+                    console.warn('⚠️ Error en IndexedDB:', ev.target.error);
+                    almacenFallback = true;
+                    almacenListo = true;
+                    resolve(false);
+                };
+
+                request.onupgradeneeded = function(ev) {
+                    const db = ev.target.result;
+                    if (!db.objectStoreNames.contains(ALMACEN_STORE_NAME)) {
+                        // Cada clave será una colección: 'paquetes', 'clientes', etc.
+                        db.createObjectStore(ALMACEN_STORE_NAME);
+                    }
+                };
+
+                request.onsuccess = function(ev) {
+                    almacenDB = ev.target.result;
+                    almacenListo = true;
+                    almacenFallback = false;
+                    console.log('✅ IndexedDB inicializado');
+                    resolve(true);
+                };
+            });
+
+            return almacenPromesaInit;
+        }
+        // ─────── FIN @JS-ALMACEN-INIT ───────
+
+        // ─────── @JS-ALMACEN-API ───────
+        // API pública del almacén. Todas las funciones son async.
+
+        // Guarda una colección entera (reemplaza)
+        function almacenGuardar(clave, valor) {
+            return new Promise(function(resolve, reject) {
+                if (!almacenListo) {
+                    reject(new Error('Almacén no inicializado'));
+                    return;
+                }
+                if (almacenFallback) {
+                    // Fallback a localStorage
+                    try {
+                        localStorage.setItem(clave, JSON.stringify(valor));
+                        resolve(true);
+                    } catch (e) {
+                        reject(e);
+                    }
+                    return;
+                }
+                try {
+                    const tx = almacenDB.transaction([ALMACEN_STORE_NAME], 'readwrite');
+                    const store = tx.objectStore(ALMACEN_STORE_NAME);
+                    const req = store.put(valor, clave);
+                    req.onsuccess = function() { resolve(true); };
+                    req.onerror = function() { reject(req.error); };
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        }
+
+        // Carga una colección
+        function almacenCargar(clave) {
+            return new Promise(function(resolve, reject) {
+                if (!almacenListo) {
+                    reject(new Error('Almacén no inicializado'));
+                    return;
+                }
+                if (almacenFallback) {
+                    try {
+                        const raw = localStorage.getItem(clave);
+                        resolve(raw ? JSON.parse(raw) : null);
+                    } catch (e) {
+                        resolve(null);
+                    }
+                    return;
+                }
+                try {
+                    const tx = almacenDB.transaction([ALMACEN_STORE_NAME], 'readonly');
+                    const store = tx.objectStore(ALMACEN_STORE_NAME);
+                    const req = store.get(clave);
+                    req.onsuccess = function() {
+                        resolve(req.result !== undefined ? req.result : null);
+                    };
+                    req.onerror = function() { reject(req.error); };
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        }
+
+        // Guarda MÚLTIPLES colecciones en una sola transacción (más rápido)
+        function almacenGuardarMulti(objeto) {
+            return new Promise(function(resolve, reject) {
+                if (!almacenListo) {
+                    reject(new Error('Almacén no inicializado'));
+                    return;
+                }
+                if (almacenFallback) {
+                    try {
+                        Object.keys(objeto).forEach(function(k) {
+                            localStorage.setItem(k, JSON.stringify(objeto[k]));
+                        });
+                        resolve(true);
+                    } catch (e) {
+                        reject(e);
+                    }
+                    return;
+                }
+                try {
+                    const tx = almacenDB.transaction([ALMACEN_STORE_NAME], 'readwrite');
+                    const store = tx.objectStore(ALMACEN_STORE_NAME);
+                    Object.keys(objeto).forEach(function(k) {
+                        store.put(objeto[k], k);
+                    });
+                    tx.oncomplete = function() { resolve(true); };
+                    tx.onerror = function() { reject(tx.error); };
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        }
+
+        // Carga MÚLTIPLES colecciones en una sola transacción
+        function almacenCargarMulti(claves) {
+            return new Promise(function(resolve, reject) {
+                if (!almacenListo) {
+                    reject(new Error('Almacén no inicializado'));
+                    return;
+                }
+                if (almacenFallback) {
+                    const res = {};
+                    claves.forEach(function(k) {
+                        try {
+                            const raw = localStorage.getItem(k);
+                            res[k] = raw ? JSON.parse(raw) : null;
+                        } catch (e) { res[k] = null; }
+                    });
+                    resolve(res);
+                    return;
+                }
+                try {
+                    const tx = almacenDB.transaction([ALMACEN_STORE_NAME], 'readonly');
+                    const store = tx.objectStore(ALMACEN_STORE_NAME);
+                    const res = {};
+                    let pendientes = claves.length;
+                    if (pendientes === 0) { resolve(res); return; }
+                    claves.forEach(function(k) {
+                        const req = store.get(k);
+                        req.onsuccess = function() {
+                            res[k] = req.result !== undefined ? req.result : null;
+                            pendientes--;
+                            if (pendientes === 0) resolve(res);
+                        };
+                        req.onerror = function() {
+                            res[k] = null;
+                            pendientes--;
+                            if (pendientes === 0) resolve(res);
+                        };
+                    });
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        }
+
+        // Elimina una colección
+        function almacenEliminar(clave) {
+            return new Promise(function(resolve, reject) {
+                if (!almacenListo) { reject(new Error('Almacén no inicializado')); return; }
+                if (almacenFallback) {
+                    try { localStorage.removeItem(clave); resolve(true); } catch (e) { reject(e); }
+                    return;
+                }
+                try {
+                    const tx = almacenDB.transaction([ALMACEN_STORE_NAME], 'readwrite');
+                    const store = tx.objectStore(ALMACEN_STORE_NAME);
+                    const req = store.delete(clave);
+                    req.onsuccess = function() { resolve(true); };
+                    req.onerror = function() { reject(req.error); };
+                } catch (e) { reject(e); }
+            });
+        }
+
+        // Estima el tamaño usado (aproximado)
+        function almacenEstimarTamano() {
+            return new Promise(function(resolve) {
+                if (!almacenListo) { resolve(0); return; }
+                if (almacenFallback) {
+                    // Suma de localStorage
+                    let total = 0;
+                    for (let k in localStorage) {
+                        if (localStorage.hasOwnProperty(k)) {
+                            total += (localStorage[k] || '').length * 2; // UTF-16
+                        }
+                    }
+                    resolve(total);
+                    return;
+                }
+                if (navigator.storage && navigator.storage.estimate) {
+                    navigator.storage.estimate().then(function(est) {
+                        resolve(est.usage || 0);
+                    }).catch(function() { resolve(0); });
+                } else {
+                    resolve(0);
+                }
+            });
+        }
+        // ─────── FIN @JS-ALMACEN-API ───────
+
+        // ─────── @JS-ALMACEN-MIGRACION ───────
+        // Migra datos de localStorage a IndexedDB una sola vez.
+        // Detecta si ya se migró con un flag 'pda_migrado_idb'.
+        async function migrarLocalStorageAIndexedDB() {
+            const MIGRADO_FLAG = 'pda_migrado_idb_v1';
+
+            // Si ya migró, no hacer nada
+            if (localStorage.getItem(MIGRADO_FLAG) === '1') return false;
+
+            // Si estamos en fallback, no tiene sentido migrar
+            if (almacenFallback) return false;
+
+            // Colecciones que se migran
+            const CLAVES = ['paquetes', 'serviciosAdicionales', 'prospectos', 'clientes', 'tareas', 'historial', 'usuarios', 'papelera'];
+
+            // Verificar si hay algo en localStorage
+            let hayDatosLocalStorage = false;
+            CLAVES.forEach(function(k) {
+                if (localStorage.getItem(k)) hayDatosLocalStorage = true;
+            });
+
+            if (!hayDatosLocalStorage) {
+                // No hay nada que migrar, marcar como migrado
+                localStorage.setItem(MIGRADO_FLAG, '1');
+                return false;
+            }
+
+            console.log('📦 Migrando datos de localStorage a IndexedDB...');
+
+            try {
+                // Verificar si IndexedDB ya tiene datos (para no sobrescribir)
+                const existentes = await almacenCargarMulti(['clientes', 'prospectos']);
+                const idbTieneDatos = (existentes.clientes && existentes.clientes.length > 0) ||
+                                      (existentes.prospectos && existentes.prospectos.length > 0);
+
+                if (idbTieneDatos) {
+                    console.log('ℹ️ IndexedDB ya tiene datos, se omite la migración');
+                    localStorage.setItem(MIGRADO_FLAG, '1');
+                    return false;
+                }
+
+                // Cargar desde localStorage
+                const datos = {};
+                CLAVES.forEach(function(k) {
+                    try {
+                        const raw = localStorage.getItem(k);
+                        if (raw) datos[k] = JSON.parse(raw);
+                    } catch (e) {
+                        console.warn('Error parseando ' + k + ':', e);
+                    }
+                });
+
+                // Guardar en IndexedDB
+                await almacenGuardarMulti(datos);
+
+                console.log('✅ Migración completada. Limpiando localStorage...');
+
+                // Eliminar colecciones de localStorage (mantener preferencias)
+                CLAVES.forEach(function(k) {
+                    try { localStorage.removeItem(k); } catch (e) {}
+                });
+
+                // Marcar como migrado
+                localStorage.setItem(MIGRADO_FLAG, '1');
+
+                return true;
+            } catch (e) {
+                console.error('❌ Error en migración:', e);
+                return false;
+            }
+        }
+        // ─────── FIN @JS-ALMACEN-MIGRACION ───────
+
         // ─────── @JS-STATE-DIRTY ───────
         // Rastreo de entidades que cambiaron desde el último guardado a Firebase.
         // En vez de subir todo el árbol, subimos solo lo que cambió.
@@ -5673,44 +5995,79 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-PERSIST-NOMBRE-ITEM-CONTRATO ───────
 
-        // ─────── @JS-PERSIST-GUARDAR-LOCAL ───────
+               // ─────── @JS-PERSIST-GUARDAR-LOCAL ───────
+        // Guarda todas las colecciones en IndexedDB (o localStorage en fallback).
+        // Las colecciones grandes se guardan en una sola transacción (rápido).
+        var guardadoLocalEnCurso = null;
         function guardarDatosLocal() {
-            try {
-                localStorage.setItem('paquetes', JSON.stringify(paquetes || []));
-                localStorage.setItem('serviciosAdicionales', JSON.stringify(serviciosAdicionales || []));
-                localStorage.setItem('prospectos', JSON.stringify(prospectos || []));
-                localStorage.setItem('clientes', JSON.stringify(clientes || []));
-                localStorage.setItem('tareas', JSON.stringify(tareas || []));
-                localStorage.setItem('historial', JSON.stringify(historial || []));
-                localStorage.setItem('usuarios', JSON.stringify(usuarios || []));
-                localStorage.setItem('papelera', JSON.stringify(papelera || []));
-            } catch (error) {
-                console.error('Error guardando:', error);
-                if (error.name === 'QuotaExceededError') mostrarNotificacion('Almacenamiento lleno', 'error');
+            if (!almacenListo) {
+                console.warn('Almacén no listo, guardado omitido');
+                return;
             }
+
+                const datos = {
+                paquetes: paquetes || [],
+                serviciosAdicionales: serviciosAdicionales || [],
+                prospectos: prospectos || [],
+                clientes: clientes || [],
+                tareas: tareas || [],
+                historial: historial || [],
+                papelera: papelera || []
+                // Nota: 'usuarios' se guarda solo en localStorage (es pequeño)
+            };
+
+            // Ejecutar en background (no bloquea el hilo principal)
+            almacenGuardarMulti(datos).catch(function(err) {
+                console.error('Error guardando en almacén:', err);
+                if (err && err.name === 'QuotaExceededError') {
+                    mostrarNotificacion('Almacenamiento lleno. Considera exportar un respaldo.', 'error');
+                }
+            });
         }
         // ─────── FIN @JS-PERSIST-GUARDAR-LOCAL ───────
 
         // ─────── @JS-PERSIST-CARGAR-LOCAL ───────
-        function cargarDatosLocal() {
+        // Carga todas las colecciones desde IndexedDB (async).
+        // Devuelve una promesa.
+        async function cargarDatosLocal() {
+            if (!almacenListo) {
+                console.warn('Almacén no listo, esperando...');
+                await inicializarAlmacen();
+            }
+
             try {
-                paquetes = JSON.parse(localStorage.getItem('paquetes')) || [];
-                serviciosAdicionales = JSON.parse(localStorage.getItem('serviciosAdicionales')) || [];
-                prospectos = JSON.parse(localStorage.getItem('prospectos')) || [];
-                clientes = JSON.parse(localStorage.getItem('clientes')) || [];
-                tareas = JSON.parse(localStorage.getItem('tareas')) || [];
-                historial = JSON.parse(localStorage.getItem('historial')) || [];
-                usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
-                papelera = JSON.parse(localStorage.getItem('papelera')) || [];
-            } catch (error) { console.error('Error cargando:', error); }
+                const claves = ['paquetes', 'serviciosAdicionales', 'prospectos', 'clientes', 'tareas', 'historial', 'papelera'];
+                const datos = await almacenCargarMulti(claves);
+
+                paquetes = datos.paquetes || [];
+                serviciosAdicionales = datos.serviciosAdicionales || [];
+                prospectos = datos.prospectos || [];
+                clientes = datos.clientes || [];
+                tareas = datos.tareas || [];
+                historial = datos.historial || [];
+                papelera = datos.papelera || [];
+
+                // Usuarios se carga desde localStorage (por @JS-USERS-INIT)
+
+                console.log('✅ Datos cargados desde ' + (almacenFallback ? 'localStorage' : 'IndexedDB') +
+                    ' → ' + paquetes.length + ' paq, ' + clientes.length + ' cli, ' +
+                    prospectos.length + ' prosp, ' + tareas.length + ' tareas, ' +
+                    historial.length + ' hist');
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                // Inicializar como arrays vacíos para evitar crashes
+                paquetes = []; serviciosAdicionales = []; prospectos = [];
+                clientes = []; tareas = []; usuarios = []; historial = []; papelera = [];
+            }
         }
         // ─────── FIN @JS-PERSIST-CARGAR-LOCAL ───────
 
                // ─────── @JS-PERSIST-GUARDAR ───────
         // Guarda localmente (siempre) y programa un guardado a Firebase con debounce.
         // El debounce evita ráfagas de escrituras cuando se hacen varios cambios seguidos.
-        var timeoutGuardadoFirebase = null;
+         var timeoutGuardadoFirebase = null;
         function guardarDatos() {
+            // Guardado local no-bloqueante (IndexedDB es async, no bloquea)
             guardarDatosLocal();
             marcarCambiosPendientes();
             if (estadoSync.modo === 'firebase' && database) {
@@ -6275,14 +6632,11 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-EMOJIS-PANEL ───────
 
-               // ─────── @JS-EMOJIS-ADJUNTAR ───────
+        // ─────── @JS-EMOJIS-ADJUNTAR ───────
         // Adjunta el botón + panel a un campo individual
         function adjuntarEmojiPicker(campo) {
             // Evitar duplicados
             if (campo.dataset.emojiAdjuntado === '1') return;
-            // Guard adicional: no adjuntar en móvil
-            if (window.innerWidth <= 768 ||
-                (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) return;
             // Evitar en inputs que no son de texto
             const tipo = (campo.getAttribute('type') || '').toLowerCase();
             if (campo.tagName === 'INPUT' && tipo !== 'text' && tipo !== 'email' && tipo !== 'search') return;
@@ -6339,88 +6693,31 @@ var DATOS_EMISOR = {
         }
         // ─────── FIN @JS-EMOJIS-ESCANEAR ───────
 
-               // ─────── @JS-EMOJIS-INICIALIZAR ───────
-        // Inicializa el sistema de emojis SOLO en escritorio.
-        // En móvil se desactiva completamente porque los teclados nativos ya tienen emojis.
+        // ─────── @JS-EMOJIS-INICIALIZAR ───────
+        // Inicializa el sistema: escucha cambios en el DOM y cierra paneles
         function inicializarSistemaEmojis() {
-            // ─── Detección de móvil ───
-            // Criterios combinados para mayor precisión:
-            //   - Ancho de pantalla ≤ 768px (coincide con tus media queries)
-            //   - Coarse pointer (dedo, no mouse) — característico de táctil
-            //   - User agent móvil (fallback)
-            const esMobil = window.innerWidth <= 768 ||
-                            (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
-                            /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-
-            if (esMobil) {
-                console.log('📱 Sistema de emojis DESACTIVADO en móvil (teclado nativo disponible)');
-                return;
-            }
-
-            console.log('💻 Sistema de emojis activado (escritorio)');
-
-            // ═══ A partir de aquí, solo se ejecuta en escritorio ═══
-
             // 1. Escanear campos existentes
             escanearCamposEmoji();
 
-            // 2. Observar cambios en el DOM — optimizado (agrupación + contenedores específicos)
-            let escaneoProgramado = false;
-            let escaneoTimeout = null;
-
+            // 2. Observar cambios en el DOM (nuevos modales, formularios dinámicos, etc.)
             const observer = new MutationObserver(function(mutations) {
-                if (escaneoProgramado) return;
-
                 let debeEscanear = false;
-                for (let i = 0; i < mutations.length && !debeEscanear; i++) {
-                    const m = mutations[i];
-                    if (m.type !== 'childList' || !m.addedNodes || m.addedNodes.length === 0) continue;
-
-                    for (let j = 0; j < m.addedNodes.length; j++) {
-                        const node = m.addedNodes[j];
-                        if (node.nodeType !== 1) continue;
-                        if (node.matches && node.matches('textarea, input[type="text"], input[type="email"], input[type="search"]')) {
+                mutations.forEach(function(m) {
+                    m.addedNodes.forEach(function(node) {
+                        if (node.nodeType !== 1) return;
+                        // Si el nodo es un campo o contiene campos, escanear
+                        if (node.matches && (node.matches('textarea, input[type="text"], input[type="email"], input[type="search"]') ||
+                            node.querySelector && node.querySelector('textarea, input[type="text"], input[type="email"], input[type="search"]'))) {
                             debeEscanear = true;
-                            break;
                         }
-                        if (node.getElementsByTagName) {
-                            if (node.getElementsByTagName('textarea').length > 0 ||
-                                node.getElementsByTagName('input').length > 0) {
-                                debeEscanear = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
+                    });
+                });
                 if (debeEscanear) {
-                    escaneoProgramado = true;
-                    if (escaneoTimeout) clearTimeout(escaneoTimeout);
-                    escaneoTimeout = setTimeout(function() {
-                        escaneoProgramado = false;
-                        escaneoTimeout = null;
-                        escanearCamposEmoji();
-                    }, 150);
+                    // Usar setTimeout para agrupar múltiples mutaciones
+                    setTimeout(escanearCamposEmoji, 50);
                 }
             });
-
-            // Observar solo los contenedores relevantes (no todo el body)
-            const contenedoresAObservar = [
-                document.getElementById('modal'),
-                document.querySelector('.main-content')
-            ].filter(Boolean);
-
-            contenedoresAObservar.forEach(function(el) {
-                observer.observe(el, { childList: true, subtree: true });
-            });
-
-            // Escanear al abrir un modal nuevo (fallback)
-            const observerModal = new MutationObserver(function() {
-                if (document.getElementById('modal').classList.contains('active')) {
-                    setTimeout(escanearCamposEmoji, 100);
-                }
-            });
-            observerModal.observe(document.getElementById('modal'), { attributes: true, attributeFilter: ['class'] });
+            observer.observe(document.body, { childList: true, subtree: true });
 
             // 3. Cerrar paneles al hacer clic fuera
             document.addEventListener('click', function(e) {
@@ -11565,7 +11862,7 @@ var DATOS_EMISOR = {
             btn = document.getElementById('btn-exportar-datos');
             if (btn) btn.addEventListener('click', function() {
                 try {
-                    const json = JSON.stringify({ version: VERSION, fechaExportacion: obtenerFechaActual(), paquetes: paquetes, serviciosAdicionales: serviciosAdicionales, prospectos: prospectos, clientes: clientes, tareas: tareas,   historial: historial, usuarios: usuarios }, null, 2);
+                    const json = JSON.stringify({ version: VERSION, fechaExportacion: obtenerFechaActual(), paquetes: paquetes, serviciosAdicionales: serviciosAdicionales, prospectos: prospectos, clientes: clientes, tareas: tareas, historial: historial, papelera: papelera, usuarios: usuarios }, null, 2);
                     const blob = new Blob([json], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -11589,6 +11886,7 @@ var DATOS_EMISOR = {
                         paquetes = d.paquetes || []; serviciosAdicionales = d.serviciosAdicionales || [];
                         prospectos = d.prospectos || []; clientes = d.clientes || [];
                         tareas = d.tareas || []; historial = d.historial || [];
+                        papelera = d.papelera || [];
                         if (d.usuarios && d.usuarios.length > 0) { usuarios = d.usuarios; guardarUsuarios(); }
                         guardarDatos(); renderizarTodo();
                         mostrarNotificacion('Datos importados', 'success');
@@ -11725,25 +12023,39 @@ var DATOS_EMISOR = {
 
         // ─────── @JS-BOOT-INIT ───────
         // Función principal de arranque con manejo de errores
-        (async function boot() {
+               (async function boot() {
             try {
                 const temaInicial = localStorage.getItem(PREF_TEMA) || 'dark';
                 document.documentElement.setAttribute('data-theme', temaInicial);
+
+                // ─── 1. Inicializar almacén (IndexedDB con fallback) ───
+                await inicializarAlmacen();
+
+                // ─── 2. Migrar datos de localStorage a IndexedDB (una sola vez) ───
+                await migrarLocalStorageAIndexedDB();
+
+                // ─── 3. Cargar usuarios (sigue usando localStorage, son pequeños) ───
                 await inicializarUsuariosSiEsNecesario();
-                cargarDatosLocal();
+
+                // ─── 4. Cargar colecciones (IndexedDB) ───
+                await cargarDatosLocal();
+
+                // ─── 5. Si no hay usuarios, crear admin ───
                 if (usuarios.length === 0) {
                     const admin = await crearUsuarioAdminInicial();
                     usuarios = [admin];
                     guardarUsuarios();
                 }
+
                 const sg = localStorage.getItem(PREF_SIDEBAR) === '1';
                 aplicarSidebarColapsado(sg);
                 aplicarTema(temaInicial);
-              // Purgar papelera vencida al iniciar (silencioso)
+
+                // Purgar papelera vencida al iniciar (silencioso)
                 purgarPapeleraVencida(true);
                 // Procesar caducidad automática de paquetes
                 procesarCaducidadPaquetes();
-                // Inicializar sistema global de emojis
+                // Inicializar sistema global de emojis (solo PC)
                 inicializarSistemaEmojis();
                 guardarDatosLocal();
                 const sesion = cargarSesion();
