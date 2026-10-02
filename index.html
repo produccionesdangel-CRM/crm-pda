@@ -2226,7 +2226,7 @@
                 motivo: motivo || '(sin motivo especificado)',
                 contexto: {}
             };
-                        papelera.unshift(entrada);
+             papelera.unshift(entrada);
             if (papelera.length > MAX_PAPELERA) papelera = papelera.slice(0, MAX_PAPELERA);
             encolarEventoAppendOnly('papelera', entrada);
             // Subir a Firebase INMEDIATAMENTE (idempotente con set())
@@ -2765,17 +2765,45 @@
                     }, 2000);
                 }
 
-                                // ─── Papelera: FUSIONAR (no reemplazar) ───
+                // ─── Papelera: FUSIONAR filtrando tombstones ───
                 const snapPap = await database.ref('papelera').once('value');
                 const papeleraObj = snapPap.val() || {};
-                const papeleraRemota = Object.keys(papeleraObj).map(function(k) { const item = papeleraObj[k]; if (item && !item.id) item.id = k; return item; }).filter(Boolean);
+                const papeleraRemota = Object.keys(papeleraObj).map(function(k) { const item = papeleraObj[k]; if (item && !item.id) item.id = k; return item; })
+                    .filter(Boolean)
+                    .filter(function(item) {
+                 // Excluir tombstones (items eliminados definitivamente)
+                        return !item._eliminadoDefinitivo;
+                    });
+                               // Construir set de IDs remotos (solo los vivos, no tombstones)
                 const idsPapRemotos = {};
                 papeleraRemota.forEach(function(e) { idsPapRemotos[e.id] = true; });
+                
+                // Construir set de IDs con tombstone (para descartar locales que estén eliminados en remoto)
+                const idsPapTombstones = {};
+                Object.keys(papeleraObj).forEach(function(k) {
+                    const item = papeleraObj[k];
+                    if (item && item._eliminadoDefinitivo === true) {
+                        idsPapTombstones[k] = true;
+                    }
+                });
+                
+                // 1. Quitar de local los que tengan tombstone en remoto
+                const antesLimpiar = papelera.length;
+                papelera = papelera.filter(function(e) { return !idsPapTombstones[e.id]; });
+                if (antesLimpiar - papelera.length > 0) {
+                    console.log('🧹 Eliminados de papelera local por tombstones: ' + (antesLimpiar - papelera.length));
+                }
+                
+                // 2. Agregar los remotos que no tengo local
                 const idsPapLocales = {};
                 papelera.forEach(function(e) { idsPapLocales[e.id] = true; });
                 papeleraRemota.forEach(function(e) { if (!idsPapLocales[e.id]) papelera.unshift(e); });
+                
+                // 3. Subir los locales que no están en remoto NI tienen tombstone
                 const papeleraASubir = [];
-                papelera.forEach(function(e) { if (!idsPapRemotos[e.id]) papeleraASubir.push(e); });
+                papelera.forEach(function(e) { 
+                    if (!idsPapRemotos[e.id] && !idsPapTombstones[e.id]) papeleraASubir.push(e); 
+                });
                 papelera.sort(function(a, b) { return (b.fechaEliminacion || '').localeCompare(a.fechaEliminacion || ''); });
                 if (papelera.length > MAX_PAPELERA) papelera = papelera.slice(0, MAX_PAPELERA);
                 if (papeleraASubir.length > 0) {
@@ -2788,7 +2816,6 @@
                         });
                     }, 2000);
                 }
-
                 paquetes = paquetesR; serviciosAdicionales = serviciosR; prospectos = prospectosR; clientes = clientesR; tareas = tareasR;
                 ultimaActualizacionRemota = versionData && versionData.ultimaActualizacion ? versionData.ultimaActualizacion : null;
                 cambiosPendientes = false;
@@ -5015,10 +5042,15 @@
                 papelera.forEach(function(e) { porTipo[e.tipo] = (porTipo[e.tipo] || 0) + 1; });
                 stats.innerHTML = '<div class="papelera-stat"><div class="lbl">Total</div><div class="val">' + total + '</div></div><div class="papelera-stat"><div class="lbl">Se purgan pronto</div><div class="val" style="color:var(--color-naranja);">' + proximosExpirar + '</div></div><div class="papelera-stat"><div class="lbl">Clientes</div><div class="val">' + (porTipo.cliente || 0) + '</div></div><div class="papelera-stat"><div class="lbl">Contratos</div><div class="val">' + (porTipo.contrato || 0) + '</div></div><div class="papelera-stat"><div class="lbl">Otros</div><div class="val">' + (total - (porTipo.cliente || 0) - (porTipo.contrato || 0)) + '</div></div>';
             }
-            const tipoFiltro = document.getElementById('papelera-filtro-tipo').value;
+                        const tipoFiltro = document.getElementById('papelera-filtro-tipo').value;
             const usuarioFiltro = document.getElementById('papelera-filtro-usuario').value.toLowerCase().trim();
             const buscarFiltro = document.getElementById('papelera-filtro-buscar').value.toLowerCase().trim();
-            let items = papelera.slice();
+
+            // Filtrar tombstones (por si alguno quedó en memoria)
+            let items = papelera.filter(function(e) { return e && !e._eliminadoDefinitivo; });
+            if (items.length !== papelera.length) {
+                papelera = items;
+            }
             if (tipoFiltro !== 'todos') items = items.filter(function(e) { return e.tipo === tipoFiltro; });
             if (usuarioFiltro) items = items.filter(function(e) { return (e.eliminadoPor || '').toLowerCase().indexOf(usuarioFiltro) !== -1; });
             if (buscarFiltro) items = items.filter(function(e) { const texto = JSON.stringify(e.item).toLowerCase() + ' ' + (e.motivo || '').toLowerCase(); return texto.indexOf(buscarFiltro) !== -1; });
@@ -5077,8 +5109,20 @@
                         serviciosAdicionales.push(entrada.item);
                         marcarSucia('serviciosAdicionales', entrada.item.id);
                     }
-                    papelera = papelera.filter(function(e) { return e.id !== entradaId; });
-                    if (estadoSync.modo === 'firebase' && database) database.ref('papelera/' + entradaId).remove().catch(function(err) { console.warn('No se pudo eliminar de papelera remota:', err); });
+                                        papelera = papelera.filter(function(e) { return e.id !== entradaId; });
+                    // ─── Tombstone de papelera (para que no vuelva tras recargar) ───
+                    if (estadoSync.modo === 'firebase' && database) {
+                        const tombstone = {
+                            id: entradaId,
+                            _eliminadoDefinitivo: true,
+                            _eliminadoPor: nombreUsuarioActual(),
+                            _fechaEliminacionDefinitiva: obtenerFechaHoraActual(),
+                            _motivo: 'restaurado'
+                        };
+                        database.ref('papelera/' + entradaId).set(tombstone).catch(function(err) {
+                            console.warn('No se pudo crear tombstone de papelera restaurada:', err);
+                        });
+                    }
                     registrarHistorial('papelera', 'editar', 'Se restauró ' + etiquetaTipoPapelera(entrada.tipo).toLowerCase() + ': "' + (entrada.item.nombre || entrada.item.festejado || 'sin nombre') + '"', { id: entrada.item.id, nombre: entrada.item.nombre || entrada.item.festejado });
                     guardarDatos(); renderizarTodo(); renderizarPapelera();
                     mostrarNotificacion('Elemento restaurado', 'success');
@@ -5092,9 +5136,24 @@
                 titulo: 'Eliminar definitivamente', entidad: etiquetaTipoPapelera(entrada.tipo).toLowerCase(),
                 nombre: (entrada.item.nombre || entrada.item.festejado || '(sin nombre)'),
                 detalle: 'Esta acción NO se puede deshacer.',
-                onConfirmar: function() {
+                               onConfirmar: function() {
+                    // Quitar de la papelera LOCAL
                     papelera = papelera.filter(function(e) { return e.id !== entradaId; });
-                    if (estadoSync.modo === 'firebase' && database) database.ref('papelera/' + entradaId).remove().catch(function(err) { console.warn('No se pudo eliminar de papelera remota:', err); });
+                    
+                    // ─── Crear TOMBSTONE en Firebase (no borrar el nodo) ───
+                    // Esto garantiza que el item NO vuelva a aparecer aunque la red falle
+                    if (estadoSync.modo === 'firebase' && database) {
+                        const tombstone = {
+                            id: entradaId,
+                            _eliminadoDefinitivo: true,
+                            _eliminadoPor: nombreUsuarioActual(),
+                            _fechaEliminacionDefinitiva: obtenerFechaHoraActual()
+                        };
+                        database.ref('papelera/' + entradaId).set(tombstone).catch(function(err) {
+                            console.warn('No se pudo crear tombstone de papelera:', err);
+                        });
+                    }
+                    
                     registrarHistorial('papelera', 'eliminar', 'Se eliminó definitivamente ' + etiquetaTipoPapelera(entrada.tipo).toLowerCase() + ': "' + (entrada.item.nombre || entrada.item.festejado || 'sin nombre') + '"', { id: entrada.item.id, nombre: entrada.item.nombre || entrada.item.festejado });
                     guardarDatos(); renderizarPapelera();
                     mostrarNotificacion('Elemento eliminado permanentemente', 'success');
@@ -5107,9 +5166,30 @@
                 titulo: 'Vaciar papelera', entidad: 'papelera completa',
                 nombre: papelera.length + ' elemento' + (papelera.length === 1 ? '' : 's'),
                 detalle: 'Se eliminarán TODOS los elementos de la papelera de forma permanente.',
-                onConfirmar: function() {
+                               onConfirmar: function() {
                     const cantidad = papelera.length;
-                    if (estadoSync.modo === 'firebase' && database) database.ref('papelera').remove().catch(function(err) { console.warn('No se pudo vaciar papelera remota:', err); });
+                    const itemsAEliminar = papelera.slice(); // copia antes de limpiar
+                    
+                    // ─── Crear tombstones en Firebase ───
+                    if (estadoSync.modo === 'firebase' && database) {
+                        const actualizaciones = {};
+                        const ahora = obtenerFechaHoraActual();
+                        const usuario = nombreUsuarioActual();
+                        itemsAEliminar.forEach(function(e) {
+                            actualizaciones[e.id] = {
+                                id: e.id,
+                                _eliminadoDefinitivo: true,
+                                _eliminadoPor: usuario,
+                                _fechaEliminacionDefinitiva: ahora
+                            };
+                        });
+                        if (Object.keys(actualizaciones).length > 0) {
+                            database.ref('papelera').update(actualizaciones).catch(function(err) {
+                                console.warn('No se pudieron crear tombstones de papelera:', err);
+                            });
+                        }
+                    }
+                    
                     papelera = [];
                     registrarHistorial('papelera', 'eliminar', 'Se vació la papelera (' + cantidad + ' elemento' + (cantidad === 1 ? '' : 's') + ')', { id: null, nombre: null });
                     guardarDatos(); renderizarPapelera();
