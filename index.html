@@ -2376,7 +2376,7 @@
             window.location.reload();
         }
 
-        function registrarHistorial(entidad, accion, descripcion, meta) {
+               function registrarHistorial(entidad, accion, descripcion, meta) {
             if (!meta) meta = {};
             const evento = {
                 id: generarId(), fecha: obtenerFechaHoraActual(),
@@ -2394,6 +2394,16 @@
             const sc = document.getElementById('seccion-configuracion');
             if (sc && sc.classList.contains('active')) renderizarHistorial();
             marcarCambiosPendientes();
+
+            // ─── Subir a Firebase INMEDIATAMENTE (dentro de la función) ───
+            if (estadoSync.modo === 'firebase' && database) {
+                const eventoParaSubir = evento;
+                database.ref('historial/' + eventoParaSubir.id).set(eventoParaSubir).catch(function(err) {
+                    console.warn('No se pudo subir evento de historial:', err);
+                });
+                if (timeoutGuardadoFirebase) clearTimeout(timeoutGuardadoFirebase);
+                timeoutGuardadoFirebase = setTimeout(function() { guardarEnFirebase(); }, 800);
+            }
         }
 
         /* ═══════════════════════════════════════════════════════════ */
@@ -2481,24 +2491,16 @@
                 paquetes = []; serviciosAdicionales = []; prospectos = []; clientes = []; tareas = []; historial = []; papelera = [];
             }
         }
-        var timeoutGuardadoFirebase = null;
+               var timeoutGuardadoFirebase = null;
         function guardarDatos() {
             guardarDatosLocal();
-
-          // 5. Subir historial INMEDIATAMENTE (append-only, no necesita debounce)
             marcarCambiosPendientes();
             if (estadoSync.modo === 'firebase' && database) {
-                // Subir el evento directo a Firebase sin esperar
-                database.ref('historial/' + evento.id).set(evento).catch(function(err) {
-                    console.warn('No se pudo subir evento de historial:', err);
-                });
-                // También disparar sincronización general con debounce (para otras entidades)
                 if (timeoutGuardadoFirebase) clearTimeout(timeoutGuardadoFirebase);
                 timeoutGuardadoFirebase = setTimeout(function() { guardarEnFirebase(); }, 800);
             }
         }
         function marcarCambiosPendientes() { cambiosPendientes = true; }
-
         /* ═══════════════════════════════════════════════════════════ */
         /* @JS-FIREBASE-GUARDAR — Guardado granular + tombstones        */
         /* ═══════════════════════════════════════════════════════════ */
