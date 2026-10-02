@@ -6,8 +6,8 @@
     <title>Registro PDA v4.7 - Estudio Fotografía</title>
     <link rel="icon" type="image/jpeg" href="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js" defer></script>
     <style>
         :root { --sidebar-width: 220px; --sidebar-width-collapsed: 64px; --border-radius: 8px; --transition: 0.25s ease; }
         html[data-theme="dark"] {
@@ -1827,14 +1827,19 @@
 
         var database = null;
         var firebaseListo = false;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            database = firebase.database();
-            firebaseListo = true;
-            console.log('✅ Firebase inicializado correctamente');
-        } catch (error) {
-            console.error('❌ Error inicializando Firebase:', error);
-            firebaseListo = false;
+        if (typeof firebase === 'undefined') {
+            console.error('❌ Firebase SDK no cargado. Verifica la conexión a internet.');
+            console.warn('⚠️ La app funcionará en modo local (sin sincronización)');
+        } else {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                firebaseListo = true;
+                console.log('✅ Firebase inicializado correctamente');
+            } catch (error) {
+                console.error('❌ Error inicializando Firebase:', error);
+                firebaseListo = false;
+            }
         }
 
         function actualizarEstadoSync(estado, texto) {
