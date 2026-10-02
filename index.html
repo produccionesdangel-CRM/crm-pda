@@ -1825,21 +1825,54 @@
             appId: "1:308550111377:web:893128880c21e2de16af30"
         };
 
-        var database = null;
+                var database = null;
         var firebaseListo = false;
-        if (typeof firebase === 'undefined') {
-            console.error('❌ Firebase SDK no cargado. Verifica la conexión a internet.');
-            console.warn('⚠️ La app funcionará en modo local (sin sincronización)');
-        } else {
+
+        // ─── Inicialización robusta de Firebase con reintentos ───
+        // Algunos navegadores móviles cargan los scripts del <head> después del inline,
+        // dejando "firebase" como undefined en el primer intento. Esperamos y reintentamos.
+        function intentarInicializarFirebase(intento) {
+            intento = intento || 1;
+            const maxIntentos = 20;
+
+            if (typeof firebase === 'undefined') {
+                if (intento === 1) {
+                    console.warn('⏳ Firebase SDK aún no cargado. Esperando...');
+                }
+                if (intento < maxIntentos) {
+                    setTimeout(function() { intentarInicializarFirebase(intento + 1); }, 250);
+                } else {
+                    console.error('❌ Firebase SDK no se cargó después de ' + maxIntentos + ' intentos.');
+                    console.error('   La app funcionará en modo local sin sincronización.');
+                    console.error('   Verifica tu conexión a internet o si algún bloqueador impide cargar cdnjs/gstatic.');
+                }
+                return;
+            }
+
             try {
+                // Si ya hay una app inicializada, no crear otra
+                if (firebase.apps && firebase.apps.length > 0) {
+                    console.log('✅ Firebase ya estaba inicializado (' + firebase.apps.length + ' app/s)');
+                    database = firebase.database();
+                    firebaseListo = true;
+                    return;
+                }
                 firebase.initializeApp(firebaseConfig);
                 database = firebase.database();
                 firebaseListo = true;
-                console.log('✅ Firebase inicializado correctamente');
+                console.log('✅ Firebase inicializado correctamente (intento ' + intento + ')');
             } catch (error) {
-                console.error('❌ Error inicializando Firebase:', error);
-                firebaseListo = false;
+                console.error('❌ Error inicializando Firebase (intento ' + intento + '):', error);
+                if (intento < maxIntentos) {
+                    setTimeout(function() { intentarInicializarFirebase(intento + 1); }, 250);
+                } else {
+                    firebaseListo = false;
+                }
             }
+        }
+
+        // Arrancar el intento de inicialización (se reintentará si el SDK no está listo)
+        intentarInicializarFirebase(1);
         }
 
         function actualizarEstadoSync(estado, texto) {
@@ -2863,8 +2896,21 @@
             });
         }
 
-        async function inicializarFirebase() {
-            if (!database) { actualizarEstadoSync('offline', 'Firebase no disponible'); estadoSync.modo = 'local'; return false; }
+               async function inicializarFirebase() {
+            // Esperar a que el SDK esté listo (máximo 5 segundos)
+            if (!firebaseListo || !database) {
+                let esperas = 0;
+                while ((!firebaseListo || !database) && esperas < 20) {
+                    await new Promise(function(r) { setTimeout(r, 250); });
+                    esperas++;
+                }
+            }
+            if (!database) {
+                console.warn('⚠️ Firebase no disponible después de esperar. Modo local.');
+                actualizarEstadoSync('offline', 'Firebase no disponible');
+                estadoSync.modo = 'local';
+                return false;
+            }
             if (firebaseInicializado) return true;
             try {
                 actualizarEstadoSync('syncing', 'Conectando...');
