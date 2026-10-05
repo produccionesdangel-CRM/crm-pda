@@ -1063,39 +1063,11 @@
                 </div>
                 <div class="login-error" id="login-error-vincular"></div>
                 <div class="campo-login"><label>Nombre completo</label><input type="text" id="vincular-nombre" placeholder="Ej: Adolfo Pérez Aguirre" autocomplete="name"></div>
-                <div class="campo-login"><label>PIN de este equipo (4 a 6 dígitos)</label><input type="password" class="pin" id="vincular-pin" maxlength="6" inputmode="numeric" autocomplete="off" placeholder="••••"></div>
-                <div class="campo-login"><label>Confirmar PIN</label><input type="password" class="pin" id="vincular-pin2" maxlength="6" inputmode="numeric" autocomplete="off" placeholder="••••"></div>
                 <div class="login-botones">
                     <button type="button" class="btn-secundario" id="login-btn-cancelar-vincular">Cancelar</button>
                     <button type="button" class="btn-primario" id="login-btn-guardar-vincular"><i class="fas fa-user-plus"></i> Crear administrador</button>
                 </div>
-                <div class="login-nota">El PIN es una segunda barrera local para este equipo. Puedes cambiarlo después en Configuración → Cambiar mi PIN.</div>
-            </div>
-            <div class="login-paso" id="login-paso-pin">
-                <h3 id="login-pin-titulo">Ingresa tu PIN</h3>
-                <div class="login-usuario-elegido" id="login-usuario-elegido"></div>
-                <div class="login-info" id="login-info"></div>
-                <div class="login-error" id="login-error"></div>
-                <div class="bloqueo-aviso" id="login-bloqueo-aviso"></div>
-                <input type="password" class="login-pin-input" id="login-pin-input" placeholder="••••" maxlength="6" inputmode="numeric" autocomplete="off">
-                <div class="login-botones">
-                    <button type="button" class="btn-secundario" id="login-btn-cancelar"><i class="fas fa-arrow-left"></i> Atrás</button>
-                    <button type="button" class="btn-primario" id="login-btn-ingresar"><i class="fas fa-sign-in-alt"></i> Ingresar</button>
-                </div>
-            </div>
-            <div class="login-paso" id="login-paso-nuevo-pin">
-                <h3>Configura tu PIN</h3>
-                <div class="login-cuenta" id="nuevo-pin-cuenta"></div>
-                <div class="login-info visible" id="login-info-nuevo-pin">
-                    Este equipo todavía no tiene un PIN configurado. Define uno de 4 a 6 dígitos para proteger el acceso local.
-                </div>
-                <div class="login-error" id="login-error-nuevo-pin"></div>
-                <input type="password" class="login-pin-input" id="login-pin-nuevo" placeholder="Nuevo PIN" maxlength="6" inputmode="numeric" autocomplete="off">
-                <input type="password" class="login-pin-input" id="login-pin-nuevo-confirmar" placeholder="Confirmar PIN" maxlength="6" inputmode="numeric" autocomplete="off">
-                <div class="login-botones">
-                    <button type="button" class="btn-secundario" id="login-btn-cancelar-nuevo">Atrás</button>
-                    <button type="button" class="btn-primario" id="login-btn-guardar-pin"><i class="fas fa-save"></i> Guardar PIN</button>
-                </div>
+                <div class="login-nota">El acceso queda ligado a tu cuenta de Google. Podrás autorizar más correos desde Configuración → Gestión de usuarios.</div>
             </div>
             <div class="login-paso" id="login-paso-denegado">
                 <h3>Acceso denegado</h3>
@@ -1408,10 +1380,9 @@
                 </div>
                 <div class="config-card" style="margin-bottom:24px;">
                     <h3><i class="fas fa-user-cog"></i> Mi cuenta</h3>
-                    <p class="config-descripcion">Administra tu cuenta personal. Puedes cambiar tu PIN de acceso.</p>
+                    <p class="config-descripcion">Tu acceso está ligado a tu cuenta de <strong>Google</strong>. No hay PIN ni contraseña adicional: la identidad la verifica Google en cada inicio de sesión.</p>
                     <div class="config-acciones">
-                        <button class="config-boton" id="btn-cambiar-mi-pin" style="border-color:var(--color-acento);"><i class="fas fa-key" style="background-color:var(--color-acento);"></i><div class="info"><div class="titulo">Cambiar mi PIN</div><div class="subtitulo">Requiere verificar el PIN actual</div></div></button>
-                        <button class="config-boton peligro" id="btn-cambiar-usuario"><i class="fas fa-user-friends"></i><div class="info"><div class="titulo">Cambiar de usuario</div><div class="subtitulo">Cierra sesión y permite elegir otro usuario</div></div></button>
+                        <button class="config-boton peligro" id="btn-cambiar-usuario"><i class="fas fa-user-friends"></i><div class="info"><div class="titulo">Cambiar de usuario</div><div class="subtitulo">Cierra sesión y permite entrar con otra cuenta de Google</div></div></button>
                     </div>
                 </div>
                 <div class="config-card" id="card-gestion-usuarios" style="margin-bottom:24px; display:none;">
@@ -1483,7 +1454,7 @@
                             <div class="changelog-icono"><i class="fab fa-google"></i></div>
                             <div class="changelog-contenido">
                                 <div class="changelog-titulo">Inicio de sesión con Google (Firebase Authentication)</div>
-                                <div class="changelog-desc">Ya no basta con tener el enlace de la aplicación: para entrar hay que autenticarse con una cuenta de Google <strong>autorizada expresamente</strong> en Configuración. La base de datos en la nube rechaza cualquier lectura o escritura sin sesión verificada, así que la información deja de ser pública en internet. El PIN de 4 a 6 dígitos queda como segunda barrera local del equipo, ahora cifrado con PBKDF2 (150.000 iteraciones), con bloqueo temporal tras 5 intentos fallidos y <strong>sin subirse nunca a la nube</strong>: cada equipo guarda su propio PIN.</div>
+                                <div class="changelog-desc">Ya no basta con tener el enlace de la aplicación: para entrar hay que autenticarse con una cuenta de Google <strong>autorizada expresamente</strong> en Configuración. La base de datos en la nube rechaza cualquier lectura o escritura sin sesión verificada, así que la información deja de ser pública en internet. Antes, cualquiera con la dirección podía descargar toda la cartera de clientes; ahora ni siquiera responde.</div>
                             </div>
                         </div>
                         <div class="changelog-item">
@@ -1511,7 +1482,14 @@
                             <div class="changelog-icono"><i class="fas fa-user-shield"></i></div>
                             <div class="changelog-contenido">
                                 <div class="changelog-titulo">Sesión y permisos más estrictos</div>
-                                <div class="changelog-desc">La sesión local va firmada: alterarla desde el navegador la invalida. Los permisos de administrador se vuelven a validar en el servidor en cada operación, se exige tu PIN para resetear el de otra persona, la papelera y los respaldos quedan reservados a administradores y los archivos exportados ya no incluyen los hashes de los PIN.</div>
+                                <div class="changelog-desc">La sesión local va firmada: alterarla desde el navegador la invalida. Los permisos de administrador se validan contra la base de datos en cada operación, la papelera y los respaldos quedan reservados al propietario y los archivos exportados no incluyen ninguna credencial.</div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-unlock-alt"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Acceso simplificado: solo con Google</div>
+                                <div class="changelog-desc">Se eliminó el PIN. Entrar requiere únicamente una cuenta de Google <strong>autorizada</strong> en Configuración: la base de datos rechaza cualquier acceso sin sesión verificada, así que la protección real está en el servidor, no en una contraseña local. Cada persona es responsable de proteger su cuenta de Google en su dispositivo. Como beneficio adicional, ya no hay contraseñas locales que se puedan olvidar ni que restablecer, y autorizar a alguien nuevo es solo capturar su correo.</div>
                             </div>
                         </div>
                         <div class="changelog-item">
@@ -1564,12 +1542,9 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '4.8';
-        var BUILD_APP = '2026-10-05.4';
-        var PIN_ADMIN_INICIAL = '1234';
+        var BUILD_APP = '2026-10-05.6';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
-        var MAX_INTENTOS_PIN = 5;
-        var BLOQUEO_INTENTOS_MS = 15 * 60 * 1000;
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
         var CLAVE_RESPALDO_SEGURIDAD = '__pda_respaldo_seguridad__';
         var EMISOR_COMPROBANTE = "Producciones D'Angel Film";
@@ -1726,73 +1701,17 @@
             crypto.getRandomValues(arr);
             return Array.from(arr).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
         }
-        async function derivarPinPbkdf2(pin, saltHex, iteraciones) {
-            if (!window.crypto || !crypto.subtle || !crypto.subtle.importKey) throw new Error('WebCrypto no disponible');
-            const saltBytes = new Uint8Array((saltHex.match(/.{2}/g) || []).map(function(h) { return parseInt(h, 16); }));
-            const clave = await crypto.subtle.importKey('raw', new TextEncoder().encode(String(pin)), { name: 'PBKDF2' }, false, ['deriveBits']);
-            const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: saltBytes, iterations: iteraciones || PBKDF2_ITERACIONES, hash: 'SHA-256' }, clave, 256);
-            return bytesAHashHex(bits);
-        }
-        async function generarHashPin(pin, salt) {
-            return derivarPinPbkdf2(pin, salt, PBKDF2_ITERACIONES);
-        }
-        // ─────── @JS-CREDENCIALES-LOCALES (v4.8) ───────
-        // El hash del PIN NUNCA sale del equipo: no se sincroniza a Firebase ni se exporta.
-        // Así, si alguien leyera la base de datos, no obtendría material para romper los PIN.
-        function leerCredencialesLocales() {
+        // ─────── @JS-SIN-PIN (v4.8.6) ───────
+        // El PIN se eliminó: la identidad la verifica Google y cada equipo entra con la cuenta
+        // autorizada. Esta limpieza borra las credenciales de PIN que quedaran de versiones previas.
+        function limpiarCredencialesPinAntiguas() {
             try {
-                const o = JSON.parse(localStorage.getItem(PREF_CREDENCIALES_PIN));
-                return (o && typeof o === 'object') ? o : {};
-            } catch (e) { return {}; }
-        }
-        function guardarCredencialesLocales(o) {
-            try { localStorage.setItem(PREF_CREDENCIALES_PIN, JSON.stringify(o || {})); return true; }
-            catch (e) { console.warn('No se pudieron guardar las credenciales locales:', e); return false; }
-        }
-        function obtenerCredencialPin(username) {
-            if (!username) return null;
-            const cred = leerCredencialesLocales()[username];
-            return (cred && cred.pinHash && cred.salt) ? cred : null;
-        }
-        function guardarCredencialPin(username, salt, pinHash, extras) {
-            if (!username) return null;
-            const todas = leerCredencialesLocales();
-            const anterior = todas[username] || {};
-            todas[username] = Object.assign({}, anterior, {
-                salt: salt, pinHash: pinHash, hashEsquema: 'pbkdf2', iteraciones: PBKDF2_ITERACIONES,
-                actualizado: obtenerFechaHoraActual(), ultimoUso: (extras && extras.ultimoUso) || anterior.ultimoUso || null
-            });
-            guardarCredencialesLocales(todas);
-            return todas[username];
-        }
-        function eliminarCredencialPin(username) {
-            const todas = leerCredencialesLocales();
-            if (todas[username]) { delete todas[username]; guardarCredencialesLocales(todas); }
-        }
-        // Solo el usuario autorizado en el equipo puede usar su PIN.
-        function usuarioTienePinLocal(username) {
-            const u = encontrarUsuario(username);
-            if (!usuarioEstaActivo(u)) return false;
-            return !!obtenerCredencialPin(username);
-        }
-        async function verificarPin(pin, credencial) {
-            if (!credencial || !credencial.pinHash || !credencial.salt) return { ok: false, motivo: 'sin-pin' };
-            if (credencial.hashEsquema === 'pbkdf2') {
-                let intento;
-                try { intento = await derivarPinPbkdf2(pin, credencial.salt, credencial.iteraciones || PBKDF2_ITERACIONES); }
-                catch (e) { console.error('Error derivando PIN:', e); return { ok: false, motivo: 'error' }; }
-                return { ok: intento === credencial.pinHash, motivo: intento === credencial.pinHash ? null : 'incorrecto' };
-            }
-            // Compatibilidad: cuentas creadas antes de la v4.8 usaban SHA-256 simple.
-            let intentoLegado;
-            try { intentoLegado = await derivarPinSha256(pin, credencial.salt); }
-            catch (e) { return { ok: false, motivo: 'error' }; }
-            return { ok: intentoLegado === credencial.pinHash, motivo: intentoLegado === credencial.pinHash ? null : 'incorrecto', migrar: intentoLegado === credencial.pinHash };
-        }
-        async function derivarPinSha256(pin, salt) {
-            const buf = new TextEncoder().encode(String(pin) + '::' + salt);
-            const hash = await crypto.subtle.digest('SHA-256', buf);
-            return bytesAHashHex(hash);
+                if (localStorage.getItem(PREF_CREDENCIALES_PIN)) {
+                    localStorage.removeItem(PREF_CREDENCIALES_PIN);
+                    console.log('🧹 Se eliminaron las credenciales de PIN de versiones anteriores (ya no se usan).');
+                }
+                if (localStorage.getItem(PREF_INTENTOS_PIN)) localStorage.removeItem(PREF_INTENTOS_PIN);
+            } catch (e) { console.warn('No se pudieron limpiar las credenciales antiguas:', e); }
         }
         // ─────── @JS-SEGURIDAD-SESION — integridad de la sesión local ───────
         function obtenerSecretoSesion() {
@@ -1861,8 +1780,6 @@
         var PREF_INTENTOS_PIN = 'pda_intentos_pin';
         var PREF_CREDENCIALES_PIN = 'pda_credenciales_pin';
         var PREF_ULTIMO_CORREO = 'pda_ultimo_correo';
-        var PBKDF2_ITERACIONES = 150000;
-        var hashPinEsquemaActual = 'sha256';
         var historialVerTodos = false;
         var recargaRemotaEnCurso = false;
         var authObservadorActivo = false;
@@ -2140,11 +2057,6 @@
         }
         function nombreUsuarioActual() { return usuarioActual ? usuarioActual.nombre : 'Sistema'; }
 
-        async function generarHashPin(pin, salt) {
-            const buf = new TextEncoder().encode(String(pin) + '::' + salt);
-            const hash = await crypto.subtle.digest('SHA-256', buf);
-            return Array.from(new Uint8Array(hash)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
-        }
         function generarId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
         function generarHuellaPago() {
             const bytes = new Uint8Array(8);
@@ -2383,47 +2295,40 @@
             return copia;
         }
         /* ═══════════════════════════════════════════════════════════ */
-        /* @JS-USERS — Usuarios, sesión y PIN                           */
+        /* @JS-USERS — Usuarios, sesión y autorización                  */
         /* ═══════════════════════════════════════════════════════════ */
         function inicializarUsuariosSiEsNecesario() {
-            // En la v4.8 los usuarios viven en Firebase (/usuarios) y su PIN solo en este equipo.
+            // Los usuarios viven en Firebase (/usuarios); aquí solo se restaura la caché local.
             try {
                 const guardados = JSON.parse(localStorage.getItem('usuarios'));
                 usuarios = Array.isArray(guardados) ? guardados.filter(Boolean) : [];
             } catch (e) { console.error('Error leyendo usuarios locales:', e); usuarios = []; }
-            migrarCredencialesLocalesHeredadas();
+            limpiarCredencialesPinAntiguas();
+            limpiarRestosDePinEnUsuarios();
             return usuarios.length;
         }
-        // Trae el hash del PIN que las versiones anteriores guardaban dentro del registro de usuario
-        // y lo mueve al almacén de credenciales exclusivo de este equipo.
-        function migrarCredencialesLocalesHeredadas() {
+        // Limpia los restos de PIN que versiones anteriores guardaban dentro del registro de usuario.
+        function limpiarRestosDePinEnUsuarios() {
             try {
                 let cambios = 0;
                 usuarios.forEach(function(u) {
-                    if (!u || !u.pinHash || !u.salt) return;
-                    if (!obtenerCredencialPin(u.username)) {
-                        const todas = leerCredencialesLocales();
-                        todas[u.username] = {
-                            salt: u.salt, pinHash: u.pinHash,
-                            hashEsquema: u.hashEsquema || 'sha256',
-                            iteraciones: u.iteraciones || PBKDF2_ITERACIONES,
-                            actualizado: obtenerFechaHoraActual(), ultimoUso: null
-                        };
-                        guardarCredencialesLocales(todas);
+                    if (!u) return;
+                    if (u.pinHash || u.salt || u.hashEsquema || u.iteraciones || u.tienePin || u.requiereCambio) {
+                        delete u.pinHash;
+                        delete u.salt;
+                        delete u.hashEsquema;
+                        delete u.iteraciones;
+                        delete u.tienePin;
+                        delete u.requiereCambio;
+                        cambios++;
                     }
-                    delete u.pinHash;
-                    delete u.salt;
-                    delete u.hashEsquema;
-                    delete u.iteraciones;
-                    u.tienePin = true;
-                    cambios++;
                 });
                 if (cambios > 0) {
                     guardarUsuarios();
-                    console.log('🔐 ' + cambios + ' credencial(es) de PIN movidas al almacén local del equipo.');
+                    console.log('🧹 ' + cambios + ' registro(s) de usuario limpiados de datos de PIN.');
                 }
                 return cambios;
-            } catch (e) { console.warn('No se pudieron migrar las credenciales heredadas:', e); return 0; }
+            } catch (e) { console.warn('No se pudieron limpiar los restos de PIN:', e); return 0; }
         }
         function guardarUsuarios() { try { localStorage.setItem('usuarios', JSON.stringify(usuarios)); } catch (e) { console.warn('No se pudo cachear usuarios:', e); } }
         function encontrarUsuario(username) { return usuarios.find(function(u) { return u && u.username === username; }) || null; }
@@ -2436,14 +2341,11 @@
         function usuariosRegistrados() { return usuarios.filter(function(u) { return u && correoDeUsuario(u); }); }
         function proximoUsuarioEsAdmin() { return usuariosRegistrados().length === 0; }
         function usuarioEstaActivo(u) { return !!u && u.activo !== false; }
-        // Crea el registro público del usuario y su credencial de PIN SOLO en este equipo.
-        async function crearUsuarioConPin(datos, pin) {
-            const salt = generarSalHex(16);
-            const pinHash = await generarHashPin(pin, salt);
-            guardarCredencialPin(datos.username, salt, pinHash, { ultimoUso: obtenerFechaHoraActual() });
+        // Crea el registro público del usuario. Sin PIN: el acceso lo verifica Google.
+        function crearUsuarioAutorizado(datos) {
             return {
-                username: datos.username, nombre: datos.nombre, email: correoDeUsuario(datos), rol: datos.rol || 'Operador',
-                admin: datos.admin === true, activo: true, tienePin: true,
+                username: datos.username, nombre: datos.nombre, email: correoDeUsuario(datos),
+                rol: datos.rol || 'Operador', admin: datos.admin === true, activo: true,
                 authProvider: PROVEEDOR_LOGIN,
                 fechaCreacion: obtenerFechaActual(), ultimoAcceso: null
             };
@@ -2477,31 +2379,6 @@
             } catch (e) { console.warn('Error validando la sesión:', e); return null; }
         }
         function limpiarSesionLocal() { try { localStorage.removeItem(PREF_SESION); } catch (e) {} }
-
-        // ─────── @JS-BLOQUEO-PIN — límite de intentos ───────
-        function leerIntentosPin() {
-            try { return JSON.parse(localStorage.getItem(PREF_INTENTOS_PIN)) || {}; } catch (e) { return {}; }
-        }
-        function escribirIntentosPin(o) { try { localStorage.setItem(PREF_INTENTOS_PIN, JSON.stringify(o)); } catch (e) {} }
-        function estadoBloqueo(clave) {
-            const reg = leerIntentosPin()[clave];
-            if (!reg || !reg.bloqueadoHasta) return { bloqueado: false, intentos: reg ? (reg.intentos || 0) : 0, minutos: 0 };
-            if (Date.now() < reg.bloqueadoHasta) return { bloqueado: true, intentos: reg.intentos || 0, minutos: Math.max(1, Math.ceil((reg.bloqueadoHasta - Date.now()) / 60000)) };
-            return { bloqueado: false, intentos: reg.intentos || 0, minutos: 0 };
-        }
-        function registrarIntentoFallidoPin(clave) {
-            const todos = leerIntentosPin();
-            const reg = todos[clave] || { intentos: 0, bloqueadoHasta: 0 };
-            reg.intentos = (reg.intentos || 0) + 1;
-            if (reg.intentos >= MAX_INTENTOS_PIN) { reg.bloqueadoHasta = Date.now() + BLOQUEO_INTENTOS_MS; reg.intentos = 0; }
-            todos[clave] = reg;
-            escribirIntentosPin(todos);
-            return estadoBloqueo(clave);
-        }
-        function limpiarIntentosFallidosPin(clave) {
-            const todos = leerIntentosPin();
-            if (todos[clave]) { delete todos[clave]; escribirIntentosPin(todos); }
-        }
 
         async function cerrarSesion() {
             const usuarioAnterior = usuarioActual ? usuarioActual.nombre : 'Desconocido';
@@ -5483,8 +5360,8 @@
         }
 
         /* ─── USUARIOS ─── */
-        // ─────── @JS-USUARIOS-ADMIN (v4.8) ───────
-        // El correo de Google es la identidad; el PIN es solo una barrera local del equipo.
+        // ─────── @JS-USUARIOS-ADMIN (v4.8.6) ───────
+        // El correo de Google es la identidad y el único método de acceso.
         function rolesDisponibles() { return ['Administrador', 'Operador']; }
         function adminsActivos() { return usuarios.filter(function(u) { return u && u.admin === true && usuarioEstaActivo(u); }); }
         function renderizarUsuarios() {
@@ -5494,33 +5371,28 @@
                 const nombre = u.nombre || 'Sin nombre';
                 const correo = correoDeUsuario(u) || '(sin correo: no puede entrar)';
                 const estado = usuarioEstaActivo(u) ? '' : ' <span class="badge-operador" style="background:var(--color-rojo);color:#fff;">Desactivado</span>';
-                const pinTxt = usuarioTienePinLocal(u.username) ? 'PIN configurado en este equipo' : 'Sin PIN en este equipo';
-                return '<div class="usuario-item ' + (u.admin ? 'admin' : '') + '"><div class="avatar">' + escapeHTML(nombre.charAt(0).toUpperCase()) + '</div><div class="info"><div class="nombre">' + escapeHTML(nombre) + ' <span class="' + (u.admin ? 'badge-admin' : 'badge-operador') + '">' + escapeHTML(u.rol || 'Operador') + '</span>' + estado + '</div><div class="detalles">' + escapeHTML(correo) + ' · ' + escapeHTML(pinTxt) + (u.ultimoAcceso ? ' · Último acceso: ' + escapeHTML(u.ultimoAcceso) : '') + '</div></div><div class="acciones"><button class="btn-editar-usuario" onclick="abrirEditarUsuario(\'' + escapeAtributoJS(u.username) + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-reset-pin" onclick="resetearPinUsuario(\'' + escapeAtributoJS(u.username) + '\')" title="Resetear PIN local"><i class="fas fa-key"></i></button>' + (usuarioEstaActivo(u) ? '<button class="btn-mini" onclick="alternarEstadoUsuario(\'' + escapeAtributoJS(u.username) + '\')" title="Desactivar acceso"><i class="fas fa-user-slash"></i></button>' : '<button class="btn-mini" onclick="alternarEstadoUsuario(\'' + escapeAtributoJS(u.username) + '\')" title="Reactivar acceso"><i class="fas fa-user-check"></i></button>') + '<button class="btn-eliminar-usuario" onclick="eliminarUsuario(\'' + escapeAtributoJS(u.username) + '\')" title="Quitar del CRM"><i class="fas fa-trash"></i></button></div></div>';
+                const acceso = correoDeUsuario(u) ? 'entra con Google' : 'SIN CORREO: no puede entrar';
+                return '<div class="usuario-item ' + (u.admin ? 'admin' : '') + '"><div class="avatar">' + escapeHTML(nombre.charAt(0).toUpperCase()) + '</div><div class="info"><div class="nombre">' + escapeHTML(nombre) + ' <span class="' + (u.admin ? 'badge-admin' : 'badge-operador') + '">' + escapeHTML(u.rol || 'Operador') + '</span>' + estado + '</div><div class="detalles">' + escapeHTML(correo) + ' · ' + escapeHTML(acceso) + (u.ultimoAcceso ? ' · Último acceso: ' + escapeHTML(u.ultimoAcceso) : '') + '</div></div><div class="acciones"><button class="btn-editar-usuario" onclick="abrirEditarUsuario(\'' + escapeAtributoJS(u.username) + '\')" title="Editar"><i class="fas fa-edit"></i></button>' + (usuarioEstaActivo(u) ? '<button class="btn-mini" onclick="alternarEstadoUsuario(\'' + escapeAtributoJS(u.username) + '\')" title="Desactivar acceso"><i class="fas fa-user-slash"></i></button>' : '<button class="btn-mini" onclick="alternarEstadoUsuario(\'' + escapeAtributoJS(u.username) + '\')" title="Reactivar acceso"><i class="fas fa-user-check"></i></button>') + '<button class="btn-eliminar-usuario" onclick="eliminarUsuario(\'' + escapeAtributoJS(u.username) + '\')" title="Quitar del CRM"><i class="fas fa-trash"></i></button></div></div>';
             }).join('');
         }
         function mostrarFormularioNuevoUsuario() {
             if (!esAdmin()) { mostrarNotificacion('Solo administradores pueden gestionar usuarios.', 'warning'); return; }
             const opcionesRol = rolesDisponibles().map(function(r) { return '<option value="' + r + '"' + (r === 'Operador' ? ' selected' : '') + '>' + r + '</option>'; }).join('');
-            abrirModal('Autorizar nuevo usuario', '<form id="form-nuevo-usuario"><div class="login-info visible" style="display:block;"><strong>El acceso se autoriza por correo de Google</strong><br>Escribe el correo exacto con el que esa persona inicia sesión en Google. Sin ese correo, la base de datos rechazará su acceso.</div><div class="form-grupo"><label>Nombre completo *</label><input type="text" id="nuevo-usuario-nombre" required></div><div class="form-grupo"><label>Correo de Google *</label><input type="email" id="nuevo-usuario-email" required placeholder="nombre@gmail.com"></div><div class="form-grupo"><label>Rol *</label><select id="nuevo-usuario-rol">' + opcionesRol + '</select></div><div class="form-grupo"><label>PIN inicial para este equipo (4 a 6 dígitos) *</label><input type="password" id="nuevo-usuario-pin" required maxlength="6" inputmode="numeric"></div><div class="form-grupo"><label>Confirmar PIN *</label><input type="password" id="nuevo-usuario-pin2" required maxlength="6" inputmode="numeric"></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-nuevo-usuario-cancelar">Cancelar</button><button type="submit" class="btn-primario">Autorizar usuario</button></div></form>');
+            abrirModal('Autorizar nuevo usuario', '<form id="form-nuevo-usuario"><div class="login-info visible" style="display:block;"><strong>El acceso se autoriza por correo de Google</strong><br>Escribe el correo exacto con el que esa persona inicia sesión en Google. Sin ese correo, la base de datos rechazará su acceso. No hay PIN ni contraseña adicional.</div><div class="form-grupo"><label>Nombre completo *</label><input type="text" id="nuevo-usuario-nombre" required></div><div class="form-grupo"><label>Correo de Google *</label><input type="email" id="nuevo-usuario-email" required placeholder="nombre@gmail.com"></div><div class="form-grupo"><label>Rol *</label><select id="nuevo-usuario-rol">' + opcionesRol + '</select></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-nuevo-usuario-cancelar">Cancelar</button><button type="submit" class="btn-primario">Autorizar usuario</button></div></form>');
             document.getElementById('btn-nuevo-usuario-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
             document.getElementById('form-nuevo-usuario').addEventListener('submit', async function(e) {
                 e.preventDefault(); e.stopPropagation();
+                sanearCamposFormulario(['nuevo-usuario-nombre']);
                 const nombre = document.getElementById('nuevo-usuario-nombre').value.trim();
                 const email = document.getElementById('nuevo-usuario-email').value.trim().toLowerCase();
                 const rol = document.getElementById('nuevo-usuario-rol').value;
-                const pin = document.getElementById('nuevo-usuario-pin').value.trim();
-                const pin2 = document.getElementById('nuevo-usuario-pin2').value.trim();
-                if (!nombre || !email || !pin) { mostrarNotificacion('Campos obligatorios faltantes', 'warning'); return; }
+                if (!nombre || !email) { mostrarNotificacion('Campos obligatorios faltantes', 'warning'); return; }
                 if (!esCorreoValido(email)) { mostrarNotificacion('El correo no tiene un formato válido.', 'warning'); return; }
                 if (encontrarUsuarioPorCorreo(email)) { mostrarNotificacion('Ese correo ya está autorizado.', 'warning'); return; }
-                if (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) { mostrarNotificacion('El PIN debe tener de 4 a 6 dígitos.', 'warning'); return; }
-                if (pin !== pin2) { mostrarNotificacion('Los PINs no coinciden', 'warning'); return; }
                 const base = email.split('@')[0].replace(/[^a-z0-9._-]/g, '') || 'usuario';
                 let username = base, n = 2;
                 while (encontrarUsuario(username)) { username = base + n; n++; }
-                let nuevo;
-                try { nuevo = await crearUsuarioConPin({ username: username, nombre: nombre, email: email, rol: rol, admin: rol === 'Administrador' }, pin); }
-                catch (err) { mostrarNotificacion('No se pudo cifrar el PIN en este navegador.', 'error'); return; }
+                const nuevo = crearUsuarioAutorizado({ username: username, nombre: nombre, email: email, rol: rol, admin: rol === 'Administrador' });
                 usuarios.push(nuevo);
                 guardarUsuarios();
                 const publicado = await subirRegistroUsuarios();
@@ -5579,46 +5451,6 @@
                 mostrarNotificacion((u.activo ? 'Acceso reactivado' : 'Acceso desactivado') + (ok ? '' : ' (solo en local)'), ok ? 'success' : 'warning');
             });
         }
-        function resetearPinUsuario(username) {
-            if (!esAdmin()) { mostrarNotificacion('Solo administradores pueden gestionar usuarios.', 'warning'); return; }
-            const u = encontrarUsuario(username); if (!u) return;
-            const propio = usuarioActual && usuarioActual.username === username;
-            abrirModal('Resetear PIN de ' + (u.nombre || username), '<form id="form-reset-pin"><div class="login-info visible" style="display:block;">El PIN es la barrera local de <strong>este equipo</strong>. Se invalidará el PIN actual y la persona deberá definir uno nuevo en su siguiente acceso.</div>' + (propio ? '' : '<div class="form-grupo"><label>Tu PIN de administrador (para autorizar) *</label><input type="password" id="reset-pin-admin" required maxlength="6" inputmode="numeric"></div>') + '<div class="form-grupo"><label>Nuevo PIN (4 a 6 dígitos) *</label><input type="password" id="reset-pin" required maxlength="6" inputmode="numeric"></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-reset-pin-cancelar">Cancelar</button><button type="submit" class="btn-primario">Asignar</button></div></form>');
-            document.getElementById('btn-reset-pin-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
-            document.getElementById('form-reset-pin').addEventListener('submit', async function(e) {
-                e.preventDefault(); e.stopPropagation();
-                const pin = document.getElementById('reset-pin').value.trim();
-                if (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) { mostrarNotificacion('El PIN debe tener de 4 a 6 dígitos.', 'warning'); return; }
-                if (!propio) {
-                    // v4.8: cambiar el PIN de otra persona exige reautenticar al administrador.
-                    const pinAdmin = (document.getElementById('reset-pin-admin').value || '').trim();
-                    const credAdmin = obtenerCredencialPin(usuarioActual.username);
-                    if (!credAdmin) { mostrarNotificacion('Tu usuario no tiene PIN configurado en este equipo.', 'error'); return; }
-                    const verificacion = await verificarPin(pinAdmin, credAdmin);
-                    if (!verificacion.ok) { mostrarNotificacion('Tu PIN de administrador es incorrecto.', 'error'); return; }
-                }
-                const salt = generarSalHex(16);
-                let nh;
-                try { nh = await generarHashPin(pin, salt); } catch (err) { mostrarNotificacion('No se pudo cifrar el PIN.', 'error'); return; }
-                guardarCredencialPin(username, salt, nh);
-                if (propio) {
-                    u.tienePin = true;
-                    guardarUsuarios();
-                } else {
-                    // El PIN de otra persona solo puede existir en SU equipo: aquí se invalida el local.
-                    eliminarCredencialPin(username);
-                    u.tienePin = false;
-                    u.requiereCambio = true;
-                    guardarUsuarios();
-                }
-                limpiarIntentosFallidosPin(username);
-                await subirRegistroUsuarios();
-                limpiarIntentosFallidosPin(username);
-                registrarHistorial('usuario', 'editar', 'Se reseteó el PIN de "' + (u.nombre || username) + '"', { nombre: u.nombre });
-                guardarDatos(); cerrarModal(); renderizarUsuarios();
-                mostrarNotificacion('PIN actualizado', 'success');
-            });
-        }
         function eliminarUsuario(username) {
             if (!esAdmin()) { mostrarNotificacion('Solo administradores pueden gestionar usuarios.', 'warning'); return; }
             const u = encontrarUsuario(username); if (!u) return;
@@ -5638,44 +5470,6 @@
                     guardarDatos(); renderizarUsuarios();
                     mostrarNotificacion('Acceso revocado', 'success');
                 }
-            });
-        }
-        function abrirCambiarMiPin() {
-            if (!usuarioActual) return;
-            const cred = obtenerCredencialPin(usuarioActual.username);
-            const tienePinActual = !!cred;
-            const campoActual = tienePinActual
-                ? '<div class="form-grupo"><label>PIN actual *</label><input type="password" id="cambio-pin-actual" required maxlength="6" inputmode="numeric"></div>'
-                : '<div class="login-info visible" style="display:block;">Este equipo todavía no tiene un PIN para tu usuario. Define uno nuevo para proteger el acceso local.</div><input type="hidden" id="cambio-pin-actual" value="">';
-            abrirModal('Cambiar mi PIN', '<form id="form-cambiar-pin">' + campoActual + '<div class="form-grupo"><label>Nuevo PIN (4 a 6 dígitos) *</label><input type="password" id="cambio-pin-nuevo" required maxlength="6" inputmode="numeric"></div><div class="form-grupo"><label>Confirmar *</label><input type="password" id="cambio-pin-nuevo2" required maxlength="6" inputmode="numeric"></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-cambiar-pin-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (tienePinActual ? 'Cambiar PIN' : 'Crear PIN') + '</button></div></form>');
-            document.getElementById('btn-cambiar-pin-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
-            document.getElementById('form-cambiar-pin').addEventListener('submit', async function(e) {
-                e.preventDefault(); e.stopPropagation();
-                const actual = (document.getElementById('cambio-pin-actual').value || '').trim();
-                const n1 = (document.getElementById('cambio-pin-nuevo').value || '').trim();
-                const n2 = (document.getElementById('cambio-pin-nuevo2').value || '').trim();
-                const u = encontrarUsuario(usuarioActual.username); if (!u) return;
-                if (tienePinActual) {
-                    const credActual = obtenerCredencialPin(u.username);
-                    if (!credActual) { mostrarNotificacion('El PIN de este equipo ya no existe. Vuelve a abrir esta ventana.', 'warning'); return; }
-                    const verificacion = await verificarPin(actual, credActual);
-                    if (!verificacion.ok) { mostrarNotificacion('PIN actual incorrecto', 'error'); return; }
-                }
-                if (n1.length < 4 || n1.length > 6 || !/^\d+$/.test(n1)) { mostrarNotificacion('El PIN debe tener de 4 a 6 dígitos.', 'warning'); return; }
-                if (n1 !== n2) { mostrarNotificacion('Los PINs no coinciden.', 'warning'); return; }
-                if (n1 === PIN_ADMIN_INICIAL) { mostrarNotificacion('No uses el PIN 1234 por seguridad.', 'warning'); return; }
-                const salt = generarSalHex(16);
-                let nh;
-                try { nh = await generarHashPin(n1, salt); } catch (err) { mostrarNotificacion('No se pudo cifrar el PIN.', 'error'); return; }
-                guardarCredencialPin(u.username, salt, nh, { ultimoUso: obtenerFechaHoraActual() });
-                u.tienePin = true;
-                u.requiereCambio = false;
-                guardarUsuarios();
-                limpiarIntentosFallidosPin(u.username);
-                await subirRegistroUsuarios();
-                guardarDatos(); cerrarModal();
-                registrarHistorial('usuario', 'editar', 'El usuario "' + u.nombre + '" actualizó el PIN de este equipo', { nombre: u.nombre });
-                mostrarNotificacion('PIN actualizado en este equipo', 'success');
             });
         }
 
@@ -5715,14 +5509,14 @@
         /* ═══════════════════════════════════════════════════════════ */
         /* @JS-GOOGLE-AUTH (v4.8) — Acceso con Firebase Authentication   */
         /* ═══════════════════════════════════════════════════════════ */
-        var PASOS_LOGIN = ['login-paso-google', 'login-paso-vincular', 'login-paso-pin', 'login-paso-nuevo-pin', 'login-paso-denegado'];
+        var PASOS_LOGIN = ['login-paso-google', 'login-paso-vincular', 'login-paso-denegado'];
         function elLogin(id) { return document.getElementById(id); }
         function mostrarPasoLogin(paso) {
             PASOS_LOGIN.forEach(function(p) {
                 const el = elLogin(p);
                 if (el) el.classList.toggle('activo', p === paso);
             });
-            const foco = { 'login-paso-pin': 'login-pin-input', 'login-paso-nuevo-pin': 'login-pin-nuevo', 'login-paso-vincular': 'vincular-nombre' }[paso];
+            const foco = { 'login-paso-vincular': 'vincular-nombre' }[paso];
             if (foco) setTimeout(function() { const el = elLogin(foco); if (el) el.focus(); }, 120);
         }
         function errorLogin(id, mensaje) {
@@ -5877,7 +5671,6 @@
                 obj[clave] = {
                     username: u.username, nombre: u.nombre, email: correoDeUsuario(u),
                     rol: u.rol || 'Operador', admin: u.admin === true, activo: usuarioEstaActivo(u),
-                    tienePin: usuarioTienePinLocal(u.username),
                     authProvider: PROVEEDOR_LOGIN,
                     fechaCreacion: u.fechaCreacion || null,
                     ultimoAcceso: u.ultimoAcceso || null
@@ -5896,11 +5689,12 @@
                     return u;
                 }).filter(Boolean) : [];
                 if (lista.length > 0) {
-                    // Se conserva cualquier credencial de PIN que ya viviera en este equipo.
-                    const locales = leerCredencialesLocales();
                     usuarios = lista.map(function(u) {
-                        const cred = locales[u.username];
-                        if (cred && cred.pinHash) u.tienePin = true;
+                        // Se descartan los restos de PIN de versiones anteriores.
+                        delete u.tienePin;
+                        delete u.requiereCambio;
+                        delete u.pinHash;
+                        delete u.salt;
                         return u;
                     });
                     guardarUsuarios();
@@ -5994,14 +5788,9 @@
                 mostrarPasoLogin('login-paso-denegado');
                 return;
             }
-            usuarioPendienteLogin = usuario;
+            // Acceso directo: Google ya verificó la identidad y el correo está autorizado.
             esPrimerAdminAbsoluto = false;
-            // El PIN es local del equipo: si este equipo todavía no lo tiene, se pide crearlo.
-            if (usuario.requiereCambio || !usuarioTienePinLocal(usuario.username)) {
-                irAPasoNuevoPin(usuario, !!usuario.requiereCambio);
-                return;
-            }
-            irAPasoPin(usuario);
+            entrarDirectoConGoogle(usuario);
         }
 
         function iniciarSesionAplicacion(registrarEvento) {
@@ -6016,137 +5805,30 @@
             iniciarAplicacion();
         }
 
-        function irAPasoPin(usuario) {
+        // ─────── @JS-ACCESO-DIRECTO (v4.8.6) ───────
+        // El PIN se eliminó por decisión de producto: la identidad la verifica Google
+        // y cada persona es responsable de proteger su cuenta en su dispositivo.
+        // Entrar es: tener el correo autorizado en /usuarios y la cuenta activa.
+        function entrarDirectoConGoogle(usuario) {
             usuarioPendienteLogin = usuario;
             esPrimerLoginAdmin = false;
-            if (usuario.requiereCambio) { irAPasoNuevoPin(usuario, true); return; }
-            mostrarPasoLogin('login-paso-pin');
-            const el = elLogin('login-usuario-elegido');
-            if (el) {
-                el.className = 'login-usuario-elegido ' + (usuario.admin ? 'admin' : '');
-                el.innerHTML = '<div class="avatar">' + escapeHTML((usuario.nombre || 'U').charAt(0).toUpperCase()) + '</div><div><div style="font-weight:600;">' + escapeHTML(usuario.nombre || 'Usuario') + '</div><div style="font-size:11px;">' + escapeHTML(correoDeUsuario(usuario) || usuario.rol || '') + '</div></div>';
-            }
-            const info = elLogin('login-info');
-            if (info) { info.classList.remove('visible'); info.textContent = ''; }
-            const pinInput = elLogin('login-pin-input');
-            if (pinInput) pinInput.value = '';
-            errorLogin('login-error', null);
-            actualizarAvisoBloqueo(usuario.username);
-        }
-        function actualizarAvisoBloqueo(clave) {
-            const aviso = elLogin('login-bloqueo-aviso');
-            if (!aviso) return false;
-            const estado = estadoBloqueo(clave);
-            const btn = elLogin('login-btn-ingresar');
-            if (estado.bloqueado) {
-                aviso.textContent = 'Demasiados intentos fallidos. Vuelve a intentarlo en ' + estado.minutos + ' minuto(s).';
-                aviso.style.display = 'block';
-                if (btn) btn.disabled = true;
-                return true;
-            }
-            const restantes = MAX_INTENTOS_PIN - estado.intentos;
-            if (estado.intentos > 0) {
-                aviso.textContent = 'PIN incorrecto. Te quedan ' + Math.max(0, restantes) + ' intento(s) antes del bloqueo temporal.';
-                aviso.style.display = 'block';
-            } else { aviso.textContent = ''; aviso.style.display = 'none'; }
-            if (btn) btn.disabled = false;
-            return false;
-        }
-        function irAPasoNuevoPin(usuario, esCambioObligatorio) {
-            usuarioPendienteLogin = usuario;
-            esPrimerLoginAdmin = !!esCambioObligatorio;
-            mostrarPasoLogin('login-paso-nuevo-pin');
-            pintarCuentaLogin('nuevo-pin-cuenta', { email: correoDeUsuario(usuario), nombre: usuario.nombre }, usuario.rol || 'Usuario');
-            const info = elLogin('login-info-nuevo-pin');
-            if (info) {
-                info.innerHTML = esCambioObligatorio
-                    ? 'Tu PIN fue restablecido por un administrador. Define uno nuevo de 4 a 6 dígitos.'
-                    : 'Este equipo todavía no tiene un PIN configurado. Define uno de 4 a 6 dígitos para proteger el acceso local.';
-            }
-            errorLogin('login-error-nuevo-pin', null);
-            const p1 = elLogin('login-pin-nuevo'), p2 = elLogin('login-pin-nuevo-confirmar');
-            if (p1) p1.value = '';
-            if (p2) p2.value = '';
-        }
-
-        async function intentarLogin() {
-            if (!usuarioPendienteLogin) return;
-            const pin = (elLogin('login-pin-input').value || '').trim();
-            const clave = usuarioPendienteLogin.username;
-            if (actualizarAvisoBloqueo(clave)) return;
-            if (!pin) { errorLogin('login-error', 'Ingresa tu PIN.'); return; }
-            errorLogin('login-error', null);
-            const credLocal = obtenerCredencialPin(clave);
-            if (!usuarioTienePinLocal(clave) || !credLocal) { irAPasoNuevoPin(usuarioPendienteLogin, false); return; }
-            const resultado = await verificarPin(pin, credLocal);
-            if (resultado.ok) {
-                limpiarIntentosFallidosPin(clave);
-                if (resultado.migrar) {
-                    // Migración transparente del PIN heredado (SHA-256) a PBKDF2, solo en este equipo.
-                    try {
-                        const saltNuevo = generarSalHex(16);
-                        const nuevoHash = await generarHashPin(pin, saltNuevo);
-                        guardarCredencialPin(clave, saltNuevo, nuevoHash, { ultimoUso: obtenerFechaHoraActual() });
-                        console.log('🔐 PIN migrado a PBKDF2 (solo local).');
-                    } catch (e) { console.warn('No se pudo migrar el PIN:', e); }
-                }
-                registrarUltimoAcceso(clave);
-                iniciarSesionAplicacion(true);
-                return;
-            }
-            const estado = registrarIntentoFallidoPin(clave);
-            errorLogin('login-error', estado.bloqueado ? 'Demasiados intentos fallidos. Acceso bloqueado temporalmente.' : 'PIN incorrecto.');
-            const input = elLogin('login-pin-input');
-            if (input) { input.value = ''; input.focus(); }
-            actualizarAvisoBloqueo(clave);
-        }
-
-        async function guardarNuevoPinLogin() {
-            if (!usuarioPendienteLogin) return;
-            const pin1 = (elLogin('login-pin-nuevo').value || '').trim();
-            const pin2 = (elLogin('login-pin-nuevo-confirmar').value || '').trim();
-            errorLogin('login-error-nuevo-pin', null);
-            if (!pin1 || pin1.length < 4 || pin1.length > 6) { errorLogin('login-error-nuevo-pin', 'El PIN debe tener de 4 a 6 dígitos.'); return; }
-            if (!/^\d+$/.test(pin1)) { errorLogin('login-error-nuevo-pin', 'El PIN solo puede contener números.'); return; }
-            if (pin1 !== pin2) { errorLogin('login-error-nuevo-pin', 'Los PINs no coinciden.'); return; }
-            if (pin1 === PIN_ADMIN_INICIAL) { errorLogin('login-error-nuevo-pin', 'No uses el PIN 1234 por seguridad.'); return; }
-            const usuario = usuarioPendienteLogin;
-            const salt = generarSalHex(16);
-            let nuevoHash;
-            try { nuevoHash = await generarHashPin(pin1, salt); }
-            catch (e) { errorLogin('login-error-nuevo-pin', 'Este navegador no puede cifrar el PIN (WebCrypto no disponible). Usa Chrome, Edge o Safari actualizados.'); return; }
-            // El PIN vive únicamente en este equipo; en la nube solo se marca que este equipo ya tiene uno.
-            guardarCredencialPin(usuario.username, salt, nuevoHash, { ultimoUso: obtenerFechaHoraActual() });
-            usuario.tienePin = true;
-            usuario.requiereCambio = false;
-            usuario.ultimoAcceso = obtenerFechaHoraActual();
-            const idx = usuarios.findIndex(function(u) { return u && u.username === usuario.username; });
-            if (idx !== -1) usuarios[idx] = usuario; else usuarios.push(usuario);
-            guardarUsuarios();
-            await subirRegistroUsuarios();
-            limpiarIntentosFallidosPin(usuario.username);
+            registrarUltimoAcceso(usuario.username);
             iniciarSesionAplicacion(true);
         }
 
+        // Registra la cuenta de Google que entra por primera vez como administrador del CRM.
         async function guardarVinculacionAdmin() {
             if (!usuarioPendienteGoogle) return;
             sanearCamposFormulario(['vincular-nombre']);
             const nombre = (elLogin('vincular-nombre').value || '').trim();
-            const pin1 = (elLogin('vincular-pin').value || '').trim();
-            const pin2 = (elLogin('vincular-pin2').value || '').trim();
             errorLogin('login-error-vincular', null);
             if (!nombre) { errorLogin('login-error-vincular', 'Escribe tu nombre completo.'); return; }
-            if (pin1.length < 4 || pin1.length > 6 || !/^\d+$/.test(pin1)) { errorLogin('login-error-vincular', 'El PIN debe tener de 4 a 6 dígitos numéricos.'); return; }
-            if (pin1 !== pin2) { errorLogin('login-error-vincular', 'Los PINs no coinciden.'); return; }
-            if (pin1 === PIN_ADMIN_INICIAL) { errorLogin('login-error-vincular', 'No uses el PIN 1234 por seguridad.'); return; }
             const base = usuarioPendienteGoogle.email.split('@')[0].replace(/[^a-z0-9._-]/g, '') || 'admin';
             let username = base;
             let n = 2;
             while (encontrarUsuario(username)) { username = base + n; n++; }
-            let nuevo;
-            try {
-                nuevo = await crearUsuarioConPin({ username: username, nombre: nombre, email: usuarioPendienteGoogle.email, rol: 'Administrador', admin: true }, pin1);
-            } catch (e) { errorLogin('login-error-vincular', 'No se pudo cifrar el PIN en este navegador.'); return; }
+            const nuevo = crearUsuarioAutorizado({ username: username, nombre: nombre, email: usuarioPendienteGoogle.email, rol: 'Administrador', admin: true });
+            nuevo.ultimoAcceso = obtenerFechaHoraActual();
             usuarios.push(nuevo);
             guardarUsuarios();
             const publicado = await subirRegistroUsuarios();
@@ -6320,7 +6002,6 @@
             btn = document.getElementById('btn-nuevo-contrato'); if (btn) btn.addEventListener('click', function() { if (clientes.length === 0) { mostrarNotificacion('Registra un cliente primero', 'warning'); return; } mostrarFormularioContrato(null); });
             btn = document.getElementById('btn-logout'); if (btn) btn.addEventListener('click', cerrarSesion);
             btn = document.getElementById('btn-cambiar-usuario'); if (btn) btn.addEventListener('click', cerrarSesion);
-            btn = document.getElementById('btn-cambiar-mi-pin'); if (btn) btn.addEventListener('click', abrirCambiarMiPin);
             btn = document.getElementById('btn-nuevo-usuario'); if (btn) btn.addEventListener('click', mostrarFormularioNuevoUsuario);
             btn = document.getElementById('filtro-estatus-paquete'); if (btn) btn.addEventListener('change', renderizarPaquetes);
             btn = document.getElementById('orden-paquetes'); if (btn) btn.addEventListener('change', renderizarPaquetes);
@@ -6390,7 +6071,7 @@
             btn = document.getElementById('btn-exportar-datos'); if (btn) btn.addEventListener('click', function() {
                 if (!esAdmin()) { mostrarNotificacion('Solo administradores pueden exportar la base completa.', 'warning'); return; }
                 try {
-                    // v4.8: los hashes y sales de los PIN ya no salen del equipo.
+                    // El respaldo exportado no incluye credenciales locales de ningún tipo.
                     const usuariosSinSecretos = usuarios.map(function(u) {
                         return { username: u.username, nombre: u.nombre, email: correoDeUsuario(u), rol: u.rol, admin: u.admin === true, activo: usuarioEstaActivo(u), fechaCreacion: u.fechaCreacion, ultimoAcceso: u.ultimoAcceso };
                     });
@@ -6478,21 +6159,13 @@
         }
         (function conectarListenersLogin() {
             var btn;
-            // ── Paso 1: Google ──
+            // ── Paso 1: Google (único método de acceso) ──
             btn = document.getElementById('btn-login-google'); if (btn) btn.addEventListener('click', function() { iniciarSesionConGoogle(); });
             // ── Paso 2: vinculación del primer administrador ──
             btn = document.getElementById('login-btn-guardar-vincular'); if (btn) btn.addEventListener('click', guardarVinculacionAdmin);
             btn = document.getElementById('login-btn-cancelar-vincular'); if (btn) btn.addEventListener('click', async function() { try { if (auth) await auth.signOut(); } catch (e) {} volverAPasoUsuario(); });
-            btn = document.getElementById('vincular-pin2'); if (btn) btn.addEventListener('keypress', function(e) { if (e.key === 'Enter') guardarVinculacionAdmin(); });
-            // ── Paso 3: PIN ──
-            btn = document.getElementById('login-btn-cancelar'); if (btn) btn.addEventListener('click', async function() { try { if (auth) await auth.signOut(); } catch (e) {} volverAPasoUsuario(); });
-            btn = document.getElementById('login-btn-ingresar'); if (btn) btn.addEventListener('click', intentarLogin);
-            btn = document.getElementById('login-pin-input'); if (btn) btn.addEventListener('keypress', function(e) { if (e.key === 'Enter') intentarLogin(); });
-            // ── Paso 4: PIN nuevo ──
-            btn = document.getElementById('login-btn-cancelar-nuevo'); if (btn) btn.addEventListener('click', volverAPasoUsuario);
-            btn = document.getElementById('login-btn-guardar-pin'); if (btn) btn.addEventListener('click', guardarNuevoPinLogin);
-            btn = document.getElementById('login-pin-nuevo-confirmar'); if (btn) btn.addEventListener('keypress', function(e) { if (e.key === 'Enter') guardarNuevoPinLogin(); });
-            // ── Paso 5: acceso denegado ──
+            btn = document.getElementById('vincular-nombre'); if (btn) btn.addEventListener('keypress', function(e) { if (e.key === 'Enter') guardarVinculacionAdmin(); });
+            // ── Paso 3: acceso denegado ──
             btn = document.getElementById('login-btn-denegado-salir'); if (btn) btn.addEventListener('click', async function() { try { if (auth) await auth.signOut(); } catch (e) {} volverAPasoUsuario(); });
         })();
         window.addEventListener('error', function(ev) { console.error('⚠️ Error global:', ev.message, 'en', ev.filename, 'línea', ev.lineno); });
