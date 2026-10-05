@@ -1079,8 +1079,10 @@
                 <div class="login-nota">Solicita a un administrador del CRM que autorice tu correo desde Configuración → Gestión de usuarios. Después vuelve a intentar el acceso.</div>
             </div>
             <div class="login-footer">
-                v4.8 · Software diseñado por <strong>JFR MEDIA</strong><br>
-                Acceso restringido a personal autorizado
+                <a href="#" id="login-btn-diagnostico" style="color:var(--color-texto-secundario);text-decoration:underline;">Ver diagnóstico de este dispositivo</a>
+                <div id="login-diagnostico" style="display:none;text-align:left;margin-top:12px;padding:10px 12px;background-color:var(--color-bg-terciario);border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;"></div>
+                <div style="margin-top:10px;">v4.8 · Software diseñado por <strong>JFR MEDIA</strong><br>
+                Acceso restringido a personal autorizado</div>
             </div>
         </div>
     </div>
@@ -1563,7 +1565,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '4.8';
-        var BUILD_APP = '2026-10-05.7';
+        var BUILD_APP = '2026-10-05.8';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -2532,6 +2534,7 @@
                     });
                 }
             } catch (e) { console.warn('No se pudo registrar el cierre de sesión en la nube:', e); }
+            limpiarAutenticacionPendiente();
             limpiarSesionLocal();
             try { if (auth) await auth.signOut(); } catch (e) { console.warn('Error cerrando sesión de Google:', e); }
             window.location.reload();
@@ -6066,39 +6069,157 @@
             return esIOS || esAndroid || esFirefox || pantallaChica;
         }
 
+        var MARCAREDIR = 'pda_autenticando_google';
+        var VENTANA_REDIRECT_MS = 10 * 60 * 1000;
+
+        // ─────── @JS-REDIRECT-MOVIL (v4.8.8) ───────
+        // El marcador se guarda en localStorage (no en sessionStorage) porque algunos navegadores
+        // móviles no conservan el sessionStorage al volver de Google, y entonces la app no sabía
+        // que venía de una redirección: volvía a mostrar el login y el usuario quedaba en un bucle.
+        function marcarAutenticacionPendiente() {
+            try {
+                localStorage.setItem(MARCAREDIR, JSON.stringify({ inicio: Date.now(), intento: leerIntentosRedirect() + 1 }));
+            } catch (e) {}
+        }
+        function limpiarAutenticacionPendiente() {
+            try { localStorage.removeItem(MARCAREDIR); } catch (e) {}
+        }
+        function infoAutenticacionPendiente() {
+            try {
+                const raw = localStorage.getItem(MARCAREDIR);
+                if (!raw) return null;
+                const info = JSON.parse(raw);
+                if (!info || !info.inicio) return null;
+                // Un marcador viejo se considera basura y se descarta.
+                if (Date.now() - info.inicio > VENTANA_REDIRECT_MS) { localStorage.removeItem(MARCAREDIR); return null; }
+                return info;
+            } catch (e) { return null; }
+        }
+        function leerIntentosRedirect() {
+            const info = (function() { try { return JSON.parse(localStorage.getItem(MARCAREDIR)); } catch (e) { return null; } })();
+            return (info && info.intento) ? info.intento : 0;
+        }
+
+        // ─────── @JS-DIAGNOSTICO-MOVIL (v4.8.8) ───────
+        // Detecta los entornos donde Google Auth falla por diseño (WebView de otra app,
+        // cookies de terceros bloqueadas) y muestra un diagnóstico en pantalla, ya que en
+        // un teléfono no se puede abrir la consola del navegador.
+        function estaEnWebView() {
+            const ua = (navigator.userAgent || '').toLowerCase();
+            if (/wv\)|webview|; wv/.test(ua)) return true;
+            if (/fban|fbav|fb_iab|instagram|line\/|whatsapp|twitter|micromessenger/.test(ua)) return true;
+            // iOS: si no hay Safari pero sí AppleWebKit, es un WebView incrustado.
+            if (/iphone|ipad|ipod/.test(ua) && !/safari/.test(ua)) return true;
+            return false;
+        }
+        function textoDiagnosticoLogin() {
+            const ua = navigator.userAgent || '';
+            const lineas = [
+                'compilacion : ' + (typeof BUILD_APP !== 'undefined' ? BUILD_APP : 'HTML ANTERIOR'),
+                'protocolo   : ' + location.protocol,
+                'host        : ' + location.host,
+                'webview app : ' + (estaEnWebView() ? 'SI  <-- Google Auth suele fallar aqui' : 'no'),
+                'requiere    : ' + (dispositivoRequiereRedirect() ? 'redireccion' : 'ventana emergente'),
+                'cookies     : ' + (navigator.cookieEnabled ? 'habilitadas' : 'BLOQUEADAS'),
+                'firebase    : ' + (typeof database !== 'undefined' && database ? 'ok' : 'sin conexion'),
+                'auth        : ' + (typeof auth !== 'undefined' && auth ? 'ok' : 'no disponible'),
+                'sesion      : ' + ((typeof auth !== 'undefined' && auth && auth.currentUser) ? auth.currentUser.email : 'ninguna'),
+                'pendiente   : ' + (infoAutenticacionPendiente() ? ('si (intento ' + leerIntentosRedirect() + ')') : 'no'),
+                'almacen     : ' + (typeof almacenListo !== 'undefined' && almacenListo ? (almacenFallback ? 'localStorage' : 'IndexedDB') : 'no listo'),
+                'navegador   : ' + ua.slice(0, 110)
+            ];
+            return lineas.join('\n');
+        }
+        function alternarDiagnosticoLogin() {
+            const caja = elLogin('login-diagnostico');
+            if (!caja) return;
+            if (caja.style.display === 'block') { caja.style.display = 'none'; return; }
+            caja.textContent = textoDiagnosticoLogin();
+            caja.style.display = 'block';
+        }
+
+        // Aviso inmediato si estamos en un entorno donde Google Auth no puede funcionar.
+        function avisarSiEntornoIncompatible() {
+            if (!estaEnWebView()) return false;
+            const aviso = elLogin('login-error-google');
+            if (aviso) {
+                aviso.innerHTML = '<strong>Estás abriendo la app dentro de otra aplicación.</strong><br><br>'
+                    + 'Google no permite iniciar sesión en navegadores incrustados (los que se abren desde WhatsApp, Instagram, Facebook o el correo).<br><br>'
+                    + '<strong>Copia esta dirección y ábrela en Chrome o Safari:</strong><br>'
+                    + '<span style="font-size:11px;word-break:break-all;">' + escapeHTML(location.href.split('?')[0]) + '</span>';
+                aviso.classList.add('visible');
+            }
+            return true;
+        }
+
         function iniciarSesionConRedirect(restaurarBoton) {
-            // Marca para saber que venimos de una redirección (evita mensajes confusos al volver).
-            try { sessionStorage.setItem('pda_redirigiendo_google', '1'); } catch (e) {}
+            // Marca persistente: sobrevive a la ida y vuelta por Google.
+            marcarAutenticacionPendiente();
             return auth.signInWithRedirect(crearProveedorGoogle()).then(function() {
                 if (typeof restaurarBoton === 'function') restaurarBoton();
                 return null;
             }).catch(function(e2) {
                 if (typeof restaurarBoton === 'function') restaurarBoton();
-                try { sessionStorage.removeItem('pda_redirigiendo_google'); } catch (e) {}
+                limpiarAutenticacionPendiente();
                 console.error('Error al redirigir a Google:', e2);
                 errorLogin('login-error-google', mensajeErrorAuth(e2));
                 return null;
             });
         }
 
+        // Espera a que la sesión quede establecida tras la redirección.
+        // No se rinde en el primer instante: el SDK puede tardar en restaurar la sesión.
+        async function esperarSesionDeRedireccion(maxMs) {
+            const limite = Date.now() + (maxMs || 25000);
+            const aviso = elLogin('login-error-google');
+            let mostrado = false;
+            while (Date.now() < limite) {
+                if (auth && auth.currentUser) return auth.currentUser;
+                if (!mostrado && aviso && Date.now() > limite - 20000) {
+                    aviso.textContent = 'Recuperando tu sesión de Google...';
+                    aviso.classList.add('visible');
+                    mostrado = true;
+                }
+                await new Promise(function(r) { setTimeout(r, 400); });
+            }
+            return (auth && auth.currentUser) ? auth.currentUser : null;
+        }
+
         // Se ejecuta al volver de la redirección de Google. Devuelve el usuario o null.
         async function procesarResultadoRedirect() {
             if (!auth || typeof auth.getRedirectResult !== 'function') return null;
-            const viniendo = (function() { try { return sessionStorage.getItem('pda_redirigiendo_google') === '1'; } catch (e) { return false; } })();
+            // Solo se limpia el marcador cuando ya hay sesión: si se limpia antes, se pierde
+            // la noción de que venimos de Google y la app vuelve al login.
             try {
                 const res = await auth.getRedirectResult();
-                try { sessionStorage.removeItem('pda_redirigiendo_google'); } catch (e) {}
                 if (res && res.user) {
                     console.log('✅ Sesión de Google recuperada tras la redirección.');
                     return res.user;
                 }
+                if (res && res.credential === null && res.operationType) {
+                    console.log('ℹ️ Redirección de Google procesada sin usuario nuevo.');
+                }
                 return null;
             } catch (error) {
-                try { sessionStorage.removeItem('pda_redirigiendo_google'); } catch (e) {}
                 console.error('Error al recuperar la sesión tras la redirección:', error);
-                if (viniendo) errorLogin('login-error-google', mensajeErrorAuth(error));
+                errorLogin('login-error-google', mensajeErrorAuth(error));
                 return null;
             }
+        }
+
+        // Diagnóstico del bucle de autenticación en móvil.
+        function mostrarAvisoBucleRedirect(intento) {
+            const aviso = elLogin('login-error-google');
+            if (aviso) {
+                aviso.innerHTML = '<strong>No se pudo completar el acceso con Google en este dispositivo.</strong><br><br>'
+                    + 'Se intentó ' + intento + ' veces. Causas habituales:<br>'
+                    + '1. El navegador está bloqueando las cookies de Google (modo incógnito o "Bloquear cookies de terceros"). Prueba en una ventana normal.<br>'
+                    + '2. Estás usando un navegador dentro de otra app (Instagram, Facebook, WhatsApp). Abre la dirección en Chrome o Safari directamente.<br>'
+                    + '3. La sesión de Google quedó a medias: cierra TODAS las pestañas de la app y vuelve a abrirla.<br><br>'
+                    + 'Si nada funciona, entra desde una computadora y usa ese equipo como referencia. Tus datos no se ven afectados.';
+                aviso.classList.add('visible');
+            }
+            mostrarNotificacion('No se pudo completar el acceso con Google. Revisa el aviso en pantalla.', 'error');
         }
 
         // ─────── @JS-USUARIOS-REGISTRO — /usuarios en Firebase es la fuente de verdad ───────
@@ -6170,6 +6291,12 @@
                     : 'Solo las cuentas de Google autorizadas en este CRM pueden entrar. La base de datos rechaza cualquier acceso sin sesión verificada.';
             }
             mostrarPasoLogin('login-paso-google');
+            // En pantalla se puede ver el diagnóstico sin abrir la consola (útil en móvil).
+            const cajaDiag = elLogin('login-diagnostico');
+            if (cajaDiag && cajaDiag.style.display === 'block') cajaDiag.textContent = textoDiagnosticoLogin();
+            // Si el entorno no permite Google Auth, se avisa de inmediato en lugar de dejar
+            // al usuario en un bucle de redirecciones.
+            avisarSiEntornoIncompatible();
         }
         function ocultarPantallaLogin() {
             const p = elLogin('pantalla-login');
@@ -6239,6 +6366,8 @@
         }
 
         function iniciarSesionAplicacion(registrarEvento) {
+            // Ya hay sesión establecida: el marcador de redirección dejó de ser necesario.
+            limpiarAutenticacionPendiente();
             usuarioActual = {
                 username: usuarioPendienteLogin.username, nombre: usuarioPendienteLogin.nombre,
                 rol: usuarioPendienteLogin.rol, admin: usuarioPendienteLogin.admin === true,
@@ -6610,6 +6739,8 @@
             btn = document.getElementById('login-btn-guardar-vincular'); if (btn) btn.addEventListener('click', guardarVinculacionAdmin);
             btn = document.getElementById('login-btn-cancelar-vincular'); if (btn) btn.addEventListener('click', async function() { try { if (auth) await auth.signOut(); } catch (e) {} volverAPasoUsuario(); });
             btn = document.getElementById('vincular-nombre'); if (btn) btn.addEventListener('keypress', function(e) { if (e.key === 'Enter') guardarVinculacionAdmin(); });
+            // Diagnóstico visible en el propio teléfono.
+            btn = document.getElementById('login-btn-diagnostico'); if (btn) btn.addEventListener('click', function(e) { e.preventDefault(); alternarDiagnosticoLogin(); });
             // ── Paso 3: acceso denegado ──
             btn = document.getElementById('login-btn-denegado-salir'); if (btn) btn.addEventListener('click', async function() { try { if (auth) await auth.signOut(); } catch (e) {} volverAPasoUsuario(); });
         })();
@@ -6659,9 +6790,55 @@
                 aplicarSidebarColapsado(sg);
                 aplicarTema(temaInicial);
                 inicializarSistemaEmojis();
-                // v4.8.3: si venimos de una redirección de Google (móvil), se resuelve ANTES
-                // de observar el estado, para no mostrar el login con la sesión ya activa.
-                await procesarResultadoRedirect();
+                // ─────── @JS-REDIRECT-MOVIL (v4.8.8) ───────
+                // Si venimos de la redirección de Google, se ESPERA a que la sesión quede
+                // establecida antes de decidir. Antes se mostraba el login de inmediato y el
+                // usuario quedaba en un bucle en el móvil.
+                const pendiente = infoAutenticacionPendiente();
+                if (pendiente) {
+                    console.log('🔁 Redirección de Google detectada (intento ' + pendiente.intento + '). Esperando la sesión...');
+                    mostrarPasoLogin('login-paso-google');
+                    const avisoEspera = elLogin('login-error-google');
+                    if (avisoEspera) { avisoEspera.textContent = 'Completando el acceso con Google...'; avisoEspera.classList.add('visible'); }
+
+                    const usuarioRedirect = await procesarResultadoRedirect();
+                    observarSesionGoogle();
+
+                    let sesionGoogle = usuarioRedirect || (auth ? auth.currentUser : null);
+                    if (!sesionGoogle) sesionGoogle = await esperarSesionDeRedireccion(25000);
+                    if (!sesionGoogle) { await esperarSesionDeRedireccion(15000); sesionGoogle = auth ? auth.currentUser : null; }
+
+                    if (!sesionGoogle) {
+                        console.error('❌ La redirección de Google no devolvió sesión.');
+                        const repeticiones = pendiente.intento || 1;
+                        // Se deja el marcador para el siguiente intento, salvo que ya se repita demasiado.
+                        if (repeticiones >= 4) {
+                            limpiarAutenticacionPendiente();
+                            mostrarAvisoBucleRedirect(repeticiones);
+                        } else {
+                            errorLogin('login-error-google', 'No se pudo completar el acceso con Google. Pulsa de nuevo el botón para reintentar.');
+                            mostrarNotificacion('Intento ' + repeticiones + ' sin completar. Vuelve a pulsar "Continuar con Google".', 'warning');
+                        }
+                        mostrarPantallaLogin();
+                        return;
+                    }
+
+                    limpiarAutenticacionPendiente();
+                    if (avisoEspera) { avisoEspera.textContent = ''; avisoEspera.classList.remove('visible'); }
+                    console.log('✅ Sesión de Google establecida en este dispositivo.');
+                    if (!database) {
+                        mostrarNotificacion('No se pudo conectar con Firebase. Revisa tu conexión.', 'error');
+                        mostrarPantallaLogin();
+                        return;
+                    }
+                    await cargarRegistroUsuarios();
+                    await cargarDatosLocal();
+                    const sesionGuardada = await cargarSesion();
+                    if (sesionGuardada) { usuarioActual = sesionGuardada; iniciarAplicacion(); return; }
+                    await procesarSesionGoogle(sesionGoogle);
+                    return;
+                }
+
                 observarSesionGoogle();
                 const sesionGoogle = await esperarUsuarioAutenticado();
                 if (!sesionGoogle) { mostrarPantallaLogin(); return; }
