@@ -1493,6 +1493,27 @@
                             </div>
                         </div>
                         <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-money-check-dollar"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Protección de los pagos y cargos</div>
+                                <div class="changelog-desc">Ninguna operación financiera puede pasar ya en silencio. Antes de registrar un pago o un cargo, el sistema revisa el estado del contrato: si el pago supera el saldo, si el contrato ya estaba liquidado, si hay otro pago por el mismo monto, si los cargos se disparan por encima del precio o si el descuento dejaría el total en negativo. Cuando algo no cuadra, <strong>no se bloquea la operación</strong>: se muestra el resumen exacto —total, pagado y saldo resultante— y se pide confirmación explícita. Si decides continuar, la decisión queda en el historial con las advertencias exactas.</div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-ban"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Los pagos no se borran: se anulan</div>
+                                <div class="changelog-desc">Anular un pago o un cargo ya no es un borrado: el movimiento conserva su identificador, su monto original, quién lo registró y su fecha. La anulación exige un <strong>motivo obligatorio</strong> y guarda quién la hizo y cuándo, con una nota visible en el contrato que referencia el movimiento original. Cada operación lleva además un identificador propio, así que un reintento por corte de red ya no genera un pago duplicado.</div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
+                            <div class="changelog-icono"><i class="fas fa-scale-balanced"></i></div>
+                            <div class="changelog-contenido">
+                                <div class="changelog-titulo">Saldos a favor visibles y descuentos con tope</div>
+                                <div class="changelog-desc">Si los pagos exceden el total del contrato, el exceso aparece claramente como <strong>saldo a favor del cliente</strong> en el listado, en el detalle y en el formulario, en lugar de mostrarse como un saldo pendiente engañoso. Un descuento mayor que el total del contrato ya no se puede aplicar. Los contratos con cifras incoherentes se marcan con el aviso <em>Revisar cobros</em>.</div>
+                            </div>
+                        </div>
+                        <div class="changelog-item">
                             <div class="changelog-icono"><i class="fas fa-code"></i></div>
                             <div class="changelog-contenido">
                                 <div class="changelog-titulo">Blindaje contra inyección de código</div>
@@ -1542,7 +1563,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '4.8';
-        var BUILD_APP = '2026-10-05.6';
+        var BUILD_APP = '2026-10-05.7';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -2064,6 +2085,124 @@
             const hex = Array.from(bytes).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
             return hex.substring(0, 15);
         }
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-INTEGRIDAD-PAGOS — identidad, idempotencia y auditoría    */
+        /* ═══════════════════════════════════════════════════════════ */
+        // Identificador criptográficamente robusto (128 bits) para operaciones financieras.
+        function generarIdSeguro(prefijo) {
+            const bytes = new Uint8Array(16);
+            crypto.getRandomValues(bytes);
+            const hex = Array.from(bytes).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+            return (prefijo || 'id') + '_' + Date.now().toString(36) + '_' + hex;
+        }
+        // Firma estable del contenido de un movimiento: sirve para detectar duplicados reales.
+        function firmaMovimiento(contratoId, monto, fecha, codigo) {
+            return [String(contratoId || ''), Number(monto).toFixed(2), String(fecha || ''), String(codigo || '')].join('|');
+        }
+        // Token de operación: TODAS las llamadas con el mismo token son la MISMA operación.
+        // Si la red se corta y el usuario reintenta, no se crea un segundo pago.
+        var tokensOperacionPago = {};
+        function obtenerTokenOperacionPago(ambito) {
+            if (!tokensOperacionPago[ambito]) tokensOperacionPago[ambito] = generarIdSeguro('op');
+            return tokensOperacionPago[ambito];
+        }
+        function renovarTokenOperacionPago(ambito) { tokensOperacionPago[ambito] = generarIdSeguro('op'); }
+        // Redondeo a centavos: evita los errores de punto flotante (0.1 + 0.2 = 0.30000000000000004).
+        function redondearMonetario(v) { return Math.round((Number(v) || 0) * 100) / 100; }
+        // Deja constancia en el historial cuando una operación se acepta A PESAR de las alertas.
+        // Nunca hay una aceptación silenciosa: queda quién lo decidió, cuándo y con qué advertencias.
+        function registrarOperacionConAlertas(entidad, accion, descripcion, detalle, alertas) {
+            const textoAlertas = (alertas || []).map(function(a) { return String(a).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); }).join(' | ');
+            const d = detalle || {};
+            registrarHistorial(entidad, accion, descripcion + ' — CONFIRMADO CON AVISO', {
+                id: d.id || null,
+                nombre: d.nombre || null,
+                detalle: 'Se registró a pesar de las advertencias: ' + (textoAlertas || 'sin detalle') + (d.extra ? ' · ' + d.extra : '')
+            });
+        }
+        // Límites de negocio. No bloquean, pero obligan a que el exceso se reconozca explícitamente.
+        var LIMITE_MOVIMIENTO_FINANCIERO = 10000000;
+        var FACTOR_CARGOS_EXCESIVOS = 1.5;
+        var MONTO_ALTO_PAGO = 100000;
+        var MAX_PAGOS_POR_CONTRATO = 60;
+        // Construye el objeto de un movimiento financiero nuevo, con toda su trazabilidad.
+        function crearMovimientoFinanciero(datos) {
+            const monto = redondearMonetario(datos.monto);
+            const ahora = obtenerFechaHoraActual();
+            const mov = {
+                id: datos.id || generarIdSeguro(datos.tipo === 'pago' ? 'pag' : 'car'),
+                _opId: datos.opId || generarIdSeguro('op'),
+                tipo: datos.tipo,
+                monto: monto,
+                montoOriginal: monto,
+                fecha: ahora,
+                fechaCreacion: ahora,
+                creadoPor: nombreUsuarioActual(),
+                creadoPorUsername: usuarioActual ? usuarioActual.username : 'system',
+                registradoPor: nombreUsuarioActual(),
+                nota: datos.nota || '',
+                estado: 'vigente',
+                eliminado: false
+            };
+            if (datos.tipo === 'pago') mov.codigo = datos.codigo || generarHuellaPago();
+            return mov;
+        }
+        // Valida un movimiento nuevo contra el estado financiero del contrato.
+        // Devuelve { accion: 'ok'|'confirmar'|'bloquear', errores: [], avisos: [] }
+        function validarMovimientoFinanciero(contrato, opciones) {
+            const op = opciones || {};
+            const tipo = op.tipo || 'pago';
+            const monto = redondearMonetario(op.monto);
+            const esPago = tipo === 'pago';
+            const errores = [];
+            const avisos = [];
+            const etiqueta = esPago ? 'El pago' : 'El cargo';
+
+            // ── Bloqueos: datos imposibles ──
+            if (!isFinite(monto) || monto <= 0) errores.push(etiqueta + ' debe ser mayor que cero.');
+            if (monto > LIMITE_MOVIMIENTO_FINANCIERO) errores.push(etiqueta + ' supera el límite permitido por operación (' + formatearMoneda(LIMITE_MOVIMIENTO_FINANCIERO) + ').');
+
+            const tot = calcularTotalesContrato(contrato);
+
+            // ── Bloqueo: misma firma exacta ya registrada (duplicado real) ──
+            if (op.firma) {
+                const firma = op.firma;
+                const duplicado = (contrato.pagos || []).concat(contrato.cargos || []).find(function(m) {
+                    return m && !m.eliminado && m.firma === firma;
+                });
+                if (duplicado) {
+                    errores.push('Ya existe un movimiento con el mismo monto y los mismos datos (' + formatearMoneda(duplicado.monto) + ' · ' + (duplicado.fecha || '') + '). No se registró dos veces.');
+                }
+            }
+            const esDuplicadoExacto = monto > 0 && tot.firmasVigentes.indexOf(String(monto)) !== -1 && esPago;
+            if (esDuplicadoExacto && !errores.length) {
+                avisos.push('Hay otro pago vigente por el mismo monto (' + formatearMoneda(monto) + '). Si es un segundo abono real, confírmalo.');
+            }
+            if (esPago && tot.cantidadPagos >= MAX_PAGOS_POR_CONTRATO) {
+                avisos.push('Este contrato ya tiene ' + tot.cantidadPagos + ' pagos registrados. Verifica que no se trate de un error antes de continuar.');
+            }
+            if (monto >= MONTO_ALTO_PAGO) {
+                avisos.push((esPago ? 'Pago' : 'Cargo') + ' por un monto alto (' + formatearMoneda(monto) + '). Verifica el importe.');
+            }
+
+            // ── Avisos de coherencia financiera ──
+            if (esPago) {
+                if (tot.saldoPendiente <= 0) {
+                    avisos.push('Este contrato ya está liquidado. Registrarlo dejaría un <strong>saldo a favor del cliente</strong> de ' + formatearMoneda(monto + Math.max(0, -tot.saldoPendiente)) + '.');
+                } else if (monto > tot.saldoPendiente) {
+                    avisos.push('El pago excede el saldo pendiente en ' + formatearMoneda(monto - tot.saldoPendiente) + '. Quedará registrado como <strong>saldo a favor del cliente</strong> por ' + formatearMoneda(monto - tot.saldoPendiente) + '.');
+                }
+            } else {
+                if (tot.precioBase > 0 && (tot.totalCargos + monto) > tot.precioBase * FACTOR_CARGOS_EXCESIVOS) {
+                    avisos.push('Los cargos extras sumarían ' + formatearMoneda(tot.totalCargos + monto) + ', muy por encima del precio base (' + formatearMoneda(tot.precioBase) + '). Verifica que sea correcto.');
+                }
+                if (tot.cantidadPagos > 0) {
+                    avisos.push('Este cargo eleva el total del contrato a ' + formatearMoneda(tot.totalAPagar + monto) + '. Ya hay pagos registrados por ' + formatearMoneda(tot.totalPagos) + '; el saldo se recalculará.');
+                }
+            }
+
+            return { accion: errores.length ? 'bloquear' : (avisos.length ? 'confirmar' : 'ok'), errores: errores, avisos: avisos, totales: tot, monto: monto };
+        }
 
         function obtenerComponentesFecha(fecha) {
             var ano, mes, dia, hora, minuto;
@@ -2452,17 +2591,71 @@
             });
             return todos;
         }
+        // ─────── @JS-TOTALES-CONTRATO (v4.8.7) ───────
+        // Además de sumar, detecta incoherencias financieras SIN alterar las cifras:
+        // el exceso se informa, nunca se acepta en silencio ni se recorta por su cuenta.
         function calcularTotalesContrato(contrato) {
-            const pagosValidos = (contrato.pagos || []).filter(function(p) { return !p.eliminado; });
-            const cargosValidos = (contrato.cargos || []).filter(function(c) { return !c.eliminado; });
-            const totalPagos = pagosValidos.reduce(function(s, p) { return s + (p.monto || 0); }, 0);
-            const totalCargos = cargosValidos.reduce(function(s, c) { return s + (c.monto || 0); }, 0);
-            const descuento = contrato.descuentoMonto || 0;
-            const precioEfectivo = contrato.precioFinal || contrato.precioBase || 0;
-            const precioBase = contrato.precioBase || precioEfectivo;
-            const totalAPagar = precioEfectivo + totalCargos - descuento;
-            const saldoPendiente = totalAPagar - totalPagos;
-            return { pagosValidos: pagosValidos, cargosValidos: cargosValidos, totalPagos: totalPagos, totalCargos: totalCargos, descuento: descuento, precioBase: precioBase, totalAPagar: totalAPagar, saldoPendiente: saldoPendiente };
+            const pagos = contrato.pagos || [];
+            const cargos = contrato.cargos || [];
+            const pagosValidos = pagos.filter(function(p) { return !p.eliminado && !p.esNotaEliminacion; });
+            const cargosValidos = cargos.filter(function(c) { return !c.eliminado && !c.esNotaEliminacion; });
+            const pagosAnulados = pagos.filter(function(p) { return p.eliminado && !p.esNotaEliminacion; });
+            const cargosAnulados = cargos.filter(function(c) { return c.eliminado && !c.esNotaEliminacion; });
+
+            const totalPagos = redondearMonetario(pagosValidos.reduce(function(s, p) { return s + (Number(p.monto) || 0); }, 0));
+            const totalCargos = redondearMonetario(cargosValidos.reduce(function(s, c) { return s + (Number(c.monto) || 0); }, 0));
+            const totalPagosAnulados = redondearMonetario(pagosAnulados.reduce(function(s, p) { return s + (Number(p.montoOriginal !== undefined ? p.montoOriginal : p.monto) || 0); }, 0));
+            const totalCargosAnulados = redondearMonetario(cargosAnulados.reduce(function(s, c) { return s + (Number(c.montoOriginal !== undefined ? c.montoOriginal : c.monto) || 0); }, 0));
+
+            const descuento = redondearMonetario(contrato.descuentoMonto || 0);
+            const precioEfectivo = redondearMonetario(contrato.precioFinal || contrato.precioBase || 0);
+            const precioBase = redondearMonetario(contrato.precioBase || precioEfectivo);
+            const totalAPagar = redondearMonetario(precioEfectivo + totalCargos - descuento);
+            const saldoBruto = redondearMonetario(totalAPagar - totalPagos);
+
+            // Saldo con signo: positivo = pendiente; negativo = a favor del cliente.
+            const saldoPendiente = Math.max(0, saldoBruto);
+            const saldoAFavor = Math.max(0, -saldoBruto);
+            const excedentePago = saldoAFavor;
+
+            const alertas = [];
+            if (saldoAFavor > 0.004) {
+                alertas.push({ tipo: 'pago_excedido', severidad: 'alta', mensaje: 'Pagos por encima del total: el cliente tiene un saldo a favor de ' + formatearMoneda(saldoAFavor) + '.', monto: saldoAFavor });
+            }
+            if (totalAPagar < 0) {
+                alertas.push({ tipo: 'total_negativo', severidad: 'alta', mensaje: 'El descuento (' + formatearMoneda(descuento) + ') supera el total del contrato. El importe a pagar es negativo.', monto: totalAPagar });
+            }
+            if (precioBase > 0 && totalCargos > precioBase * FACTOR_CARGOS_EXCESIVOS) {
+                alertas.push({ tipo: 'cargos_excesivos', severidad: 'media', mensaje: 'Los cargos extras (' + formatearMoneda(totalCargos) + ') superan en más del 50% el precio base del contrato.', monto: totalCargos });
+            }
+            if (descuento > 0 && precioEfectivo > 0 && descuento > precioEfectivo) {
+                alertas.push({ tipo: 'descuento_excesivo', severidad: 'alta', mensaje: 'El descuento (' + formatearMoneda(descuento) + ') es mayor que el precio del contrato.', monto: descuento });
+            }
+            // Pagos vigentes con el mismo monto: posible duplicado por doble clic.
+            const porMonto = {};
+            pagosValidos.forEach(function(p) {
+                const k = Number(p.monto || 0).toFixed(2);
+                porMonto[k] = (porMonto[k] || 0) + 1;
+            });
+            const montosRepetidos = Object.keys(porMonto).filter(function(k) { return porMonto[k] > 1; });
+            if (montosRepetidos.length > 0) {
+                alertas.push({ tipo: 'montos_repetidos', severidad: 'media', mensaje: 'Hay ' + montosRepetidos.length + ' monto(s) repetido(s) entre los pagos vigentes. Revisa que no sea un registro duplicado.', montos: montosRepetidos });
+            }
+            // Firmas vigentes: permite detectar un duplicado exacto antes de registrar.
+            const firmasVigentes = pagosValidos.concat(cargosValidos).map(function(m) { return String(m.monto); });
+
+            return {
+                pagosValidos: pagosValidos, cargosValidos: cargosValidos,
+                pagosAnulados: pagosAnulados, cargosAnulados: cargosAnulados,
+                totalPagos: totalPagos, totalCargos: totalCargos,
+                totalPagosAnulados: totalPagosAnulados, totalCargosAnulados: totalCargosAnulados,
+                descuento: descuento, precioBase: precioBase, precioEfectivo: precioEfectivo,
+                totalAPagar: totalAPagar, saldoBruto: saldoBruto,
+                saldoPendiente: saldoPendiente, saldoAFavor: saldoAFavor, excedentePago: excedentePago,
+                cantidadPagos: pagosValidos.length, cantidadCargos: cargosValidos.length,
+                alertas: alertas, firmasVigentes: firmasVigentes,
+                incoherente: alertas.some(function(a) { return a.severidad === 'alta'; })
+            };
         }
         function obtenerNombreItemContrato(contrato) {
             if (contrato.tipo === 'paquete') {
@@ -2607,14 +2800,26 @@
                             entidadParaSubir._version = nuevaVersion;
                             entidadParaSubir._editadoPor = usuarioActual.nombre;
                             entidadParaSubir._fechaEdicion = obtenerFechaHoraActual();
+                            // ─────── @JS-IDEMPOTENCIA (v4.8.7) ───────
+                            // Si la operación ya se aplicó en la nube pero la respuesta se perdió
+                            // (red cortada, pestaña cerrada), el reintento NO debe contar como conflicto
+                            // ni volver a escribir: se reconoce por el mismo _opId.
+                            let yaAplicada = false;
                             const resultado = await refEntidad.transaction(function(actual) {
                                 if (actual === null) return entidadParaSubir;
                                 if (actual._eliminado === true) return undefined;
+                                if (entidadParaSubir._opId && actual._opId === entidadParaSubir._opId) {
+                                    yaAplicada = true;
+                                    return actual; // idempotente: la nube ya tenía esta misma operación
+                                }
                                 const vRemota = actual._version || 0;
                                 if (vRemota !== versionLocalEsperada && versionLocalEsperada !== 0 && vRemota !== 0) return undefined;
                                 return entidadParaSubir;
                             });
                             if (resultado.committed) {
+                                if (yaAplicada) {
+                                    console.log('♻️ Operación ya aplicada en la nube (reintento idempotente): ' + col + '/' + id);
+                                }
                                 entidadLocal._version = nuevaVersion;
                                 entidadLocal._editadoPor = usuarioActual.nombre;
                                 entidadLocal._fechaEdicion = obtenerFechaHoraActual();
@@ -3059,6 +3264,56 @@
             const html = '<div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:8px;background-color:var(--color-bg-terciario);border-left:4px solid var(--color-acento);margin-bottom:16px;"><i class="fas ' + icono + '" style="color:var(--color-acento);font-size:20px;flex-shrink:0;margin-top:2px;"></i><div style="flex:1;font-size:13px;line-height:1.5;color:var(--color-texto-primario);"><strong style="display:block;margin-bottom:4px;font-size:14px;">' + titulo + '</strong>El ' + entidad + ' será restaurado a su sección correspondiente.' + detalleHTML + '</div></div><div class="form-acciones"><button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="' + colorBoton + '" id="btn-confirmar-accion"><i class="fas ' + icono + '"></i> ' + textoConfirmar + '</button></div>';
             abrirModal(titulo, html);
             document.getElementById('btn-confirmar-accion').addEventListener('click', function() { cerrarModal(); if (typeof onConfirmar === 'function') onConfirmar(); });
+        }
+
+        // ─────── @JS-CONFIRMACION-FINANCIERA (v4.8.7) ───────
+        // Cuando una operación financiera es válida pero incoherente (por ejemplo un pago mayor
+        // al saldo), se muestra el detalle exacto y se exige confirmación explícita.
+        // Nunca se acepta en silencio y nunca se recorta el importe por cuenta propia.
+        function confirmarOperacionFinanciera(opciones) {
+            const titulo = opciones.titulo || 'Confirmar operación';
+            const avisos = opciones.avisos || [];
+            const textoConfirmar = opciones.textoConfirmar || 'Sí, registrar de todos modos';
+            const onConfirmar = opciones.onConfirmar;
+            const resumenHTML = opciones.resumenHTML || '';
+            const listaAvisos = avisos.map(function(a) {
+                return '<li style="margin-bottom:6px;">' + a + '</li>';
+            }).join('');
+            const html = '<div class="advertencia-eliminar" style="background-color:rgba(255,152,0,0.12);border-color:var(--color-naranja);"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto"><strong style="color:var(--color-naranja);">Revisa antes de continuar</strong>Esta operación es válida, pero el resultado financiero requiere tu confirmación:' + '<ul style="margin:8px 0 0 18px;padding:0;">' + listaAvisos + '</ul></div></div>' + resumenHTML + '<div class="form-acciones"><button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="btn-primario" id="btn-confirmar-financiero"><i class="fas fa-check"></i> ' + escapeHTML(textoConfirmar) + '</button></div>';
+            abrirModal(titulo, html);
+            document.getElementById('btn-confirmar-financiero').addEventListener('click', function() { cerrarModal(); if (typeof onConfirmar === 'function') onConfirmar(); });
+        }
+        // Muestra los errores que impiden la operación (no se puede continuar).
+        function mostrarErroresFinancieros(titulo, errores) {
+            const lista = (errores || []).map(function(e) { return '<li style="margin-bottom:6px;">' + e + '</li>'; }).join('');
+            abrirModal(titulo || 'Operación no permitida', '<div class="advertencia-eliminar"><i class="fas fa-ban"></i><div class="texto"><strong>No se registró nada</strong>Corrige lo siguiente antes de continuar:<ul style="margin:8px 0 0 18px;padding:0;">' + lista + '</ul></div></div><div class="form-acciones"><button type="button" class="btn-secundario" onclick="cerrarModal()">Entendido</button></div>');
+        }
+        // Bloque HTML con el resumen financiero del contrato, para las ventanas de confirmación.
+        function resumenFinancieroHTML(tot, montoNuevo, esPago) {
+            const m = Number(montoNuevo) || 0;
+            const nuevoTotalPagos = esPago ? tot.totalPagos + m : tot.totalPagos;
+            const nuevoTotalAPagar = esPago ? tot.totalAPagar : tot.totalAPagar + m;
+            const nuevoSaldoBruto = redondearMonetario(nuevoTotalAPagar - nuevoTotalPagos);
+            const fila = function(lbl, val, color) {
+                return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--color-borde-suave);font-size:13px;"><span style="color:var(--color-texto-secundario);">' + lbl + '</span><span style="font-weight:600;color:' + (color || 'var(--color-texto-primario)') + ';">' + val + '</span></div>';
+            };
+            let h = '<div style="background-color:var(--color-bg-terciario);border-radius:8px;padding:12px 14px;margin-bottom:16px;">';
+            h += fila('Precio del contrato', formatearMoneda(tot.precioEfectivo));
+            if (tot.totalCargos > 0) h += fila('Cargos extras vigentes', '+' + formatearMoneda(tot.totalCargos));
+            if (tot.descuento > 0) h += fila('Descuento', '-' + formatearMoneda(tot.descuento));
+            h += fila('<strong>Total del contrato</strong>', formatearMoneda(nuevoTotalAPagar));
+            h += fila('Pagado antes de esta operación', formatearMoneda(tot.totalPagos));
+            h += fila(esPago ? 'Este pago' : 'Este cargo', (esPago ? '+' : '+') + formatearMoneda(m), 'var(--color-acento)');
+            h += fila('<strong>Pagado con esta operación</strong>', formatearMoneda(nuevoTotalPagos));
+            if (nuevoSaldoBruto > 0.004) {
+                h += fila('<strong>Saldo pendiente resultante</strong>', formatearMoneda(nuevoSaldoBruto), 'var(--color-naranja)');
+            } else if (nuevoSaldoBruto < -0.004) {
+                h += fila('<strong>Saldo a favor del cliente</strong>', formatearMoneda(-nuevoSaldoBruto), 'var(--color-verde)');
+            } else {
+                h += fila('<strong>Resultado</strong>', 'Contrato liquidado', 'var(--color-verde)');
+            }
+            h += '</div>';
+            return h;
         }
 
         function mostrarModalConflicto(conflictos) {
@@ -4292,7 +4547,7 @@
                 os += '<option value="' + s.id + '" data-precio="' + pf + '" data-nombre="' + s.nombre + '" ' + sel + '>' + s.nombre + ' - ' + formatearMoneda(pf) + '</option>';
             });
             if (serviciosIndividualesDisponibles === 0) os += '<option value="" disabled>— No hay servicios con precio —</option>';
-            const html = '<form id="form-contrato"><input type="hidden" id="contrato-id" value="' + (contrato ? contrato.id : '') + '"><input type="hidden" id="contrato-cliente-id" value="' + clienteActualId + '"><div class="form-grupo"><label>Cliente *</label><div class="cliente-wrapper"><div class="buscador-cliente" id="buscador-contrato-cliente-container"><input type="text" class="buscador-input" id="contrato-cliente-input" placeholder="Escribe para buscar cliente..." autocomplete="off" value="' + nombreClienteActual + '"><i class="fas fa-search buscador-icono"></i><div class="buscador-resultados" id="contrato-cliente-resultados"></div></div><button type="button" class="btn-nuevo-cliente-inline" id="btn-nuevo-cliente-contrato"><i class="fas fa-user-plus"></i> Nuevo</button></div></div>' + infoClienteHTML + '<div class="form-grupo"><label>Nombre del festejado *</label><input type="text" id="contrato-festejado" required value="' + (contrato ? contrato.festejado : '') + '"></div><div class="form-grupo"><label>Tipo *</label><select id="contrato-tipo" required><option value="paquete" ' + (tc === 'paquete' ? 'selected' : '') + '>Paquete</option><option value="solo-servicio" ' + (tc === 'solo-servicio' ? 'selected' : '') + '>Solo servicio</option></select></div><div id="seccion-paquete" style="' + (tc === 'paquete' ? '' : 'display:none;') + '"><div class="form-grupo"><label>Paquete *</label><select id="contrato-paquete" ' + (tc === 'paquete' ? 'required' : '') + '>' + op + '</select></div><div class="form-grupo"><label>Servicios adicionales</label><div class="servicios-dropdown" id="servicios-dropdown"><button type="button" class="servicios-dropdown-toggle" id="servicios-dropdown-toggle"><span id="servicios-dropdown-label"><i class="fas fa-plus-circle"></i> Seleccionar servicios</span><i class="fas fa-chevron-down icono"></i></button><div class="servicios-dropdown-panel">' + (serviciosCheckboxes || '<div style="padding:12px;text-align:center;color:var(--color-texto-secundario);font-size:13px;">No hay servicios registrados</div>') + '</div></div><div class="servicios-chips" id="servicios-chips"></div></div></div><div id="seccion-solo-servicio" style="' + (tc === 'solo-servicio' ? '' : 'display:none;') + '"><div class="form-grupo"><label>Servicio *</label><select id="contrato-servicio" ' + (tc === 'solo-servicio' ? 'required' : '') + '>' + os + '</select></div></div><div class="row-2col"><div class="form-grupo"><label>Fecha del evento *</label><input type="date" id="contrato-fecha-evento" required value="' + (contrato ? contrato.fechaEvento : '') + '"></div><div class="form-grupo"><label>Hora del evento</label><select id="contrato-hora-evento"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div><div class="form-grupo"><label>Dirección del evento religioso</label><input type="text" id="contrato-direccion-evento" value="' + (contrato ? contrato.direccionEvento : '') + '"></div><div class="row-2col"><div class="form-grupo"><label>Dirección de la recepción</label><input type="text" id="contrato-direccion-recepcion" value="' + (contrato ? contrato.direccionRecepcion : '') + '"></div><div class="form-grupo"><label>Hora de la recepción</label><select id="contrato-hora-recepcion"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div><div class="resumen-precios-caja" id="contrato-resumen-precios"><div class="titulo-resumen"><i class="fas fa-calculator"></i> Precio base del contrato</div><div id="resumen-precios-filas"></div><div class="fila-resumen total"><span>Total base</span><span class="valor" id="resumen-precios-total">$0</span></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-descuento"><i class="fas fa-tag"></i> Descuento</div><div id="descuento-contenedor"></div><div class="inline-add-movimiento" id="descuento-form"><input type="text" id="descuento-descripcion" placeholder="Descripción del descuento" style="flex:2;"><input type="number" id="descuento-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;"><button type="button" class="btn-agregar btn-agregar-descuento" id="btn-aplicar-descuento"><i class="fas fa-tag"></i> Aplicar</button></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-cargos"><i class="fas fa-plus-circle"></i> Cargos extras</div><div class="inline-add-movimiento"><input type="text" id="cargo-descripcion" placeholder="Descripción del cargo" style="flex:2;"><input type="number" id="cargo-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;"><button type="button" class="btn-agregar btn-agregar-cargo" id="btn-agregar-cargo"><i class="fas fa-plus"></i> Agregar</button></div><div id="cargos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-pagos"><i class="fas fa-coins"></i> Pagos</div><div class="inline-add-movimiento"><input type="number" id="contrato-nuevo-pago" placeholder="Monto del pago" min="0" step="100" style="flex:1;"><button type="button" class="btn-agregar btn-agregar-pago" id="btn-agregar-pago"><i class="fas fa-plus"></i> Registrar pago</button></div><div id="pagos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div></div><div class="resumen-financiero-caja" id="contrato-resumen-financiero"><div class="titulo"><i class="fas fa-chart-line"></i> Resumen financiero</div><div class="fila"><span class="lbl">Precio base</span><span class="vlr" id="resumen-precio-base">$0</span></div><div class="fila"><span class="lbl">Cargos extras</span><span class="vlr" id="resumen-cargos-total">+$0</span></div><div class="fila desc"><span class="lbl">Descuento</span><span class="vlr" id="resumen-descuento">-$0</span></div><div class="fila total"><span class="lbl">Total a pagar</span><span class="vlr" id="resumen-total">$0</span></div><div class="fila pagado"><span class="lbl">Total pagado</span><span class="vlr" id="resumen-pagado">$0</span></div><div class="fila saldo"><span class="lbl">Saldo pendiente</span><span class="vlr" id="resumen-saldo">$0</span></div></div><div class="form-grupo" style="margin-top:16px;"><label>Estado *</label><select id="contrato-estado" required>' + ESTADOS_CONTRATO.map(function(e) { return '<option value="' + e + '" ' + (contrato && contrato.estado === e ? 'selected' : '') + '>' + e + '</option>'; }).join('') + '</select></div><div class="form-grupo"><label>Notas</label><textarea id="contrato-notas">' + (contrato ? contrato.notas : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-contrato-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar Contrato') + '</button></div></form>';
+            const html = '<form id="form-contrato"><input type="hidden" id="contrato-id" value="' + (contrato ? contrato.id : '') + '"><input type="hidden" id="contrato-cliente-id" value="' + clienteActualId + '"><div class="form-grupo"><label>Cliente *</label><div class="cliente-wrapper"><div class="buscador-cliente" id="buscador-contrato-cliente-container"><input type="text" class="buscador-input" id="contrato-cliente-input" placeholder="Escribe para buscar cliente..." autocomplete="off" value="' + nombreClienteActual + '"><i class="fas fa-search buscador-icono"></i><div class="buscador-resultados" id="contrato-cliente-resultados"></div></div><button type="button" class="btn-nuevo-cliente-inline" id="btn-nuevo-cliente-contrato"><i class="fas fa-user-plus"></i> Nuevo</button></div></div>' + infoClienteHTML + '<div class="form-grupo"><label>Nombre del festejado *</label><input type="text" id="contrato-festejado" required value="' + (contrato ? contrato.festejado : '') + '"></div><div class="form-grupo"><label>Tipo *</label><select id="contrato-tipo" required><option value="paquete" ' + (tc === 'paquete' ? 'selected' : '') + '>Paquete</option><option value="solo-servicio" ' + (tc === 'solo-servicio' ? 'selected' : '') + '>Solo servicio</option></select></div><div id="seccion-paquete" style="' + (tc === 'paquete' ? '' : 'display:none;') + '"><div class="form-grupo"><label>Paquete *</label><select id="contrato-paquete" ' + (tc === 'paquete' ? 'required' : '') + '>' + op + '</select></div><div class="form-grupo"><label>Servicios adicionales</label><div class="servicios-dropdown" id="servicios-dropdown"><button type="button" class="servicios-dropdown-toggle" id="servicios-dropdown-toggle"><span id="servicios-dropdown-label"><i class="fas fa-plus-circle"></i> Seleccionar servicios</span><i class="fas fa-chevron-down icono"></i></button><div class="servicios-dropdown-panel">' + (serviciosCheckboxes || '<div style="padding:12px;text-align:center;color:var(--color-texto-secundario);font-size:13px;">No hay servicios registrados</div>') + '</div></div><div class="servicios-chips" id="servicios-chips"></div></div></div><div id="seccion-solo-servicio" style="' + (tc === 'solo-servicio' ? '' : 'display:none;') + '"><div class="form-grupo"><label>Servicio *</label><select id="contrato-servicio" ' + (tc === 'solo-servicio' ? 'required' : '') + '>' + os + '</select></div></div><div class="row-2col"><div class="form-grupo"><label>Fecha del evento *</label><input type="date" id="contrato-fecha-evento" required value="' + (contrato ? contrato.fechaEvento : '') + '"></div><div class="form-grupo"><label>Hora del evento</label><select id="contrato-hora-evento"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div><div class="form-grupo"><label>Dirección del evento religioso</label><input type="text" id="contrato-direccion-evento" value="' + (contrato ? contrato.direccionEvento : '') + '"></div><div class="row-2col"><div class="form-grupo"><label>Dirección de la recepción</label><input type="text" id="contrato-direccion-recepcion" value="' + (contrato ? contrato.direccionRecepcion : '') + '"></div><div class="form-grupo"><label>Hora de la recepción</label><select id="contrato-hora-recepcion"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div><div class="resumen-precios-caja" id="contrato-resumen-precios"><div class="titulo-resumen"><i class="fas fa-calculator"></i> Precio base del contrato</div><div id="resumen-precios-filas"></div><div class="fila-resumen total"><span>Total base</span><span class="valor" id="resumen-precios-total">$0</span></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-descuento"><i class="fas fa-tag"></i> Descuento</div><div id="descuento-contenedor"></div><div class="inline-add-movimiento" id="descuento-form"><input type="text" id="descuento-descripcion" placeholder="Descripción del descuento" style="flex:2;"><input type="number" id="descuento-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;"><button type="button" class="btn-agregar btn-agregar-descuento" id="btn-aplicar-descuento"><i class="fas fa-tag"></i> Aplicar</button></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-cargos"><i class="fas fa-plus-circle"></i> Cargos extras</div><div class="inline-add-movimiento"><input type="text" id="cargo-descripcion" placeholder="Descripción del cargo" style="flex:2;"><input type="number" id="cargo-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;"><button type="button" class="btn-agregar btn-agregar-cargo" id="btn-agregar-cargo"><i class="fas fa-plus"></i> Agregar</button></div><div id="cargos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-pagos"><i class="fas fa-coins"></i> Pagos</div><div class="inline-add-movimiento"><input type="number" id="contrato-nuevo-pago" placeholder="Monto del pago" min="0" step="100" style="flex:1;"><button type="button" class="btn-agregar btn-agregar-pago" id="btn-agregar-pago"><i class="fas fa-plus"></i> Registrar pago</button></div><div id="pagos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div></div><div id="coherencia-financiera" style="display:none;"></div><div class="resumen-financiero-caja" id="contrato-resumen-financiero"><div class="titulo"><i class="fas fa-chart-line"></i> Resumen financiero</div><div class="fila"><span class="lbl">Precio base</span><span class="vlr" id="resumen-precio-base">$0</span></div><div class="fila"><span class="lbl">Cargos extras</span><span class="vlr" id="resumen-cargos-total">+$0</span></div><div class="fila desc"><span class="lbl">Descuento</span><span class="vlr" id="resumen-descuento">-$0</span></div><div class="fila total"><span class="lbl">Total a pagar</span><span class="vlr" id="resumen-total">$0</span></div><div class="fila pagado"><span class="lbl">Total pagado</span><span class="vlr" id="resumen-pagado">$0</span></div><div class="fila saldo"><span class="lbl">Saldo pendiente</span><span class="vlr" id="resumen-saldo">$0</span></div></div><div class="form-grupo" style="margin-top:16px;"><label>Estado *</label><select id="contrato-estado" required>' + ESTADOS_CONTRATO.map(function(e) { return '<option value="' + e + '" ' + (contrato && contrato.estado === e ? 'selected' : '') + '>' + e + '</option>'; }).join('') + '</select></div><div class="form-grupo"><label>Notas</label><textarea id="contrato-notas">' + (contrato ? contrato.notas : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-contrato-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar Contrato') + '</button></div></form>';
             abrirModal(titulo, html, true);
             let pagosArr = contrato && contrato.pagos ? contrato.pagos.slice() : [];
             let cargosArr = contrato && contrato.cargos ? contrato.cargos.slice() : [];
@@ -4413,8 +4668,24 @@
                 el('resumen-descuento').textContent = '-' + formatearMoneda(descMonto);
                 el('resumen-total').textContent = formatearMoneda(totalAPagar);
                 el('resumen-pagado').textContent = formatearMoneda(totalPagos);
-                el('resumen-saldo').textContent = formatearMoneda(saldo);
-                el('resumen-saldo').style.color = saldo === 0 ? 'var(--color-verde)' : 'var(--color-naranja)';
+                const saldoAFavor = Math.max(0, redondearMonetario(-saldo));
+                const saldoPendiente = Math.max(0, redondearMonetario(saldo));
+                el('resumen-saldo').textContent = saldoAFavor > 0.004 ? ('A favor: ' + formatearMoneda(saldoAFavor)) : formatearMoneda(saldoPendiente);
+                el('resumen-saldo').style.color = (saldoAFavor > 0.004 || saldoPendiente === 0) ? 'var(--color-verde)' : 'var(--color-naranja)';
+
+                // ── Aviso de coherencia en vivo (v4.8.7) ──
+                // Si el estado financiero del formulario no cuadra, se avisa ANTES de guardar.
+                const contenedorAviso = el('coherencia-financiera');
+                if (contenedorAviso) {
+                    const totVivo = calcularTotalesContrato({ pagos: pagosArr, cargos: cargosArr, descuentoMonto: descMonto, precioBase: pb, precioFinal: pb });
+                    if (totVivo.alertas.length > 0) {
+                        contenedorAviso.innerHTML = '<div class="advertencia-eliminar" style="background-color:rgba(255,152,0,0.10);border-color:var(--color-naranja);margin-bottom:14px;"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto"><strong style="color:var(--color-naranja);">Revisa las cifras de este contrato</strong><ul style="margin:6px 0 0 18px;padding:0;font-size:12.5px;">' + totVivo.alertas.map(function(a) { return '<li>' + a.mensaje + '</li>'; }).join('') + '</ul><div style="margin-top:6px;font-size:11.5px;color:var(--color-texto-secundario);">Puedes guardar de todos modos: quedará registrado en el historial con esta advertencia.</div></div></div>';
+                        contenedorAviso.style.display = 'block';
+                    } else {
+                        contenedorAviso.innerHTML = '';
+                        contenedorAviso.style.display = 'none';
+                    }
+                }
             }
             el('contrato-tipo').addEventListener('change', function() {
                 if (this.value === 'paquete') {
@@ -4436,9 +4707,32 @@
             el('contrato-servicio').addEventListener('change', calcularPrecioBaseContrato);
             el('btn-aplicar-descuento').addEventListener('click', function() {
                 const desc = el('descuento-descripcion').value.trim();
-                const monto = parseFloat(el('descuento-monto').value);
+                const monto = redondearMonetario(parseFloat(el('descuento-monto').value));
                 if (!desc) { mostrarNotificacion('Ingresa una descripción del descuento', 'warning'); return; }
-                if (!monto || monto <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
+                if (!isFinite(monto) || monto <= 0) { mostrarNotificacion('El descuento debe ser mayor que cero.', 'warning'); return; }
+                if (monto > LIMITE_MOVIMIENTO_FINANCIERO) { mostrarNotificacion('El descuento supera el límite permitido por operación.', 'warning'); return; }
+                // Un descuento no puede dejar el contrato en negativo: eso rompería el estado financiero.
+                const baseActual = (function() {
+                    const tipoActual = el('contrato-tipo').value;
+                    let pb = 0;
+                    if (tipoActual === 'paquete') {
+                        const ps = el('contrato-paquete'); const o = ps.options[ps.selectedIndex];
+                        pb += o ? parseFloat(o.dataset.precio) || 0 : 0;
+                        document.querySelectorAll('.servicio-check-form:checked').forEach(function(cb) { pb += parseFloat(cb.dataset.precio) || 0; });
+                    } else {
+                        const ss = el('contrato-servicio'); const o = ss.options[ss.selectedIndex];
+                        pb += o ? parseFloat(o.dataset.precio) || 0 : 0;
+                    }
+                    const cargosVigentes = cargosArr.filter(function(c) { return !c.eliminado; }).reduce(function(s, c) { return s + (Number(c.monto) || 0); }, 0);
+                    return { precio: pb, cargos: cargosVigentes };
+                })();
+                if (monto > baseActual.precio + baseActual.cargos) {
+                    mostrarErroresFinancieros('Descuento no permitido', [
+                        'El descuento (' + formatearMoneda(monto) + ') es mayor que el total del contrato (' + formatearMoneda(baseActual.precio + baseActual.cargos) + ').',
+                        'Un descuento así dejaría el importe a pagar en negativo.'
+                    ]);
+                    return;
+                }
                 descuentoTemporal = { monto: monto, descripcion: desc };
                 el('descuento-descripcion').value = '';
                 el('descuento-monto').value = '';
@@ -4447,55 +4741,158 @@
             });
             el('btn-agregar-cargo').addEventListener('click', function() {
                 const d = el('cargo-descripcion').value.trim();
-                const m = parseFloat(el('cargo-monto').value);
+                const m = redondearMonetario(parseFloat(el('cargo-monto').value));
                 if (!d) { mostrarNotificacion('Ingresa una descripción del cargo', 'warning'); return; }
                 if (!isFinite(m) || m <= 0) { mostrarNotificacion('El monto del cargo debe ser mayor que cero.', 'warning'); return; }
-                if (m > 10000000) { mostrarNotificacion('El monto del cargo parece incorrecto.', 'warning'); return; }
-                const nuevoCargo = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Cargo extra: ' + d, registradoPor: nombreUsuarioActual() };
-                cargosArr.push(nuevoCargo);
-                el('cargo-descripcion').value = '';
-                el('cargo-monto').value = '';
-                renderizarCargos(); actualizarResumenFinanciero();
-                mostrarNotificacion('Cargo agregado', 'success');
+                const token = obtenerTokenOperacionPago('form-contrato-cargo');
+                const revision = validarMovimientoFinanciero(
+                    { pagos: pagosArr, cargos: cargosArr, descuentoMonto: descuentoTemporal ? descuentoTemporal.monto : (contrato ? contrato.descuentoMonto : 0), precioBase: contrato ? contrato.precioBase : 0, precioFinal: contrato ? contrato.precioFinal : 0 },
+                    { tipo: 'cargo', monto: m, opId: token }
+                );
+                if (revision.accion === 'bloquear') { mostrarErroresFinancieros('Cargo no permitido', revision.errores); return; }
+                const registrar = function(confirmadoConAviso) {
+                    const nuevoCargo = crearMovimientoFinanciero({ tipo: 'cargo', monto: m, nota: 'Cargo extra: ' + d, opId: token });
+                    nuevoCargo.firma = firmaMovimiento((contrato && contrato.id) || 'nuevo', m, nuevoCargo.fecha, '');
+                    if (confirmadoConAviso && revision.avisos.length) {
+                        nuevoCargo.aceptadoConAviso = true;
+                        nuevoCargo.avisosAlRegistrar = revision.avisos.map(function(a) { return String(a).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); });
+                        registrarOperacionConAlertas('cargo', 'crear', 'Cargo extra de ' + formatearMoneda(m) + ': ' + d, { id: nuevoCargo.id, nombre: formatearMoneda(m), extra: 'Movimiento ' + nuevoCargo.id }, revision.avisos);
+                    }
+                    cargosArr.push(nuevoCargo);
+                    renovarTokenOperacionPago('form-contrato-cargo');
+                    el('cargo-descripcion').value = '';
+                    el('cargo-monto').value = '';
+                    renderizarCargos(); actualizarResumenFinanciero();
+                    mostrarNotificacion('Cargo agregado', 'success');
+                };
+                if (revision.accion === 'confirmar') {
+                    confirmarOperacionFinanciera({
+                        titulo: 'Confirmar cargo de ' + formatearMoneda(m),
+                        avisos: revision.avisos,
+                        resumenHTML: resumenFinancieroHTML(revision.totales, m, false),
+                        textoConfirmar: 'Registrar el cargo',
+                        onConfirmar: function() { registrar(true); }
+                    });
+                    return;
+                }
+                registrar(false);
             });
             el('btn-agregar-pago').addEventListener('click', function() {
                 const mi = el('contrato-nuevo-pago');
-                const m = parseFloat(mi.value);
-                if (!m || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
-                const nuevoPago = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: 'Pago registrado', codigo: generarHuellaPago(), registradoPor: nombreUsuarioActual() };
-                pagosArr.push(nuevoPago);
-                pagosRecientes.push(nuevoPago);
-                mi.value = '';
-                renderizarPagos(); actualizarResumenFinanciero();
-                mostrarNotificacion('Pago agregado', 'success');
+                const m = redondearMonetario(parseFloat(mi.value));
+                if (!isFinite(m) || m <= 0) { mostrarNotificacion('El monto del pago debe ser mayor que cero.', 'warning'); return; }
+                const codigoNuevo = generarHuellaPago();
+                const contratoEnEdicion = (contrato && contrato.id) ? contrato : { id: el('contrato-id').value || 'nuevo', pagos: pagosArr, cargos: cargosArr, precioBase: 0, precioFinal: 0 };
+                const firma = firmaMovimiento(contratoEnEdicion.id, m, '', codigoNuevo);
+                const token = obtenerTokenOperacionPago('form-contrato');
+                const revision = validarMovimientoFinanciero(
+                    { pagos: pagosArr, cargos: cargosArr, descuentoMonto: descuentoTemporal ? descuentoTemporal.monto : (contrato ? contrato.descuentoMonto : 0), precioBase: contrato ? contrato.precioBase : 0, precioFinal: contrato ? contrato.precioFinal : 0 },
+                    { tipo: 'pago', monto: m, opId: token }
+                );
+                if (revision.accion === 'bloquear') { mostrarErroresFinancieros('Pago no permitido', revision.errores); return; }
+                const registrar = function(confirmadoConAviso) {
+                    const nuevoPago = crearMovimientoFinanciero({ tipo: 'pago', monto: m, nota: 'Pago registrado', codigo: codigoNuevo, opId: token });
+                    nuevoPago.firma = firmaMovimiento(contratoEnEdicion.id, m, nuevoPago.fecha, codigoNuevo);
+                    if (confirmadoConAviso && revision.avisos.length) {
+                        nuevoPago.aceptadoConAviso = true;
+                        nuevoPago.avisosAlRegistrar = revision.avisos.map(function(a) { return String(a).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); });
+                        registrarOperacionConAlertas('pago', 'crear', 'Pago de ' + formatearMoneda(m) + ' en el contrato', { id: nuevoPago.id, nombre: formatearMoneda(m), extra: 'Movimiento ' + nuevoPago.id }, revision.avisos);
+                    }
+                    pagosArr.push(nuevoPago);
+                    pagosRecientes.push(nuevoPago);
+                    renovarTokenOperacionPago('form-contrato');
+                    mi.value = '';
+                    renderizarPagos(); actualizarResumenFinanciero();
+                    mostrarNotificacion('Pago agregado', 'success');
+                };
+                if (revision.accion === 'confirmar') {
+                    confirmarOperacionFinanciera({
+                        titulo: 'Confirmar pago de ' + formatearMoneda(m),
+                        avisos: revision.avisos,
+                        resumenHTML: resumenFinancieroHTML(revision.totales, m, true),
+                        textoConfirmar: 'Registrar el pago',
+                        onConfirmar: function() { registrar(true); }
+                    });
+                    return;
+                }
+                registrar(false);
             });
             window.PDA = window.PDA || {};
-            // v4.8: se localiza el movimiento por su id, no por el índice del array filtrado.
-            // Antes, con notas de eliminación presentes, se marcaba como eliminado el movimiento equivocado.
+            // ─────── @JS-ANULACION-FINANCIERA (v4.8.7) ───────
+            // Un pago NUNCA se borra físicamente: se ANULA conservando identificador, monto
+            // original, quién lo creó y quién lo anuló, cuándo y por qué motivo.
             window.PDA.eliminarMovimientoContrato = function(tipo, idMovimiento) {
                 const esPago = tipo === 'pago';
                 const arreglo = esPago ? pagosArr : cargosArr;
                 const indiceReal = arreglo.findIndex(function(m) { return m && m.id === idMovimiento; });
                 if (indiceReal === -1) { mostrarNotificacion('No se encontró el movimiento en el contrato.', 'warning'); return; }
                 const item = arreglo[indiceReal];
-                if (!item || item.eliminado) { mostrarNotificacion('Ese movimiento ya fue eliminado.', 'info'); return; }
-                confirmarEliminacion({
-                    titulo: esPago ? 'Eliminar pago' : 'Eliminar cargo extra',
-                    entidad: esPago ? 'pago' : 'cargo extra',
-                    nombre: formatearMoneda(item.monto),
-                    detalle: item.nota || '',
-                    onConfirmar: function() {
-                        item.eliminado = true;
-                        item.eliminadoPor = nombreUsuarioActual();
-                        item.fechaEliminacion = obtenerFechaHoraActual();
-                        const nota = { monto: 0, fecha: obtenerFechaHoraActual(), nota: (esPago ? 'Pago de ' : 'Cargo de ') + formatearMoneda(item.monto) + ' eliminado', eliminado: false, esNotaEliminacion: true, registradoPor: nombreUsuarioActual() };
-                        if (esPago) pagosArr.push(nota);
-                        else cargosArr.push(nota);
-                        registrarHistorial(esPago ? 'pago' : 'cargo', 'eliminar', 'Se eliminó ' + (esPago ? 'pago' : 'cargo extra') + ' de ' + formatearMoneda(item.monto), { nombre: formatearMoneda(item.monto) });
-                        if (esPago) renderizarPagos(); else renderizarCargos();
-                        actualizarResumenFinanciero();
-                        mostrarNotificacion('Movimiento eliminado', 'success');
+                if (!item || item.eliminado) { mostrarNotificacion('Ese movimiento ya estaba anulado.', 'info'); return; }
+
+                const contratoActual = (contrato && contrato.id) ? contrato : { id: el('contrato-id').value || 'nuevo', pagos: pagosArr, cargos: cargosArr, precioBase: 0, precioFinal: 0 };
+                const datosFinancieros = { descuentoMonto: descuentoTemporal ? descuentoTemporal.monto : (contrato ? contrato.descuentoMonto : 0), precioBase: contrato ? contrato.precioBase : 0, precioFinal: contrato ? contrato.precioFinal : 0 };
+                const totAntes = calcularTotalesContrato(Object.assign({ pagos: pagosArr, cargos: cargosArr }, datosFinancieros));
+                const montoItem = Number(item.montoOriginal !== undefined ? item.montoOriginal : item.monto) || 0;
+                // Se recalcula el escenario "después de anular" con los mismos datos, sin fórmulas a mano.
+                const totDespues = calcularTotalesContrato(Object.assign({
+                    pagos: esPago ? pagosArr.filter(function(x) { return x.id !== item.id; }) : pagosArr,
+                    cargos: esPago ? cargosArr : cargosArr.filter(function(x) { return x.id !== item.id; })
+                }, datosFinancieros));
+                const saldoActual = Math.max(0, totAntes.saldoBruto);
+                const saldoFinal = Math.max(0, totDespues.saldoBruto);
+
+                const aviso = '<div class="advertencia-eliminar"><i class="fas fa-exclamation-triangle"></i><div class="texto"><strong>El movimiento no se borra: queda anulado</strong>Se conserva su identificador, su monto original y quién lo registró. La anulación queda en el historial con tu nombre, la fecha y el motivo.<div class="detalle-entidad"><div><strong>' + formatearMoneda(montoItem) + '</strong> · ' + escapeHTML(item.nota || (esPago ? 'Pago' : 'Cargo extra')) + '</div><div style="font-size:12px;color:var(--color-texto-secundario);">Registrado por ' + escapeHTML(item.creadoPor || item.registradoPor || 'desconocido') + ' el ' + escapeHTML(item.fechaCreacion || item.fecha || 'N/D') + '</div><div style="font-size:12px;color:var(--color-texto-secundario);">ID: ' + escapeHTML(String(item.id)) + (esPago && item.codigo ? ' · Código: ' + escapeHTML(item.codigo) : '') + '</div></div></div></div>'
+                    + '<div class="form-grupo"><label>Motivo de la anulación (obligatorio) *</label><textarea id="motivo-anulacion" required placeholder="Ej: pago duplicado, monto mal capturado, cheque devuelto..." style="min-height:60px;"></textarea></div>'
+                    + '<div style="background-color:var(--color-bg-terciario);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;">'
+                    + '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:var(--color-texto-secundario);">Saldo pendiente actual</span><span style="font-weight:600;">' + formatearMoneda(saldoActual) + '</span></div>'
+                    + '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:var(--color-texto-secundario);">Saldo después de anular</span><span style="font-weight:600;color:var(--color-naranja);">' + formatearMoneda(saldoFinal) + '</span></div>'
+                    + '</div>'
+                    + '<div class="form-acciones"><button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="btn-peligro" id="btn-confirmar-anulacion"><i class="fas fa-ban"></i> Anular movimiento</button></div>';
+
+                abrirModal(esPago ? 'Anular pago' : 'Anular cargo extra', aviso);
+
+                const boton = document.getElementById('btn-confirmar-anulacion');
+                boton.addEventListener('click', function() {
+                    const motivo = (document.getElementById('motivo-anulacion').value || '').trim();
+                    if (motivo.length < 5) {
+                        mostrarNotificacion('Escribe un motivo de al menos 5 caracteres. Es obligatorio para la auditoría.', 'warning');
+                        document.getElementById('motivo-anulacion').focus();
+                        return;
                     }
+                    const ahora = obtenerFechaHoraActual();
+                    item.eliminado = true;
+                    item.estado = 'anulado';
+                    item.motivoAnulacion = motivo;
+                    if (item.montoOriginal === undefined) item.montoOriginal = montoItem;
+                    item.eliminadoPor = nombreUsuarioActual();
+                    item.eliminadoPorUsername = usuarioActual ? usuarioActual.username : 'system';
+                    item.fechaEliminacion = ahora;
+                    item.anuladoPor = item.eliminadoPor;
+                    item.fechaAnulacion = ahora;
+                    // La nota de anulación deja rastro visible en el listado del contrato.
+                    const nota = {
+                        id: generarIdSeguro('nota'),
+                        tipo: esPago ? 'pago' : 'cargo',
+                        monto: 0,
+                        montoOriginal: 0,
+                        fecha: ahora,
+                        fechaCreacion: ahora,
+                        creadoPor: nombreUsuarioActual(),
+                        registradoPor: nombreUsuarioActual(),
+                        estado: 'nota_anulacion',
+                        eliminado: false,
+                        esNotaEliminacion: true,
+                        refId: item.id,
+                        nota: (esPago ? 'Pago de ' : 'Cargo de ') + formatearMoneda(montoItem) + ' anulado — Motivo: ' + motivo + ' (ID original: ' + item.id + ')'
+                    };
+                    if (esPago) pagosArr.push(nota); else cargosArr.push(nota);
+                    registrarHistorial(esPago ? 'pago' : 'cargo', 'eliminar',
+                        'Se anuló ' + (esPago ? 'pago' : 'cargo extra') + ' de ' + formatearMoneda(montoItem) + ' — Motivo: ' + motivo,
+                        { id: item.id, nombre: formatearMoneda(montoItem), detalle: 'ID original: ' + item.id + (esPago && item.codigo ? ' · Código: ' + item.codigo : '') + ' · Registrado por: ' + (item.creadoPor || item.registradoPor || 'desconocido') });
+                    if (esPago) renderizarPagos(); else renderizarCargos();
+                    actualizarResumenFinanciero();
+                    cerrarModal();
+                    mostrarNotificacion('Movimiento anulado. El registro original se conserva.', 'success');
                 });
             };
             el('btn-nuevo-cliente-contrato').addEventListener('click', function() {
@@ -4607,8 +5004,20 @@
                     descuentoMonto: descMonto, descuentoDescripcion: descDesc,
                     pagos: pagosFinales, cargos: cargosFinales,
                     notas: not, fechaContrato: (base.fechaContrato || obtenerFechaActual()), estado: est,
-                    _modificadoPor: nombreUsuarioActual(), _fechaModificacion: obtenerFechaHoraActual()
+                    _modificadoPor: nombreUsuarioActual(), _fechaModificacion: obtenerFechaHoraActual(),
+                    _opId: base._opId || obtenerTokenOperacionPago('contrato-' + (ci || 'nuevo'))
                 });
+
+                // ── Control final de coherencia financiera (v4.8.7) ──
+                // Si el contrato queda con cifras incoherentes, se registra explícitamente en el
+                // historial que se aceptó con aviso. Nada se guarda en silencio.
+                const totalesProyectados = calcularTotalesContrato({ pagos: pagosFinales, cargos: cargosFinales, descuentoMonto: descMonto, precioBase: pb, precioFinal: precioFinal });
+                if (totalesProyectados.alertas.length > 0) {
+                    registrarOperacionConAlertas('contrato', ee ? 'editar' : 'crear',
+                        'Contrato de "' + c.nombre + '" (' + formatearMoneda(totalesProyectados.totalAPagar) + ')',
+                        { id: nc.id, nombre: c.nombre, extra: 'Pagado: ' + formatearMoneda(totalesProyectados.totalPagos) + (totalesProyectados.saldoAFavor > 0.004 ? ' · A favor: ' + formatearMoneda(totalesProyectados.saldoAFavor) : '') },
+                        totalesProyectados.alertas.map(function(a) { return a.mensaje; }));
+                }
 
                 if (ee) {
                     if (!Array.isArray(c.contratos)) c.contratos = [];
@@ -4666,13 +5075,17 @@
                     const tc = c.tipo === 'paquete' ? 'etiqueta-paquete' : 'etiqueta-solo-servicio';
                     const tl = c.tipo === 'paquete' ? 'Paquete' : 'Solo Servicio';
                     const tot = calcularTotalesContrato(c);
-                    const liq = tot.saldoPendiente === 0 && c.estado === 'Completado';
+                    const liq = tot.saldoBruto <= 0.004 && c.estado === 'Completado';
+                    const alertaFin = tot.incoherente ? '<span class="tarjeta-etiqueta" style="background:var(--color-rojo);color:#fff;" title="' + escapeHTML(tot.alertas.map(function(a) { return a.mensaje.replace(/<[^>]*>/g, ''); }).join(' · ')) + '"><i class="fas fa-exclamation-triangle"></i> Revisar cobros</span>' : '';
+                    const etiquetaSaldo = tot.saldoAFavor > 0.004
+                        ? '<span style="color:var(--color-verde);"><i class="fas fa-hand-holding-usd"></i> A favor: ' + formatearMoneda(tot.saldoAFavor) + '</span>'
+                        : '<span style="color:' + (tot.saldoPendiente === 0 ? 'var(--color-verde)' : 'var(--color-naranja)') + ';"><i class="fas fa-wallet"></i> ' + (tot.saldoPendiente === 0 ? 'Liquidado' : 'Saldo: ' + formatearMoneda(tot.saldoPendiente)) + '</span>';
                     const in_ = obtenerNombreItemContrato(c);
                     const he = c.horaEvento ? ' ' + c.horaEvento + ' hrs' : '';
                     const cl = obtenerCliente(c.clienteId);
                     const tieneTelefono = cl && cl.telefono && normalizarTelefonoWhatsApp(cl.telefono);
                     const inicial = (c.clienteNombre || 'C').charAt(0).toUpperCase();
-                    return '<div class="lista-fila" onclick="verDetalleContrato(\'' + c.clienteId + '\',\'' + c.id + '\')"><div class="lista-avatar avatar-contrato">' + inicial + '</div><div class="lista-contenido"><div class="lista-titulo-linea"><span class="lista-titulo">' + c.clienteNombre + '</span><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span><span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span>' + (liq ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Liquidado</span>' : '') + '</div><div class="lista-datos"><span><i class="fas fa-star"></i> ' + (c.festejado || 'Sin festejado') + '</span><span><i class="fas fa-calendar"></i> ' + formatearFecha(c.fechaEvento) + he + '</span></div><div class="lista-meta"><span><i class="fas fa-box"></i> <strong>' + in_ + '</strong></span><span><i class="fas fa-coins"></i> Pagado: <strong>' + formatearMoneda(tot.totalPagos) + '</strong></span><span style="color:' + (tot.saldoPendiente === 0 ? 'var(--color-verde)' : 'var(--color-naranja)') + ';"><i class="fas fa-wallet"></i> ' + (tot.saldoPendiente === 0 ? 'Liquidado' : 'Saldo: ' + formatearMoneda(tot.saldoPendiente)) + '</span></div></div><div class="lista-acciones" onclick="event.stopPropagation()"><button class="btn-editar" onclick="editarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-pago" onclick="agregarPagoRapido(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Agregar pago"><i class="fas fa-coins"></i></button><button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.clienteId + '\')" title="WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button><button class="btn-calendar" onclick="crearEventoGoogleCalendar(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Google Calendar"><i class="fab fa-google"></i></button><button class="btn-imprimir" onclick="generarVistaImpresion(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Imprimir"><i class="fas fa-print"></i></button>' + (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '') + '</div></div>';
+                    return '<div class="lista-fila" onclick="verDetalleContrato(\'' + c.clienteId + '\',\'' + c.id + '\')"><div class="lista-avatar avatar-contrato">' + inicial + '</div><div class="lista-contenido"><div class="lista-titulo-linea"><span class="lista-titulo">' + c.clienteNombre + '</span><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span><span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span>' + (liq ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Liquidado</span>' : '') + alertaFin + '</div><div class="lista-datos"><span><i class="fas fa-star"></i> ' + (c.festejado || 'Sin festejado') + '</span><span><i class="fas fa-calendar"></i> ' + formatearFecha(c.fechaEvento) + he + '</span></div><div class="lista-meta"><span><i class="fas fa-box"></i> <strong>' + in_ + '</strong></span><span><i class="fas fa-coins"></i> Pagado: <strong>' + formatearMoneda(tot.totalPagos) + '</strong></span>' + etiquetaSaldo + '</div></div><div class="lista-acciones" onclick="event.stopPropagation()"><button class="btn-editar" onclick="editarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-pago" onclick="agregarPagoRapido(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Agregar pago"><i class="fas fa-coins"></i></button><button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.clienteId + '\')" title="WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button><button class="btn-calendar" onclick="crearEventoGoogleCalendar(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Google Calendar"><i class="fab fa-google"></i></button><button class="btn-imprimir" onclick="generarVistaImpresion(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Imprimir"><i class="fas fa-print"></i></button>' + (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '') + '</div></div>';
                 }).join('');
             } else {
                 const cont = document.getElementById('lista-contratos');
@@ -4733,17 +5146,40 @@
             document.getElementById('form-pago-rapido').addEventListener('submit', function(e) {
                 e.preventDefault(); e.stopPropagation();
                 sanearCamposFormulario(['pago-rapido-nota']);
-                const m = parseFloat(document.getElementById('pago-rapido-monto').value);
+                const m = redondearMonetario(parseFloat(document.getElementById('pago-rapido-monto').value));
                 const n = document.getElementById('pago-rapido-nota').value.trim();
-                if (isNaN(m) || m <= 0) { mostrarNotificacion('Monto inválido', 'warning'); return; }
-                if (m > 10000000) { mostrarNotificacion('El monto del pago parece incorrecto.', 'warning'); return; }
-                if (!co.pagos) co.pagos = [];
-                const nuevoPago = { id: generarId(), monto: m, fecha: obtenerFechaHoraActual(), nota: n ? 'Pago: ' + n + ' - ' + formatearMoneda(m) : 'Pago de ' + formatearMoneda(m), codigo: generarHuellaPago(), registradoPor: nombreUsuarioActual() };
-                co.pagos.push(nuevoPago);
-                marcarSucia('clientes', clienteId);
-                registrarHistorial('pago', 'crear', 'Pago de ' + formatearMoneda(m) + ' para "' + c.nombre + '" - Código: ' + nuevoPago.codigo, { id: nuevoPago.id, nombre: c.nombre });
-                guardarDatos(); cerrarModal(); renderizarContratos(); renderizarClientes(); renderizarInformes();
-                setTimeout(function() { abrirSelectorComprobante(clienteId, contratoId, nuevoPago.id); }, 200);
+                if (!isFinite(m) || m <= 0) { mostrarNotificacion('El monto del pago debe ser mayor que cero.', 'warning'); return; }
+                const codigoNuevo = generarHuellaPago();
+                const token = obtenerTokenOperacionPago('pago-rapido-' + contratoId);
+                const revision = validarMovimientoFinanciero(co, { tipo: 'pago', monto: m, opId: token });
+                if (revision.accion === 'bloquear') { mostrarErroresFinancieros('Pago no permitido', revision.errores); return; }
+                const registrar = function(confirmadoConAviso) {
+                    const nuevoPago = crearMovimientoFinanciero({ tipo: 'pago', monto: m, nota: n ? 'Pago: ' + n : 'Pago de ' + formatearMoneda(m), codigo: codigoNuevo, opId: token });
+                    nuevoPago.firma = firmaMovimiento(contratoId, m, nuevoPago.fecha, codigoNuevo);
+                    if (confirmadoConAviso && revision.avisos.length) {
+                        nuevoPago.aceptadoConAviso = true;
+                        nuevoPago.avisosAlRegistrar = revision.avisos.map(function(a) { return String(a).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); });
+                        registrarOperacionConAlertas('pago', 'crear', 'Pago de ' + formatearMoneda(m) + ' para "' + c.nombre + '"', { id: nuevoPago.id, nombre: c.nombre, extra: 'Código ' + nuevoPago.codigo + ' · Movimiento ' + nuevoPago.id }, revision.avisos);
+                    }
+                    if (!co.pagos) co.pagos = [];
+                    co.pagos.push(nuevoPago);
+                    renovarTokenOperacionPago('pago-rapido-' + contratoId);
+                    marcarSucia('clientes', clienteId);
+                    registrarHistorial('pago', 'crear', 'Pago de ' + formatearMoneda(m) + ' para "' + c.nombre + '" - Código: ' + nuevoPago.codigo, { id: nuevoPago.id, nombre: c.nombre });
+                    guardarDatos(); cerrarModal(); renderizarContratos(); renderizarClientes(); renderizarInformes();
+                    setTimeout(function() { abrirSelectorComprobante(clienteId, contratoId, nuevoPago.id); }, 200);
+                };
+                if (revision.accion === 'confirmar') {
+                    confirmarOperacionFinanciera({
+                        titulo: 'Confirmar pago de ' + formatearMoneda(m),
+                        avisos: revision.avisos,
+                        resumenHTML: resumenFinancieroHTML(revision.totales, m, true),
+                        textoConfirmar: 'Registrar el pago',
+                        onConfirmar: function() { registrar(true); }
+                    });
+                    return;
+                }
+                registrar(false);
             });
         }
 
@@ -4786,7 +5222,16 @@
                 }).join('');
                 tareasHTML = '<div class="detalle-seccion detalle-seccion-tareas"><div class="detalle-seccion-titulo"><i class="fas fa-tasks"></i> Tareas del cliente (' + tareasCliente.length + ')' + ' <span class="contador-tareas">· ' + pendientes + ' pendiente' + (pendientes === 1 ? '' : 's') + ' · ' + completadas + ' completada' + (completadas === 1 ? '' : 's') + '</span></div><div class="tareas-lista">' + filasTareas + '</div></div>';
             }
-            const html = '<div class="detalle-acciones"><button class="btn-primario" onclick="editarContrato(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-edit"></i> Editar</button><button class="btn-naranja" onclick="cerrarModal(); agregarPagoRapido(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-coins"></i> Agregar pago</button><button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + clienteId + '\')"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i> WhatsApp cliente</button>' + (esAdmin() ? '<button class="btn-peligro" onclick="cerrarModal(); eliminarContrato(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-trash"></i> Eliminar</button>' : '') + '</div><div class="detalle-header"><div class="detalle-cliente">' + cliente.nombre + '</div><div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + contrato.estado + '</span><span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span></div><div class="detalle-festejado">Festejado: <strong>' + (contrato.festejado || 'No especificado') + '</strong></div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-user"></i> Datos del cliente</div><div class="detalle-grid">' + campo('Nombre', cliente.nombre) + campo('Teléfono', cliente.telefono) + campo('Email', cliente.email) + campo('Estado', cliente.estado) + '</div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-calendar-alt"></i> Información del evento</div><div class="detalle-grid">' + campo('Festejado', contrato.festejado) + campo('Tipo', tl) + campo('Fecha', formatearFecha(contrato.fechaEvento)) + campo('Hora', contrato.horaEvento ? contrato.horaEvento + ' hrs' : 'Sin especificar') + campo('Dirección evento', contrato.direccionEvento) + campo('Dirección recepción', contrato.direccionRecepcion) + campo('Hora recepción', contrato.horaRecepcion ? contrato.horaRecepcion + ' hrs' : 'Sin especificar') + campo('Fecha contrato', formatearFecha(contrato.fechaContrato)) + '</div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-box"></i> Paquete / Servicio</div><div class="detalle-grid"><div class="detalle-campo" style="grid-column:1/-1;"><span class="lbl">Descripción</span><span class="val">' + (in_ || 'No especificado') + '</span></div></div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-chart-line"></i> Resumen financiero</div><div class="detalle-resumen-financiero"><div class="detalle-financiero-card"><div class="lbl">Precio base</div><div class="val">' + formatearMoneda(contrato.precioBase) + '</div></div><div class="detalle-financiero-card"><div class="lbl">Precio final</div><div class="val">' + formatearMoneda(contrato.precioFinal) + '</div></div>' + (tot.totalCargos > 0 ? '<div class="detalle-financiero-card"><div class="lbl">Cargos extras</div><div class="val">' + formatearMoneda(tot.totalCargos) + '</div></div>' : '') + '<div class="detalle-financiero-card destacado"><div class="lbl">Total a pagar</div><div class="val">' + formatearMoneda(tot.totalAPagar) + '</div></div><div class="detalle-financiero-card ok"><div class="lbl">Pagado</div><div class="val">' + formatearMoneda(tot.totalPagos) + '</div></div><div class="detalle-financiero-card ' + (tot.saldoPendiente === 0 ? 'ok' : 'pendiente') + '"><div class="lbl">Saldo pendiente</div><div class="val">' + (tot.saldoPendiente === 0 ? 'Liquidado ' : '') + formatearMoneda(tot.saldoPendiente) + '</div></div></div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-coins"></i> Pagos (' + tot.pagosValidos.length + ')</div><div class="detalle-lista">' + pagosHTML + '</div></div>' + cargosHTML + (contrato.notas ? '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas</div><div class="detalle-notas">' + contrato.notas + '</div></div>' : '') + tareasHTML;
+            // ── Alertas de integridad financiera (v4.8.7) ──
+            let alertasFinancierasHTML = '';
+            if (tot.alertas.length > 0) {
+                const filas = tot.alertas.map(function(a) {
+                    const color = a.severidad === 'alta' ? 'var(--color-rojo)' : 'var(--color-naranja)';
+                    return '<li style="margin-bottom:6px;color:' + color + ';">' + a.mensaje + '</li>';
+                }).join('');
+                alertasFinancierasHTML = '<div class="advertencia-eliminar" style="background-color:rgba(255,152,0,0.10);border-color:var(--color-naranja);"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto"><strong style="color:var(--color-naranja);">Revisar el estado de cobros</strong><ul style="margin:8px 0 0 18px;padding:0;">' + filas + '</ul><div style="margin-top:8px;font-size:12px;color:var(--color-texto-secundario);">Los importes no se modifican automáticamente: corrígelos desde Editar o anula el movimiento que corresponda.</div></div></div>';
+            }
+            const html = '<div class="detalle-acciones"><button class="btn-primario" onclick="editarContrato(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-edit"></i> Editar</button><button class="btn-naranja" onclick="cerrarModal(); agregarPagoRapido(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-coins"></i> Agregar pago</button><button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + clienteId + '\')"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i> WhatsApp cliente</button>' + (esAdmin() ? '<button class="btn-peligro" onclick="cerrarModal(); eliminarContrato(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-trash"></i> Eliminar</button>' : '') + '</div><div class="detalle-header"><div class="detalle-cliente">' + cliente.nombre + '</div><div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + contrato.estado + '</span><span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span></div><div class="detalle-festejado">Festejado: <strong>' + (contrato.festejado || 'No especificado') + '</strong></div></div>' + alertasFinancierasHTML + '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-user"></i> Datos del cliente</div><div class="detalle-grid">' + campo('Nombre', cliente.nombre) + campo('Teléfono', cliente.telefono) + campo('Email', cliente.email) + campo('Estado', cliente.estado) + '</div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-calendar-alt"></i> Información del evento</div><div class="detalle-grid">' + campo('Festejado', contrato.festejado) + campo('Tipo', tl) + campo('Fecha', formatearFecha(contrato.fechaEvento)) + campo('Hora', contrato.horaEvento ? contrato.horaEvento + ' hrs' : 'Sin especificar') + campo('Dirección evento', contrato.direccionEvento) + campo('Dirección recepción', contrato.direccionRecepcion) + campo('Hora recepción', contrato.horaRecepcion ? contrato.horaRecepcion + ' hrs' : 'Sin especificar') + campo('Fecha contrato', formatearFecha(contrato.fechaContrato)) + '</div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-box"></i> Paquete / Servicio</div><div class="detalle-grid"><div class="detalle-campo" style="grid-column:1/-1;"><span class="lbl">Descripción</span><span class="val">' + (in_ || 'No especificado') + '</span></div></div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-chart-line"></i> Resumen financiero</div><div class="detalle-resumen-financiero"><div class="detalle-financiero-card"><div class="lbl">Precio base</div><div class="val">' + formatearMoneda(contrato.precioBase) + '</div></div><div class="detalle-financiero-card"><div class="lbl">Precio final</div><div class="val">' + formatearMoneda(contrato.precioFinal) + '</div></div>' + (tot.totalCargos > 0 ? '<div class="detalle-financiero-card"><div class="lbl">Cargos extras</div><div class="val">' + formatearMoneda(tot.totalCargos) + '</div></div>' : '') + '<div class="detalle-financiero-card destacado"><div class="lbl">Total a pagar</div><div class="val">' + formatearMoneda(tot.totalAPagar) + '</div></div><div class="detalle-financiero-card ok"><div class="lbl">Pagado</div><div class="val">' + formatearMoneda(tot.totalPagos) + '</div></div><div class="detalle-financiero-card ' + (tot.saldoPendiente === 0 ? 'ok' : 'pendiente') + '"><div class="lbl">Saldo pendiente</div><div class="val">' + (tot.saldoPendiente === 0 ? 'Liquidado ' : '') + formatearMoneda(tot.saldoPendiente) + '</div></div></div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-coins"></i> Pagos (' + tot.pagosValidos.length + ')</div><div class="detalle-lista">' + pagosHTML + '</div></div>' + cargosHTML + (contrato.notas ? '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas</div><div class="detalle-notas">' + contrato.notas + '</div></div>' : '') + tareasHTML;
             const esMobil = window.innerWidth <= 768;
             if (esMobil) abrirModal('Detalle del contrato', html, true);
             else { abrirPanelLateral('Detalle del contrato', html, { tipo: 'contrato', itemId: contratoId }); marcarItemSeleccionado(contratoId); }
