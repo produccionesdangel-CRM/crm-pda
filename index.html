@@ -1565,7 +1565,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '4.8';
-        var BUILD_APP = '2026-10-05.8';
+        var BUILD_APP = '2026-10-05.9';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -6028,11 +6028,13 @@
                 return true;
             };
             // Red de seguridad: si el popup queda bloqueado en silencio, avisa en vez de pensar para siempre.
+            // v4.8.9: en el teléfono, elegir la cuenta en la ventana emergente tarda más de 20 s.
+            const ESPERA_POPUP_MS = (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '') || window.innerWidth <= 820) ? 90000 : 20000;
             const temporizador = setTimeout(function() {
                 if (!restaurarBoton()) return;
                 errorLogin('login-error-google', 'La ventana de Google no respondió. Causas habituales: (1) el navegador bloqueó la ventana emergente — habilítala para este sitio; (2) el dominio no está autorizado en Firebase → Authentication → Settings → Authorized domains; (3) estás abriendo el archivo con file:// en lugar de http://localhost. Revisa la consola del navegador (F12) para ver el código exacto del error.');
                 mostrarNotificacion('Google no respondió. Revisa las ventanas emergentes y los dominios autorizados.', 'warning');
-            }, 20000);
+            }, ESPERA_POPUP_MS);
             const limpiar = function() { clearTimeout(temporizador); };
 
             // ── @JS-AUTH-MOVIL (v4.8.3) ──
@@ -6066,6 +6068,14 @@
             const esAndroid = /Android/i.test(ua);
             const esFirefox = /Firefox|FxiOS/i.test(ua);
             const pantallaChica = window.innerWidth <= 820;
+            // ─────── @JS-AUTH-MOVIL (v4.8.9) ───────
+            // Chrome en Android SÍ admite la ventana emergente, y esa vía NO depende de las
+            // cookies de terceros que Chrome bloquea y que rompían el resultado de la
+            // redirección: Google autenticaba, la sesión nunca llegaba y volvía al login.
+            // Si el popup falla, iniciarSesionConGoogle() cae solo a redirección.
+            const esChromeAndroid = esAndroid && /Chrome\/\d/.test(ua)
+                && !/EdgA|OPR|SamsungBrowser|; wv|Firefox/i.test(ua);
+            if (esChromeAndroid) return false;
             return esIOS || esAndroid || esFirefox || pantallaChica;
         }
 
