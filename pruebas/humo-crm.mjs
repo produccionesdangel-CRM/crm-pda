@@ -45,7 +45,7 @@ export function crearContexto({ conIndexedDB = false } = {}) {
     if (elementos.has(id)) return elementos.get(id);
     const el = {
       id, tagName: 'DIV', nodeName: 'DIV', value: '', checked: false, disabled: false,
-      textContent: '', innerHTML: '', outerHTML: '', className: '', title: '', href: '',
+      outerHTML: '', className: '', title: '', href: '',
       style: {}, dataset: {}, children: [], childNodes: [], files: [], options: [], selectedIndex: 0,
       classList: {
         _s: new Set(),
@@ -58,7 +58,7 @@ export function crearContexto({ conIndexedDB = false } = {}) {
       appendChild(c) { el.children.push(c); return c; }, removeChild(c) { el.children = el.children.filter(x => x !== c); return c; },
       insertBefore(c) { el.children.push(c); return c; }, replaceChild() { }, remove() { },
       setAttribute() { }, getAttribute() { return null; }, removeAttribute() { }, hasAttribute() { return false; },
-      querySelector() { return null; }, querySelectorAll() { return []; },
+      querySelector(sel) { return hacerEl('sel:' + sel); }, querySelectorAll() { return []; },
       getElementsByClassName() { return []; }, getElementsByTagName() { return []; },
       closest() { return el; }, contains() { return false; },
       focus() { }, blur() { }, click() { anotar('click:' + id); }, scrollIntoView() { }, select() { },
@@ -68,6 +68,16 @@ export function crearContexto({ conIndexedDB = false } = {}) {
     };
     Object.defineProperty(el, 'firstChild', { get() { return el.children[0] || null; } });
     Object.defineProperty(el, 'lastChild', { get() { return el.children[el.children.length - 1] || null; } });
+    // El CRM inyecta HTML y luego busca esos elementos por id (por ejemplo el botón
+    // de confirmar del modal). Si el simulador no los registrara, daría falsos negativos.
+    Object.defineProperty(el, 'innerHTML', {
+      get() { return el._html || ''; },
+      set(v) { el._html = String(v); for (const m of el._html.matchAll(/id="([^"]+)"/g)) IDS.add(m[1]); }
+    });
+    Object.defineProperty(el, 'textContent', {
+      get() { return el._texto || ''; },
+      set(v) { el._texto = String(v); }
+    });
     elementos.set(id, el);
     return el;
   }
@@ -337,5 +347,33 @@ console.log('\n=== 6. Capa de datos: las colecciones nuevas entraron al mecanism
     'el export no las incluye');
 }
 
+console.log('\n=== 7. Puente de la interfaz de campañas con el CRM ===');
+{
+  const c = r.contexto;
+  comprobar('App existe con el puente de modales', !!c.App && typeof c.App.abrirModal === 'function');
+
+  let error = null;
+  try { c.App.abrirModal('Prueba de modal', '<p id="prueba-contenido">hola</p>'); } catch (e) { error = e.message; }
+  const titulo = (r.elementos.get('modal-titulo') || {}).textContent;
+  const cuerpo = String((r.elementos.get('modal-body') || {}).innerHTML);
+  comprobar('App.abrirModal() usa el modal del CRM (título y contenido)',
+    error === null && titulo === 'Prueba de modal' && cuerpo.includes('prueba-contenido'),
+    error || `titulo="${titulo}"`);
+
+  error = null;
+  try { c.App.notificar('Aviso de prueba', 'ok'); } catch (e) { error = e.message; }
+  comprobar('App.notificar() acepta el tipo "ok" que usa la lite', error === null, error || '');
+
+  let confirmado = false, errorConfirmar = null;
+  try { c.App.confirmar('¿Seguimos?', function () { confirmado = true; }, 'Sí'); } catch (e) { errorConfirmar = e.message; }
+  const btn = r.elementos.get('btn-confirmar-accion');
+  const manejador = btn && btn._ev && btn._ev.click && btn._ev.click[0];
+  comprobar('App.confirmar() abre la confirmación del CRM con su botón', errorConfirmar === null && !!manejador, errorConfirmar || 'sin botón');
+  if (manejador) manejador();
+  comprobar('el botón de confirmar ejecuta la acción pedida', confirmado === true, `confirmado=${confirmado}`);
+
+  comprobar('el puente apunta al almacén y al motor reales',
+    c.App.almacen === c.almacenCampanias && c.App.motor === c.motorCampanias, 'no coinciden');
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);

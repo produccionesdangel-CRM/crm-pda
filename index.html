@@ -9075,6 +9075,84 @@
         };
         var motorCampanias = crearMotor(almacenCampanias);
 
+        /* ─────── Puente de la interfaz de campañas con el CRM ───────
+           La interfaz del módulo de campañas (portada del CRM Lite) está escrita
+           contra una capa App.*. Aquí esas llamadas se conectan con lo que este CRM
+           ya tiene: modales, avisos, confirmaciones, panel lateral y navegación.
+           Este bloque va DESPUÉS de portar la interfaz, porque reemplaza las
+           versiones propias de la lite por las del CRM.
+           No se tocan los modales de campaña (tarea, contacto, conversión…): esos
+           ya escriben por el motor y deben seguir haciéndolo. */
+        var App = (typeof window !== 'undefined' ? (window.App = window.App || {}) : {});
+        App.almacen = almacenCampanias;
+        App.motor = motorCampanias;
+        App.ui = App.ui || { vistaProspectos: 'mosaico', vistaCampanias: 'mosaico', campaniaAbierta: null, tabCampania: 'resumen', mesCalendario: null, modal: null };
+        App.seccionActual = App.seccionActual || 'panel';
+
+        App.abrirModal = function (titulo, html, opciones) {
+            abrirModal(titulo, html, !!(opciones && (opciones.ancho || opciones.anchoAmplio)));
+        };
+        App.cerrarModal = function () { cerrarModal(); };
+
+        // La lite avisa con 'ok' | 'error' | 'aviso'; el CRM usa 'success' | 'error' | 'warning' | 'info'.
+        App.notificar = function (mensaje, tipo) {
+            var mapa = { ok: 'success', exito: 'success', error: 'error', aviso: 'warning', warning: 'warning' };
+            mostrarNotificacion(mensaje, mapa[tipo] || 'info');
+        };
+
+        // La lite llama App.confirmar(mensaje, alConfirmar, textoBoton).
+        App.confirmar = function (mensaje, alConfirmar, textoBoton) {
+            confirmarAccion({
+                titulo: 'Confirmar', entidad: 'esta acción', detalle: mensaje,
+                textoConfirmar: textoBoton || 'Confirmar',
+                icono: 'fa-question-circle', colorBoton: 'btn-primario',
+                onConfirmar: alConfirmar
+            });
+        };
+
+        App.descargar = function (nombreArchivo, contenido, tipoMime) {
+            var blob = new Blob([contenido], { type: tipoMime || 'text/plain;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url; a.download = nombreArchivo || 'descarga.txt';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        };
+
+        App.seleccionarSeccion = function (nombre) { App.seccionActual = nombre; cambiarSeccion(nombre); };
+        App.renderSeccion = function (nombre) {
+            var n = nombre || App.seccionActual;
+            App.seccionActual = n;
+            try { renderizarSeccion(n); } catch (e) { console.warn('No se pudo renderizar la sección ' + n + ':', e); }
+            if (n === 'panel' && typeof App.renderPanel === 'function') App.renderPanel();
+            if (n === 'campanias' && typeof App.renderCampanias === 'function') App.renderCampanias();
+            if (n === 'calendario') { try { renderizarCalendario(); } catch (e) { } }
+        };
+        App.renderTodo = function () {
+            try { renderizarTodo(); } catch (e) { console.warn('renderizarTodo:', e); }
+            if (typeof App.renderPanel === 'function') App.renderPanel();
+            if (typeof App.renderCampanias === 'function') App.renderCampanias();
+        };
+
+        // Prospectos y clientes con las vistas que el CRM ya tiene (no se duplican).
+        App.abrirProspecto = function (id) { if (typeof verDetalleProspecto === 'function') verDetalleProspecto(id); };
+        App.abrirPanelProspecto = function (id) { if (typeof verDetalleProspecto === 'function') verDetalleProspecto(id); };
+        App.abrirCliente = function (id) { if (typeof verDetalleCliente === 'function') verDetalleCliente(id); };
+        App.cerrarPanel = function () { if (typeof cerrarPanelLateral === 'function') cerrarPanelLateral(); };
+
+        App.renderProspectos = function () { if (typeof renderizarProspectos === 'function') renderizarProspectos(); };
+        App.renderClientes = function () { if (typeof renderizarClientes === 'function') renderizarClientes(); };
+        App.renderHistorial = function () { if (typeof renderizarHistorial === 'function') renderizarHistorial(); };
+        App.renderConfiguracion = function () { App.renderHistorial(); if (typeof renderizarUsuarios === 'function') renderizarUsuarios(); };
+        App.renderCatalogo = function () {
+            if (typeof renderizarPaquetes === 'function') renderizarPaquetes();
+            if (typeof renderizarServicios === 'function') renderizarServicios();
+        };
+        App.renderCalendario = function () { if (typeof renderizarCalendario === 'function') renderizarCalendario(); };
+        App.aplicarTema = function (tema) { if (typeof aplicarTema === 'function') aplicarTema(tema || 'dark'); };
+        App.modalProspecto = function () { if (typeof mostrarFormularioProspecto === 'function') mostrarFormularioProspecto(); };
+        App.modalPaquete = function () { if (typeof mostrarFormularioPaquete === 'function') mostrarFormularioPaquete(); };
+
         (async function boot() {
             // ─────── @JS-BOOT-V48 ───────
             // Orden obligatorio: almacén → datos locales → sesión de Google → (login | app) → nube.

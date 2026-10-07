@@ -113,7 +113,15 @@
       **sí puede imprimir y enviar comprobantes de pago** (corrección suya), fase comercial hasta Negociación,
       los Operadores conservan sus permisos, **sin PIN: solo cuenta de Google**, y **autorizó ajustar las reglas
       de Firebase**. Matriz completa y límites en `PERMISOS-VENTAS.md`.
-- [ ] Fase 3b (interfaz de campañas) · Fase 3c (calendario y panel del prospecto) · Fase 4 (rol de Ventas) · Fase 5 (cierre)
+- [x] **Fase 3b (parte 1)** (commit siguiente): **puente `App`** con el CRM — `abrirModal`, `cerrarModal`, `notificar`
+      (traduce el `'ok'` de la lite a `'success'`), `confirmar` (conecta el botón del CRM y ejecuta la acción),
+      `descargar`, navegación (`seleccionarSeccion`, `renderSeccion`, `renderTodo`) y las pantallas que el CRM ya
+      tiene (prospectos, clientes, catálogo, historial, configuración, tema). Verificado **35/35** en el banco.
+- [ ] **Fase 3b (parte 2):** portar `30-vistas.js` (77 KB), `40-campanias.js` (1.733 líneas) y `50-calendario.js`,
+      más el cableado de `60-inicio.js`. **Importante:** esos archivos definen sus propias versiones de `App.*`,
+      así que el puente tiene que quedar **después** de ellos (pisa las de la lite con las del CRM).
+      No se tocan los modales de campaña (tarea, contacto, conversión): ya escriben por el motor.
+- [ ] Fase 3c (calendario y panel del prospecto) · Fase 4 (rol de Ventas) · Fase 5 (cierre)
 - [ ] Respaldo exportado y verificado por Jorge (regla de oro, antes de tocar la base real).
 - [ ] `firebase-rules-recomendadas.json` (pedido a la PC de trabajo por el canal).
 
