@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.7';
+        var BUILD_APP = '2026-10-07.8';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -9204,6 +9204,32 @@
             } catch (e) { console.warn("No se pudo actualizar el indice de administradores:", e); return false; }
         }
         var historialCampaniasEnviado = historial.length;
+        /* Auto-reparacion de campanas.
+           Firebase Realtime Database NO guarda arreglos vacios: una campana que
+           se guarda y vuelve de la nube pierde sus arreglos vacios (ofertas,
+           beneficios, plantillas de tareas, campos propios, criterios...).
+           El CRM siempre se defendio leyendo con "|| []"; el asistente portado
+           lo dio por hecho y sus botones de agregar lanzaban una excepcion que
+           no se veia en pantalla ("no hace nada").
+           Se reparan al leerlas, que es justo donde nace el problema. */
+        function normalizarCampania(c) {
+            if (!c || typeof c !== 'object') return c;
+            var arreglos = ['objetivosSecundarios', 'criteriosElegibilidad', 'datosRequeridos',
+                'camposPersonalizados', 'etapas', 'plantillasTareas', 'beneficios', 'ofertas'];
+            arreglos.forEach(function (k) { if (!Array.isArray(c[k])) c[k] = []; });
+            if (!c.metas || typeof c.metas !== 'object') c.metas = {};
+            if (!c.publicoObjetivo || typeof c.publicoObjetivo !== 'object') c.publicoObjetivo = {};
+            if (!Array.isArray(c.publicoObjetivo.fuentes)) c.publicoObjetivo.fuentes = [];
+            if (typeof c.publicoObjetivo.descripcion !== 'string') c.publicoObjetivo.descripcion = '';
+            if (!c.configuracion || typeof c.configuracion !== 'object') c.configuracion = {};
+            if (c.configuracion.avisarSeguimiento === undefined) c.configuracion.avisarSeguimiento = true;
+            if (!c.configuracion.sincronizarFaseComercial || typeof c.configuracion.sincronizarFaseComercial !== 'object') {
+                c.configuracion.sincronizarFaseComercial = { activo: false, mapa: {} };
+            }
+            if (!c.configuracion.sincronizarFaseComercial.mapa) c.configuracion.sincronizarFaseComercial.mapa = {};
+            return c;
+        }
+
         var almacenCampanias = {
             get db() {
                 return {
@@ -9221,7 +9247,8 @@
                 for (var i = 0; i < lista.length; i++) { if (lista[i] && lista[i].id === id) return lista[i]; }
                 return null;
             },
-            campania: function (id) { return almacenCampanias.porId('campanias', id); },
+            campania: function (id) { return normalizarCampania(almacenCampanias.porId('campanias', id)); },
+            normalizarCampania: normalizarCampania,
             participacion: function (id) { return almacenCampanias.porId('participaciones', id); },
             prospecto: function (id) { return almacenCampanias.porId('prospectos', id); },
             cliente: function (id) { return almacenCampanias.porId('clientes', id); },
@@ -10446,6 +10473,8 @@
     /* ═══════════════ Listado de campañas ═══════════════ */
 
     App.renderCampanias = function () {
+        /* Se reparan todas antes de dibujar (ver normalizarCampania en el adaptador). */
+        (App.almacen.db.campanias || []).forEach(function (c) { App.almacen.normalizarCampania(c); });
         var vistaLista = document.getElementById('campanias-lista-vista');
         var vistaDetalle = document.getElementById('campania-detalle-vista');
 

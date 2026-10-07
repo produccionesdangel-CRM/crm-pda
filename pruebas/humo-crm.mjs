@@ -833,5 +833,96 @@ console.log('\n=== 20. Ninguna ventana ni aviso muestra código (reportado por J
   comprobar('los avisos siguen escapando el mensaje',
     /escapeHTML\(mensaje\)/.test(HTML), 'los avisos dejaron de escapar');
 }
+/* ══════════════════════════════════════════════════════════════════════
+   21. Una campaña que vuelve de la nube pierde sus arreglos vacíos
+   ----------------------------------------------------------------------
+   Firebase Realtime Database NO guarda arreglos vacíos: al sincronizar y
+   volver a leer, una campaña se queda sin "ofertas", "beneficios",
+   "plantillasTareas", "camposPersonalizados", etc. Eso fue el fallo que
+   reportó Jorge: pulsaba "Agregar oferta" y no pasaba nada (el manejador
+   existía, pero lanzaba una excepción que no se veía en pantalla).
+
+   Esta prueba reproduce esa campaña "dañada", abre el asistente y PULSA
+   cada botón de agregar, comprobando que el dato entra de verdad.
+   ══════════════════════════════════════════════════════════════════════ */
+{
+  const c = r.contexto;
+  c.usuarioActual = { username: 'jorge', nombre: 'Jorge', rol: 'Administrador', admin: true };
+
+  /* Campaña tal como queda en la base cuando sus arreglos están vacíos. */
+  const danada = {
+    id: 'cmp_danada',
+    nombre: 'Campaña que volvió de la nube',
+    tipo: 'Captación',
+    estado: 'activa',
+    fechaInicio: '2026-10-01',
+    fechaFin: '2026-12-31',
+    etapas: [{ id: 'e1', nombre: 'Inicio', orden: 1, esInicial: true, esFinal: false, resultadoTipo: 'ninguno' }]
+  };
+  c.campanias.push(danada);
+  c.paquetes.push({ id: 'paq_x', nombre: 'Paquete X', precio: 1000, estatus: 'Activo' });
+  c.serviciosAdicionales.push({ id: 'srv_x', nombre: 'Servicio X', precio: 500 });
+
+  const documento = r.ventana.document;
+  const buscar = (id) => documento.getElementById(id);
+
+  /* 1) El adaptador la repara al leerla. */
+  const reparada = c.App.almacen.campania('cmp_danada');
+  const arreglos = ['objetivosSecundarios', 'criteriosElegibilidad', 'datosRequeridos', 'camposPersonalizados',
+    'etapas', 'plantillasTareas', 'beneficios', 'ofertas'];
+  const faltan = arreglos.filter(k => !Array.isArray(reparada[k]));
+  comprobar('el adaptador le devuelve los arreglos vacíos a una campaña que volvió de la nube',
+    faltan.length === 0, faltan.join(', '));
+  comprobar('y también el público objetivo con sus fuentes',
+    !!(reparada.publicoObjetivo && Array.isArray(reparada.publicoObjetivo.fuentes)), 'publicoObjetivo.fuentes');
+
+  /* 2) Prueba funcional: abrir el asistente y pulsar CADA botón de agregar. */
+  let errorAsistente = null;
+  try { c.App.asistenteCampania('cmp_danada'); } catch (e) { errorAsistente = (e && e.message) || String(e); }
+  comprobar('el asistente abre con una campaña que volvió de la nube (paso 3 inclusive)',
+    errorAsistente === null, errorAsistente || '');
+
+  const casos = [
+    { paso: 3, boton: 'as-agregar-criterio', campos: { 'as-criterio-tipo': 'tipoEventoEs', 'as-criterio-valor': 'Boda' }, arreglo: 'criteriosElegibilidad' },
+    { paso: 4, boton: 'as-agregar-campo', campos: { 'as-cp-nombre': 'campoPrueba', 'as-cp-etiqueta': 'Campo de prueba' }, arreglo: 'camposPersonalizados' },
+    { paso: 5, boton: 'as-agregar-etapa', campos: { 'as-etapa-nombre': 'Etapa de prueba' }, arreglo: 'etapas' },
+    { paso: 6, boton: 'as-agregar-plantilla', campos: { 'as-plt-nombre': 'Tarea de prueba' }, arreglo: 'plantillasTareas' },
+    { paso: 7, boton: 'as-agregar-beneficio', campos: { 'as-ben-nombre': 'Beneficio de prueba' }, arreglo: 'beneficios' },
+    { paso: 7, boton: 'as-agregar-oferta', campos: { 'as-oft-nombre': 'Oferta de prueba', 'as-oft-servicio': 'srv_x', 'as-oft-precio': '600' }, arreglo: 'ofertas' }
+  ];
+
+  for (const caso of casos) {
+    let guardia = 0;
+    while ((c.App.ui.asistente.paso || 1) < caso.paso && guardia < 12) {
+      const siguiente = buscar('asi-siguiente');
+      if (!siguiente || typeof siguiente.onclick !== 'function') break;
+      siguiente.onclick({ preventDefault() { } });
+      guardia++;
+    }
+    for (const [id, valor] of Object.entries(caso.campos)) {
+      const el = buscar(id);
+      if (el) el.value = valor;
+    }
+    const antes = (c.App.ui.asistente.borrador[caso.arreglo] || []).length;
+    let error = null;
+    const boton = buscar(caso.boton);
+    if (!boton || typeof boton.onclick !== 'function') error = 'el botón no quedó conectado';
+    else {
+      try { boton.onclick({ preventDefault() { } }); }
+      catch (e) { error = (e && e.message) || String(e); }
+    }
+    const despues = (c.App.ui.asistente.borrador[caso.arreglo] || []).length;
+    comprobar(`paso ${caso.paso}: pulsar "${caso.boton}" agrega a ${caso.arreglo}`,
+      error === null && despues === antes + 1, error || `${antes} -> ${despues}`);
+  }
+
+  /* 3) El caso exacto que reportó Jorge, con su nombre. */
+  comprobar('el botón "Agregar oferta" del paso 7 hace su trabajo (fallo reportado por Jorge)',
+    (c.App.ui.asistente.borrador.ofertas || []).length === 1,
+    'ofertas=' + (c.App.ui.asistente.borrador.ofertas || []).length);
+
+  try { c.App.cerrarModal(); } catch (e) { }
+}
+
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);
