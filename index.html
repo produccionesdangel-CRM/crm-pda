@@ -1019,7 +1019,185 @@
         @keyframes girarLogin { to { transform: rotate(360deg); } }
         .bloqueo-aviso { background-color: rgba(255, 152, 0, 0.12); border: 1px solid var(--color-naranja); color: var(--color-naranja); padding: 10px 14px; border-radius: var(--border-radius); font-size: 12.5px; margin-bottom: 12px; text-align: left; line-height: 1.5; }
         /* ─────── FIN @CSS-V48-ACCESO ─────── */
-    </style>
+        /* ─────── @CSS-CAMPANIAS v5.0 (portado del CRM Lite, sin tocar lo existente) ─────── */
+        /* ═══════════════════════════════════════════════════════════
+           Estilos NUEVOS del módulo de Campañas (versión lite).
+           Usan las mismas variables de color del CRM v4.8 para que la
+           estética sea idéntica en los 4 temas (dark/light/otono/angel).
+           ═══════════════════════════════════════════════════════════ */
+
+        /* ── Aviso de modo de sesión ─────────────────────────────── */
+
+        /* ── Etiquetas de estado de campaña ──────────────────────── */
+        .etiqueta-estado { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; white-space: nowrap; text-transform: capitalize; }
+        .etiqueta-estado.borrador { background-color: rgba(168, 168, 168, 0.2); color: var(--color-texto-secundario); }
+        .etiqueta-estado.programada { background-color: rgba(66, 165, 245, 0.2); color: var(--color-azul); }
+        .etiqueta-estado.activa { background-color: rgba(76, 175, 80, 0.2); color: var(--color-verde); }
+        .etiqueta-estado.pausada { background-color: rgba(255, 152, 0, 0.2); color: var(--color-naranja); }
+        .etiqueta-estado.finalizada { background-color: rgba(156, 39, 176, 0.2); color: var(--color-morado); }
+        .etiqueta-estado.cancelada { background-color: rgba(239, 83, 80, 0.2); color: var(--color-rojo); }
+
+        /* ── Etiquetas de la participación ───────────────────────── */
+        .etiqueta-part { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; background-color: var(--color-bg-terciario); color: var(--color-texto-secundario); border: 1px solid var(--color-borde); }
+        .etiqueta-part.positiva { background-color: rgba(76, 175, 80, 0.18); color: var(--color-verde); border-color: transparent; }
+        .etiqueta-part.negativa { background-color: rgba(239, 83, 80, 0.18); color: var(--color-rojo); border-color: transparent; }
+        .etiqueta-part.neutra { background-color: rgba(66, 165, 245, 0.18); color: var(--color-azul); border-color: transparent; }
+        .etiqueta-part.aviso { background-color: rgba(255, 152, 0, 0.18); color: var(--color-naranja); border-color: transparent; }
+
+        /* ── Navegación de pestañas dentro de una ficha ──────────── */
+        .tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--color-borde); margin-bottom: 20px; }
+        .tab { background: none; border: none; border-bottom: 3px solid transparent; color: var(--color-texto-secundario); font-family: inherit; font-size: 13.5px; font-weight: 600; padding: 10px 14px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 7px; }
+        .tab:hover { color: var(--color-texto-primario); background-color: var(--color-bg-hover); }
+        .tab.activo { color: var(--color-acento); border-bottom-color: var(--color-acento); }
+        .tab .conteo { background-color: var(--color-bg-terciario); border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+
+        /* ── Encabezado de la ficha de campaña ───────────────────── */
+        .ficha-cabecera { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde); border-radius: var(--border-radius); padding: 20px; margin-bottom: 20px; }
+        .ficha-cabecera .titulo-bloque { flex: 1; min-width: 240px; }
+        .ficha-cabecera h2 { font-size: 22px; font-weight: 500; margin: 0 0 8px 0; color: var(--color-texto-primario); }
+        .ficha-cabecera .meta-linea { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--color-texto-secundario); }
+        .ficha-cabecera .meta-linea span { display: inline-flex; align-items: center; gap: 5px; }
+
+        /* ── Embudo ──────────────────────────────────────────────── */
+        .embudo { display: flex; flex-direction: column; gap: 6px; }
+        .embudo-fila { display: flex; align-items: center; gap: 12px; }
+        .embudo-nombre { width: 190px; min-width: 130px; font-size: 13px; color: var(--color-texto-primario); text-align: right; word-break: break-word; }
+        .embudo-barra-caja { flex: 1; min-width: 60px; background-color: var(--color-bg-terciario); border-radius: 6px; overflow: hidden; height: 26px; }
+        .embudo-barra { height: 100%; background: linear-gradient(90deg, var(--color-acento), var(--color-acento-hover)); border-radius: 6px; transition: width 0.4s ease; min-width: 2px; }
+        .embudo-barra.etapa-final { background: linear-gradient(90deg, var(--color-verde), #66bb6a); }
+        .embudo-barra.etapa-inicial { background: linear-gradient(90deg, var(--color-azul), #64b5f6); }
+        .embudo-valor { width: 78px; font-size: 13px; font-weight: 700; color: var(--color-texto-primario); }
+        .embudo-valor small { display: block; font-weight: 400; font-size: 11px; color: var(--color-texto-secundario); }
+
+        /* ── Progreso de metas ───────────────────────────────────── */
+        .meta-fila { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+        .meta-titulo { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--color-texto-secundario); }
+        .meta-titulo strong { color: var(--color-texto-primario); }
+        .meta-barra-caja { background-color: var(--color-bg-terciario); border-radius: 6px; height: 12px; overflow: hidden; }
+        .meta-barra { height: 100%; background-color: var(--color-acento); border-radius: 6px; transition: width 0.4s ease; }
+        .meta-barra.cumplida { background-color: var(--color-verde); }
+
+        /* ── Constructor de campañas (asistente por pasos) ───────── */
+        .asistente { display: grid; grid-template-columns: 230px 1fr; gap: 24px; align-items: start; }
+        .asistente-pasos { display: flex; flex-direction: column; gap: 4px; position: sticky; top: 8px; }
+        .asistente-paso { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--border-radius); font-size: 13px; color: var(--color-texto-secundario); background: none; border: none; text-align: left; font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
+        .asistente-paso:hover { background-color: var(--color-bg-hover); color: var(--color-texto-primario); }
+        .asistente-paso .num { width: 24px; height: 24px; border-radius: 50%; background-color: var(--color-bg-terciario); color: var(--color-texto-secundario); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+        .asistente-paso.activo { background-color: var(--color-sidebar-active-bg); color: var(--color-texto-primario); font-weight: 600; }
+        .asistente-paso.activo .num { background-color: var(--color-acento); color: var(--color-acento-contraste); }
+        .asistente-paso.listo .num { background-color: var(--color-verde); color: #ffffff; }
+        .asistente-cuerpo { min-height: 320px; }
+        .asistente-cuerpo h3 { font-size: 17px; font-weight: 600; margin: 0 0 4px 0; color: var(--color-texto-primario); }
+        .asistente-cuerpo .ayuda-paso { font-size: 12.5px; color: var(--color-texto-secundario); margin-bottom: 18px; line-height: 1.5; }
+        .asistente-pie { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--color-borde); }
+
+        /* ── Listas editables dentro del constructor ─────────────── */
+        .item-editor { background-color: var(--color-bg-terciario); border: 1px solid var(--color-borde); border-radius: var(--border-radius); padding: 12px 14px; margin-bottom: 10px; }
+        .item-editor-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .item-editor-cabecera .nombre-item { font-size: 13.5px; font-weight: 700; color: var(--color-texto-primario); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .item-editor-acciones { display: flex; gap: 2px; flex-shrink: 0; }
+        .item-editor-acciones button { background: none; border: none; color: var(--color-texto-secundario); cursor: pointer; padding: 5px 8px; border-radius: 6px; font-size: 12.5px; transition: all 0.2s ease; }
+        .item-editor-acciones button:hover { background-color: var(--color-bg-hover); color: var(--color-texto-primario); }
+        .item-editor-acciones button.peligro:hover { color: var(--color-rojo); }
+        .lista-editor { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+        .editor-vacio { text-align: center; padding: 18px; font-size: 13px; color: var(--color-texto-secundario); background-color: var(--color-bg-terciario); border-radius: var(--border-radius); border: 1px dashed var(--color-borde); }
+        .chips-seleccion { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip-opcion { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 20px; border: 1px solid var(--color-borde); background-color: var(--color-bg-primario); color: var(--color-texto-secundario); font-size: 12.5px; font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
+        .chip-opcion:hover { border-color: var(--color-acento); color: var(--color-texto-primario); }
+        .chip-opcion.marcado { background-color: var(--color-sidebar-active-bg); border-color: var(--color-acento); color: var(--color-texto-primario); font-weight: 600; }
+        .chip-opcion .marca { width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid var(--color-borde); display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
+        .chip-opcion.marcado .marca { background-color: var(--color-acento); border-color: var(--color-acento); color: var(--color-acento-contraste); }
+
+        /* ── Listas de selección múltiple (participantes) ─────────── */
+        .lista-check { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; padding: 4px; border: 1px solid var(--color-borde); border-radius: var(--border-radius); background-color: var(--color-bg-primario); }
+        .fila-check { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 6px; cursor: pointer; transition: background-color 0.15s ease; font-size: 13.5px; }
+        .fila-check:hover { background-color: var(--color-bg-hover); }
+        .fila-check input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--color-acento); cursor: pointer; flex-shrink: 0; }
+        .fila-check .dato-principal { flex: 1; min-width: 0; }
+        .fila-check .dato-principal small { display: block; font-size: 11.5px; color: var(--color-texto-secundario); }
+        .contador-seleccion { font-size: 12.5px; color: var(--color-texto-secundario); margin-top: 8px; }
+        .contador-seleccion strong { color: var(--color-acento); }
+
+        /* ── Tabla simple de participantes ───────────────────────── */
+        .tabla-scroll { overflow-x: auto; border: 1px solid var(--color-borde); border-radius: var(--border-radius); background-color: var(--color-bg-secundario); }
+        table.tabla-datos { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 760px; }
+        table.tabla-datos th { text-align: left; padding: 11px 12px; background-color: var(--color-bg-terciario); color: var(--color-texto-secundario); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-bottom: 1px solid var(--color-borde); white-space: nowrap; }
+        table.tabla-datos td { padding: 11px 12px; border-bottom: 1px solid var(--color-borde-suave); color: var(--color-texto-primario); vertical-align: middle; }
+        table.tabla-datos tr:last-child td { border-bottom: none; }
+        table.tabla-datos tbody tr:hover { background-color: var(--color-bg-card-hover); }
+        table.tabla-datos td.acciones-celda { white-space: nowrap; text-align: right; }
+        table.tabla-datos td.acciones-celda button { background: none; border: none; color: var(--color-texto-secundario); cursor: pointer; padding: 6px 8px; border-radius: 6px; font-size: 13px; transition: all 0.2s ease; }
+        table.tabla-datos td.acciones-celda button:hover { background-color: var(--color-bg-hover); color: var(--color-acento); }
+        table.tabla-datos td.acciones-celda button.peligro:hover { color: var(--color-rojo); }
+
+        /* ── Leyenda extra del calendario ────────────────────────── */
+        .leyenda-color-campania { background-color: var(--color-morado); }
+        .calendario-grid .dia .evento-campania { background-color: rgba(156, 39, 176, 0.3); border-left: 3px solid var(--color-morado); color: var(--color-texto-primario); }
+        .calendario-grid .dia .evento-seguimiento { background-color: rgba(0, 188, 212, 0.25); border-left: 3px solid var(--color-cian); color: var(--color-texto-primario); }
+
+        /* ── Tarjetas de seguimiento (panel) ─────────────────────── */
+        .seguimiento-grupo { background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde); border-radius: var(--border-radius); padding: 16px; margin-bottom: 16px; }
+        .seguimiento-grupo h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--color-texto-secundario); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px; }
+        .seguimiento-grupo h4 i { color: var(--color-acento); }
+        .seguimiento-grupo h4 .conteo { background-color: var(--color-bg-terciario); border-radius: 10px; padding: 1px 8px; font-size: 11px; font-weight: 700; }
+        .seguimiento-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--color-borde-suave); font-size: 13px; }
+        .seguimiento-item:last-child { border-bottom: none; }
+        .seguimiento-item .izq { min-width: 0; flex: 1; }
+        .seguimiento-item .izq strong { color: var(--color-texto-primario); }
+        .seguimiento-item .izq small { display: block; color: var(--color-texto-secundario); font-size: 11.5px; margin-top: 2px; }
+        .seguimiento-item .der { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .vencido { color: var(--color-rojo); font-weight: 700; }
+        .por-vencer { color: var(--color-naranja); font-weight: 600; }
+
+        /* ── Bloque de revisión final del asistente ──────────────── */
+        .revision-bloque { background-color: var(--color-bg-terciario); border-radius: var(--border-radius); padding: 14px 16px; margin-bottom: 12px; border-left: 3px solid var(--color-acento); }
+        .revision-bloque h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--color-acento); margin: 0 0 8px 0; }
+        .lista-errores { background-color: rgba(239, 83, 80, 0.1); border-left: 4px solid var(--color-rojo); border-radius: 6px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; }
+        .lista-errores ul { margin: 6px 0 0 18px; }
+        .lista-avisos { background-color: rgba(255, 193, 7, 0.1); border-left: 4px solid var(--color-amarillo); border-radius: 6px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; }
+        .lista-avisos ul { margin: 6px 0 0 18px; }
+        .lista-ok { background-color: rgba(76, 175, 80, 0.1); border-left: 4px solid var(--color-verde); border-radius: 6px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; }
+
+        /* ── Panel derecho: acciones de la ficha y grupos de tareas ── */
+        .acciones-ficha { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+        .acciones-ficha button { font-size: 12.5px; padding: 7px 12px; }
+        .tarea-grupo-titulo { display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--color-texto-secundario); margin: 16px 0 8px 0; padding-bottom: 6px; border-bottom: 1px dashed var(--color-borde); }
+        .tarea-grupo-titulo:first-child { margin-top: 0; }
+        .tarea-grupo-titulo i { font-size: 11px; }
+        .tarea-grupo-titulo .conteo { background-color: var(--color-bg-terciario); border-radius: 10px; padding: 1px 8px; font-size: 11px; font-weight: 700; text-transform: none; letter-spacing: 0; }
+        .tarea-grupo-lista { display: flex; flex-direction: column; gap: 10px; }
+        .nota-tareas { font-size: 12px; color: var(--color-texto-secundario); line-height: 1.5; margin-bottom: 10px; }
+        .nota-tareas strong { color: var(--color-texto-primario); }
+        .detalle-seccion-sueltas { border-left-color: var(--color-morado) !important; }
+        .detalle-seccion-sueltas .detalle-seccion-titulo { color: var(--color-morado); }
+
+        /* ── Aviso de "campaña no activa" dentro de la ficha de campaña ── */
+        .aviso-no-activa { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: var(--border-radius); border-left: 4px solid var(--color-amarillo); background-color: rgba(255, 193, 7, 0.1); margin-bottom: 16px; font-size: 13.5px; line-height: 1.5; }
+        .aviso-no-activa i { color: var(--color-amarillo); margin-right: 6px; }
+        .aviso-no-activa .aviso-texto { flex: 1; min-width: 200px; }
+
+        /* ── Ajustes para móvil ──────────────────────────────────── */
+        @media (max-width: 900px) {
+            .asistente { grid-template-columns: 1fr; gap: 14px; }
+            .asistente-pasos { flex-direction: row; overflow-x: auto; position: static; padding-bottom: 6px; }
+            .asistente-paso { white-space: nowrap; padding: 8px 10px; font-size: 12px; }
+            .asistente-paso .etiqueta-paso { display: none; }
+            .embudo-nombre { width: 110px; font-size: 12px; }
+            .embudo-valor { width: 58px; font-size: 12px; }
+            .meta-titulo { font-size: 12px; }
+        }
+        @media (max-width: 768px) {
+            .ficha-cabecera { padding: 14px; }
+            .ficha-cabecera h2 { font-size: 18px; }
+            .tab { padding: 10px 10px; font-size: 12.5px; }
+            .tab .etiqueta-tab { display: none; }
+            .seguimiento-item { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .seguimiento-item .der { width: 100%; justify-content: space-between; }
+            .item-editor { padding: 10px; }
+            .lista-check { max-height: 260px; }
+            .asistente-cuerpo { min-height: 0; }
+        }
+        /* ─────── FIN @CSS-CAMPANIAS ─────── */    </style>
 </head>
 <body>
     <!-- ─────── @HTML-MOBILE-MENU ─────── -->
@@ -1105,8 +1283,10 @@
             </div>
             <ul class="menu">
                 <li class="menu-item active" data-seccion="informes" data-label="Informes"><i class="fas fa-chart-pie"></i><span>Informes</span></li>
-                <li class="menu-item" data-seccion="prospectos" data-label="Prospectos"><i class="fas fa-users"></i><span>Prospectos</span></li>
-                <li class="menu-item" data-seccion="clientes" data-label="Clientes"><i class="fas fa-user-check"></i><span>Clientes</span></li>
+                <li class="menu-item" data-seccion="panel" data-label="Panel"><i class="fas fa-gauge-high"></i><span>Panel</span></li>
+        <li class="menu-item" data-seccion="prospectos" data-label="Prospectos"><i class="fas fa-users"></i><span>Prospectos</span></li>
+                <li class="menu-item" data-seccion="campanias" data-label="Campañas"><i class="fas fa-bullhorn"></i><span>Campañas</span></li>
+        <li class="menu-item" data-seccion="clientes" data-label="Clientes"><i class="fas fa-user-check"></i><span>Clientes</span></li>
                 <li class="menu-item" data-seccion="contratos" data-label="Contratos"><i class="fas fa-file-contract"></i><span>Contratos</span></li>
                 <li class="menu-item" data-seccion="paquetes" data-label="Paquetes"><i class="fas fa-box"></i><span>Paquetes</span></li>
                 <li class="menu-item solo-admin" data-seccion="servicios" data-label="Servicios"><i class="fas fa-tools"></i><span>Servicios</span></li>
@@ -1168,6 +1348,55 @@
             </section>
 
             <!-- @HTML-SECTION-PROSPECTOS -->
+            <section id="seccion-panel" class="seccion">
+                <div class="seccion-header">
+                    <h1><i class="fas fa-chart-pie"></i> Panel de campañas</h1>
+                    <div class="header-actions">
+                        <button class="btn-primario" id="btn-nueva-campania-panel"><i class="fas fa-plus"></i> Nueva campaña</button>
+                    </div>
+                </div>
+                <div class="metricas-container" id="panel-metricas"></div>
+                <div class="informe-grid-2">
+                    <div class="informe-bloque">
+                        <div class="seccion-bloque-titulo"><i class="fas fa-filter"></i> Embudo general (todas las campañas)</div>
+                        <div id="panel-embudo"></div>
+                    </div>
+                    <div class="informe-bloque">
+                        <div class="seccion-bloque-titulo"><i class="fas fa-bullseye"></i> Cumplimiento de metas</div>
+                        <div id="panel-metas"></div>
+                    </div>
+                </div>
+                <div class="informe-grid-2">
+                    <div class="informe-bloque">
+                        <div class="seccion-bloque-titulo"><i class="fas fa-diagram-project"></i> Participaciones por origen</div>
+                        <div id="panel-origenes"></div>
+                    </div>
+                    <div class="informe-bloque">
+                        <div class="seccion-bloque-titulo"><i class="fas fa-list-check"></i> Tareas de campaña</div>
+                        <div id="panel-tareas"></div>
+                    </div>
+                </div>
+                <h3 style="color:var(--color-texto-secundario);font-weight:400;margin:24px 0 12px;"><i class="fas fa-bell"></i> Seguimientos</h3>
+                <div class="informe-grid-2">
+                    <div class="seguimiento-grupo">
+                        <h4><i class="fas fa-clock"></i> Vencidos <span class="conteo" id="seguimiento-vencidos-conteo">0</span></h4>
+                        <div id="seguimiento-vencidos"></div>
+                    </div>
+                    <div class="seguimiento-grupo">
+                        <h4><i class="fas fa-calendar-day"></i> Para hoy <span class="conteo" id="seguimiento-hoy-conteo">0</span></h4>
+                        <div id="seguimiento-hoy"></div>
+                    </div>
+                </div>
+                <div class="seguimiento-grupo">
+                    <h4><i class="fas fa-calendar-week"></i> Próximos 7 días</h4>
+                    <div id="seguimiento-proximos"></div>
+                </div>
+                <div class="seguimiento-grupo">
+                    <h4><i class="fas fa-phone-slash"></i> Sin seguimiento programado</h4>
+                    <div id="seguimiento-sin-programar"></div>
+                </div>
+            </section>
+
             <section id="seccion-prospectos" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-users"></i> Prospectos</h1>
@@ -1195,6 +1424,43 @@
             </section>
 
             <!-- @HTML-SECTION-CLIENTES -->
+            <section id="seccion-campanias" class="seccion">
+                <div id="campanias-lista-vista">
+                    <div class="seccion-header">
+                        <h1><i class="fas fa-bullhorn"></i> Campañas</h1>
+                        <div class="header-actions">
+                            <div class="btn-view-toggle" data-vista-seccion="campanias">
+                                <button class="btn-vista-mosaico active" title="Vista mosaico"><i class="fas fa-th-large"></i> <span>Mosaico</span></button>
+                                <button class="btn-vista-lista" title="Vista lista"><i class="fas fa-list"></i> <span>Lista</span></button>
+                            </div>
+                            <button class="btn-primario" id="btn-nueva-campania"><i class="fas fa-plus"></i> Nueva campaña</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-toggle-filtros" data-target="filtros-campanias">
+                        <span><i class="fas fa-filter"></i> Filtros <span class="btn-toggle-filtros-badge">activos</span></span>
+                        <i class="fas fa-chevron-down btn-toggle-filtros-icono"></i>
+                    </button>
+                    <div class="filtros-container" id="filtros-campanias">
+                        <div class="filtro-grupo"><label>Estado</label><select id="filtro-campania-estado"></select></div>
+                        <div class="filtro-grupo"><label>Tipo</label><select id="filtro-campania-tipo"></select></div>
+                        <div class="filtro-grupo"><label>Responsable</label><select id="filtro-campania-responsable"></select></div>
+                        <div class="filtro-grupo"><label>Situación</label>
+                            <select id="filtro-campania-vigencia">
+                                <option value="todas">Todas</option>
+                                <option value="vigentes">Vigentes hoy</option>
+                                <option value="por-iniciar">Por iniciar</option>
+                                <option value="terminadas">Fecha fin pasada</option>
+                            </select>
+                        </div>
+                        <div class="filtro-grupo"><label>Buscar</label><input type="text" id="buscar-campania" placeholder="Nombre u objetivo…"></div>
+                        <button class="btn-limpiar" id="btn-limpiar-campanias"><i class="fas fa-undo"></i> Limpiar</button>
+                    </div>
+                    <div id="lista-campanias" class="mosaico-grid"><p class="mensaje-vacio">No hay campañas registradas</p></div>
+                </div>
+
+                <div id="campania-detalle-vista" style="display:none;"></div>
+            </section>
+
             <section id="seccion-clientes" class="seccion">
                 <div class="seccion-header">
                     <h1><i class="fas fa-user-check"></i> Clientes</h1>

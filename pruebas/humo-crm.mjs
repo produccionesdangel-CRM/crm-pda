@@ -258,5 +258,30 @@ if (!tieneMotor) {
   comprobar('la interfaz de campañas está integrada', typeof r.contexto.App === 'object' && typeof r.contexto.App.abrirModal === 'function');
 }
 
+console.log('\n=== 5. Estructura: menú, secciones y estilos (Fase 1) ===');
+{
+  const soloMarcado = HTML.slice(0, HTML.indexOf('<script'));
+  const ids = [...soloMarcado.matchAll(/id="([^"]+)"/g)].map(m => m[1]);
+  const repetidos = Object.entries(ids.reduce((a, i) => (a[i] = (a[i] || 0) + 1, a), {}))
+    .filter(([, n]) => n > 1).map(([i, n]) => `${i} x${n}`);
+  comprobar('no hay ids repetidos en el marcado', repetidos.length === 0, repetidos.join(', '));
+
+  const orden = [...HTML.matchAll(/<li class="menu-item[^"]*" data-seccion="([^"]+)"/g)].map(m => m[1]);
+  const esperado = ['informes', 'panel', 'prospectos', 'campanias', 'clientes', 'contratos',
+    'paquetes', 'servicios', 'calendario', 'configuracion'];
+  comprobar('el menú quedó en el orden pedido por Jorge', JSON.stringify(orden) === JSON.stringify(esperado),
+    `quedó: ${orden.join(' · ')}`);
+
+  for (const [id, nombre] of [['seccion-panel', 'Panel'], ['seccion-campanias', 'Campañas']]) {
+    comprobar(`la sección ${nombre} existe y no nace activa`,
+      new RegExp(`id="${id}" class="seccion"`).test(HTML));
+  }
+  comprobar('se portó el CSS de campañas en su propio bloque', /@CSS-CAMPANIAS v5\.0/.test(HTML) && /FIN @CSS-CAMPANIAS/.test(HTML));
+  comprobar('no se coló el cartel de la versión lite', !/lite de pruebas|id="aviso-modo"/.test(HTML));
+  comprobar('las clases que el CRM ya tenía no se redefinieron',
+    !/^\s*\.panel-lateral-body\s*\{/m.test(HTML.slice(HTML.indexOf('@CSS-CAMPANIAS'), HTML.indexOf('FIN @CSS-CAMPANIAS'))),
+    'el CSS de campañas redefine .panel-lateral-body');
+}
+
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);
