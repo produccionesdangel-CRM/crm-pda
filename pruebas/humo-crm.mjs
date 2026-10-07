@@ -401,5 +401,47 @@ console.log('\n=== 8. Las vistas de campañas se pintan (Fase 3b) ===');
   try { c.App.renderTodo(); } catch (e) { error = e.message; }
   comprobar('el refresco general del CRM no se rompe con las vistas nuevas', error === null, error || '');
 }
+console.log('\n=== 9. Calendario con campañas (Fase 3c) ===');
+{
+  const c = r.contexto;
+  const leerGrid = () => String((r.elementos.get('calendario-grid') || {}).innerHTML || '');
+  const hoy = c.obtenerFechaActual();
+
+  const camp = c.motorCampanias.crearCampania({ nombre: 'Campaña calendario' });
+  const rp = c.motorCampanias.crearProspecto({ nombre: 'Prospecto calendario' });
+  const pros = rp && rp.prospecto ? rp.prospecto : null;
+
+  // Regla del pliego dentro del CRM: una campaña en borrador NO recibe participantes.
+  const rpa = c.motorCampanias.agregarParticipacion({ campaniaId: camp.id, prospectoId: pros ? pros.id : undefined });
+  comprobar('el motor rechaza participantes en una campaña en borrador (regla del pliego)',
+    !!(rpa && rpa.ok === false && rpa.codigo === 'campania-no-activa'),
+    JSON.stringify(rpa && { ok: rpa.ok, codigo: rpa.codigo }));
+
+  // Para probar el calendario se usa una participación de datos: el calendario dibuja lo que hay.
+  c.participaciones.push({
+    id: 'part-cal', campaniaId: camp.id, prospectoId: pros ? pros.id : 'pro-1',
+    estado: 'contactado', fechaProximoSeguimiento: hoy
+  });
+
+  // Dos tareas para hoy: una de campaña y una normal.
+  c.tareas.push({ id: 'tar-camp', tipo: 'Llamada', descripcion: 'Tarea de campaña', fecha: hoy, completada: false, campaniaId: camp.id });
+  c.tareas.push({ id: 'tar-normal', tipo: 'Llamada', descripcion: 'Tarea normal', fecha: hoy, completada: false });
+
+  let error = null;
+  try { c.renderizarCalendario(); } catch (e) { error = e.message; }
+  comprobar('el calendario se dibuja sin errores', error === null, error || '');
+  comprobar('la tarea de campaña sale con su color propio', leerGrid().includes('evento-campania'),
+    leerGrid().includes('evento-tarea') ? 'salió como tarea normal' : 'no aparece');
+  comprobar('el seguimiento del prospecto sale en el calendario', leerGrid().includes('evento-seguimiento'), 'no aparece');
+  comprobar('la tarea normal sigue saliendo como tarea', leerGrid().includes('evento-tarea'), 'no aparece');
+
+  r.elementos.get('filtro-tareas-calendario').value = 'campanias';
+  try { c.renderizarCalendario(); } catch (e) { error = e.message; }
+  comprobar('el filtro "Solo campañas" deja la tarea de campaña', leerGrid().includes('evento-campania'), 'desapareció');
+  comprobar('el filtro "Solo campañas" esconde la tarea normal', !leerGrid().includes('evento-tarea'), 'siguió apareciendo');
+  comprobar('la leyenda y el filtro nuevos están en el marcado',
+    HTML.includes('Solo campañas') && HTML.includes('leyenda-color-seguimiento') && HTML.includes('Tarea de campaña'),
+    'falta el filtro o la leyenda');
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);

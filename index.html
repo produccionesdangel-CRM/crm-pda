@@ -1132,6 +1132,7 @@
 
         /* ── Leyenda extra del calendario ────────────────────────── */
         .leyenda-color-campania { background-color: var(--color-morado); }
+        .leyenda-color-seguimiento { background-color: var(--color-cian); }
         .calendario-grid .dia .evento-campania { background-color: rgba(156, 39, 176, 0.3); border-left: 3px solid var(--color-morado); color: var(--color-texto-primario); }
         .calendario-grid .dia .evento-seguimiento { background-color: rgba(0, 188, 212, 0.25); border-left: 3px solid var(--color-cian); color: var(--color-texto-primario); }
 
@@ -1591,7 +1592,7 @@
                 <div class="filtros-container" id="filtros-calendario">
                     <div class="filtro-grupo"><label>Filtrar tareas</label>
                         <select id="filtro-tareas-calendario">
-                            <option value="todas">Todas</option><option value="pendientes">Pendientes</option><option value="completadas">Completadas</option><option value="contratos">Solo contratos</option>
+                            <option value="todas">Todas</option><option value="pendientes">Pendientes</option><option value="completadas">Completadas</option><option value="contratos">Solo contratos</option><option value="campanias">Solo campañas</option>
                         </select>
                     </div>
                     <div class="filtro-grupo"><label>Buscar</label><input type="text" id="buscar-calendario" placeholder="Cliente o festejado..."></div>
@@ -1610,6 +1611,8 @@
                         <div class="leyenda-item"><div class="leyenda-color leyenda-color-contrato"></div><span>Contrato / Evento</span></div>
                         <div class="leyenda-item"><div class="leyenda-color leyenda-color-tarea"></div><span>Tarea pendiente</span></div>
                         <div class="leyenda-item"><div class="leyenda-color leyenda-color-completada"></div><span>Tarea completada</span></div>
+                        <div class="leyenda-item"><div class="leyenda-color leyenda-color-campania"></div><span>Tarea de campaña</span></div>
+                        <div class="leyenda-item"><div class="leyenda-color leyenda-color-seguimiento"></div><span>Seguimiento de campaña</span></div>
                     </div>
                 </div>
                 <div style="margin-top:24px;">
@@ -5772,14 +5775,29 @@
                 if (ft === 'pendientes') et = et.filter(function(t) { return !t.completada; });
                 else if (ft === 'completadas') et = et.filter(function(t) { return t.completada; });
                 else if (ft === 'contratos') et = [];
+                else if (ft === 'campanias') { ec = []; et = et.filter(function(t) { return !!(t.campaniaId || t.participacionId); }); }
                 if (b) {
                     ec = ec.filter(function(c) { return c.clienteNombre.toLowerCase().indexOf(b) !== -1 || (c.festejado && c.festejado.toLowerCase().indexOf(b) !== -1); });
                     et = et.filter(function(t) { const nc = obtenerNombreCliente(t.clienteId); return nc.toLowerCase().indexOf(b) !== -1 || t.descripcion.toLowerCase().indexOf(b) !== -1; });
                 }
                 let eh_ = '', em = 0;
                 ec.forEach(function(c) { if (em < mm) { const nc = c.festejado ? c.festejado + ' (' + c.clienteNombre + ')' : c.clienteNombre; eh_ += '<div class="evento evento-contrato" onclick="event.stopPropagation(); abrirContratoDesdeCalendario(\'' + c.clienteId + '\',\'' + c.id + '\')">' + nc + '</div>'; em++; } });
-                et.forEach(function(t) { if (em < mm) { const cc = t.completada ? 'evento-completada' : 'evento-tarea'; eh_ += '<div class="evento ' + cc + '" onclick="event.stopPropagation(); editarTareaDesdeCalendario(\'' + t.id + '\')">' + t.tipo + '</div>'; em++; } });
-                const te = ec.length + et.length;
+                et.forEach(function(t) { if (em < mm) { const cc = t.completada ? 'evento-completada' : ((t.campaniaId || t.participacionId) ? 'evento-campania' : 'evento-tarea'); eh_ += '<div class="evento ' + cc + '" onclick="event.stopPropagation(); editarTareaDesdeCalendario(\'' + t.id + '\')">' + t.tipo + '</div>'; em++; } });
+                // Seguimientos de campaña: la fecha que se le prometió al prospecto.
+                let es = [];
+                try {
+                    es = (participaciones || []).filter(function(p) {
+                        if (!p || p.fechaProximoSeguimiento !== fs) return false;
+                        return ['convertida', 'cancelada', 'noSeleccionada', 'rechazada', 'sinInteres'].indexOf(p.estado) === -1;
+                    });
+                    es.forEach(function(p) {
+                        if (em >= mm) return;
+                        const pr = (prospectos || []).filter(function(x) { return x && x.id === p.prospectoId; })[0];
+                        eh_ += '<div class="evento evento-seguimiento" title="Seguimiento de campaña">' + escapeHTML((pr && pr.nombre) || 'Prospecto') + '</div>';
+                        em++;
+                    });
+                } catch (e) { console.warn('No se pudieron dibujar los seguimientos:', e); }
+                const te = ec.length + et.length + es.length;
                 if (te > mm) eh_ += '<div class="evento-mas">+' + (te - mm) + ' más</div>';
                 h += '<div class="dia ' + (eh ? 'hoy' : '') + '" data-fecha="' + fs + '"><div class="numero">' + d + '</div>' + eh_ + '</div>';
             }
@@ -5825,6 +5843,7 @@
             if (filtro === 'pendientes') tm = tm.filter(function(t) { return !t.completada; });
             else if (filtro === 'completadas') tm = tm.filter(function(t) { return t.completada; });
             else if (filtro === 'contratos') tm = [];
+            else if (filtro === 'campanias') tm = tm.filter(function(t) { return !!(t.campaniaId || t.participacionId); });
             if (b) tm = tm.filter(function(t) { const nc = obtenerNombreCliente(t.clienteId); return nc.toLowerCase().indexOf(b) !== -1 || t.descripcion.toLowerCase().indexOf(b) !== -1; });
             if (tm.length === 0) { c.innerHTML = '<p class="mensaje-vacio">No hay tareas</p>'; return; }
             c.innerHTML = tm.map(function(t) {
@@ -5832,7 +5851,7 @@
                 const el_ = t.completada ? 'Completada' : 'Pendiente';
                 const ic = t.completada ? 'fa-undo' : 'fa-check';
                 const nc = obtenerNombreCliente(t.clienteId);
-                return '<div class="tarjeta-registro"><div class="tarjeta-info"><div class="tarjeta-titulo">' + t.tipo + ' <span class="tarjeta-etiqueta ' + cc + '">' + el_ + '</span></div><div class="tarjeta-detalle">' + t.descripcion + '</div><div class="tarjeta-detalle">' + formatearFecha(t.fecha) + (t.clienteId ? ' | ' + nc : '') + (t.creadaPor ? ' | Creada por: ' + t.creadaPor : '') + '</div></div><div class="tarjeta-acciones"><button class="btn-completar" onclick="alternarCompletarTarea(\'' + t.id + '\')"><i class="fas ' + ic + '"></i></button><button class="btn-editar" onclick="editarTarea(\'' + t.id + '\')"><i class="fas fa-edit"></i></button><button class="btn-eliminar" onclick="eliminarTarea(\'' + t.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
+                return '<div class="tarjeta-registro"><div class="tarjeta-info"><div class="tarjeta-titulo">' + t.tipo + ' <span class="tarjeta-etiqueta ' + cc + '">' + el_ + '</span></div><div class="tarjeta-detalle">' + t.descripcion + '</div><div class="tarjeta-detalle">' + formatearFecha(t.fecha) + (t.clienteId ? ' | ' + nc : '') + (t.creadaPor ? ' | Creada por: ' + t.creadaPor : '') + (t.campaniaId && typeof App !== 'undefined' && App.nombreCampania ? ' | Campaña: ' + escapeHTML(String(App.nombreCampania(t.campaniaId) || '')) : '') + '</div></div><div class="tarjeta-acciones"><button class="btn-completar" onclick="alternarCompletarTarea(\'' + t.id + '\')"><i class="fas ' + ic + '"></i></button><button class="btn-editar" onclick="editarTarea(\'' + t.id + '\')"><i class="fas fa-edit"></i></button><button class="btn-eliminar" onclick="eliminarTarea(\'' + t.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
             }).join('');
         }
 

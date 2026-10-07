@@ -125,7 +125,14 @@
       (`renderizarTodo`, que también usa el arranque) redibuja las dos vistas.
       **Verificado: 42/42** — el Panel pinta métricas y embudo, la lista de Campañas se dibuja, **el asistente de
       campaña arma sus pasos** y el refresco general del CRM no se rompe.
-- [ ] Fase 3c (calendario con eventos de campaña y panel del prospecto con sus tareas) · Fase 4 (rol de Ventas) · Fase 5 (cierre)
+- [x] **Fase 3c (parte 1) — Calendario**: el calendario que ya tenía el CRM ahora distingue lo de campaña:
+      las tareas con `campaniaId`/`participacionId` salen con el color de campaña, aparecen los **seguimientos**
+      (`participacion.fechaProximoSeguimiento`, ignorando las participaciones cerradas), hay un filtro
+      **"Solo campañas"** (que también aplica a la lista de tareas) y la leyenda tiene sus dos renglones nuevos.
+      Nada se duplicó: se amplió el calendario existente, como pedía la auditoría (§7).
+      **Verificado: 50/50** — incluye comprobar que el motor **rechaza meter gente en una campaña en borrador**.
+- [ ] Fase 3c (parte 2): **panel del prospecto** con sus campañas y sus tareas agrupadas por vencimiento ·
+      Fase 4 (rol de Ventas) · Fase 5 (cierre)
 - [ ] Respaldo exportado y verificado por Jorge (regla de oro, antes de tocar la base real).
 - [ ] `firebase-rules-recomendadas.json` (pedido a la PC de trabajo por el canal).
 
