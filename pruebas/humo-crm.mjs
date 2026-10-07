@@ -1129,6 +1129,53 @@ console.log('\n=== 20. Ninguna ventana ni aviso muestra código (reportado por J
         analisisExcel.duplicadas.length === 1 && analisisExcel.nuevas.length === 2,
         JSON.stringify({ d: analisisExcel.duplicadas.length, n: analisisExcel.nuevas.length }));
     }
+    /* 9-bis) LECTOR DE LIBREOFFICE (.ods): archivo real hecho por LibreOffice
+       (su content.xml), con celdas de texto, fecha y número. */
+    const odsBase64 = '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';
+    let hojasOds = null, errorOds = null;
+    try { hojasOds = p.leerOdsBuffer(p.desdeBase64(odsBase64).buffer); }
+    catch (e) { errorOds = (e && e.message) || String(e); }
+    comprobar('lee un archivo de LibreOffice (.ods) de verdad',
+      errorOds === null && !!hojasOds && hojasOds.length >= 1, errorOds || ('hojas=' + (hojasOds ? hojasOds.length : 0)));
+    if (hojasOds && hojasOds.length) {
+      const filasOds = hojasOds[0].filas;
+      comprobar('del .ods saca la tabla con sus títulos y acentos',
+        filasOds[0][1] === 'Nombre completo' && filasOds[0][5] === 'Fecha del evento',
+        JSON.stringify(filasOds[0]));
+      comprobar('del .ods saca el texto, el teléfono y el número',
+        filasOds[1][1] === 'Ana López Ruiz' && filasOds[1][2] === '55 4444 5555' && filasOds[1][6] === '45000',
+        JSON.stringify(filasOds[1]));
+      comprobar('del .ods convierte la fecha a texto legible',
+        filasOds[1][5] === '2027-03-20', JSON.stringify(filasOds[1][5]));
+      /* El mismo .ods por el camino completo */
+      const analisisOds = p.analizarFilas(filasOds.slice(1), p.detectarMapeo(filasOds[0]),
+        { criterioDuplicado: { telefono: true, nombre: true } }, [], {});
+      comprobar('el .ods entra completo: 2 filas y ninguna perdida',
+        analisisOds.nuevas.length === 2 && analisisOds.vacias === 0,
+        JSON.stringify({ n: analisisOds.nuevas.length, v: analisisOds.vacias }));
+      const sinTitulo = p.detectarMapeo(filasOds[0]);
+      comprobar('y los títulos del .ods se reconocen solos',
+        sinTitulo[1].campo === 'nombre' && sinTitulo[2].campo === 'telefono' && sinTitulo[5].campo === 'fechaEvento',
+        JSON.stringify(sinTitulo.map(m => m.campo)));
+    }
+
+    /* 9-ter) ARCHIVO ENLAZADO: detección de cambios (puro, sin navegador). */
+    comprobar('detecta que el archivo cambió por fecha o tamaño',
+      p.archivoCambio({ nombre: 'a.xlsx', lastModified: 100, size: 10 }, { nombre: 'a.xlsx', lastModified: 101, size: 10 }) === true &&
+      p.archivoCambio({ nombre: 'a.xlsx', lastModified: 100, size: 10 }, { nombre: 'a.xlsx', lastModified: 100, size: 11 }) === true &&
+      p.archivoCambio({ nombre: 'a.xlsx', lastModified: 100, size: 10 }, { nombre: 'a.xlsx', lastModified: 100, size: 10 }) === false);
+    comprobar('detecta que le cambiaron el archivo por otro',
+      p.archivoCambio({ nombre: 'a.xlsx', lastModified: 100, size: 10 }, { nombre: 'b.csv', lastModified: 100, size: 10 }) === true);
+    comprobar('compara bien un archivo del navegador (File) contra el registro interno',
+      p.archivoCambio({ nombre: 'r.csv', lastModified: 1000, size: 148 }, { name: 'r.csv', lastModified: 1000, size: 148 }) === false &&
+      p.archivoCambio({ nombre: 'r.csv', lastModified: 1000, size: 148 }, { name: 'r.csv', lastModified: 1001, size: 148 }) === true &&
+      p.archivoCambio({ nombre: 'r.csv', lastModified: 1000, size: 148 }, { name: 'otro.csv', lastModified: 1000, size: 148 }) === true,
+      'un archivo del navegador trae name/size/lastModified y el registro usa nombre: hay que aceptar los dos');
+
+    comprobar('la primera lectura siempre cuenta como cambio',
+      p.archivoCambio(null, { nombre: 'a.xlsx', lastModified: 1, size: 1 }) === true &&
+      p.archivoCambio({ nombre: 'a.xlsx', lastModified: 1, size: 1 }, null) === false);
+
     comprobar('un Excel viejo (.xls) se rechaza con un mensaje claro',
       (function () { try { p.leerBuffer('viejo.xls', new Uint8Array([0xD0, 0xCF, 0x11, 0xE0, 0, 0]).buffer); return false; } catch (e) { return /Excel viejo/.test(e.message); } })());
   }

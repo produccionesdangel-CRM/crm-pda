@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
   Prueba funcional de la importación de prospectos desde un archivo.
-  NO necesita internet, ni Google, ni permisos: trae incrustado un archivo
-  .xlsx de verdad (con dos hojas, acentos, una fecha como número de serie y
-  celdas vacías en medio) y recorre el camino completo: leer el archivo,
-  analizar duplicados por teléfono y nombre, confirmar e importar, y volver a
-  cargar el mismo archivo para comprobar que ya no propone nada.
+  NO necesita internet, ni Google, ni permisos: trae incrustados un .xlsx y un
+  .ods de verdad (hechos por otras herramientas). Recorre el camino completo:
+  leer, analizar duplicados por teléfono y nombre, confirmar, importar, volver a
+  cargar el mismo archivo, y el ARCHIVO ENLAZADO (con un manejador simulado,
+  porque el selector nativo de archivos no se puede accionar en una prueba).
 
   Cómo correrla (desde la carpeta del repositorio):
       node pruebas/servir.mjs
@@ -42,6 +42,7 @@
         function bien(t) { log('  OK    ' + t); }
         function mal(t) { fallas++; log('  FALLA ' + t); }
         function comprobar(t, cond, detalle) { if (cond) bien(t); else mal(t + (detalle ? '  -> ' + detalle : '')); }
+        var ODS_BASE64 = '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';
         var XLSX_BASE64 = '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';
 
         marco.src = archivo;
@@ -79,12 +80,24 @@
                     !!cuerpo && /Descargar/i.test(cuerpo.innerHTML) && /xlsx|Excel/i.test(cuerpo.innerHTML));
                 comprobar('el boton de elegir archivo tiene su manejador', !!(d.getElementById('imp-elegir') || {}).onclick);
 
+                /* 2-bis) Un archivo de LibreOffice (.ods) de verdad. */
+                var odsBytes = imp.pruebas.desdeBase64(ODS_BASE64);
+                var fileOds = new w.File([odsBytes], 'respuestas.ods', { type: 'application/vnd.oasis.opendocument.spreadsheet' });
+                var promesaOds = imp.procesarArchivo(fileOds);
+
                 /* 3) Un archivo .xlsx de verdad, como el que exporta Google o Excel. */
                 var bytes = imp.pruebas.desdeBase64(XLSX_BASE64);
                 comprobar('el archivo de prueba se decodifico', bytes.length > 2000, bytes.length + ' bytes');
                 var file = new w.File([bytes], 'respuestas.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
-                var promesa = imp.procesarArchivo(file);
+                var promesa = promesaOds.then(function (rOds) {
+                    comprobar('lee un archivo de LibreOffice (.ods) de verdad',
+                        !!rOds && rOds.hojas[0].filas.length >= 3, JSON.stringify(rOds.hojas.map(function (h) { return h.nombre; })));
+                    comprobar('del .ods saca los datos con acentos y la fecha convertida',
+                        rOds.hojas[0].filas[1][1] === 'Ana López Ruiz' && rOds.hojas[0].filas[1][5] === '2027-03-20',
+                        JSON.stringify(rOds.hojas[0].filas[1]));
+                    return imp.procesarArchivo(file);
+                });
                 promesa.then(function (r) {
                     bien('el archivo se leyo y se analizo sin errores');
                     comprobar('reconoce las 2 hojas del archivo', r.hojas.length === 2, 'hojas=' + r.hojas.length);
@@ -150,6 +163,8 @@
                         comprobar('pegar filas a mano tambien funciona (con punto y coma y comas dentro de comillas)',
                             a3 && a3.nuevas.length === 1 && /Ruiz, Sofia/.test(a3.nuevas[0].nombre), JSON.stringify(a3 ? { n: a3.nuevas.length } : {}));
                     }
+                    return pruebasDelEnlazado();
+                }).then(function () {
                     /* 7) La lista de prospectos del CRM se repinta. */
                     var errorRender = null;
                     try { w.renderizarProspectos(); } catch (e) { errorRender = e.message; }
@@ -163,6 +178,140 @@
                 });
             }, 2200);
         });
+
+        /* Pruebas del ARCHIVO ENLAZADO (se revisa solo). Se usa un manejador
+           simulado porque el selector nativo de archivos no se puede accionar
+           desde una prueba automática. */
+        function pruebasDelEnlazado() {
+            var w = marco.contentWindow, d = marco.contentDocument;
+            var imp = w.ImportarProspectos;
+            if (!imp) { mal('no hay modulo para probar el archivo enlazado'); return Promise.resolve(); }
+            log('');
+            log('--- archivo enlazado ---');
+
+            /* Se espera a que el módulo termine su propio intento de restaurar el
+               archivo (lo hace 2.5 s después de cargar) para no chocar con él. */
+            return new Promise(function (res) { setTimeout(res, 3200); }).then(function () {
+                return sondaIndexedDB();
+            }).then(function (estadoBD) {
+                log('       [diagnóstico] IndexedDB: ' + estadoBD);
+                return pruebasEnlazadoEnSi(imp, w, d);
+            }).catch(function (e) {
+                mal('el archivo enlazado falló: ' + ((e && e.message) || e));
+            });
+        }
+
+        /* ¿El navegador deja guardar el acceso al archivo? (se informa, no se califica) */
+        function sondaIndexedDB() {
+            var w = marco.contentWindow;
+            return new Promise(function (res) {
+                var respondido = false;
+                var terminar = function (t) { if (!respondido) { respondido = true; res(t); } };
+                setTimeout(function () { terminar('el navegador no respondió en 3 s'); }, 3000);
+                try {
+                    var p = w.indexedDB.open('pda_archivos_enlazados', 1);
+                    p.onupgradeneeded = function () {
+                        if (!p.result.objectStoreNames.contains('archivos')) p.result.createObjectStore('archivos');
+                    };
+                    p.onsuccess = function () {
+                        try {
+                            var t = p.result.transaction('archivos', 'readonly');
+                            var g = t.objectStore('archivos').get('archivo');
+                            g.onsuccess = function () { terminar(g.result ? ('hay un acceso guardado: ' + (g.result.name || '?')) : 'funciona (sin accesos guardados)'); };
+                            g.onerror = function () { terminar('funciona, pero no pudo leer'); };
+                        } catch (e) { terminar('abrió pero falló la lectura: ' + e.message); }
+                    };
+                    p.onerror = function () { terminar('bloqueado por el navegador'); };
+                } catch (e) { terminar('no disponible: ' + e.message); }
+            });
+        }
+
+        function pruebasEnlazadoEnSi(imp, w, d) {
+            var csvEnlazado = 'Nombre;Teléfono;Correo;Comentarios\n' +
+                'Ana Lopez Ruiz;55 4444 5555;;ya existia\n' +
+                'Diego Rivera;55 1111 2222;diego@correo.com;llego despues por el archivo\n';
+            var archivo1 = new w.File([csvEnlazado], 'respuestas.csv', { type: 'text/csv', lastModified: 1000 });
+            var archivo2 = new w.File([csvEnlazado + 'Elena Paz;55 3333 4444;;nueva de hoy\n'], 'respuestas.csv', { type: 'text/csv', lastModified: 2000 });
+            var actual = archivo1;
+            var permiso = 'granted';
+            var handleFalso = {
+                name: 'respuestas.csv',
+                queryPermission: function () { return Promise.resolve(permiso); },
+                requestPermission: function () { permiso = 'granted'; return Promise.resolve('granted'); },
+                getFile: function () { return Promise.resolve(actual); }
+            };
+
+            /* La app recarga datos desde el almacén del navegador (roto en este
+               entorno de prueba), así que el prospecto de prueba se vuelve a sembrar. */
+            if (!w.prospectos.some(function (p) { return p.id === 'pro_existente'; })) {
+                w.prospectos.push({ id: 'pro_existente', nombre: 'Ana Lopez Ruiz', telefono: '+52 55 4444 5555', email: '', faseActual: 'Interesado', historialFases: [], notasGenerales: '', clienteId: null, fechaRegistro: '2026-09-01' });
+                bien('se volvió a sembrar el prospecto de prueba (la app recargó datos)');
+            }
+
+            imp.estado.handle = handleFalso;
+            imp.estado.ultimoArchivo = null;
+
+            /* 1) Autenticación pendiente */
+            permiso = 'prompt';
+            return imp.revisarEnlazado(true).then(function () {
+                mal('debía avisar que hacía falta autorizar el archivo');
+            }).catch(function (e) {
+                comprobar('avisa cuando el navegador pide autorizar otra vez', /autorizar/i.test((e && e.message) || ''), (e && e.message) || '');
+            }).then(function () {
+                permiso = 'granted';
+                /* 2) Primera lectura del archivo enlazado */
+                return imp.revisarEnlazado(true);
+            }).then(function (r) {
+                comprobar('lee el archivo enlazado la primera vez', !!r && r.cambio === true, JSON.stringify(r && { cambio: r.cambio }));
+                var a = imp.estado.analisis;
+                comprobar('del archivo enlazado detecta 1 duplicada (Ana) y 1 nueva (Diego)',
+                    a.duplicadas.length === 1 && a.nuevas.length === 1 && /Diego/.test(a.nuevas[0].nombre),
+                    JSON.stringify({ d: a.duplicadas.length, n: a.nuevas.map(function (x) { return x.nombre; }) }));
+                /* 3) Sin cambios: no debe volver a leerlo ni volver a proponerlo */
+                comprobar('la comparación interna reconoce que el archivo está igual',
+                    imp.pruebas.archivoCambio(imp.estado.ultimoArchivo, actual) === false,
+                    'el registro dice ' + JSON.stringify(imp.estado.ultimoArchivo && { nombre: imp.estado.ultimoArchivo.nombre, lm: imp.estado.ultimoArchivo.lastModified, size: imp.estado.ultimoArchivo.size }));
+                return imp.revisarEnlazado(true).then(function (r2) {
+                    comprobar('si el archivo no cambió, no vuelve a procesarlo', r2 && r2.cambio === false, JSON.stringify(r2 && { cambio: r2.cambio }));
+                });
+            }).then(function () {
+                /* 4) El archivo cambió: avisa (auto apagado). Diego sigue sin
+                   importarse (auto apagado), así que lo nuevo son Diego y Elena. */
+                actual = archivo2;
+                return imp.revisarEnlazado(true);
+            }).then(function (r) {
+                comprobar('detecta que el archivo cambió y avisa sin importar (auto apagado)',
+                    r && r.cambio === true && r.importados === 0,
+                    JSON.stringify(r && { cambio: r.cambio, importados: r.importados, nuevas: r.analisis.nuevas.length }));
+                /* 5) Con automático encendido: agrega sola todo lo pendiente
+                   (se mide por lo que reporta el módulo: la app puede recargar
+                   el arreglo global y no es una medida confiable aquí). */
+                var cfg = JSON.parse(w.localStorage.getItem('pda_importar_config_v1') || '{}');
+                cfg.auto = true; cfg.origenPorDefecto = 'Formulario Google'; cfg.faseInicial = 'Interesado';
+                cfg.criterioDuplicado = { telefono: true, nombre: true };
+                w.localStorage.setItem('pda_importar_config_v1', JSON.stringify(cfg));
+                actual = new w.File([csvEnlazado + 'Elena Paz;55 3333 4444;;nueva de hoy\nFrida Solis;55 5555 6666;;otra mas\n'], 'respuestas.csv', { type: 'text/csv', lastModified: 3000 });
+                return imp.revisarEnlazado(true).then(function (r3) {
+                    comprobar('con "agregar sola" encendido, importa lo nuevo sin preguntar',
+                        r3 && r3.automatico === true && r3.importados === 3,
+                        JSON.stringify(r3 && { auto: r3.automatico, importados: r3.importados, nuevas: r3.analisis.nuevas.length }));
+                    comprobar('y los que entraron quedan con la marca de importación',
+                        w.prospectos.filter(function (p) { return p.firmaImportacion; }).length >= 3 &&
+                        w.prospectos.filter(function (p) { return p.firmaImportacion; }).every(function (p) { return p.fuenteCaptacion === 'Importación de archivo'; }),
+                        'marcados=' + w.prospectos.filter(function (p) { return p.firmaImportacion; }).length);
+                });
+            }).then(function () {
+                /* 6) Desconectar (con límite de tiempo: si el navegador se queda
+                   pensando en el almacén, la prueba no se debe colgar). */
+                var resuelto = false;
+                return Promise.race([
+                    imp.desconectarEnlazado().then(function () { resuelto = true; comprobar('desconectar el archivo deja de revisarlo', !imp.estado.handle); }),
+                    new Promise(function (res) { setTimeout(function () { if (!resuelto) mal('desconectar tardó demasiado'); res(); }, 4000); })
+                ]);
+            }).catch(function (e) {
+                mal('el archivo enlazado falló: ' + ((e && e.message) || e));
+            });
+        }
 
         function terminar() {
             log('');

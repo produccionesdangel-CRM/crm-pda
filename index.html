@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.14';
+        var BUILD_APP = '2026-10-07.16';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -12913,7 +12913,12 @@
         mapeo: null,
         filas: null,
         analisis: null,
-        ultimoAviso: ''
+        ultimoAviso: '',
+        /* Archivo enlazado */
+        handle: null,
+        ultimoArchivo: null,  // { nombre, lastModified, size, leido }
+        permisoEnlazado: '',
+        temporizador: null
     };
 
     /* ─────────────── Utilidades puras ─────────────── */
@@ -13430,11 +13435,95 @@
         var bytes = new Uint8Array(buffer);
         var esZip = bytes.length > 1 && bytes[0] === 0x50 && bytes[1] === 0x4B;
         var esXlsViejo = bytes.length > 1 && bytes[0] === 0xD0 && bytes[1] === 0xCF;
-        if (esXlsViejo) throw new Error('Ese archivo es un Excel viejo (.xls). Ábrelo en Excel y guárdalo como .xlsx o como .csv.');
-        if (esZip || /\.xlsx$|\.xlsm$/.test(nombre)) return leerXlsxBuffer(buffer);
+        if (esXlsViejo) throw new Error('Ese archivo es un Excel viejo (.xls). Ábrelo en Excel y guárdalo como .xlsx, .ods o .csv.');
+        if (esZip || /\.xlsx$|\.xlsm$|\.ods$/.test(nombre)) {
+            /* Los dos son ZIP: se distingue por el archivo "mimetype" del ODF. */
+            var zip = leerZip(buffer);
+            var esOds = false;
+            if (zip.nombres.indexOf('mimetype') !== -1) {
+                var tipo = zip.texto('mimetype') || '';
+                esOds = /opendocument/.test(tipo);
+            }
+            if (esOds || /\.ods$/.test(nombre)) return leerOdsBuffer(buffer);
+            return leerXlsxBuffer(buffer);
+        }
         var texto = decodificarTexto(buffer);
         var filas = textoAFilas(texto).slice(0, MAX_FILAS);
         return [{ nombre: 'Datos', filas: filas }];
+    }
+
+    /* ─── ODF de LibreOffice (.ods) ───
+       También es un ZIP con XML: la tabla vive en content.xml. */
+    function textoDeOds(fragmento) {
+        var t = String(fragmento || '')
+            .replace(/<text:s\/>/g, ' ')
+            .replace(/<text:tab\/>/g, '\t')
+            .replace(/<text:line-break\/>/g, '\n');
+        var parrafos = [];
+        var re = /<text:p[^>]*>([\s\S]*?)<\/text:p>/g, m;
+        while ((m = re.exec(t)) !== null) parrafos.push(desescaparXml(m[1].replace(/<[^>]+>/g, '')));
+        if (!parrafos.length) return desescaparXml(t.replace(/<[^>]+>/g, '')).trim();
+        return parrafos.join('\n').trim();
+    }
+
+    function leerOdsBuffer(buffer) {
+        var zip = leerZip(buffer);
+        var xml = zip.texto('content.xml');
+        if (!xml) throw new Error('Ese archivo de LibreOffice no tiene una tabla legible.');
+        var LIMITE_VACIOS = 100;   /* columnas vacías repetidas: no se expanden más allá de esto */
+        var LIMITE_REPITE = 20;    /* filas o celdas con contenido repetidas */
+
+        var hojas = [];
+        var reTabla = /<table:table\s[^>]*table:name="([^"]*)"[^>]*>([\s\S]*?)<\/table:table>/g, mTabla;
+        while ((mTabla = reTabla.exec(xml)) !== null) {
+            var nombreHoja = desescaparXml(mTabla[1]);
+            var cuerpo = mTabla[2];
+            var filas = [];
+            var reFila = /<table:table-row([^>]*?)(?:\/>|>([\s\S]*?)<\/table:table-row>)/g, mFila;
+            while ((mFila = reFila.exec(cuerpo)) !== null) {
+                var attrsFila = mFila[1] || '', contenidoFila = mFila[2] || '';
+                var repiteFila = Number((/table:number-rows-repeated="(\d+)"/.exec(attrsFila) || [])[1]) || 1;
+                var valores = [];
+                var reCelda = /<table:(covered-)?table-cell([^>]*?)(?:\/>|>([\s\S]*?)<\/table:(?:covered-)?table-cell>)/g, mCelda;
+                while ((mCelda = reCelda.exec(contenidoFila)) !== null) {
+                    var attrs = mCelda[2] || '', dentro = mCelda[3] || '';
+                    var repite = Number((/table:number-columns-repeated="(\d+)"/.exec(attrs) || [])[1]) || 1;
+                    var tipo = (/office:value-type="([^"]+)"/.exec(attrs) || [])[1] || '';
+                    var valor = '';
+                    if (tipo === 'float' || tipo === 'currency' || tipo === 'percentage') {
+                        valor = (/office:value="([^"]*)"/.exec(attrs) || [])[1] || '';
+                        if (valor !== '' && Number(valor) === Math.floor(Number(valor))) valor = String(Math.floor(Number(valor)));
+                    } else if (tipo === 'date') {
+                        var f = (/office:date-value="([^"]*)"/.exec(attrs) || [])[1] || '';
+                        valor = f.indexOf('T') === -1 ? f.slice(0, 10) : (f.replace('T', ' ').slice(0, 16));
+                    } else if (tipo === 'time') {
+                        valor = (/office:time-value="([^"]*)"/.exec(attrs) || [])[1] || '';
+                    } else if (tipo === 'boolean') {
+                        valor = (/office:boolean-value="([^"]*)"/.exec(attrs) || [])[1] === 'true' ? 'Sí' : 'No';
+                    } else {
+                        valor = textoDeOds(dentro);
+                        if (!valor) valor = (/office:string-value="([^"]*)"/.exec(attrs) || [])[1] || '';
+                    }
+                    if (!valor) {
+                        /* Celda vacía: se respetan las columnas que declara, pero sin exagerar
+                           (LibreOffice marca 16377 columnas vacías al final de cada fila). */
+                        var vacias = Math.min(repite, LIMITE_VACIOS);
+                        for (var v = 0; v < vacias; v++) valores.push('');
+                    } else {
+                        var veces = Math.min(repite, LIMITE_REPITE);
+                        for (var r = 0; r < veces; r++) valores.push(valor);
+                    }
+                }
+                var hayDatos = valores.some(function (x) { return x !== ''; });
+                var vecesFila = hayDatos ? Math.min(repiteFila, LIMITE_REPITE) : 1;
+                for (var fr = 0; fr < vecesFila; fr++) filas.push(valores.slice());
+            }
+            /* Se quitan las filas vacías del final (LibreOffice deja muchísimas). */
+            while (filas.length && !filas[filas.length - 1].some(function (x) { return x !== ''; })) filas.pop();
+            hojas.push({ nombre: nombreHoja, filas: filas });
+        }
+        if (!hojas.length) throw new Error('No encontré ninguna tabla dentro del archivo de LibreOffice.');
+        return hojas;
     }
 
     /* ─────────────── Configuración guardada ─────────────── */
@@ -13446,7 +13535,13 @@
             campaniaId: '',
             criterioDuplicado: { telefono: true, nombre: true },
             ultimoArchivo: '',
-            totalImportados: 0
+            ultimaHoja: '',
+            totalImportados: 0,
+            /* Archivo enlazado (se revisa solo) */
+            enlazado: false,
+            nombreEnlazado: '',
+            intervaloSegundos: 30,
+            auto: false
         };
     }
     function leerJson(clave) {
@@ -13520,10 +13615,12 @@
         var hoja = estado.archivo.hojas.filter(function (h) { return h.nombre === nombreHoja; })[0] || estado.archivo.hojas[0];
         estado.hojaElegida = hoja.nombre;
         var cfg = leerConfig();
+        cfg.ultimaHoja = hoja.nombre;
         /* Si la hoja cambió, el mapeo anterior ya no sirve: se vuelve a detectar. */
         if (!cfg.encabezados || !estado.encabezados || cfg.encabezados.join('|') !== (hoja.filas[0] || []).map(function (h) { return limpiarValor(h) || ''; }).join('|')) {
             cfg.mapeo = [];
         }
+        guardarConfig(cfg);
         return analizarConFilas(hoja.filas, cfg);
     }
 
@@ -13686,6 +13783,55 @@
         return lista.filter(function (c) { return c && c.estado === 'activa'; });
     }
 
+    /* Bloque del archivo enlazado: se revisa solo y agrega lo nuevo. */
+    function bloqueEnlazado(cfg) {
+        var soportado = soportaEnlazado();
+        var tiene = !!estado.handle;
+        var permiso = estado.permisoEnlazado;
+        var chip;
+        if (!soportado) chip = '<span class="etiqueta-part neutra">No disponible aquí</span>';
+        else if (tiene && permiso === 'granted') chip = '<span class="etiqueta-part positiva">Conectado y revisando</span>';
+        else if (tiene && permiso && permiso !== 'granted') chip = '<span class="etiqueta-part negativa">Necesita autorización</span>';
+        else if (tiene) chip = '<span class="etiqueta-part">Conectado</span>';
+        else chip = '<span class="etiqueta-part neutra">Sin conectar</span>';
+
+        var html = '<div class="seccion-bloque-titulo" style="margin-bottom:8px;"><i class="fas fa-link"></i> Archivo enlazado (se actualiza solo) ' + chip + '</div>';
+
+        if (!soportado) {
+            html += '<div class="lista-avisos"><i class="fas fa-circle-info"></i><div>' +
+                'Este navegador no puede dejar un archivo enlazado (pasa en el <strong>celular</strong> y en <strong>Firefox</strong>). ' +
+                'En esos casos usa <strong>"Elegir archivo"</strong> de abajo para importarlo cuando quieras: el control de duplicados funciona igual.' +
+                '</div></div>';
+            return html;
+        }
+
+        if (!tiene) {
+            html += '<div class="nota-tareas">Conecta un archivo <strong>.xlsx</strong>, <strong>.ods</strong> (LibreOffice) o <strong>.csv</strong> y el CRM lo revisará solo: ' +
+                'cuando cambie el archivo, agrega los prospectos nuevos (respetando los duplicados). Se lee en tu equipo; el archivo no se sube a ningún lado.</div>' +
+                '<div class="form-acciones" style="display:flex;justify-content:flex-start;margin-top:10px;">' +
+                '<button class="btn-primario" id="imp-enlazar"><i class="fas fa-link"></i> Conectar un archivo que se actualice solo</button></div>';
+            return html;
+        }
+
+        var leido = estado.ultimoArchivo && estado.ultimoArchivo.leido ? estado.ultimoArchivo.leido.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '—';
+        var a = estado.analisis;
+        html += '<div class="detalle-etiquetas" style="margin-bottom:10px;">' +
+            '<span class="etiqueta-part">' + esc(estado.handle.name || cfg.nombreEnlazado || '') + '</span>' +
+            '<span class="etiqueta-part neutra">Última lectura: ' + esc(leido) + '</span>' +
+            '<span class="etiqueta-part neutra">Revisa cada ' + esc(cfg.intervaloSegundos || 30) + ' s</span>' +
+            (cfg.auto ? '<span class="etiqueta-part positiva">Agrega los nuevos sola</span>' : '<span class="etiqueta-part neutra">Solo avisa; tú importas</span>') +
+            (a ? '<span class="etiqueta-part">' + a.nuevas.length + ' nueva(s) · ' + a.duplicadas.length + ' duplicada(s)</span>' : '') +
+            '</div>' +
+            '<div class="form-acciones" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-start;">' +
+            '<button class="btn-secundario" id="imp-revisar-enlazado"><i class="fas fa-rotate"></i> Revisar ahora</button>' +
+            (permiso && permiso !== 'granted' ? '<button class="btn-primario" id="imp-autorizar"><i class="fas fa-key"></i> Autorizar el archivo</button>' : '') +
+            '<button class="btn-secundario" id="imp-cambiar-enlazado"><i class="fas fa-arrows-rotate"></i> Cambiar archivo</button>' +
+            '<button class="btn-peligro" id="imp-desconectar"><i class="fas fa-link-slash"></i> Desconectar</button>' +
+            '</div>' +
+            '<div id="imp-enlazado-zona" style="margin-top:12px;"></div>';
+        return html;
+    }
+
     function cuerpoArchivo(cfg) {
         var hojas = (estado.archivo && estado.archivo.hojas) || [];
         var selector = '';
@@ -13696,15 +13842,16 @@
                 }).join('') + '</select></div>';
         }
         var nombreArchivo = estado.archivo ? ('<div class="lista-aviso" style="margin-top:10px;"><i class="fas fa-file-lines"></i><div>Archivo cargado: <strong>' + esc(estado.archivo.nombre) + '</strong>' + (estado.hojaElegida ? ' · hoja <strong>' + esc(estado.hojaElegida) + '</strong>' : '') + '</div></div>') : '';
-        return '' +
+        return bloqueEnlazado(cfg) +
+            '<div class="seccion-bloque-titulo" style="margin:18px 0 8px;"><i class="fas fa-file-arrow-up"></i> Importar un archivo a mano</div>' +
             '<div class="nota-tareas"><i class="fas fa-circle-info"></i> ' +
             'En tu hoja de respuestas de Google: <strong>Archivo → Descargar → Microsoft Excel (.xlsx)</strong> o <strong>CSV</strong>. ' +
-            'También sirve cualquier tabla que tengas en Excel. El archivo se lee en este equipo: no se sube a ningún lado ni pide permisos.</div>' +
+            'También sirve cualquier tabla de Excel o de LibreOffice (.ods). El archivo se lee en este equipo: no se sube a ningún lado ni pide permisos.</div>' +
             '<div id="imp-zona" style="margin-top:12px;border:2px dashed var(--color-borde);border-radius:10px;padding:22px 16px;text-align:center;">' +
             '  <div style="font-size:26px;color:var(--color-acento);"><i class="fas fa-file-arrow-up"></i></div>' +
-            '  <div style="margin:8px 0;font-size:14px;">Arrastra aquí tu archivo <strong>.xlsx</strong> o <strong>.csv</strong></div>' +
+            '  <div style="margin:8px 0;font-size:14px;">Arrastra aquí tu archivo <strong>.xlsx</strong>, <strong>.ods</strong> o <strong>.csv</strong></div>' +
             '  <div style="color:var(--color-texto-secundario);font-size:12.5px;margin-bottom:12px;">o elígelo con el botón</div>' +
-            '  <input type="file" id="imp-archivo" accept=".xlsx,.xlsm,.csv,.tsv,.txt" style="display:none;">' +
+            '  <input type="file" id="imp-archivo" accept=".xlsx,.xlsm,.ods,.csv,.tsv,.txt" style="display:none;">' +
             '  <button class="btn-primario" id="imp-elegir"><i class="fas fa-folder-open"></i> Elegir archivo</button>' +
             '</div>' +
             selector + nombreArchivo +
@@ -13735,6 +13882,12 @@
             '    <label class="fila-check" style="flex:0 0 auto;"><input type="checkbox" id="imp-dup-nombre"' + (cfg.criterioDuplicado.nombre ? ' checked' : '') + '><span class="dato-principal">Nombre</span></label>' +
             '  </div>' +
             '  <div class="nota-tareas" style="margin-top:8px;">El teléfono se compara por los últimos 10 dígitos; el nombre sin acentos, sin mayúsculas y en cualquier orden. Si el nombre coincide pero el teléfono es distinto, se marca aparte para que tú decidas.</div>' +
+            '</div>' +
+            '<div class="row-2col">' +
+            '  <div class="form-grupo"><label>Revisar el archivo enlazado cada (segundos)</label><input type="number" id="imp-intervalo" min="10" value="' + esc(cfg.intervaloSegundos || 30) + '"></div>' +
+            '  <div class="form-grupo"><label>Cuando el archivo cambie</label>' +
+            '    <label class="fila-check" style="padding-top:10px;"><input type="checkbox" id="imp-auto"' + (cfg.auto ? ' checked' : '') + '><span class="dato-principal">Agregar los nuevos sola, sin preguntar<small>Si está apagada, solo te avisa y tú decides (recomendado al principio).</small></span></label>' +
+            '  </div>' +
             '</div>' +
             '<div class="form-acciones" style="display:flex;justify-content:flex-end;"><button class="btn-primario" id="imp-guardar-ajustes"><i class="fas fa-floppy-disk"></i> Guardar ajustes</button></div>';
     }
@@ -13815,6 +13968,8 @@
         if (v('imp-origen') !== null) cfg.origenPorDefecto = v('imp-origen');
         if (v('imp-fase')) cfg.faseInicial = v('imp-fase');
         if (v('imp-campania') !== null) cfg.campaniaId = v('imp-campania');
+        if (v('imp-intervalo')) cfg.intervaloSegundos = Math.max(10, Number(v('imp-intervalo')) || 30);
+        if (c('imp-auto') !== null) cfg.auto = c('imp-auto');
         if (c('imp-dup-tel') !== null || c('imp-dup-nombre') !== null) {
             cfg.criterioDuplicado = { telefono: c('imp-dup-tel') !== false, nombre: c('imp-dup-nombre') !== false };
         }
@@ -13822,32 +13977,305 @@
         return cfg;
     }
 
-    /* Procesa un archivo ya elegido (o soltado). */
-    function procesarArchivo(archivo) {
+    /* Lee un archivo del disco (o del enlace) y devuelve sus hojas. */
+    function leerBlob(archivo) {
         return new Promise(function (resolver, rechazar) {
             if (!archivo) { rechazar(new Error('No se eligió ningún archivo.')); return; }
+            if (typeof FileReader === 'undefined') { rechazar(new Error('Este navegador no puede leer archivos.')); return; }
             var lector = new FileReader();
             lector.onerror = function () { rechazar(new Error('No se pudo leer el archivo.')); };
             lector.onload = function () {
                 try {
                     var hojas = leerBuffer(archivo.name, lector.result);
                     if (!hojas.length || !hojas[0].filas.length) { rechazar(new Error('El archivo no tiene datos que se puedan leer.')); return; }
-                    estado.archivo = { nombre: archivo.name, hojas: hojas };
-                    var cfg = leerConfig();
-                    cfg.ultimoArchivo = archivo.name;
-                    cfg.encabezados = null;
-                    cfg.mapeo = [];
-                    guardarConfig(cfg);
-                    elegirHoja(hojas[0].nombre);
-                    resolver({ hojas: hojas, analisis: estado.analisis });
+                    resolver(hojas);
                 } catch (e) { rechazar(e); }
             };
             lector.readAsArrayBuffer(archivo);
         });
     }
 
+    /* Procesa un archivo ya elegido a mano (arrastrado o con el botón). */
+    function procesarArchivo(archivo) {
+        return leerBlob(archivo).then(function (hojas) {
+            estado.archivo = { nombre: archivo.name, hojas: hojas };
+            var cfg = leerConfig();
+            cfg.ultimoArchivo = archivo.name;
+            cfg.encabezados = null;
+            cfg.mapeo = [];
+            guardarConfig(cfg);
+            elegirHoja(hojas[0].nombre);
+            return { hojas: hojas, analisis: estado.analisis };
+        });
+    }
+
+    /* ─────────────── Archivo enlazado: se revisa solo ───────────────
+       Con el permiso del navegador (Chrome/Edge de escritorio) el CRM guarda el
+       acceso al archivo y puede volver a leerlo cuando quiera. Así, cada vez que
+       Jorge cambie el archivo, el CRM lo detecta y agrega lo nuevo.
+       El contenido se lee en su equipo: el archivo no se sube a ningún lado. */
+
+    var BD_ARCHIVOS = 'pda_archivos_enlazados';
+
+    function soportaEnlazado() { return typeof raiz.showOpenFilePicker === 'function'; }
+
+    function abrirBD() {
+        return new Promise(function (resolver, rechazar) {
+            if (!raiz.indexedDB) { rechazar(new Error('Este navegador no puede recordar el archivo enlazado.')); return; }
+            var peticion = raiz.indexedDB.open(BD_ARCHIVOS, 1);
+            peticion.onupgradeneeded = function () {
+                if (!peticion.result.objectStoreNames.contains('archivos')) peticion.result.createObjectStore('archivos');
+            };
+            peticion.onsuccess = function () { resolver(peticion.result); };
+            peticion.onerror = function () { rechazar(new Error('No se pudo abrir el almacén del navegador.')); };
+        });
+    }
+    function guardarHandle(handle) {
+        return abrirBD().then(function (bd) {
+            return new Promise(function (resolver, rechazar) {
+                var t = bd.transaction('archivos', 'readwrite');
+                t.objectStore('archivos').put(handle, 'archivo');
+                t.oncomplete = function () { resolver(true); };
+                t.onerror = function () { rechazar(new Error('No se pudo recordar el archivo enlazado.')); };
+            });
+        });
+    }
+    function leerHandleGuardado() {
+        return abrirBD().then(function (bd) {
+            return new Promise(function (resolver) {
+                var t = bd.transaction('archivos', 'readonly');
+                var p = t.objectStore('archivos').get('archivo');
+                p.onsuccess = function () { resolver(p.result || null); };
+                p.onerror = function () { resolver(null); };
+            });
+        }).catch(function () { return null; });
+    }
+    function borrarHandleGuardado() {
+        return abrirBD().then(function (bd) {
+            return new Promise(function (resolver) {
+                var t = bd.transaction('archivos', 'readwrite');
+                t.objectStore('archivos').delete('archivo');
+                t.oncomplete = function () { resolver(true); };
+                t.onerror = function () { resolver(false); };
+            });
+        }).catch(function () { return false; });
+    }
+
+    /* ¿El archivo cambió desde la última lectura? (puro: se prueba en el banco)
+       OJO: un archivo del navegador (File) trae "name", "size" y "lastModified",
+       mientras que el registro interno usa "nombre": hay que aceptar los dos. */
+    function nombreDeArchivo(a) { return a ? (a.nombre !== undefined ? a.nombre : (a.name || '')) : ''; }
+    function tamanoDeArchivo(a) { return a && a.size !== undefined ? a.size : -1; }
+    function fechaDeArchivo(a) { return a && a.lastModified !== undefined ? a.lastModified : 0; }
+
+    function archivoCambio(anterior, nuevo) {
+        if (!nuevo) return false;
+        if (!anterior) return true;
+        return fechaDeArchivo(anterior) !== fechaDeArchivo(nuevo) ||
+            tamanoDeArchivo(anterior) !== tamanoDeArchivo(nuevo) ||
+            nombreDeArchivo(anterior) !== nombreDeArchivo(nuevo);
+    }
+
+    function recordarArchivo(archivo) {
+        estado.ultimoArchivo = { nombre: archivo.name, lastModified: archivo.lastModified, size: archivo.size, leido: new Date() };
+        return estado.ultimoArchivo;
+    }
+
+    /* Pide permiso otra vez (tiene que ser con un clic de Jorge). */
+    function autorizarEnlazado() {
+        if (!estado.handle) return Promise.reject(new Error('No hay archivo enlazado.'));
+        return estado.handle.requestPermission({ mode: 'read' }).then(function (permiso) {
+            estado.permisoEnlazado = permiso;
+            if (permiso !== 'granted') throw new Error('No se autorizó el archivo.');
+            return revisarEnlazado(true);
+        });
+    }
+
+    function elegirArchivoEnlazado() {
+        if (!soportaEnlazado()) {
+            return Promise.reject(new Error('Este navegador no puede dejar un archivo enlazado (pasa en el celular y en Firefox). Usa "Elegir archivo" para importarlo cuando quieras.'));
+        }
+        return raiz.showOpenFilePicker({
+            multiple: false,
+            types: [{
+                description: 'Tablas (Excel, LibreOffice o CSV)',
+                accept: {
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx', '.xlsm'],
+                    'application/vnd.oasis.opendocument.spreadsheet': ['.ods'],
+                    'text/csv': ['.csv'],
+                    'text/tab-separated-values': ['.tsv', '.txt']
+                }
+            }]
+        }).then(function (eleccion) {
+            var handle = eleccion && eleccion[0];
+            if (!handle) throw new Error('No se eligió ningún archivo.');
+            return guardarHandle(handle).catch(function () { return false; }).then(function () {
+                estado.handle = handle;
+                estado.permisoEnlazado = 'granted';
+                var cfg = leerConfig();
+                cfg.enlazado = true;
+                cfg.nombreEnlazado = handle.name;
+                guardarConfig(cfg);
+                return revisarEnlazado(true);
+            });
+        });
+    }
+
+    function desconectarEnlazado() {
+        detenerRevisionEnlazada();
+        estado.handle = null;
+        estado.ultimoArchivo = null;
+        estado.permisoEnlazado = '';
+        var cfg = leerConfig();
+        cfg.enlazado = false;
+        cfg.nombreEnlazado = '';
+        guardarConfig(cfg);
+        /* El olvido en el almacén del navegador se hace aparte: si el navegador
+           se tarda (o lo bloquea), la interfaz ya quedó desconectada. */
+        borrarHandleGuardado().catch(function () { return false; });
+        return Promise.resolve(true);
+    }
+
+    /* Revisa el archivo enlazado: si cambió, lo vuelve a leer y (si está puesto
+       en automático) agrega los prospectos nuevos. */
+    function revisarEnlazado(manual) {
+        if (!estado.handle) return Promise.reject(new Error('Todavía no hay un archivo enlazado.'));
+        return estado.handle.queryPermission({ mode: 'read' }).then(function (permiso) {
+            estado.permisoEnlazado = permiso;
+            if (permiso !== 'granted') {
+                detenerRevisionEnlazada();
+                throw new Error('Hay que volver a autorizar el archivo: pulsa "Autorizar".');
+            }
+            return estado.handle.getFile();
+        }).then(function (archivo) {
+            var cambio = archivoCambio(estado.ultimoArchivo, archivo);
+            if (!cambio) {
+                if (manual && typeof raiz.mostrarNotificacion === 'function') raiz.mostrarNotificacion('El archivo no ha cambiado desde la última revisión.', 'info');
+                return { cambio: false, analisis: estado.analisis };
+            }
+            return leerBlob(archivo).then(function (hojas) {
+                estado.archivo = { nombre: archivo.name, hojas: hojas };
+                var cfg = leerConfig();
+                var hojaPrevia = cfg.ultimaHoja;
+                var elegida = hojas.filter(function (h) { return h.nombre === hojaPrevia; })[0] ? hojaPrevia : hojas[0].nombre;
+                elegirHoja(elegida);
+                recordarArchivo(archivo);
+                var analisis = estado.analisis || { nuevas: [], duplicadas: [], repetidas: [], vacias: 0 };
+                if (cfg.auto && analisis.nuevas.length) {
+                    var res = importar(analisis.nuevas);
+                    return { cambio: true, analisis: analisis, importados: res.creados.length, automatico: true };
+                }
+                if (analisis.nuevas.length && typeof raiz.mostrarNotificacion === 'function') {
+                    raiz.mostrarNotificacion('El archivo cambió: ' + analisis.nuevas.length + ' respuesta(s) nueva(s). Revísalas en "Importar archivo" y pulsa Importar.', 'success');
+                }
+                return { cambio: true, analisis: analisis, importados: 0, automatico: false };
+            });
+        });
+    }
+
+    /* Revisión automática mientras el CRM esté abierto. */
+    function programarRevisionEnlazada() {
+        detenerRevisionEnlazada();
+        var cfg = leerConfig();
+        if (!cfg.enlazado || !estado.handle || !soportaEnlazado()) return;
+        var segundos = Math.max(10, Number(cfg.intervaloSegundos) || 30);
+        estado.temporizador = raiz.setInterval(function () {
+            if (typeof document !== 'undefined' && document.hidden) return;   /* no molestar si la pestaña está oculta */
+            if (!estado.handle) { detenerRevisionEnlazada(); return; }
+            revisarEnlazado(false).catch(function (e) {
+                var msg = (e && e.message) || String(e);
+                if (msg !== estado.ultimoAviso) {
+                    estado.ultimoAviso = msg;
+                    if (typeof raiz.mostrarNotificacion === 'function') raiz.mostrarNotificacion('Archivo enlazado: ' + msg, 'warning');
+                }
+            });
+        }, segundos * 1000);
+    }
+    function detenerRevisionEnlazada() {
+        if (estado.temporizador) { raiz.clearInterval(estado.temporizador); estado.temporizador = null; }
+    }
+
+    /* Al abrir el CRM: recordar el archivo enlazado y, si el navegador todavía da
+       permiso, revisarlo de una vez. */
+    function restaurarEnlazado() {
+        if (!soportaEnlazado()) return Promise.resolve(false);
+        /* Si ya hay un archivo enlazado en memoria (por ejemplo porque Jorge
+           acaba de conectarlo), no se pisa. */
+        if (estado.handle) return Promise.resolve(true);
+        return leerHandleGuardado().then(function (handle) {
+            if (!handle) return false;
+            estado.handle = handle;
+            var cfg = leerConfig();
+            if (!cfg.nombreEnlazado) { cfg.nombreEnlazado = handle.name; guardarConfig(cfg); }
+            return handle.queryPermission({ mode: 'read' }).then(function (permiso) {
+                estado.permisoEnlazado = permiso;
+                if (permiso === 'granted') {
+                    estado.ultimoArchivo = null;   /* fuerza la primera lectura */
+                    return revisarEnlazado(false).then(function () { programarRevisionEnlazada(); return true; })
+                        .catch(function () { programarRevisionEnlazada(); return false; });
+                }
+                programarRevisionEnlazada();
+                return false;
+            });
+        }).catch(function () { return false; });
+    }
+
     function conectarCuerpo() {
         if (typeof document === 'undefined') return;
+
+        /* ── Archivo enlazado ── */
+        var bEnlazar = document.getElementById('imp-enlazar');
+        var bCambiar = document.getElementById('imp-cambiar-enlazado');
+        var enlazar = function () {
+            elegirArchivoEnlazado().then(function (r) {
+                var a = (r && r.analisis) || estado.analisis || { nuevas: [], duplicadas: [] };
+                aviso('Archivo conectado. ' + a.nuevas.length + ' nueva(s), ' + a.duplicadas.length + ' duplicada(s). Se revisará solo.', 'success');
+                programarRevisionEnlazada();
+                abrirPanel('archivo');
+            }).catch(function (e) { aviso((e && e.message) || String(e), 'error'); });
+        };
+        if (bEnlazar) bEnlazar.onclick = enlazar;
+        if (bCambiar) bCambiar.onclick = enlazar;
+
+        var bRevisarEnlazado = document.getElementById('imp-revisar-enlazado');
+        if (bRevisarEnlazado) bRevisarEnlazado.onclick = function () {
+            bRevisarEnlazado.disabled = true;
+            revisarEnlazado(true).then(function (r) {
+                if (r && r.cambio) {
+                    var a = r.analisis || { nuevas: [], duplicadas: [] };
+                    aviso(r.automatico ? ('Se agregaron ' + r.importados + ' prospecto(s) del archivo enlazado.') : ('El archivo cambió: ' + a.nuevas.length + ' nueva(s), ' + a.duplicadas.length + ' duplicada(s).'), r.automatico ? 'success' : 'info');
+                }
+                abrirPanel('archivo');
+            }).catch(function (e) { aviso((e && e.message) || String(e), 'error'); abrirPanel('archivo'); });
+        };
+
+        var bAutorizar = document.getElementById('imp-autorizar');
+        if (bAutorizar) bAutorizar.onclick = function () {
+            autorizarEnlazado().then(function () {
+                aviso('Listo: el archivo quedó autorizado otra vez.', 'success');
+                programarRevisionEnlazada();
+                abrirPanel('archivo');
+            }).catch(function (e) { aviso((e && e.message) || String(e), 'error'); abrirPanel('archivo'); });
+        };
+
+        var bDesconectar = document.getElementById('imp-desconectar');
+        if (bDesconectar) bDesconectar.onclick = function () {
+            var zona = document.getElementById('imp-enlazado-zona');
+            if (!zona) { desconectarEnlazado(); abrirPanel('archivo'); return; }
+            zona.innerHTML = '<div class="lista-avisos" style="border-left:4px solid var(--color-naranja);">' +
+                '<i class="fas fa-triangle-exclamation" style="color:var(--color-naranja);"></i>' +
+                '<div>Se va a desconectar el archivo enlazado: el CRM dejará de revisarlo solo. Los prospectos que ya se importaron <strong>no se tocan</strong>.</div></div>' +
+                '<div class="form-acciones" style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">' +
+                '<button class="btn-secundario" id="imp-cancelar-desc">Cancelar</button>' +
+                '<button class="btn-peligro" id="imp-confirmar-desc"><i class="fas fa-link-slash"></i> Sí, desconectar</button></div>';
+            document.getElementById('imp-cancelar-desc').onclick = function () { zona.innerHTML = ''; };
+            document.getElementById('imp-confirmar-desc').onclick = function () {
+                desconectarEnlazado().then(function () {
+                    aviso('Archivo desconectado.', 'success');
+                    abrirPanel('archivo');
+                });
+            };
+        };
 
         var bElegir = document.getElementById('imp-elegir');
         var entrada = document.getElementById('imp-archivo');
@@ -13913,6 +14341,7 @@
         var bGuardarAjustes = document.getElementById('imp-guardar-ajustes');
         if (bGuardarAjustes) bGuardarAjustes.onclick = function () {
             leerFormulario();
+            programarRevisionEnlazada();
             aviso('Ajustes guardados.', 'success');
             abrirPanel('archivo');
         };
@@ -14008,6 +14437,9 @@
             ponerBoton();
             setTimeout(function () { try { ponerBoton(); } catch (e) { } }, 1500);
             setTimeout(function () { try { ponerBoton(); } catch (e) { } }, 4000);
+            /* Si Jorge ya había conectado un archivo, se retoma (y si el navegador
+               todavía da permiso, se revisa de una vez). */
+            setTimeout(function () { try { restaurarEnlazado(); } catch (e) { } }, 2500);
         } catch (e) {
             if (typeof console !== 'undefined' && console.warn) console.warn('Importar prospectos: no se pudo iniciar.', e);
         }
@@ -14022,12 +14454,23 @@
         procesarArchivo: procesarArchivo,
         leerBuffer: leerBuffer,
         leerXlsxBuffer: leerXlsxBuffer,
+        leerOdsBuffer: leerOdsBuffer,
         inflar: inflar,
         leerZip: leerZip,
         decodificarTexto: decodificarTexto,
         analizarTexto: analizarTexto,
         elegirHoja: elegirHoja,
         importar: importar,
+        /* Archivo enlazado (se revisa solo) */
+        soportaEnlazado: soportaEnlazado,
+        elegirArchivoEnlazado: elegirArchivoEnlazado,
+        revisarEnlazado: revisarEnlazado,
+        autorizarEnlazado: autorizarEnlazado,
+        desconectarEnlazado: desconectarEnlazado,
+        restaurarEnlazado: restaurarEnlazado,
+        programarRevisionEnlazada: programarRevisionEnlazada,
+        detenerRevisionEnlazada: detenerRevisionEnlazada,
+        archivoCambio: archivoCambio,
         /* Utilidades puras: las prueba el banco de pruebas. */
         pruebas: {
             normalizarTelefono: normalizarTelefono,
@@ -14044,8 +14487,11 @@
             estilosDeFecha: estilosDeFecha,
             leerBuffer: leerBuffer,
             leerXlsxBuffer: leerXlsxBuffer,
+            leerOdsBuffer: leerOdsBuffer,
+            textoDeOds: textoDeOds,
             decodificarTexto: decodificarTexto,
-            desdeBase64: desdeBase64
+            desdeBase64: desdeBase64,
+            archivoCambio: archivoCambio
         }
     };
 
