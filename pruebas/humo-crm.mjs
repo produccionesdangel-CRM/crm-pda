@@ -561,5 +561,40 @@ console.log('\n=== 12. Paquetes y Servicios en solo lectura (Fase 4) ===');
     paqAdmin.includes('CRUD.paquetes.editar') && paqAdmin.includes('CRUD.paquetes.eliminar'), 'perdió los botones');
   c.usuarioActual = null;
 }
+console.log('\n=== 13. Rol de Ventas: capacidades (Fase 4) ===');
+{
+  const c = r.contexto;
+  comprobar('el rol Ventas aparece en la lista de roles', c.rolesDisponibles().includes('Ventas'), c.rolesDisponibles().join(', '));
+
+  const comoVentas = () => { c.usuarioActual = { username: 'ana', nombre: 'Ana', rol: 'Ventas', admin: false }; };
+  const comoOperador = () => { c.usuarioActual = { username: 'luis', nombre: 'Luis', rol: 'Operador', admin: false }; };
+  const comoAdmin = () => { c.usuarioActual = { username: 'jorge', nombre: 'Jorge', rol: 'Administrador', admin: true }; };
+
+  comoVentas();
+  comprobar('Ventas NO puede ver Informes', c.puede('ver-informes') === false);
+  comprobar('Ventas NO puede imprimir contratos', c.puede('imprimir-contrato') === false);
+  comprobar('Ventas NO puede activar campañas', c.puede('activar-campanias') === false);
+  comprobar('Ventas NO ve la papelera', c.puede('ver-papelera') === false);
+  comprobar('esVentas() lo reconoce', c.esVentas() === true && c.esOperador() === false);
+
+  // Con Ventas, la sección de Informes no se dibuja.
+  for (const el of r.elementos.values()) el._html = '';
+  let error = null;
+  try { c.renderizarSeccion('informes'); } catch (e) { error = e.message; }
+  const pintado = [...r.elementos.values()].map(el => String(el._html || '')).join('\n');
+  comprobar('entrar a Informes con rol Ventas no dibuja nada', error === null && !pintado.includes('PATRIMONIO NETO') && !pintado.includes('donut'), error || 'se dibujó Informes');
+  comprobar('imprimir un contrato con rol Ventas queda bloqueado', (() => {
+    try { c.generarVistaImpresion('x', 'y'); return true; } catch (e) { return false; }
+  })() === true, 'soltó una excepción');
+
+  comoOperador();
+  comprobar('el Operador SÍ puede ver Informes (no se le cambió nada)', c.puede('ver-informes') === true);
+  comprobar('el Operador SÍ puede imprimir contratos', c.puede('imprimir-contrato') === true);
+  comprobar('pero el Operador tampoco activa campañas', c.puede('activar-campanias') === false);
+
+  comoAdmin();
+  comprobar('el Administrador puede todo', c.puede('ver-informes') && c.puede('imprimir-contrato') && c.puede('activar-campanias') && c.puede('ver-papelera'));
+  c.usuarioActual = null;
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);

@@ -2345,6 +2345,25 @@
         /* @JS-UTILS — Permisos, IDs, fechas, formato                   */
         /* ═══════════════════════════════════════════════════════════ */
         function esAdmin() { return usuarioActual && usuarioActual.admin === true; }
+
+        /* ─────── @JS-CAPACIDADES (v5.0) ───────
+           Un solo lugar para preguntar qué puede hacer cada rol: `puede('ver-informes')`.
+           Se conserva esAdmin() porque los candados que ya existían lo usan, y el
+           administrador siempre puede todo. El rol se valida además contra la base
+           en cada operación: esto es la guarda de la interfaz, no la única. */
+        function esVentas() { return !!(usuarioActual && usuarioActual.admin !== true && usuarioActual.rol === 'Ventas'); }
+        function esOperador() { return !!(usuarioActual && usuarioActual.admin !== true && usuarioActual.rol !== 'Ventas'); }
+        var CAPACIDADES = {
+            'Administrador': { 'ver-informes': true,  'imprimir-contrato': true,  'activar-campanias': true,  'ver-papelera': true },
+            'Operador':      { 'ver-informes': true,  'imprimir-contrato': true,  'activar-campanias': false, 'ver-papelera': false },
+            'Ventas':        { 'ver-informes': false, 'imprimir-contrato': false, 'activar-campanias': false, 'ver-papelera': false }
+        };
+        function puede(capacidad) {
+            if (esAdmin()) return true;
+            var rol = (usuarioActual && usuarioActual.rol) || 'Operador';
+            var tabla = CAPACIDADES[rol] || CAPACIDADES['Operador'];
+            return tabla[capacidad] === true;
+        }
         function bloquearSiNoEsAdmin(accion) {
             if (!esAdmin()) { mostrarNotificacion('Acción restringida. Solo administradores pueden ' + (accion || 'realizar esta acción') + '.', 'warning'); return true; }
             return false;
@@ -6144,7 +6163,7 @@
         /* ─── USUARIOS ─── */
         // ─────── @JS-USUARIOS-ADMIN (v4.8.6) ───────
         // El correo de Google es la identidad y el único método de acceso.
-        function rolesDisponibles() { return ['Administrador', 'Operador']; }
+        function rolesDisponibles() { return ['Administrador', 'Operador', 'Ventas']; }
         function adminsActivos() { return usuarios.filter(function(u) { return u && u.admin === true && usuarioEstaActivo(u); }); }
         function renderizarUsuarios() {
             const cont = document.getElementById('usuarios-lista'); if (!cont) return;
@@ -6257,6 +6276,9 @@
 
         /* ─── IMPRESIÓN ─── */
         function generarVistaImpresion(clienteId, contratoId) {
+            // El contrato lleva el desglose completo del precio: imprimirlo es de administradores
+            // y operadores. El rol de Ventas sí puede imprimir y enviar comprobantes de PAGO.
+            if (!puede('imprimir-contrato')) { mostrarNotificacion('Tu rol no puede imprimir contratos.', 'warning'); return; }
             const c = obtenerCliente(clienteId);
             if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
             const co = c.contratos.find(function(x) { return x.id === contratoId; });
@@ -6850,6 +6872,8 @@
         }
         function aplicarRestriccionesPorRol() {
             document.querySelectorAll('.menu-item.solo-admin').forEach(function(el) { el.style.display = esAdmin() ? '' : 'none'; });
+            // Informes: no lo ve el rol de Ventas (decisión de Jorge).
+            document.querySelectorAll('.menu-item[data-seccion="informes"]').forEach(function(el) { el.style.display = puede('ver-informes') ? '' : 'none'; });
             const btnNuevoPaq = document.getElementById('btn-nuevo-paquete');
             const btnNuevoServ = document.getElementById('btn-nuevo-servicio');
             if (btnNuevoPaq) btnNuevoPaq.style.display = esAdmin() ? '' : 'none';
@@ -6918,6 +6942,7 @@
             document.querySelectorAll('.menu-item').forEach(function(item) {
                 item.addEventListener('click', function() {
                     const seccion = this.dataset.seccion;
+                    if (seccion === 'informes' && !puede('ver-informes')) { mostrarNotificacion('Tu rol no tiene acceso a Informes.', 'warning'); return; }
                     cambiarSeccion(seccion);
                     renderizarSeccion(seccion);
                     if (window.innerWidth <= 768) cerrarSidebarMovil();
@@ -7127,7 +7152,7 @@
         }
         function renderizarSeccion(seccion) {
             switch(seccion) {
-                case 'informes': renderizarInformes(); break;
+                case 'informes': if (puede('ver-informes')) renderizarInformes(); break;
                 case 'prospectos': renderizarProspectos(); break;
                 case 'clientes': renderizarClientes(); break;
                 case 'contratos': renderizarContratos(); break;
