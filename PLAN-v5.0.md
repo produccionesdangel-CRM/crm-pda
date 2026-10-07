@@ -61,6 +61,11 @@
     con los eventos de campaña y el filtro nuevo, sin romper los filtros existentes.
 11. **Panel del prospecto** (regla acordada): datos, campañas con el estado de **sus** tareas, tareas de campaña
     agrupadas por vencimiento y ordenadas por fecha y prioridad, y las tareas sueltas aparte.
+    El CRM **ya tiene** un panel lateral (`#panel-lateral-global`) que hoy sólo se abre para contratos
+    (`cambiarSeccion`, línea 6774): hay que reutilizarlo y ampliar esa condición, no crear otro.
+12. **Falta en el banco de pruebas:** hoy el arranque termina en la pantalla de login (no hay sesión de Google),
+    así que las vistas nuevas aún no se pueden verificar de verdad desde Node. Antes de dar la Fase 3 por buena,
+    el banco debe poder **simular una sesión iniciada** y comprobar que las vistas nuevas se dibujan.
 
 ### Fase 4 — Rol de Ventas (espera las decisiones de Jorge)
 12. Tabla **única de capacidades** por rol (evita regar `if (rol === 'ventas')` por el archivo) + el rol nuevo.
@@ -85,8 +90,23 @@
 
 - [x] Base confirmada: `parche-v4.8.9\index.html` es **idéntica** a lo publicado en Pages (solo CRLF vs LF).
 - [x] Repositorio clonado, rama `v5.0`, `.gitattributes` con LF (commit `5a493f2`).
-- [x] **Banco de pruebas del archivo real** (`pruebas\humo-crm.mjs`): 6/6 en verde, arranque sin errores.
+- [x] **Banco de pruebas del archivo real** (`pruebas\humo-crm.mjs`): 13/13 en verde (arranque sin errores,
+      funciones base, llegada al login, orden del menú, secciones nuevas, ids sin repetir, CSS portado).
 - [x] Servidor local para pruebas en navegador y móvil (`pruebas\servir.mjs`).
-- [ ] Fase 1 · Fase 2 · Fase 3 · Fase 4 · Fase 5
+- [x] **Fase 1** (commit `65433cd`): pestañas **Panel** y **Campañas** en el menú, sus dos secciones y el CSS de
+      campañas en su propio bloque `@CSS-CAMPANIAS`. Menú final: Informes · **Panel** · Prospectos · **Campañas** ·
+      Clientes · Contratos · Paquetes · Servicios · Calendario · Configuración. Marcado balanceado (10 secciones, 315 divs).
+      Nada se rompió: el CRM arranca igual y ningún id quedó repetido.
+- [ ] Fase 2 (datos) · Fase 3 (motor e interfaz) · Fase 4 (rol de Ventas) · Fase 5 (cierre)
 - [ ] Respaldo exportado y verificado por Jorge (regla de oro, antes de tocar la base real).
 - [ ] `firebase-rules-recomendadas.json` (pedido a la PC de trabajo por el canal).
+
+### Notas de la integración (para no repetir errores)
+
+- El CRM **ya tiene** `sync-dot`/`sync-text` y un panel lateral (`#panel-lateral-global`): los ids del mismo nombre
+  que venían en la lite se descartaron al portar (duplicar ids habría roto la app).
+- Del CSS de la lite se dejaron fuera las reglas de `.aviso-modo` (eran el cartel de la "versión lite") y tres reglas
+  que cambiaban el **panel lateral global** existente (`.panel-lateral-body .detalle-seccion`, `.tarea-vinculada`,
+  `.tarea-fechas`): se aplicarán en la Fase 3, ya con el panel de campañas integrado.
+- El markup de la lite traía la clase `active` en la sección Panel (allá es la vista inicial). En el CRM la inicial es
+  Informes: se quitó, si no, dos secciones habrían quedado activas a la vez.
