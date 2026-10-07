@@ -196,3 +196,21 @@ están guardados por nombre de usuario (no por UID), así que no es fiable. Por 
 - Que Ventas **no borre clientes ni contratos**.
 - Que Operador y Ventas **no editen el catálogo**: esto **sí** lo vigilan las reglas (solo administrador) además
   de la interfaz. Doble candado.
+
+
+## 11. Publicación (7/10/2026)
+
+Jorge publicó estas reglas en la consola de Firebase. **Lo que sigue es la comprobación funcional por rol**, que solo
+puede hacerse con las cuentas reales:
+
+| Rol | Comprobación |
+|---|---|
+| Administrador (dueño) | Ve papelera y usuarios; editar un paquete guarda |
+| Segundo administrador | **Tras recargar el CRM y volver a entrar**, ve la papelera (eso confirma que su casilla del índice se publicó) |
+| Operador | Crea o edita un prospecto o una tarea y guarda; **no** ve la papelera |
+| Ventas (cuando se cree) | Sin Informes; agrega un pago; sin papelera, sin usuarios, sin respaldos |
+
+**Señal de problema:** si al guardar la app avisa "solo en local" o sale un aviso de permisos, esa regla quedó corta.
+**Regreso:** volver a pegar `REGLAS-FIREBASE-v4.8-actuales.txt`.
+**Si el segundo administrador no ve la papelera** tras recargar dos veces: en la consola, Datos → `admins` → su
+casilla en `true`.
