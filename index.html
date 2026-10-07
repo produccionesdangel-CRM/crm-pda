@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.11';
+        var BUILD_APP = '2026-10-07.12';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -12910,6 +12910,12 @@
         token: null,           // token de Google SOLO en memoria
         conectado: false,
         motivo: '',
+        cuenta: '',            // con qué cuenta de Google se conectó
+        scopes: '',            // permisos que Google entregó de verdad
+        permisoHojas: '',      // 'concedido' | 'no concedido' | 'sin verificar'
+        ultimoError: null,     // el error crudo de Google (para diagnóstico)
+        explicacion: '',       // el mismo error, dicho en claro
+        enlaceApi: '',         // enlace para activar la API de Hojas de cálculo
         hoja: null,            // {id, titulo, pestanias:[{titulo, gid}]}
         encabezados: null,
         filas: null,
@@ -13184,7 +13190,13 @@
                 estado.token = token;
                 estado.conectado = true;
                 estado.motivo = '';
-                resolver({ ok: true });
+                estado.ultimoError = null;
+                estado.explicacion = '';
+                /* Se apunta con qué cuenta se conectó y se le pregunta a Google
+                   qué permisos entregó de verdad (no se da por hecho). */
+                var u = auth.currentUser;
+                estado.cuenta = (u && u.email) || estado.cuenta || '';
+                verificarPermisos().then(function () { resolver({ ok: true }); });
             }).catch(function (e) {
                 estado.conectado = false;
                 estado.motivo = (e && (e.code || e.message)) || 'error';
@@ -13206,17 +13218,79 @@
         return '';
     }
 
+    /* Traduce el error crudo de Google a algo que Jorge pueda accionar, SIN
+       esconder el mensaje original (que es el que dice qué falta exactamente). */
+    function explicarError(status, cuerpo) {
+        var t = String(cuerpo || '');
+        if (/SERVICE_DISABLED|has not been used in project|is disabled/i.test(t)) {
+            return 'La API de Hojas de cálculo de Google NO está activada en tu proyecto de Google. ' +
+                'Es un clic (gratis): entra al enlace que aparece abajo, elige tu proyecto y pulsa "Habilitar". ' +
+                'Espera 1 minuto y vuelve a pulsar "Conectar con Google".';
+        }
+        if (/insufficient authentication scopes|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(t)) {
+            return 'Google entregó la sesión pero SIN el permiso de Hojas de cálculo. ' +
+                'Vuelve a pulsar "Conectar con Google" y en la pantalla de Google marca/acepta la casilla de Hojas de cálculo.';
+        }
+        if (/caller does not have permission|PERMISSION_DENIED/i.test(t)) {
+            return 'La hoja de cálculo no es de la cuenta de Google conectada (o no te la compartieron). ' +
+                'Revisa que la hoja sea de la cuenta que aparece arriba como "Cuenta conectada".';
+        }
+        if (/not found|NOT_FOUND|Unable to parse range/i.test(t)) {
+            return 'No se encontró esa hoja o esa pestaña. Copia otra vez el enlace completo de la hoja y elige la pestaña correcta.';
+        }
+        if (status === 401) return 'La sesión con Google venció (dura ~1 hora). Pulsa "Conectar con Google" otra vez.';
+        return 'Google rechazó la petición (' + status + '). El detalle exacto está abajo.';
+    }
+
+    function enlaceActivarApi(cuerpo) {
+        var m = String(cuerpo || '').match(/https:\/\/console\.developers\.google\.com[^"\s\\]+/);
+        return m ? m[0].replace(/\\u003d/g, '=').replace(/\\u0026/g, '&') : 'https://console.cloud.google.com/apis/library/sheets.googleapis.com';
+    }
+
     function pedir(url) {
         if (!estado.token) return Promise.reject(new Error('Falta conectar con Google.'));
         return raiz.fetch(url, { headers: { Authorization: 'Bearer ' + estado.token } }).then(function (r) {
-            if (r.status === 401 || r.status === 403) {
-                estado.conectado = false;
-                estado.motivo = 'permiso vencido o insuficiente';
-                return r.text().then(function (t) { throw new Error('Google rechazó el permiso (' + r.status + '). Vuelve a conectar. ' + t.slice(0, 120)); });
+            if (!r.ok) {
+                return r.text().then(function (t) {
+                    estado.ultimoError = {
+                        status: r.status, cuerpo: String(t || '').slice(0, 1200), url: url,
+                        cuando: new Date().toLocaleString('es-MX')
+                    };
+                    estado.explicacion = explicarError(r.status, t);
+                    estado.enlaceApi = enlaceActivarApi(t);
+                    if (r.status === 401 || r.status === 403) {
+                        estado.conectado = false;
+                        estado.motivo = (r.status === 401) ? 'sesión de Google vencida' : 'Google rechazó el permiso';
+                    }
+                    var e = new Error(estado.explicacion + '  (' + r.status + ')');
+                    e.detalle = estado.ultimoError;
+                    throw e;
+                });
             }
-            if (!r.ok) return r.text().then(function (t) { throw new Error('Error de Google (' + r.status + '): ' + t.slice(0, 160)); });
+            estado.ultimoError = null;
+            estado.explicacion = '';
             return r.json();
         });
+    }
+
+    /* ¿Qué permisos entregó Google de verdad? Se le pregunta a Google por el
+       mismo token: así se sabe si falta el permiso de Hojas de cálculo. */
+    function verificarPermisos() {
+        if (!estado.token) return Promise.resolve(null);
+        return raiz.fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(estado.token))
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (!d) { estado.permisoHojas = 'sin verificar'; return null; }
+                estado.cuenta = d.email || estado.cuenta || '';
+                estado.scopes = String(d.scope || '');
+                estado.permisoHojas = estado.scopes.indexOf('spreadsheets') !== -1 ? 'concedido' : 'no concedido';
+                if (estado.permisoHojas === 'no concedido') {
+                    estado.explicacion = 'Google entregó la sesión pero SIN el permiso de Hojas de cálculo. ' +
+                        'Pulsa "Conectar con Google" otra vez y acepta la casilla de Hojas de cálculo.';
+                }
+                return d;
+            })
+            .catch(function () { estado.permisoHojas = 'sin verificar'; return null; });
     }
 
     function leerPestanias(idHoja) {
@@ -13475,10 +13549,41 @@
             '  </div>' +
             '</div>' +
             '<div class="lista-avisos"><i class="fas fa-shield-halved"></i><div>El permiso que se pide es <strong>solo lectura</strong> de hojas de cálculo y el token <strong>no se guarda</strong>: al cerrar el CRM hay que volver a conectar. La configuración sí se recuerda en este equipo.</div></div>' +
+            bloqueDiagnostico() +
             '<div class="form-acciones" style="display:flex;gap:10px;justify-content:flex-end;">' +
             '  <button class="btn-secundario" id="cap-guardar"><i class="fas fa-floppy-disk"></i> Guardar configuración</button>' +
             '  <button class="btn-primario" id="cap-revisar"><i class="fas fa-rotate"></i> Revisar ahora</button>' +
             '</div>';
+    }
+
+    /* Diagnóstico a la vista: qué cuenta, qué permisos y qué dijo Google
+       exactamente la última vez. Sin esto, un "rechazó el permiso" es adivinar. */
+    function bloqueDiagnostico() {
+        if (!estado.conectado && !estado.ultimoError && !estado.cuenta) return '';
+        var permiso = estado.permisoHojas === 'concedido'
+            ? '<span class="etiqueta-part positiva">Permiso de Hojas: concedido</span>'
+            : (estado.permisoHojas === 'no concedido'
+                ? '<span class="etiqueta-part negativa">Permiso de Hojas: NO concedido</span>'
+                : '<span class="etiqueta-part neutra">Permiso de Hojas: sin verificar</span>');
+        var html = '<div class="seccion-bloque-titulo" style="margin-top:18px;"><i class="fas fa-stethoscope"></i> Diagnóstico de la conexión</div>' +
+            '<div class="detalle-etiquetas" style="margin-bottom:10px;">' +
+            '<span class="etiqueta-part">Cuenta conectada: ' + esc(estado.cuenta || '—') + '</span>' + permiso +
+            (estado.scopes ? '<span class="etiqueta-part neutra">' + esc(estado.scopes.split(' ').map(function (s) { return s.replace('https://www.googleapis.com/auth/', ''); }).join(', ')) + '</span>' : '') +
+            '</div>';
+        if (estado.explicacion) {
+            html += '<div class="lista-avisos" style="border-left:4px solid var(--color-naranja);">' +
+                '<i class="fas fa-triangle-exclamation" style="color:var(--color-naranja);"></i>' +
+                '<div>' + esc(estado.explicacion) +
+                (estado.enlaceApi ? '<br><br><a href="' + esc(estado.enlaceApi) + '" target="_blank" rel="noopener" class="btn-secundario" style="display:inline-block;text-decoration:none;"><i class="fas fa-arrow-up-right-from-square"></i> Abrir la página para activar la API de Hojas de cálculo</a>' : '') +
+                '</div></div>';
+        }
+        if (estado.ultimoError) {
+            html += '<details style="margin-top:10px;"><summary style="cursor:pointer;color:var(--color-texto-secundario);font-size:12.5px;">Ver el mensaje exacto de Google (' + esc(estado.ultimoError.status) + ' · ' + esc(estado.ultimoError.cuando) + ')</summary>' +
+                '<pre style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;background:var(--color-bg-terciario);padding:10px;border-radius:6px;margin-top:8px;">' + esc(estado.ultimoError.cuerpo) + '</pre></details>';
+        }
+        html += '<div class="form-acciones" style="display:flex;justify-content:flex-start;margin-top:10px;">' +
+            '<button class="btn-secundario" id="cap-diagnostico"><i class="fas fa-vial"></i> Volver a revisar permisos y hoja</button></div>';
+        return html;
     }
 
     function cuerpoPegado() {
@@ -13513,6 +13618,7 @@
         ];
         var html = '<div class="detalle-header"><div class="mosaico-titulo" style="font-size:17px;">Prospectos desde tu formulario de Google</div>' +
             '<div class="detalle-etiquetas">' + estadoConexion +
+            (estado.cuenta ? '<span class="etiqueta-part neutra">' + esc(estado.cuenta) + '</span>' : '') +
             (cfg.hojaTitulo ? '<span class="etiqueta-part">' + esc(cfg.hojaTitulo) + '</span>' : '') +
             (cfg.pestania ? '<span class="etiqueta-part">' + esc(cfg.pestania) + '</span>' : '') +
             '<span class="etiqueta-part neutra">' + (cfg.totalImportados || 0) + ' importado(s)</span></div>' +
@@ -13601,6 +13707,10 @@
             bConectar.textContent = 'Esperando a Google…';
             conectar().then(function () {
                 var cfg = leerConfig();
+                if (estado.permisoHojas === 'no concedido') {
+                    aviso('Google no entregó el permiso de Hojas de cálculo. Vuelve a intentarlo aceptando esa casilla.', 'error');
+                    return null;
+                }
                 if (cfg.hojaId) return leerPestanias(cfg.hojaId).then(function (h) {
                     cfg.hojaTitulo = h.titulo;
                     if (!cfg.pestania && h.pestanias.length) cfg.pestania = h.pestanias[0].titulo;
@@ -13608,12 +13718,36 @@
                 });
                 return null;
             }).then(function () {
-                aviso('Listo: permiso concedido.', 'success');
+                if (estado.ultimoError) aviso(estado.explicacion || 'Google rechazó la petición.', 'error');
+                else aviso('Listo: permiso concedido y hoja leída.', 'success');
                 abrirPanel(pestaniaActual);
             }).catch(function (e) {
                 aviso('No se pudo conectar: ' + ((e && e.message) || e), 'error');
                 bConectar.disabled = false;
                 abrirPanel(pestaniaActual);
+            });
+        };
+
+        /* Volver a revisar permisos y hoja, mostrando el detalle exacto de Google. */
+        var bDiagnostico = document.getElementById('cap-diagnostico');
+        if (bDiagnostico) bDiagnostico.onclick = function () {
+            var cfg = leerConfig();
+            bDiagnostico.disabled = true;
+            bDiagnostico.textContent = 'Revisando…';
+            verificarPermisos().then(function () {
+                if (!cfg.hojaId) { aviso('Falta el enlace de la hoja.', 'warning'); return null; }
+                return leerPestanias(cfg.hojaId).then(function (h) {
+                    cfg.hojaTitulo = h.titulo;
+                    if (!cfg.pestania && h.pestanias.length) cfg.pestania = h.pestanias[0].titulo;
+                    guardarConfig(cfg);
+                });
+            }).then(function () {
+                if (estado.ultimoError) aviso(estado.explicacion || 'Google rechazó la petición.', 'error');
+                else aviso('Todo bien: los permisos y la hoja responden.', 'success');
+                abrirPanel('conexion');
+            }).catch(function (e) {
+                aviso((e && e.message) || String(e), 'error');
+                abrirPanel('conexion');
             });
         };
 
