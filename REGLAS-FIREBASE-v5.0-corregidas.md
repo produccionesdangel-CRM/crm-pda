@@ -1,5 +1,17 @@
 # Reglas de Firebase — corrección del 7/10/2026 (esto causaba el "Error de red")
 
+## ⚠️ Cuál archivo es cuál (leer antes de tocar nada)
+
+| Archivo | Qué es | ¿Se publica? |
+|---|---|---|
+| **REGLAS-FIREBASE-ACTUALES-en-firebase.json** | **lo que está publicado hoy** en la consola (copia de referencia) | No hace falta: ya está puesto |
+| **REGLAS-FIREBASE-v5.0-corregidas.json** | las reglas con **las dos correcciones** (es el mismo contenido) | Sí, si algún día hay que volver a publicarlas |
+| REGLAS-FIREBASE-v5.0-propuesta.json | la propuesta original del 6/10, **con los dos bugs** (campos en español en participaciones y sin permitir las lápidas) | **NO. No publicar.** Se queda solo como histórico |
+| REGLAS-FIREBASE-v4.8-actuales.txt | las reglas de la v4.8 | Es el **regreso de emergencia** recomendado |
+
+**Si algún día hay que volver atrás**: publicar **REGLAS-FIREBASE-v4.8-actuales.txt** (funcionaron bien
+mucho tiempo) o **REGLAS-FIREBASE-v5.0-corregidas.json**. Nunca la propuesta.
+
 ## Qué pasaba (no era la red de Jorge)
 
 El CRM mostraba **"Error de red"** con el internet perfecto, no sincronizaba nada y todo lo demás
