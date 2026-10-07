@@ -73,6 +73,11 @@
     `firebase-rules-recomendadas.json`).
 
 ### Fase 5 — Cierre
+
+**Pruebas del motor portado (hecho):** `pruebas\motor-v5.cmd` corre las **224 pruebas originales del CRM Lite**
+contra **el motor tal como quedó dentro del CRM v5.0** (se extrae el bloque del motor desde `index.html` y se le
+enchufa el almacén de prueba de la lite). Resultado: **224/224 en verde** → el port no cambió el comportamiento.
+Para regenerar la copia del motor tras tocar `index.html`: `pruebas\preparar-motor-v5.ps1`.
 14. Suites completas (motor + interfaz con clics) + regresión de lo existente + recorrido en móvil.
 15. Respaldo, publicación al canal y despliegue (el despliegue necesita credenciales de Jorge: no se guardan aquí).
 
