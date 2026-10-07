@@ -18,7 +18,7 @@ El CRM es **un solo archivo**: `C:\Users\noman\Documents\deepseek-harness\crm-pd
 
 **Opción A — Desde el navegador (la más simple, sin instalar nada):**
 
-1. Entra a `https://github.com/produccionesdangel-crm/crm-pda`.
+1. Entra a `https://github.com/produccionesdangel-CRM/crm-pda`.
 2. Botón **Add file → Upload files**.
 3. Arrastra el `index.html` de la carpeta de arriba (reemplaza el que está).
 4. Abajo, escribe el mensaje: *"v5.0: campañas, rol de Ventas y seguridad"* → **Commit changes**.

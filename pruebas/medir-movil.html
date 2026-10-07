@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Medición de arranque</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; background: #0d0d0d; color: #eee; margin: 0; padding: 18px; }
+  h1 { font-size: 18px; margin: 0 0 14px; }
+  .dato { font-size: 16px; line-height: 1.7; }
+  b { color: #4ade80; }
+  .error { color: #f87171; }
+  small { color: #9ca3af; }
+</style>
+</head>
+<body>
+<h1>Medición de arranque del CRM</h1>
+<div id="salida" class="dato">Midiendo…</div>
+<small>Esta página no es el CRM: mide cuánto tarda el teléfono en bajarlo y en leerlo.</small>
+
+<script>
+(async function () {
+  const salida = document.getElementById('salida');
+  const res = { aparato: navigator.userAgent, cuando: new Date().toISOString() };
+  const enviar = async function () {
+    try { await fetch('../medicion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(res) }); } catch (e) { }
+  };
+  try {
+    res.conexion = (navigator.connection && navigator.connection.effectiveType) || 'sin dato';
+
+    // 1) Descarga del archivo tal cual lo baja el teléfono.
+    const t0 = performance.now();
+    const r = await fetch('../index.html', { cache: 'no-store' });
+    const texto = await r.text();
+    const t1 = performance.now();
+    res.bytes = texto.length;
+    res.descargaMs = Math.round(t1 - t0);
+
+    // 2) Leerlo y ejecutarlo: es lo que de verdad pesa en un archivo único.
+    const t2 = performance.now();
+    await new Promise(function (listo, fallo) {
+      const marco = document.createElement('iframe');
+      marco.style.cssText = 'width:360px;height:240px;position:fixed;left:-9999px;top:0;border:0';
+      marco.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups');
+      marco.onload = function () { listo(); };
+      marco.srcdoc = texto;
+      document.body.appendChild(marco);
+      setTimeout(function () { fallo(new Error('el marco no terminó en 60 s')); }, 60000);
+    });
+    const t3 = performance.now();
+    res.lecturaMs = Math.round(t3 - t2);
+    res.totalMs = res.descargaMs + res.lecturaMs;
+
+    salida.innerHTML = 'Listo.<br>Descarga: <b>' + res.descargaMs + ' ms</b><br>' +
+      'Leer y ejecutar: <b>' + res.lecturaMs + ' ms</b><br>' +
+      'Total: <b>' + res.totalMs + ' ms</b><br>' +
+      'Peso: <b>' + Math.round(res.bytes / 1024) + ' KB</b>';
+    await enviar();
+  } catch (e) {
+    res.error = String((e && e.message) || e);
+    salida.innerHTML = '<span class="error">Error: ' + res.error + '</span>';
+    await enviar();
+  }
+})();
+</script>
+</body>
+</html>
