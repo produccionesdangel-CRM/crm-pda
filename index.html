@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.18';
+        var BUILD_APP = '2026-10-07.19';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -3260,7 +3260,16 @@
                 return true;
             } catch (error) {
                 console.error('Error Firebase:', error);
-                actualizarEstadoSync('offline', 'Error de red');
+                /* Se distingue un problema de PERMISOS de uno de red: antes todo
+                   se mostraba como "Error de red" y eso despistaba (la red podía
+                   estar perfecta y el guardado fallar por las reglas). */
+                const codigoError = String((error && (error.code || error.message)) || error);
+                if (/PERMISSION_DENIED|permission denied/i.test(codigoError)) {
+                    console.warn('⛔ Firebase rechazó el guardado por PERMISOS (revisa las reglas). Detalle:', codigoError);
+                    actualizarEstadoSync('offline', 'Sin permiso en la nube');
+                } else {
+                    actualizarEstadoSync('offline', 'Error de red');
+                }
                 return false;
             } finally {
                 sincronizandoFirebase = false;

@@ -1205,5 +1205,97 @@ console.log('\n=== 20. Ninguna ventana ni aviso muestra código (reportado por J
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   25. Las reglas de Firebase y la app deben hablar el mismo idioma
+   ----------------------------------------------------------------------
+   Esto es lo que estuvo mal y costó una tarde de diagnóstico: el candado de
+   `participaciones` en las reglas publicadas exigía los campos
+   `campaniaId`/`prospectoId`, pero el motor del CRM escribe
+   `campaignId`/`prospectId`. Firebase rechazaba CADA participación, el guardado
+   completo fallaba y el CRM mostraba "Error de red" con el internet perfecto.
+
+   Aquí se revisa, contra el archivo de reglas del repositorio:
+     1. que cada colección que la app sube tenga su nodo con regla;
+     2. que los objetos que crea el motor cumplan el candado de su nodo
+        (aceptando los sinónimos de nombre de campo).
+   ══════════════════════════════════════════════════════════════════════ */
+{
+  /* (fs y path ya están importados en este archivo) */
+  const c = r.contexto;
+  /* Sinónimos de nombre de campo entre la app y las reglas. */
+  const SINONIMOS = {
+    campaniaId: 'campaignId', campaignId: 'campaniaId',
+    prospectoId: 'prospectId', prospectId: 'prospectoId',
+    clienteId: 'clientId', clientId: 'clienteId',
+    tareaId: 'taskId', taskId: 'tareaId'
+  };
+
+  const rutaReglas = path.join(AQUI, '..', 'REGLAS-FIREBASE-v5.0-corregidas.json');
+  comprobar('existe el archivo de reglas corregidas', fs.existsSync(rutaReglas), rutaReglas);
+  if (fs.existsSync(rutaReglas)) {
+    const reglas = JSON.parse(fs.readFileSync(rutaReglas, 'utf8'));
+    const nodos = Object.keys(reglas.rules).filter(k => k.charAt(0) !== '.');
+
+    /* 1) Cada colección que la app marca para subir tiene regla. */
+    const colecciones = ['prospectos', 'clientes', 'tareas', 'paquetes', 'serviciosAdicionales', 'campanias', 'participaciones', 'historial'];
+    const sinRegla = colecciones.filter(c => nodos.indexOf(c) === -1);
+    comprobar('todas las colecciones que la app sube tienen su nodo con regla',
+      sinRegla.length === 0, sinRegla.join(', '));
+
+    /* 2) Saca los campos que exige un candado. */
+    /* Evalúa el candado DE VERDAD, tal como está escrito en las reglas: se le da
+       un "newData" de mentira con los datos del objeto que la app va a guardar.
+       (Antes esta prueba aceptaba sinónimos y por eso no mordía: era decorativa.) */
+    function evaluarCandado(validate, obj) {
+      if (!validate) return true;
+      const nuevo = {
+        exists: () => true,
+        val: () => obj,
+        hasChildren: (lista) => Array.isArray(lista) && lista.every(campo => obj[campo] !== undefined),
+        isString: () => false, isNumber: () => false, isBoolean: () => false,
+        child: (campo) => ({
+          exists: () => obj[campo] !== undefined,
+          val: () => obj[campo],
+          hasChildren: (lista) => Array.isArray(lista) && lista.every(k => obj[campo] && obj[campo][k] !== undefined),
+          isString: () => typeof obj[campo] === 'string',
+          isNumber: () => typeof obj[campo] === 'number',
+          isBoolean: () => typeof obj[campo] === 'boolean'
+        })
+      };
+      try { return !!new Function('newData', 'return (' + validate + ');')(nuevo); }
+      catch (e) { return false; }
+    }
+    function revisarObjeto(coleccion, obj, etiqueta) {
+      if (!obj) { comprobar('objeto ' + etiqueta + ' creado', false, 'no se creó'); return; }
+      const validate = (reglas.rules[coleccion] && reglas.rules[coleccion].$id && reglas.rules[coleccion].$id['.validate']) || '';
+      const pasa = evaluarCandado(validate, obj);
+      comprobar('lo que la app escribe en ' + coleccion + ' PASA el candado de las reglas (' + etiqueta + ')',
+        pasa, pasa ? '' : ('el candado pide: ' + validate.slice(0, 160) + ' · el objeto trae: ' + Object.keys(obj).join(', ')));
+    }
+
+    /* Objetos reales del motor, creados sobre el almacén del CRM. */
+    const motor = c.crearMotor(c.App.almacen);
+    const camp = motor.crearCampania({
+      nombre: 'Campaña de las reglas', tipo: 'Captación', objetivoPrincipal: 'x', estado: 'activa',
+      fechaInicio: '2026-10-01', fechaFin: '2026-12-31'
+    });
+    revisarObjeto('campanias', camp, 'campaña');
+
+    c.prospectos.push({ id: 'pro_reglas', nombre: 'Ana de las reglas', telefono: '5511223344', email: '', faseActual: 'Interesado', historialFases: [], notasGenerales: '', clienteId: null, fechaRegistro: '2026-10-07' });
+    const alta = motor.agregarParticipacion({ campaniaId: camp.id, prospectoId: 'pro_reglas' });
+    revisarObjeto('participaciones', alta && alta.participacion, 'participación');
+    revisarObjeto('prospectos', c.prospectos[c.prospectos.length - 1], 'prospecto');
+
+    /* Y el caso exacto que estaba roto: la participación trae campaignId/prospectId. */
+    const part = alta && alta.participacion;
+    if (part) {
+      comprobar('la participación conserva el id de campaña y de prospecto que las reglas ahora aceptan',
+        (part.campaignId !== undefined || part.campaniaId !== undefined) &&
+        (part.prospectId !== undefined || part.prospectoId !== undefined),
+        JSON.stringify({ campaignId: part.campaignId, prospectId: part.prospectId }));
+    }
+  }
+}
+
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);
