@@ -97,7 +97,18 @@
       campañas en su propio bloque `@CSS-CAMPANIAS`. Menú final: Informes · **Panel** · Prospectos · **Campañas** ·
       Clientes · Contratos · Paquetes · Servicios · Calendario · Configuración. Marcado balanceado (10 secciones, 315 divs).
       Nada se rompió: el CRM arranca igual y ningún id quedó repetido.
-- [ ] Fase 2 (datos) · Fase 3 (motor e interfaz) · Fase 4 (rol de Ventas) · Fase 5 (cierre)
+- [x] **Fase 2** (commit `398440f`): `campanias` y `participaciones` entraron al mecanismo que ya existía —
+      `COLECCIONES_VERSIONADAS`, outbox persistente, guardado local confirmable, carga/guardado en la nube,
+      respaldo de seguridad, exportación e importación. Verificado guardando de verdad y revisando qué se escribió.
+- [x] **Fase 3a** (motor): portados `Util`, `Catalogos` y el motor puro (2.300 líneas) **sin tocar nada existente**
+      (no había choque de nombres: `Util`, `Catalogos` y `esc` no existían en el CRM).
+      `crearMotor(almacen)` sólo pide 9 cosas: `db` + `campania`, `cliente`, `paquete`, `participacion`, `prospecto`,
+      `servicio`, `tarea` y `guardar`. El adaptador lee las colecciones **por función** (el CRM reasigna esos arreglos
+      al cargar de la nube; una copia se quedaría con la versión vieja) y `guardar()` marca como pendiente lo tocado
+      y **encola el historial nuevo** para la nube.
+      El rastro de auditoría usa el usuario real: se quitó `var USUARIO = 'Sesión de prueba'` y sus 16 usos pasaron a
+      `usuarioDeSesion()`.
+- [ ] Fase 3b (interfaz de campañas) · Fase 3c (calendario y panel del prospecto) · Fase 4 (rol de Ventas) · Fase 5 (cierre)
 - [ ] Respaldo exportado y verificado por Jorge (regla de oro, antes de tocar la base real).
 - [ ] `firebase-rules-recomendadas.json` (pedido a la PC de trabajo por el canal).
 

@@ -248,14 +248,38 @@ const login = r.elementos.get('pantalla-login') || r.elementos.get('login');
 const pidioLogin = Object.keys(r.registro.llamadas).some(k => /pantalla-login|login/i.test(k)) || !!login;
 comprobar('mostró la pantalla de login', pidioLogin, 'no se detectó pantalla de login');
 
-console.log('\n=== 4. Motor de campañas (a partir de la v5.0) ===');
+console.log('\n=== 4. Motor de campañas integrado (Fase 3a) ===');
 const tieneMotor = typeof r.contexto.crearMotor === 'function';
 if (!tieneMotor) {
   console.log('  (pendiente: todavía no está integrado)');
 } else {
+  const c = r.contexto;
   comprobar('el motor de campañas está integrado', tieneMotor);
-  comprobar('los catálogos de campaña existen', !!r.contexto.Catalogos && !!r.contexto.Catalogos.estadosCampania);
-  comprobar('la interfaz de campañas está integrada', typeof r.contexto.App === 'object' && typeof r.contexto.App.abrirModal === 'function');
+  comprobar('los catálogos de campaña existen', !!c.Catalogos && !!c.Catalogos.estadosCampania);
+  comprobar('el motor quedó listo sobre los datos del CRM',
+    !!c.motorCampanias && typeof c.motorCampanias.crearCampania === 'function');
+
+  // De verdad: se crea una campaña y se revisa dónde quedó.
+  const antesCamp = c.campanias.length, antesHist = c.historial.length;
+  const antesSucias = Object.keys(c.entidadesSucias.campanias || {}).length;
+  const camp = c.motorCampanias.crearCampania({ nombre: 'Campaña de prueba v5.0', objetivoPrincipal: 'verificar el adaptador' });
+  comprobar('crearCampania() la guarda en las campañas del CRM',
+    c.campanias.length === antesCamp + 1 && c.campanias.some(x => x && x.id === camp.id),
+    `campañas=${c.campanias.length}`);
+  comprobar('deja rastro en el historial con el usuario de la sesión',
+    c.historial.length > antesHist && c.historial[0] && c.historial[0].usuario === 'Sistema',
+    `usuario=${c.historial[0] && c.historial[0].usuario}`);
+  comprobar('la campaña quedó marcada para subir a la nube',
+    Object.keys(c.entidadesSucias.campanias || {}).length > antesSucias, 'no se marcó como pendiente');
+  comprobar('el historial nuevo entró a la cola de la nube',
+    c.eventosAppendOnlyPendientes.historial.length > 0, 'la cola quedó vacía');
+  comprobar('el motor revisa la integridad sin reportar huérfanos',
+    (() => { const v = c.motorCampanias.validarIntegridad(); return !v || !v.problemas || v.problemas.length === 0; })(),
+    JSON.stringify((c.motorCampanias.validarIntegridad() || {}).problemas || []).slice(0, 120));
+
+  const tieneUI = typeof c.App === 'object' && c.App && typeof c.App.abrirModal === 'function';
+  if (!tieneUI) console.log('  (pendiente de la Fase 3b: la interfaz de campañas todavía no está portada)');
+  else comprobar('la interfaz de campañas está integrada', true);
 }
 
 console.log('\n=== 5. Estructura: menú, secciones y estilos (Fase 1) ===');
