@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.20';
+        var BUILD_APP = '2026-10-07.21';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -12764,7 +12764,14 @@
             setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
         };
 
-        App.seleccionarSeccion = function (nombre) { App.seccionActual = nombre; cambiarSeccion(nombre); };
+        /* Al cambiar de sección hay que REDIBUJARLA: cambiarSeccion() solo muestra y
+       oculta paneles. Sin esto, abrir la ficha de una campaña (o cualquier cambio
+       de sección hecho por el código) dejaba el contenido vacío o viejo. */
+    App.seleccionarSeccion = function (nombre) {
+        App.seccionActual = nombre;
+        cambiarSeccion(nombre);
+        try { App.renderSeccion(nombre); } catch (e) { console.warn('No se pudo dibujar la sección ' + nombre + ':', e); }
+    };
         App.renderSeccion = function (nombre) {
             var n = nombre || App.seccionActual;
             App.seccionActual = n;

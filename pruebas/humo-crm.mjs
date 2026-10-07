@@ -1343,5 +1343,65 @@ console.log('\n=== 20. Ninguna ventana ni aviso muestra código (reportado por J
     'un rechazo por reglas no debe mostrarse como error de red');
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   27. Abrir la ficha de una campaña la dibuja de verdad
+   ----------------------------------------------------------------------
+   El botón "Abrir ficha" tenía su manejador y no lanzaba ningún error, pero no
+   hacía nada visible: `App.seleccionarSeccion` quedó definido dos veces y la
+   última versión solo cambiaba de sección SIN redibujar, así que la ficha nunca
+   se pintaba (parecía un botón muerto).
+
+   Esta prueba abre la campaña y comprueba que la ficha queda dibujada y que sus
+   botones existen. Es la que habría cazado el problema.
+   ══════════════════════════════════════════════════════════════════════ */
+{
+  const c = r.contexto;
+  c.usuarioActual = { username: 'jorge', nombre: 'Jorge', rol: 'Administrador', admin: true, email: 'produccionesdangel@gmail.com' };
+
+  /* Campaña completa, como las que crea el asistente. */
+  c.campanias.push({
+    id: 'cmp_ficha', nombre: 'Campaña de la ficha', tipo: 'Captación', objetivoPrincipal: 'Conseguir 20 registros',
+    objetivosSecundarios: [], estado: 'activa', fechaInicio: '2026-12-01', fechaFin: '2026-12-31',
+    publicoObjetivo: { fuentes: ['Instagram'], descripcion: '' },
+    criteriosElegibilidad: [{ id: 'cr1', tipo: 'ciudad', valor: 'Puebla' }],
+    datosRequeridos: [], camposPersonalizados: [],
+    etapas: [{ id: 'et1', nombre: 'Registrado', orden: 1, esInicial: true, esFinal: false, resultadoTipo: 'ninguno' },
+             { id: 'et2', nombre: 'Contactado', orden: 2, esInicial: false, esFinal: false, resultadoTipo: 'ninguno' }],
+    plantillasTareas: [], beneficios: [], ofertas: [], metas: {},
+    configuracion: { responsable: 'Jorge', requiereAutorizacion: false, permiteMultiplesParticipaciones: false, permitirParticipacionFinalizada: false, avisarSeguimiento: true, sincronizarFaseComercial: { activo: false, mapa: {} } },
+    creadoPor: 'Jorge', actualizadoPor: 'Jorge'
+  });
+
+  /* 1) Se dibuja la lista y aparece el botón de abrir. */
+  let errorLista = null;
+  try { c.App.renderCampanias(); } catch (e) { errorLista = (e && e.message) || String(e); }
+  comprobar('la lista de campañas se dibuja sin error', errorLista === null, errorLista || '');
+  const dibujado = [...r.elementos.values()].map(el => String(el._html || '')).join(' ');
+  comprobar('la tarjeta de la campaña ofrece "Abrir ficha"', /data-abrir-campania="cmp_ficha"/.test(dibujado), dibujado.slice(0, 120));
+
+  /* 2) Abrir la ficha: es lo que hacía el botón que "no hacía nada". */
+  let errorAbrir = null;
+  try { c.App.abrirCampania('cmp_ficha'); } catch (e) { errorAbrir = (e && e.message) || String(e); }
+  comprobar('abrir la ficha no lanza error', errorAbrir === null, errorAbrir || '');
+  const detalle = String((r.elementos.get('campania-detalle-vista') || {})._html || '');
+  comprobar('la ficha de la campaña queda DIBUJADA (antes quedaba vacía)',
+    detalle.length > 300 && /Campaña de la ficha/.test(detalle), detalle.length + ' caracteres');
+  comprobar('la ficha trae sus botones (volver y configurar)',
+    /id="volver-campanias"/.test(detalle) && /id="editar-campania"/.test(detalle));
+
+  /* 3) El cambio de sección tiene que REDIBUJAR (fue justo lo que faltaba). */
+  comprobar('cambiar de sección redibuja el contenido (no solo muestra el panel)',
+    /App\.seleccionarSeccion = function \(nombre\) \{[\s\S]{0,220}App\.renderSeccion\(nombre\)/.test(HTML),
+    'si se quita el redibujado, la ficha vuelve a quedar vacía');
+
+  /* 4) Volver al listado funciona. */
+  let errorVolver = null;
+  try { c.App.cerrarCampania(); } catch (e) { errorVolver = (e && e.message) || String(e); }
+  comprobar('volver al listado funciona', errorVolver === null, errorVolver || '');
+  comprobar('al volver, la campaña queda cerrada y el listado se vuelve a dibujar',
+    c.App.ui.campaniaAbierta === null && /data-abrir-campania="cmp_ficha"/.test([...r.elementos.values()].map(el => String(el._html || '')).join(' ')),
+    'campaniaAbierta=' + String(c.App.ui.campaniaAbierta));
+}
+
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);

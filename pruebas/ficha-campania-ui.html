@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--
+  Prueba funcional de la ficha de una campaña.
+  Crea una campaña completa, dibuja el listado, pulsa "Abrir ficha" y comprueba
+  que la ficha QUEDA DIBUJADA y que sus botones (volver, configurar, duplicar,
+  eliminar) funcionan. Es la prueba que habría cazado el botón que "no hacía
+  nada" (App.seleccionarSeccion estaba definido dos veces y no redibujaba).
+
+  Cómo correrla (desde la carpeta del repositorio):
+      node pruebas/servir.mjs
+      y abrir:  http://127.0.0.1:8080/pruebas/ficha-campania-ui.html
+
+  Resultado en el título: PRUEBA-FICHA-OK  /  PRUEBA-FICHA-FALLAS-<n>
+-->
+
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>PRUEBA-FICHA-PENDIENTE</title>
+    <style>body{font-family:'Courier New',monospace;background:#0d0d0d;color:#e8e8e8;padding:14px;font-size:12.5px}
+    #datos{white-space:pre-wrap;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:12px;margin-bottom:10px}
+    iframe{width:1280px;height:820px;border:1px solid #333;border-radius:8px;background:#000}</style>
+</head>
+<body>
+    <h3>Prueba: abrir la ficha de una campaña (el botón que no hace nada)</h3>
+    <div id="datos">Esperando…</div>
+    <iframe id="marco"></iframe>
+    <script>
+    /* Abre la ficha de una campaña de verdad y reporta CUALQUIER error interno,
+       que es lo que hace que el botón parezca "no hacer nada".
+       Uso: prueba-ficha.html?archivo=X */
+    (function () {
+        var archivo = new URLSearchParams(location.search).get('archivo') || '../index.html';
+        var marco = document.getElementById('marco');
+        var caja = document.getElementById('datos');
+        var salida = [];
+        var fallas = 0;
+        function log(t) { salida.push(t); caja.innerHTML = salida.join('\n'); }
+        function comprobar(t, cond, detalle) {
+            if (cond) log('  OK    ' + t);
+            else { fallas++; log('  FALLA ' + t + (detalle ? '  -> ' + detalle : '')); }
+        }
+
+        marco.src = archivo;
+        marco.addEventListener('load', function () {
+            setTimeout(function () {
+                var w = marco.contentWindow, d = marco.contentDocument;
+                var errores = [];
+                w.addEventListener('error', function (e) { errores.push(e.message); });
+                log('Archivo: ' + archivo);
+
+                /* Usuario administrador, para que los botones existan. */
+                w.usuarioActual = { username: 'jorge', nombre: 'Jorge', rol: 'Administrador', admin: true, email: 'produccionesdangel@gmail.com' };
+                try { w.guardarDatos = function () { }; w.cargarDatosLocal = function () { return Promise.resolve(); }; } catch (e) { }
+
+                /* Una campaña completa, como las que crea el asistente. */
+                var camp = {
+                    id: 'cmp_ficha', nombre: 'Campaña de la ficha', tipo: 'Captación', objetivoPrincipal: 'Conseguir 20 registros',
+                    objetivosSecundarios: [], estado: 'activa', fechaInicio: '2026-12-01', fechaFin: '2026-12-31',
+                    publicoObjetivo: { fuentes: ['Instagram'], descripcion: '' },
+                    criteriosElegibilidad: [{ id: 'cr1', tipo: 'ciudad', valor: 'Puebla' }],
+                    datosRequeridos: [], camposPersonalizados: [],
+                    etapas: [{ id: 'et1', nombre: 'Registrado', orden: 1, esInicial: true, esFinal: false, resultadoTipo: 'ninguno' },
+                             { id: 'et2', nombre: 'Contactado', orden: 2, esInicial: false, esFinal: false, resultadoTipo: 'ninguno' }],
+                    plantillasTareas: [{ id: 'pl1', nombre: 'Llamar', tipo: 'llamada', prioridad: 'Alta', diasVencimiento: 2, etapaOrigen: 'et1' }],
+                    beneficios: [], ofertas: [], metas: {},
+                    configuracion: { responsable: 'Jorge', requiereAutorizacion: false, permiteMultiplesParticipaciones: false, permitirParticipacionFinalizada: false, avisarSeguimiento: true, sincronizarFaseComercial: { activo: false, mapa: {} } },
+                    creadoPor: 'Jorge', actualizadoPor: 'Jorge'
+                };
+                w.campanias.push(camp);
+                comprobar('la campaña de prueba quedó en el CRM', w.campanias.length > 0, 'campanias=' + w.campanias.length);
+
+                /* 1) La lista se dibuja. */
+                var errorLista = null;
+                try { w.App.renderCampanias(); } catch (e) { errorLista = e.message; }
+                comprobar('la lista de campañas se dibuja sin error', errorLista === null, errorLista || '');
+
+                /* 2) El botón "Abrir ficha" de la tarjeta. */
+                var boton = d.querySelector('[data-abrir-campania]');
+                comprobar('existe el botón "Abrir ficha" en la tarjeta', !!boton);
+                if (boton) {
+                    comprobar('el botón tiene manejador', typeof boton.onclick === 'function');
+                    var errorClick = null;
+                    try { boton.click(); } catch (e) { errorClick = e.message; }
+                    /* click() no dispara onclick en un elemento creado por innerHTML si no está en el documento real,
+                       así que se llama también directo. */
+                    if (typeof boton.onclick === 'function') {
+                        try { boton.onclick({ stopPropagation: function () { }, preventDefault: function () { } }); }
+                        catch (e) { errorClick = (e && e.message) || String(e); }
+                    }
+                    comprobar('pulsar "Abrir ficha" no lanza error', errorClick === null, errorClick || '');
+                }
+
+                /* 3) Directo: App.abrirCampania (aquí sale el error real si lo hay). */
+                var errorAbrir = null, pila = '';
+                try { w.App.abrirCampania('cmp_ficha'); }
+                catch (e) { errorAbrir = (e && e.message) || String(e); pila = (e && e.stack) ? String(e.stack).split('\n').slice(0, 4).join(' | ') : ''; }
+                comprobar('App.abrirCampania() no lanza error', errorAbrir === null, errorAbrir || '');
+                if (errorAbrir) log('        pila: ' + pila);
+
+                /* 4) ¿Quedó algo dibujado? */
+                var detalle = d.getElementById('campania-detalle-vista');
+                var lista = d.getElementById('campanias-lista-vista');
+                log('        detalle en pantalla: ' + (detalle ? (detalle.innerHTML.length + ' caracteres') : 'no existe'));
+                log('        lista en pantalla  : ' + (lista ? (lista.innerHTML.length + ' caracteres') : 'no existe'));
+                comprobar('la ficha se dibujó con contenido', !!detalle && detalle.innerHTML.length > 200, detalle ? detalle.innerHTML.length + ' caracteres' : 'sin elemento');
+
+                /* 5) Los botones de dentro de la ficha. */
+                ['volver-campanias', 'editar-campania', 'duplicar-campania', 'agregar-participantes', 'eliminar-campania'].forEach(function (id) {
+                    var el = d.getElementById(id);
+                    if (!el) { log('        (no existe el botón ' + id + ')'); return; }
+                    var err = null;
+                    try { if (typeof el.onclick === 'function') el.onclick({ stopPropagation: function () { }, preventDefault: function () { } }); else err = 'sin manejador'; }
+                    catch (e) { err = (e && e.message) || String(e); }
+                    comprobar('el botón "' + id + '" de la ficha funciona', err === null, err || '');
+                    /* volver al listado para poder probar el siguiente */
+                    try { if (id !== 'volver-campanias') w.App.cerrarCampania(); } catch (e) { }
+                });
+
+                log('');
+                comprobar('sin errores de JavaScript en la página', errores.length === 0, errores.join(' | '));
+                log('');
+                log('== ' + (fallas ? ('PRUEBA-FICHA-FALLAS-' + fallas) : 'PRUEBA-FICHA-OK') + ' ==');
+                document.title = fallas ? ('PRUEBA-FICHA-FALLAS-' + fallas) : 'PRUEBA-FICHA-OK';
+            }, 2500);
+        });
+    })();
+    </script>
+</body>
+</html>
