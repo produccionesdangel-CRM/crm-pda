@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.12';
+        var BUILD_APP = '2026-10-07.13';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -12913,6 +12913,7 @@
         cuenta: '',            // con qué cuenta de Google se conectó
         scopes: '',            // permisos que Google entregó de verdad
         permisoHojas: '',      // 'concedido' | 'no concedido' | 'sin verificar'
+        apiHojas: '',          // 'desactivada' cuando Google dice SERVICE_DISABLED
         ultimoError: null,     // el error crudo de Google (para diagnóstico)
         explicacion: '',       // el mismo error, dicho en claro
         enlaceApi: '',         // enlace para activar la API de Hojas de cálculo
@@ -13223,6 +13224,7 @@
     function explicarError(status, cuerpo) {
         var t = String(cuerpo || '');
         if (/SERVICE_DISABLED|has not been used in project|is disabled/i.test(t)) {
+            estado.apiHojas = 'desactivada';
             return 'La API de Hojas de cálculo de Google NO está activada en tu proyecto de Google. ' +
                 'Es un clic (gratis): entra al enlace que aparece abajo, elige tu proyecto y pulsa "Habilitar". ' +
                 'Espera 1 minuto y vuelve a pulsar "Conectar con Google".';
@@ -13568,13 +13570,16 @@
         var html = '<div class="seccion-bloque-titulo" style="margin-top:18px;"><i class="fas fa-stethoscope"></i> Diagnóstico de la conexión</div>' +
             '<div class="detalle-etiquetas" style="margin-bottom:10px;">' +
             '<span class="etiqueta-part">Cuenta conectada: ' + esc(estado.cuenta || '—') + '</span>' + permiso +
+            (estado.apiHojas === 'desactivada' ? '<span class="etiqueta-part negativa">API de Hojas: desactivada</span>' : '') +
             (estado.scopes ? '<span class="etiqueta-part neutra">' + esc(estado.scopes.split(' ').map(function (s) { return s.replace('https://www.googleapis.com/auth/', ''); }).join(', ')) + '</span>' : '') +
             '</div>';
         if (estado.explicacion) {
             html += '<div class="lista-avisos" style="border-left:4px solid var(--color-naranja);">' +
                 '<i class="fas fa-triangle-exclamation" style="color:var(--color-naranja);"></i>' +
                 '<div>' + esc(estado.explicacion) +
-                (estado.enlaceApi ? '<br><br><a href="' + esc(estado.enlaceApi) + '" target="_blank" rel="noopener" class="btn-secundario" style="display:inline-block;text-decoration:none;"><i class="fas fa-arrow-up-right-from-square"></i> Abrir la página para activar la API de Hojas de cálculo</a>' : '') +
+                (estado.enlaceApi ? '<br><br><a href="' + esc(estado.enlaceApi) + '" target="_blank" rel="noopener" class="btn-secundario" style="display:inline-block;text-decoration:none;"><i class="fas fa-arrow-up-right-from-square"></i> Abrir la página para activar la API de Hojas de cálculo</a>' +
+                    '<div style="margin-top:8px;font-size:11.5px;color:var(--color-texto-secundario);">Si el botón no abre, copia y pega este enlace en el navegador:<br>' +
+                    '<code style="user-select:all;word-break:break-all;">' + esc(estado.enlaceApi) + '</code></div>' : '') +
                 '</div></div>';
         }
         if (estado.ultimoError) {
