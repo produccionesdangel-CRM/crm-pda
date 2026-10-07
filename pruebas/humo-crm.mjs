@@ -993,22 +993,22 @@ console.log('\n=== 20. Ninguna ventana ni aviso muestra código (reportado por J
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   23. Captación de prospectos desde un formulario de Google
+   24. Importar prospectos desde un archivo (Excel o CSV)
    ----------------------------------------------------------------------
-   Lo que NO se puede probar aquí es el permiso de Google (necesita la cuenta
-   de Jorge y una hoja real). Lo que SÍ se prueba es todo el camino de datos,
-   que es donde de verdad se pueden colar duplicados o perderse información:
-   leer los títulos del formulario, mapearlos a los campos del prospecto,
-   detectar duplicados por teléfono y por nombre, no volver a importar la
-   misma fila, y entender un CSV pegado a mano.
+   Prueba el camino de datos completo SIN depender de ningún servicio:
+   teléfonos escritos de mil formas, nombres con acentos y al revés, detección
+   de los títulos del archivo, conversión de fila a prospecto, duplicados por
+   teléfono y por nombre, CSV con comas y comillas dentro del texto, y el
+   lector de Excel (.xlsx) contra un archivo de verdad incrustado aquí en
+   base64 (ZIP + DEFLATE + XML, hecho con otra herramienta).
    ══════════════════════════════════════════════════════════════════════ */
 {
   const c = r.contexto;
-  const cap = c.CaptacionFormularios;
-  comprobar('el módulo de captación desde formulario quedó cargado', !!cap && !!cap.pruebas);
+  const imp = c.ImportarProspectos;
+  comprobar('el módulo de importación de prospectos quedó cargado', !!imp && !!imp.pruebas);
 
-  if (cap && cap.pruebas) {
-    const p = cap.pruebas;
+  if (imp && imp.pruebas) {
+    const p = imp.pruebas;
 
     /* 1) Teléfonos: la misma persona escrita de tres formas. */
     const tel1 = p.normalizarTelefono('+52 55 1234 5678');
@@ -1017,86 +1017,81 @@ console.log('\n=== 20. Ninguna ventana ni aviso muestra código (reportado por J
     comprobar('el teléfono se compara igual con lada, guiones o paréntesis',
       tel1 === tel2 && tel2 === tel3 && tel1 === '5512345678', [tel1, tel2, tel3].join(' / '));
 
-    /* 2) Nombres: mismo nombre con acentos, mayúsculas y orden distinto. */
+    /* 2) Nombres. */
     comprobar('el nombre se compara sin acentos ni mayúsculas',
       p.claveNombre('José Pérez') === p.claveNombre('JOSE PEREZ'));
     comprobar('el nombre se compara aunque venga al revés (apellido primero)',
       p.claveNombre('Pérez Gómez José') === p.claveNombre('José Pérez Gómez'));
 
-    /* 3) Los títulos del formulario se reconocen solos. */
+    /* 3) Títulos del archivo. */
     const encabezados = ['Marca temporal', 'Nombre completo', 'Teléfono / WhatsApp', 'Correo electrónico', '¿Qué evento es?', 'Fecha del evento', 'Presupuesto aproximado', 'Un campo raro'];
     const mapeo = p.detectarMapeo(encabezados);
     const campoDe = (titulo) => (mapeo.filter(m => m.columna === titulo)[0] || {}).campo;
-    comprobar('reconoce los títulos típicos de un formulario de Google',
-      campoDe('Nombre completo') === 'nombre' &&
-      campoDe('Teléfono / WhatsApp') === 'telefono' &&
-      campoDe('Correo electrónico') === 'email' &&
-      campoDe('Marca temporal') === 'fechaRegistro',
+    comprobar('reconoce los títulos típicos',
+      campoDe('Nombre completo') === 'nombre' && campoDe('Teléfono / WhatsApp') === 'telefono' &&
+      campoDe('Correo electrónico') === 'email' && campoDe('Marca temporal') === 'fechaRegistro',
       JSON.stringify(mapeo.map(m => m.campo)));
-    comprobar('reconoce los campos de evento y presupuesto que usan las campañas',
-      campoDe('¿Qué evento es?') === 'tipoEvento' &&
-      campoDe('Fecha del evento') === 'fechaEvento' &&
+    comprobar('reconoce evento, fecha y presupuesto (los que usan las campañas)',
+      campoDe('¿Qué evento es?') === 'tipoEvento' && campoDe('Fecha del evento') === 'fechaEvento' &&
       campoDe('Presupuesto aproximado') === 'presupuesto');
-    comprobar('deja en paz la columna que no reconoce',
-      campoDe('Un campo raro') === 'ignorar');
+    comprobar('deja en paz la columna que no reconoce', campoDe('Un campo raro') === 'ignorar');
 
-    /* 4) Una fila del formulario se vuelve un prospecto con los datos del CRM. */
+    /* 4) Fila -> prospecto. */
     const candidato = p.filaAProspecto(
       ['2026-10-07 09:15:00', 'Ana López Ruiz', '55 4444 5555', 'ana@correo.com', 'XV años', '2027-03-20', '45000', 'lo que sea'],
       mapeo, { origenPorDefecto: 'Formulario Google', faseInicial: 'Interesado' });
     comprobar('la fila se convierte en prospecto con nombre, teléfono y correo',
-      candidato.nombre === 'Ana López Ruiz' && candidato.telefono === '55 4444 5555' && candidato.email === 'ana@correo.com',
-      JSON.stringify(candidato));
+      candidato.nombre === 'Ana López Ruiz' && candidato.telefono === '55 4444 5555' && candidato.email === 'ana@correo.com');
     comprobar('los campos de campaña sí se guardan (evento, fecha, presupuesto)',
       candidato.tipoEvento === 'XV años' && candidato.fechaEvento === '2027-03-20' && candidato.presupuesto === '45000');
     comprobar('lo que no se mapea no se pierde: queda en las notas',
       /Un campo raro: lo que sea/.test(candidato.notasGenerales), candidato.notasGenerales);
 
-    /* 5) Duplicados contra los prospectos que ya existen. */
+    /* 5) Duplicados. */
     const existentes = [
       { id: 'pro_x', nombre: 'Ana López Ruiz', telefono: '+52 55 4444 5555' },
       { id: 'pro_y', nombre: 'Carlos Méndez', telefono: '55 9999 0000' }
     ];
-    const dupTel = p.buscarDuplicado(p.filaAProspecto(['', 'Ana Lopez', '5544445555'], [{ columna: 'Nombre', indice: 1, campo: 'nombre' }, { columna: 'Tel', indice: 2, campo: 'telefono' }], {}), existentes, { telefono: true, nombre: true });
+    const dupTel = p.buscarDuplicado({ nombre: 'Ana Lopez', telefono: '5544445555' }, existentes, { telefono: true, nombre: true });
     comprobar('detecta el duplicado por teléfono aunque el nombre venga distinto',
       dupTel.duplicado === true && dupTel.tipo === 'telefono', JSON.stringify(dupTel.motivo));
     const dupNombre = p.buscarDuplicado({ nombre: 'Carlos Mendez', telefono: '55 1111 2222' }, existentes, { telefono: true, nombre: true });
-    comprobar('detecta el mismo nombre con teléfono distinto (y lo marca distinto)',
+    comprobar('detecta el mismo nombre con teléfono distinto (y lo marca aparte)',
       dupNombre.duplicado === true && dupNombre.tipo === 'nombre-con-telefono-distinto', JSON.stringify(dupNombre.motivo));
-    const noDup = p.buscarDuplicado({ nombre: 'Persona Nueva', telefono: '55 7777 8888' }, existentes, { telefono: true, nombre: true });
-    comprobar('un prospecto realmente nuevo no se marca como duplicado', noDup.duplicado === false);
+    comprobar('un prospecto realmente nuevo no se marca como duplicado',
+      p.buscarDuplicado({ nombre: 'Persona Nueva', telefono: '55 7777 8888' }, existentes, { telefono: true, nombre: true }).duplicado === false);
 
-    /* 6) Análisis completo: nuevas, duplicadas y ya importadas antes. */
+    /* 6) Análisis completo. */
     const filas = [
       ['Nombre completo', 'Teléfono'],
-      ['Ana López Ruiz', '55 4444 5555'],       /* duplicada por teléfono */
-      ['Persona Nueva', '55 7777 8888'],        /* nueva */
-      ['Otra Persona', '55 6666 7777'],         /* nueva pero ya importada antes */
-      ['', '']                                  /* vacía */
+      ['Ana López Ruiz', '55 4444 5555'],
+      ['Persona Nueva', '55 7777 8888'],
+      ['Otra Persona', '55 6666 7777'],
+      ['', '']
     ];
     const firmaOtra = p.claveFila(['Otra Persona', '55 6666 7777']);
+    const firmas = {}; firmas[firmaOtra] = 'ya';
     const analisis = p.analizarFilas(filas.slice(1), [
       { columna: 'Nombre completo', indice: 0, campo: 'nombre' },
       { columna: 'Teléfono', indice: 1, campo: 'telefono' }
-    ], { criterioDuplicado: { telefono: true, nombre: true } }, existentes, (function () { const f = {}; f[firmaOtra] = 'ya'; return f; })());
-    comprobar('clasifica bien: 1 nueva, 1 duplicada, 1 ya importada y 1 vacía',
+    ], { criterioDuplicado: { telefono: true, nombre: true } }, existentes, firmas);
+    comprobar('clasifica bien: 1 nueva, 1 duplicada, 1 ya importada y 1 sin datos',
       analisis.nuevas.length === 1 && analisis.duplicadas.length === 1 && analisis.repetidas.length === 1 && analisis.vacias === 1,
       JSON.stringify({ n: analisis.nuevas.length, d: analisis.duplicadas.length, r: analisis.repetidas.length, v: analisis.vacias }));
-    comprobar('la nueva es la correcta y no la duplicada',
-      analisis.nuevas[0].nombre === 'Persona Nueva', analisis.nuevas[0].nombre);
+    comprobar('la nueva es la correcta y no la duplicada', analisis.nuevas[0].nombre === 'Persona Nueva', analisis.nuevas[0].nombre);
 
-    /* 7) Pegar filas a mano (sin dar permiso a Google). */
-    const csv = 'Nombre,Teléfono,Comentarios\n"López, Ana",5512345678,"Dijo ""sí, quiero cotizar"""';
+    /* 7) CSV pegado (Excel en español usa punto y coma). */
+    const csv = 'Nombre;Teléfono;Comentarios\r\n"López, Ana";5512345678;"Dijo ""sí, quiero cotizar"""';
     const filasCsv = p.textoAFilas(csv);
-    comprobar('entiende un CSV con comas y comillas dentro del texto',
+    comprobar('entiende un CSV con punto y coma, comas y comillas dentro del texto',
       filasCsv.length === 2 && filasCsv[1][0] === 'López, Ana' && /sí, quiero cotizar/.test(filasCsv[1][2]),
       JSON.stringify(filasCsv));
     comprobar('detecta solo el separador que corresponde',
-      p.detectarSeparador('a\tb\tc') === '\t' && p.detectarSeparador('a,b,c') === ',');
+      p.detectarSeparador('a\tb\tc') === '\t' && p.detectarSeparador('a,b,c') === ',' && p.detectarSeparador('a;b;c') === ';');
     comprobar('la firma de una fila cambia si cambia algún dato',
       p.claveFila(['Ana', '55']) !== p.claveFila(['Ana', '56']));
 
-    /* 7-bis) Un teléfono que en realidad es texto no se guarda como número. */
+    /* 8) Un teléfono que en realidad es texto no se guarda como número. */
     const conTexto = p.filaAProspecto(['Llamar después', 'Sin Teléfono'],
       [{ columna: 'Nombre', indice: 0, campo: 'nombre' }, { columna: 'Tel', indice: 1, campo: 'telefono' }], {});
     comprobar('un teléfono escrito como texto no se guarda como número',
@@ -1105,28 +1100,60 @@ console.log('\n=== 20. Ninguna ventana ni aviso muestra código (reportado por J
     comprobar('una fila sin nombre ni teléfono válido se descarta',
       p.filaAProspecto(['', 'no tengo'],
         [{ columna: 'Nombre', indice: 0, campo: 'nombre' }, { columna: 'Tel', indice: 1, campo: 'telefono' }], {}) === null);
+
+    /* 9) LECTOR DE EXCEL: contra un archivo .xlsx de verdad (incrustado en base64).
+       Trae dos hojas, acentos, una fecha guardada como número de serie y celdas
+       vacías en medio de una fila. */
+    const xlsxBase64 = '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';
+    let hojas = null, errorExcel = null;
+    try { hojas = p.leerXlsxBuffer(p.desdeBase64(xlsxBase64).buffer); }
+    catch (e) { errorExcel = (e && e.message) || String(e); }
+    comprobar('lee un archivo de Excel (.xlsx) de verdad',
+      errorExcel === null && !!hojas && hojas.length === 2, errorExcel || ('hojas=' + (hojas ? hojas.length : 0)));
+    if (hojas && hojas.length) {
+      const filasExcel = hojas[0].filas;
+      comprobar('saca el nombre de la hoja y sus encabezados con acentos',
+        hojas[0].nombre === 'Respuestas de formulario 1' && filasExcel[0][2] === 'Teléfono' && filasExcel[0][4] === '¿Qué evento es?',
+        JSON.stringify([hojas[0].nombre].concat(filasExcel[0] || [])));
+      comprobar('convierte la fecha de Excel (número de serie) a fecha legible',
+        filasExcel[1][5] === '2026-11-19', 'quedó: ' + JSON.stringify(filasExcel[1] && filasExcel[1][5]));
+      comprobar('las celdas vacías en medio no corren las columnas',
+        filasExcel[2][5] === '' && filasExcel[2][7] === 'Quiere ver el paquete Platinum',
+        JSON.stringify(filasExcel[2]));
+      comprobar('conserva los acentos del archivo',
+        filasExcel[3][1] === 'Carlos Méndez', JSON.stringify(filasExcel[3] && filasExcel[3][1]));
+      /* El mismo archivo pasado por el camino completo del importador */
+      const analisisExcel = p.analizarFilas(filasExcel.slice(1), p.detectarMapeo(filasExcel[0]),
+        { criterioDuplicado: { telefono: true, nombre: true } }, [{ id: 'pro_1', nombre: 'Ana López Ruiz', telefono: '+52 55 4444 5555' }], {});
+      comprobar('del archivo de Excel: 1 duplicada por teléfono y 2 nuevas',
+        analisisExcel.duplicadas.length === 1 && analisisExcel.nuevas.length === 2,
+        JSON.stringify({ d: analisisExcel.duplicadas.length, n: analisisExcel.nuevas.length }));
+    }
+    comprobar('un Excel viejo (.xls) se rechaza con un mensaje claro',
+      (function () { try { p.leerBuffer('viejo.xls', new Uint8Array([0xD0, 0xCF, 0x11, 0xE0, 0, 0]).buffer); return false; } catch (e) { return /Excel viejo/.test(e.message); } })());
   }
 
-  /* 8) El botón de la sección de Prospectos se puede poner (solo administradores). */
-  if (cap && typeof cap.ponerBoton === 'function') {
+  /* 10) El botón de la sección de Prospectos y el panel. */
+  if (imp && typeof imp.ponerBoton === 'function') {
     c.usuarioActual = { username: 'jorge', nombre: 'Jorge', rol: 'Administrador', admin: true };
     let errorBoton = null;
-    try { cap.ponerBoton(); } catch (e) { errorBoton = (e && e.message) || String(e); }
-    /* El navegador simulado no indexa por id los elementos creados con
-       createElement, asi que el boton se busca entre los hijos del contenedor. */
+    try { imp.ponerBoton(); } catch (e) { errorBoton = (e && e.message) || String(e); }
     const contenedor = r.ventana.document.querySelector('#seccion-prospectos .header-actions');
-    const botones = (contenedor.children || []).filter(x => x.id === 'btn-captacion-formulario');
-    comprobar('el botón de captación se crea sin error para el administrador',
+    const botones = (contenedor.children || []).filter(x => x.id === 'btn-importar-prospectos');
+    comprobar('el botón "Importar prospectos" se crea sin error para el administrador',
       errorBoton === null && botones.length > 0, errorBoton || 'no se creó el botón');
     const boton = botones[botones.length - 1];
     if (boton && typeof boton.onclick === 'function') {
       let errorAbrir = null;
       try { boton.onclick({ preventDefault() { } }); } catch (e) { errorAbrir = (e && e.message) || String(e); }
-      comprobar('el botón abre el panel de captación sin error', errorAbrir === null, errorAbrir || '');
-      const cuerpoModal = String((r.elementos.get('modal-body') || {})._html || '');
-      comprobar('el panel dibuja la conexión con Google y sus pestañas',
-        /cap-conectar/.test(cuerpoModal) && /cap-cuerpo/.test(cuerpoModal) && /data-cap-tab/.test(cuerpoModal),
+      comprobar('el botón abre el panel de importación sin error', errorAbrir === null, errorAbrir || '');
+      const cuerpoModal = String((r.elementos.get('modal-body') || {})._html || '') +
+        String((r.elementos.get('imp-cuerpo') || {})._html || '');
+      comprobar('el panel ofrece elegir/arrastrar archivo y sus pestañas',
+        /imp-archivo/.test(cuerpoModal) && /imp-zona/.test(cuerpoModal) && /data-imp-tab/.test(cuerpoModal),
         'no se dibujó el panel: ' + cuerpoModal.slice(0, 120));
+      comprobar('el panel avisa que no se sube nada a ningún lado',
+        /no se sube a ningún lado/i.test(cuerpoModal), 'falta el aviso de privacidad');
     }
   }
 }

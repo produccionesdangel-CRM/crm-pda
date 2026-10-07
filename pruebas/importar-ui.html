@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<!--
+  Prueba funcional de la importación de prospectos desde un archivo.
+  NO necesita internet, ni Google, ni permisos: trae incrustado un archivo
+  .xlsx de verdad (con dos hojas, acentos, una fecha como número de serie y
+  celdas vacías en medio) y recorre el camino completo: leer el archivo,
+  analizar duplicados por teléfono y nombre, confirmar e importar, y volver a
+  cargar el mismo archivo para comprobar que ya no propone nada.
+
+  Cómo correrla (desde la carpeta del repositorio):
+      node pruebas/servir.mjs
+      y abrir en el navegador:  http://127.0.0.1:8080/pruebas/importar-ui.html
+
+  El resultado se pone en el título de la página:
+      PRUEBA-IMPORTAR-OK   /   PRUEBA-IMPORTAR-FALLAS-<n>
+-->
+
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>PRUEBA-IMPORTAR-PENDIENTE</title>
+    <style>body{font-family:'Courier New',monospace;background:#0d0d0d;color:#e8e8e8;padding:14px;font-size:12.5px}
+    #datos{white-space:pre-wrap;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:12px;margin-bottom:10px}
+    iframe{width:1250px;height:700px;border:1px solid #333;border-radius:8px;background:#000}</style>
+</head>
+<body>
+    <h3>Prueba funcional: importar prospectos desde un archivo Excel (.xlsx) real</h3>
+    <div id="datos">Esperando…</div>
+    <iframe id="marco"></iframe>
+    <script>
+    /* Prueba el camino COMPLETO sin tocar Google ni pedir permisos: construye un
+       archivo .xlsx de verdad (incrustado en base64), lo pasa por el importador y
+       verifica el análisis de duplicados y los prospectos creados.
+       Uso: importar-ui.html?archivo=X */
+    (function () {
+        var archivo = new URLSearchParams(location.search).get('archivo') || '../index.html';
+        var marco = document.getElementById('marco');
+        var caja = document.getElementById('datos');
+        var salida = [];
+        var fallas = 0;
+        function log(t) { salida.push(t); caja.innerHTML = salida.join('\n'); }
+        function bien(t) { log('  OK    ' + t); }
+        function mal(t) { fallas++; log('  FALLA ' + t); }
+        function comprobar(t, cond, detalle) { if (cond) bien(t); else mal(t + (detalle ? '  -> ' + detalle : '')); }
+        var XLSX_BASE64 = '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';
+
+        marco.src = archivo;
+        marco.addEventListener('load', function () {
+            setTimeout(function () {
+                var w = marco.contentWindow, d = marco.contentDocument;
+                var errores = [];
+                w.addEventListener('error', function (e) { errores.push(e.message); });
+                log('Archivo probado: ' + archivo);
+
+                var imp = w.ImportarProspectos;
+                if (!imp) { mal('no cargo el modulo de importacion'); terminar(); return; }
+                bien('el modulo de importacion quedo cargado');
+
+                /* Un prospecto que ya existe (para provocar un duplicado por telefono). */
+                w.prospectos.push({ id: 'pro_existente', nombre: 'Ana Lopez Ruiz', telefono: '+52 55 4444 5555', email: '', faseActual: 'Interesado', historialFases: [], notasGenerales: '', clienteId: null, fechaRegistro: '2026-09-01' });
+                var antes = w.prospectos.length;
+
+                /* 1) El boton en la seccion de Prospectos. */
+                w.usuarioActual = { username: 'jorge', nombre: 'Jorge', rol: 'Administrador', admin: true };
+                try { imp.ponerBoton(); } catch (e) { mal('ponerBoton lanzo: ' + e.message); }
+                var boton = d.getElementById('btn-importar-prospectos');
+                comprobar('el boton "Importar prospectos" aparece en Prospectos', !!boton);
+                if (!boton) { terminar(); return; }
+
+                /* 2) Abre el panel. */
+                var errorAbrir = null;
+                try { boton.click(); } catch (e) { errorAbrir = e.message; }
+                comprobar('el panel abre sin errores', errorAbrir === null, errorAbrir || '');
+                var cuerpo = d.getElementById('imp-cuerpo');
+                comprobar('el panel ofrece elegir un archivo', !!d.getElementById('imp-archivo') && !!d.getElementById('imp-zona'));
+                comprobar('avisa que el archivo se lee en el equipo y no se sube a ningun lado',
+                    !!cuerpo && /no se sube a ning/i.test(cuerpo.innerHTML));
+                comprobar('explica como exportar la hoja de respuestas',
+                    !!cuerpo && /Descargar/i.test(cuerpo.innerHTML) && /xlsx|Excel/i.test(cuerpo.innerHTML));
+                comprobar('el boton de elegir archivo tiene su manejador', !!(d.getElementById('imp-elegir') || {}).onclick);
+
+                /* 3) Un archivo .xlsx de verdad, como el que exporta Google o Excel. */
+                var bytes = imp.pruebas.desdeBase64(XLSX_BASE64);
+                comprobar('el archivo de prueba se decodifico', bytes.length > 2000, bytes.length + ' bytes');
+                var file = new w.File([bytes], 'respuestas.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+                var promesa = imp.procesarArchivo(file);
+                promesa.then(function (r) {
+                    bien('el archivo se leyo y se analizo sin errores');
+                    comprobar('reconoce las 2 hojas del archivo', r.hojas.length === 2, 'hojas=' + r.hojas.length);
+
+                    var a = imp.estado.analisis;
+                    comprobar('la fila de Ana (telefono repetido) se detecta como duplicada',
+                        a.duplicadas.length === 1 && /Ana/.test(a.duplicadas[0].nombre), JSON.stringify(a.duplicadas.map(x => x.nombre + ' (' + x._motivo + ')')));
+                    comprobar('las otras 2 filas entran como nuevas', a.nuevas.length === 2, 'nuevas=' + a.nuevas.length);
+                    comprobar('la fecha de Excel se convirtio a fecha legible',
+                        a.duplicadas[0].fechaEvento === '2026-11-19', JSON.stringify(a.duplicadas.map(x => x.fechaEvento)));
+                    comprobar('los acentos del archivo llegaron bien',
+                        a.nuevas.some(function (p) { return /Núñez/.test(p.nombre); }), JSON.stringify(a.nuevas.map(x => x.nombre)));
+
+                    /* 4) Importar con confirmacion en dos pasos. */
+                    imp.abrirPanel('archivo');
+                    var bImportar = d.getElementById('imp-importar');
+                    comprobar('el panel ofrece importar lo analizado', !!bImportar);
+                    if (bImportar) {
+                        bImportar.click();
+                        comprobar('pide confirmacion antes de guardar',
+                            /imp-confirmar-si/.test(d.getElementById('imp-confirmar').innerHTML));
+                        var si = d.getElementById('imp-confirmar-si');
+                        if (si) si.click();
+                    }
+
+                    var nuevos = w.prospectos.slice(antes);
+                    comprobar('se crearon exactamente 2 prospectos nuevos', nuevos.length === 2, 'creados=' + nuevos.length);
+                    comprobar('el duplicado NO se volvio a crear',
+                        !w.prospectos.some(function (p) { return p.telefono && String(p.telefono).replace(/\D+/g, '').slice(-10) === '5544445555' && p.id !== 'pro_existente'; }));
+                    var bea = nuevos.filter(function (p) { return /Núñez/.test(p.nombre || ''); })[0];
+                    comprobar('el prospecto nuevo llego con nombre, telefono y correo',
+                        !!bea && bea.telefono === '55 7777 8888' && bea.email === 'bea@correo.com',
+                        bea ? JSON.stringify({ n: bea.nombre, t: bea.telefono, e: bea.email }) : 'no se encontro');
+                    comprobar('los campos que captura el formulario quedan guardados (evento, fecha, presupuesto)',
+                        (function () {
+                            var carlos = nuevos.filter(function (p) { return /Méndez/.test(p.nombre || ''); })[0];
+                            return !!carlos && carlos.tipoEvento === 'Corporativo' && carlos.fechaEvento === '2027-04-23' && carlos.presupuesto === '15000';
+                        })(),
+                        JSON.stringify(nuevos.map(function (p) { return { n: p.nombre, t: p.tipoEvento, f: p.fechaEvento, p: p.presupuesto }; })));
+                    comprobar('y el tipo de evento de la otra fila llega bien',
+                        !!bea && bea.tipoEvento === 'Boda', bea ? bea.tipoEvento : 'sin Beatriz');
+                    comprobar('el comentario del formulario queda en las notas',
+                        !!bea && /Quiere ver el paquete Platinum/.test(bea.notasGenerales || ''));
+                    comprobar('queda marcado de donde vino y con su historial de fase',
+                        !!bea && bea.fuenteCaptacion === 'Importación de archivo' && Array.isArray(bea.historialFases) && bea.historialFases.length === 1);
+                    comprobar('quedaron marcados para subir a la nube', nuevos.every(function (p) { return p.firmaImportacion; }));
+
+                    /* 5) Volver a cargar el mismo archivo: ya no debe proponer nada. */
+                    return imp.procesarArchivo(new w.File([bytes], 'respuestas.xlsx', { type: 'application/vnd.ms-excel' })).then(function () {
+                        var a2 = imp.estado.analisis;
+                        comprobar('al recargar el mismo archivo ya no propone ninguna fila nueva',
+                            a2.nuevas.length === 0 && a2.repetidas.length === 2 && a2.duplicadas.length === 1,
+                            JSON.stringify({ n: a2.nuevas.length, r: a2.repetidas.length, d: a2.duplicadas.length }));
+                    });
+                }).then(function () {
+                    /* 6) Pegar filas a mano (mismo camino de datos). */
+                    imp.abrirPanel('archivo');
+                    var area = d.getElementById('imp-pegar');
+                    if (area) {
+                        area.value = 'Nombre;Teléfono;Comentarios\n"Ruiz, Sofia";5544332211;"Quiere cotizar, urge"';
+                        d.getElementById('imp-analizar-pegado').click();
+                        var a3 = imp.estado.analisis;
+                        comprobar('pegar filas a mano tambien funciona (con punto y coma y comas dentro de comillas)',
+                            a3 && a3.nuevas.length === 1 && /Ruiz, Sofia/.test(a3.nuevas[0].nombre), JSON.stringify(a3 ? { n: a3.nuevas.length } : {}));
+                    }
+                    /* 7) La lista de prospectos del CRM se repinta. */
+                    var errorRender = null;
+                    try { w.renderizarProspectos(); } catch (e) { errorRender = e.message; }
+                    comprobar('el CRM repinta la lista de prospectos con lo importado', errorRender === null, errorRender || '');
+                    log('');
+                    comprobar('sin errores de JavaScript en la pagina', errores.length === 0, errores.join(' | '));
+                    terminar();
+                }).catch(function (e) {
+                    mal('la importacion lanzo un error: ' + ((e && e.message) || e));
+                    terminar();
+                });
+            }, 2200);
+        });
+
+        function terminar() {
+            log('');
+            log('== ' + (fallas ? ('PRUEBA-IMPORTAR-FALLAS-' + fallas) : 'PRUEBA-IMPORTAR-OK') + ' ==');
+            document.title = fallas ? ('PRUEBA-IMPORTAR-FALLAS-' + fallas) : 'PRUEBA-IMPORTAR-OK';
+        }
+    })();
+    </script>
+</body>
+</html>

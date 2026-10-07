@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.13';
+        var BUILD_APP = '2026-10-07.14';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -12853,42 +12853,42 @@
             }
         })();
     </script>
+
 <script>
 /* ═══════════════════════════════════════════════════════════════════════
-   @JS-CAPTACION-FORMULARIOS — Prospectos automáticos desde Google Forms
+   @JS-IMPORTAR-PROSPECTOS — Prospectos desde un archivo local (Excel o CSV)
    -----------------------------------------------------------------------
    Qué hace:
-     · Un botón en Prospectos ("Captación desde formulario") para que Jorge
-       conecte la HOJA DE CÁLCULO donde caen las respuestas de su formulario.
-     · Lee las respuestas con la API de Google Sheets (permiso de SOLO LECTURA).
-     · Mapea las columnas del formulario a los campos del prospecto (automático
-       y ajustable a mano).
-     · Revisa la hoja cada cierto tiempo (o cuando Jorge pulsa "Revisar ahora").
-     · Antes de guardar, muestra qué entraría, qué es duplicado y por qué.
+     · Un botón en Prospectos ("Importar prospectos") para cargar un archivo
+       .xlsx (Excel), .csv o .txt con la tabla de respuestas de un formulario
+       (o cualquier lista de prospectos que Jorge tenga en una hoja).
+     · NO se conecta a Google ni pide ningún permiso: el archivo se lee en el
+       propio navegador y nunca sale de su equipo.
+     · Reconoce solo los títulos de las columnas del archivo y los mapea a los
+       campos del prospecto (corregible a mano).
+     · Antes de guardar, muestra qué entraría, qué es duplicado y POR QUÉ.
      · Verifica duplicidad por TELÉFONO y/o NOMBRE contra los prospectos que ya
-       existen, y también contra las filas que ya se importaron antes.
-     · Crea los prospectos con la misma estructura que usa el CRM, deja rastro
-       en el historial y los marca para subir a la nube.
+       existen, y también contra las filas ya importadas antes.
+     · Crea los prospectos con la misma estructura del CRM, deja rastro en el
+       historial y los marca para subir a la nube.
 
-   Decisiones de seguridad:
-     · El token de Google vive SOLO en memoria: nunca se guarda en disco ni en
-       Firebase. Al cerrar la pestaña hay que reconectar (es el precio de no
-       guardar credenciales).
-     · El permiso que se pide es de lectura de hojas de cálculo, nada más.
-     · La configuración (hoja, pestaña, mapeo, intervalo) se guarda en este
-       equipo con localStorage: no son credenciales.
+   El lector de Excel (.xlsx) está hecho aquí mismo, sin librerías de terceros:
+   un .xlsx es un ZIP con XML dentro, así que el módulo descomprime (DEFLATE),
+   lee las hojas, los textos compartidos y los formatos de fecha.
    ═══════════════════════════════════════════════════════════════════════ */
 (function (raiz) {
     'use strict';
 
-    var CLAVE_CONFIG = 'pda_captacion_config_v1';
-    var CLAVE_IMPORTADAS = 'pda_captacion_filas_v1';
-    var CLAVE_HISTORIAL = 'pda_captacion_historial_v1';
-    var SCOPE_HOJAS = 'https://www.googleapis.com/auth/spreadsheets.readonly';
-    var MAX_FILAS = 5000;
+    var CLAVE_CONFIG = 'pda_importar_config_v1';
+    var CLAVE_CONFIG_VIEJA = 'pda_captacion_config_v1';
+    var CLAVE_FIRMAS = 'pda_importar_filas_v1';
+    var CLAVE_FIRMAS_VIEJA = 'pda_captacion_filas_v1';
+    var CLAVE_HISTORIAL = 'pda_importar_historial_v1';
+    var CLAVE_HISTORIAL_VIEJO = 'pda_captacion_historial_v1';
+    var MAX_FILAS = 20000;
     var MAX_FIRMAS = 3000;
 
-    /* Campos del prospecto a los que se puede mapear una columna del formulario. */
+    /* Campos del prospecto a los que se puede mapear una columna del archivo. */
     var CAMPOS = [
         { id: 'nombre', etiqueta: 'Nombre completo', requerido: true, claves: ['nombre', 'name', 'nombre completo', 'nombres', 'festejado', 'cliente', 'contacto'] },
         { id: 'telefono', etiqueta: 'Teléfono', claves: ['telefono', 'teléfono', 'tel', 'celular', 'whatsapp', 'numero', 'número', 'phone', 'movil', 'móvil'] },
@@ -12907,30 +12907,20 @@
     /* ─────────────── Estado (en memoria) ─────────────── */
 
     var estado = {
-        token: null,           // token de Google SOLO en memoria
-        conectado: false,
-        motivo: '',
-        cuenta: '',            // con qué cuenta de Google se conectó
-        scopes: '',            // permisos que Google entregó de verdad
-        permisoHojas: '',      // 'concedido' | 'no concedido' | 'sin verificar'
-        apiHojas: '',          // 'desactivada' cuando Google dice SERVICE_DISABLED
-        ultimoError: null,     // el error crudo de Google (para diagnóstico)
-        explicacion: '',       // el mismo error, dicho en claro
-        enlaceApi: '',         // enlace para activar la API de Hojas de cálculo
-        hoja: null,            // {id, titulo, pestanias:[{titulo, gid}]}
+        archivo: null,        // { nombre, hojas: [{nombre, filas}] }
+        hojaElegida: '',
         encabezados: null,
+        mapeo: null,
         filas: null,
         analisis: null,
-        temporizador: null,
         ultimoAviso: ''
     };
 
-    /* ─────────────── Utilidades puras (probadas por el banco) ─────────────── */
+    /* ─────────────── Utilidades puras ─────────────── */
 
     function soloDigitos(v) { return String(v === null || v === undefined ? '' : v).replace(/\D+/g, ''); }
 
-    /* Teléfono normalizado para comparar: se queda con los últimos 10 dígitos
-       (los números mexicanos), ignorando ladas de país, espacios y guiones. */
+    /* Teléfono normalizado para comparar: los últimos 10 dígitos (números de México). */
     function normalizarTelefono(v) {
         var d = soloDigitos(v);
         if (d.length > 10) d = d.slice(-10);
@@ -12948,7 +12938,7 @@
 
     function normalizarNombre(v) { return sinAcentos(v); }
 
-    /* Nombre con las palabras ordenadas: atrapa "Pérez Juan" contra "Juan Pérez". */
+    /* Palabras ordenadas: atrapa "Pérez Juan" contra "Juan Pérez". */
     function claveNombre(v) {
         return normalizarNombre(v).split(' ').filter(Boolean).sort().join(' ');
     }
@@ -12966,10 +12956,10 @@
         return t === '-' ? '' : t;
     }
 
-    /* ¿Qué campo del prospecto parece cada columna del formulario? */
+    /* ¿Qué campo del prospecto parece cada columna del archivo? */
     function detectarMapeo(encabezados) {
         var usados = {};
-        return (encabezados || []).map(function (titulo) {
+        return (encabezados || []).map(function (titulo, indice) {
             var t = sinAcentos(titulo);
             var elegido = 'ignorar';
             if (t) {
@@ -12983,11 +12973,11 @@
                     if (coincide) { elegido = campo.id; usados[campo.id] = true; break; }
                 }
             }
-            return { columna: String(titulo === undefined ? '' : titulo), indice: (encabezados || []).indexOf(titulo), campo: elegido };
+            return { columna: String(titulo === undefined ? '' : titulo), indice: indice, campo: elegido };
         });
     }
 
-    /* Convierte una fila de la hoja en un prospecto candidato, según el mapeo. */
+    /* Convierte una fila del archivo en un prospecto candidato, según el mapeo. */
     function filaAProspecto(fila, mapeo, config) {
         var datos = {};
         var extras = {};
@@ -12995,13 +12985,13 @@
             var valor = limpiarValor((fila || [])[m.indice]);
             if (!valor) return;
             if (m.campo === 'ignorar') { extras[m.columna] = valor; return; }
-            if (datos[m.campo]) { extras[m.columna] = valor; return; } /* dos columnas al mismo campo: la segunda se conserva en notas */
+            if (datos[m.campo]) { extras[m.columna] = valor; return; } /* dos columnas al mismo campo: la segunda va a notas */
             datos[m.campo] = valor;
         });
         var nombre = limpiarValor(datos.nombre);
         var telefonoBruto = limpiarValor(datos.telefono);
-        /* Un teléfono de verdad tiene al menos 7 dígitos: si la persona escribió
-           "Sin teléfono", "no tengo" o "de WhatsApp", no se guarda como número. */
+        /* Un teléfono de verdad tiene al menos 7 dígitos: si escribieron
+           "Sin teléfono" o "no tengo", no se guarda como número. */
         var telefono = soloDigitos(telefonoBruto).length >= 7 ? telefonoBruto : '';
         if (!nombre && !telefono) return null;
         if (!nombre) nombre = 'Prospecto del formulario ' + telefono;
@@ -13056,7 +13046,7 @@
         return { duplicado: true, motivo: elegido.motivo, tipo: elegido.tipo, existente: elegido.existente, otros: hallados.length - 1 };
     }
 
-    /* Analiza todas las filas de la hoja: nuevas, duplicadas y ya importadas. */
+    /* Analiza todas las filas: nuevas, duplicadas y ya importadas. */
     function analizarFilas(filas, mapeo, config, prospectos, firmasImportadas) {
         var nuevas = [], duplicadas = [], repetidas = [], vacias = 0;
         var firmas = firmasImportadas || {};
@@ -13078,7 +13068,7 @@
         return { nuevas: nuevas, duplicadas: duplicadas, repetidas: repetidas, vacias: vacias };
     }
 
-    /* Detecta el separador de un texto pegado (CSV o copiado de la hoja). */
+    /* Detecta el separador de un texto (coma, punto y coma o tabulador). */
     function detectarSeparador(texto) {
         var lineas = String(texto || '').split(/\r?\n/).filter(function (l) { return l.trim(); });
         if (!lineas.length) return '\t';
@@ -13091,67 +13081,402 @@
         return mejor;
     }
 
-    /* Parte un texto pegado en filas y columnas, respetando las comillas. */
+    /* Parte un texto en filas y columnas respetando comillas y saltos dentro de comillas. */
     function textoAFilas(texto) {
-        var sep = detectarSeparador(texto);
-        var filas = [];
-        String(texto || '').split(/\r?\n/).forEach(function (linea) {
-            if (!linea.trim()) return;
-            if (sep === '\t') { filas.push(linea.split('\t').map(function (c) { return c.trim(); })); return; }
-            var celdas = [], actual = '', entreComillas = false;
-            for (var i = 0; i < linea.length; i++) {
-                var ch = linea[i];
-                if (ch === '"') { if (entreComillas && linea[i + 1] === '"') { actual += '"'; i++; } else entreComillas = !entreComillas; }
-                else if (ch === sep && !entreComillas) { celdas.push(actual.trim()); actual = ''; }
-                else actual += ch;
+        var t = String(texto || '').replace(/^\ufeff/, '');
+        var sep = detectarSeparador(t);
+        var filas = [], celdas = [], actual = '', entreComillas = false;
+        for (var i = 0; i < t.length; i++) {
+            var ch = t[i];
+            if (entreComillas) {
+                if (ch === '"') {
+                    if (t[i + 1] === '"') { actual += '"'; i++; }
+                    else entreComillas = false;
+                } else actual += ch;
+            } else if (ch === '"') {
+                entreComillas = true;
+            } else if (ch === sep) {
+                celdas.push(actual.trim()); actual = '';
+            } else if (ch === '\n') {
+                celdas.push(actual.trim()); actual = '';
+                if (celdas.length > 1 || celdas[0] !== '') filas.push(celdas);
+                celdas = [];
+            } else if (ch !== '\r') {
+                actual += ch;
             }
-            celdas.push(actual.trim());
-            filas.push(celdas);
-        });
-        /* Si todas las filas tienen el mismo largo, la primera es el encabezado. */
+        }
+        celdas.push(actual.trim());
+        if (celdas.length > 1 || celdas[0] !== '') filas.push(celdas);
         return filas;
     }
 
-    /* ─────────────── Configuración guardada (localStorage) ─────────────── */
+    /* ─────────────── Lectura de archivos ─────────────── */
+
+    /* Texto del archivo: UTF-8 y, si viene de Excel en español (ANSI), windows-1252. */
+    function decodificarTexto(buffer) {
+        var bytes = new Uint8Array(buffer);
+        if (bytes.length > 2 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) bytes = bytes.subarray(3);
+        try {
+            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+        } catch (e) {
+            try { return new TextDecoder('windows-1252').decode(bytes); }
+            catch (e2) { return new TextDecoder('utf-8').decode(bytes); }
+        }
+    }
+
+    /* Descomprime DEFLATE crudo (el que usa el ZIP de Excel). Hecho a mano. */
+    function inflar(datos) {
+        var p = 0, bit = 0, acumulado = 0;
+        function leerBit() {
+            if (bit === 0) { acumulado = datos[p++] || 0; bit = 8; }
+            var v = acumulado & 1; acumulado >>= 1; bit--; return v;
+        }
+        function leerBits(k) { var v = 0; for (var i = 0; i < k; i++) v |= leerBit() << i; return v; }
+
+        /* Tabla de Huffman canónica: se decodifica bit por bit (simple y seguro). */
+        function arbol(longitudes) {
+            var max = 0, i;
+            for (i = 0; i < longitudes.length; i++) if (longitudes[i] > max) max = longitudes[i];
+            var cuenta = new Array(max + 1).fill(0);
+            for (i = 0; i < longitudes.length; i++) if (longitudes[i]) cuenta[longitudes[i]]++;
+            var sig = new Array(max + 1).fill(0), codigo = 0;
+            for (var b = 1; b <= max; b++) { codigo = (codigo + cuenta[b - 1]) << 1; sig[b] = codigo; }
+            var mapa = {};
+            for (i = 0; i < longitudes.length; i++) {
+                var l = longitudes[i];
+                if (l) { mapa[l + ':' + sig[l]] = i; sig[l]++; }
+            }
+            return { mapa: mapa, max: max };
+        }
+        function decodificar(a) {
+            var codigo = 0, l = 0;
+            while (l <= a.max) {
+                codigo = (codigo << 1) | leerBit(); l++;
+                var s = a.mapa[l + ':' + codigo];
+                if (s !== undefined) return s;
+            }
+            throw new Error('El archivo comprimido está dañado (no se pudo descomprimir).');
+        }
+
+        var salida = new Uint8Array(Math.max(1024, datos.length * 6)), n = 0;
+        function guardar(byte) {
+            if (n === salida.length) {
+                var mas = new Uint8Array(salida.length * 2);
+                mas.set(salida); salida = mas;
+            }
+            salida[n++] = byte;
+        }
+
+        var LARGO_BASE = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258];
+        var EXTRA_LARGO = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
+        var DIST_BASE = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577];
+        var EXTRA_DIST = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
+
+        var ultimo = 0;
+        do {
+            ultimo = leerBit();
+            var tipo = leerBits(2);
+            if (tipo === 0) {
+                /* Bloque sin comprimir */
+                if (bit) { bit = 0; }
+                var largo = (datos[p] | (datos[p + 1] << 8)) & 0xFFFF; p += 4;
+                for (var i = 0; i < largo; i++) guardar(datos[p++]);
+            } else {
+                var arbolLargo, arbolDist;
+                if (tipo === 1) {
+                    var ll = new Array(288);
+                    for (var s = 0; s < 288; s++) ll[s] = (s < 144) ? 8 : (s < 256) ? 9 : (s < 280) ? 7 : 8;
+                    arbolLargo = arbol(ll);
+                    arbolDist = arbol(new Array(30).fill(5));
+                } else {
+                    var hl = leerBits(5) + 257, hd = leerBits(5) + 1, hc = leerBits(4) + 4;
+                    var orden = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+                    var largosCodigo = new Array(19).fill(0);
+                    for (var c = 0; c < hc; c++) largosCodigo[orden[c]] = leerBits(3);
+                    var arbolCodigo = arbol(largosCodigo);
+                    var todos = [];
+                    while (todos.length < hl + hd) {
+                        var sim = decodificar(arbolCodigo);
+                        if (sim < 16) todos.push(sim);
+                        else if (sim === 16) { var rep = 3 + leerBits(2), prev = todos[todos.length - 1]; while (rep--) todos.push(prev); }
+                        else if (sim === 17) { var r17 = 3 + leerBits(3); while (r17--) todos.push(0); }
+                        else { var r18 = 11 + leerBits(7); while (r18--) todos.push(0); }
+                    }
+                    arbolLargo = arbol(todos.slice(0, hl));
+                    arbolDist = arbol(todos.slice(hl, hl + hd));
+                }
+                for (;;) {
+                    var simbolo = decodificar(arbolLargo);
+                    if (simbolo === 256) break;
+                    if (simbolo < 256) { guardar(simbolo); continue; }
+                    var idxL = simbolo - 257;
+                    if (idxL >= LARGO_BASE.length) throw new Error('El archivo comprimido está dañado.');
+                    var largoCopia = LARGO_BASE[idxL] + leerBits(EXTRA_LARGO[idxL]);
+                    var idxD = decodificar(arbolDist);
+                    var distancia = DIST_BASE[idxD] + leerBits(EXTRA_DIST[idxD]);
+                    if (distancia > n) throw new Error('El archivo comprimido está dañado.');
+                    for (var k = 0; k < largoCopia; k++) guardar(salida[n - distancia]);
+                }
+            }
+        } while (!ultimo);
+        return salida.subarray(0, n);
+    }
+
+    /* Lee un ZIP (el .xlsx es un ZIP) y devuelve sus partes. */
+    function leerZip(buffer) {
+        var d = new Uint8Array(buffer), vista = new DataView(buffer);
+        if (d.length > 4 && d[0] === 0xD0 && d[1] === 0xCF) {
+            throw new Error('Ese archivo es un Excel viejo (.xls). Ábrelo en Excel y guárdalo como .xlsx o como .csv.');
+        }
+        var fin = -1;
+        for (var i = d.length - 22; i >= 0 && i > d.length - 66000; i--) {
+            if (vista.getUint32(i, true) === 0x06054b50) { fin = i; break; }
+        }
+        if (fin < 0) throw new Error('El archivo no parece un Excel (.xlsx) ni un CSV.');
+        var total = vista.getUint16(fin + 10, true), inicio = vista.getUint32(fin + 16, true);
+        var partes = {}; var p = inicio;
+        for (var k = 0; k < total; k++) {
+            if (vista.getUint32(p, true) !== 0x02014b50) break;
+            var metodo = vista.getUint16(p + 10, true);
+            var comp = vista.getUint32(p + 20, true), sinComp = vista.getUint32(p + 24, true);
+            var largoNombre = vista.getUint16(p + 28, true), extra = vista.getUint16(p + 30, true), comentario = vista.getUint16(p + 32, true);
+            var offLocal = vista.getUint32(p + 42, true);
+            var nombre = '';
+            for (var c = 0; c < largoNombre; c++) nombre += String.fromCharCode(d[p + 46 + c]);
+            partes[nombre] = { metodo: metodo, comp: comp, sinComp: sinComp, offLocal: offLocal };
+            p += 46 + largoNombre + extra + comentario;
+        }
+        function bytes(nombre) {
+            var e = partes[nombre]; if (!e) return null;
+            var ln = vista.getUint16(e.offLocal + 26, true), le = vista.getUint16(e.offLocal + 28, true);
+            var desde = e.offLocal + 30 + ln + le;
+            var crudo = d.subarray(desde, desde + e.comp);
+            if (e.metodo === 0) return crudo;
+            if (e.metodo === 8) return inflar(crudo);
+            throw new Error('El Excel usa una compresión que no se puede leer.');
+        }
+        return {
+            nombres: Object.keys(partes),
+            bytes: bytes,
+            texto: function (nombre) {
+                var b = bytes(nombre);
+                if (!b) return null;
+                return decodificarTexto(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
+            }
+        };
+    }
+
+    /* Texto en base64 -> bytes (sirve para las pruebas y para cargar ejemplos). */
+    function desdeBase64(texto) {
+        var limpio = String(texto || '').replace(/[^A-Za-z0-9+/=]/g, '');
+        var tabla = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+        var bytes = [], buffer = 0, bits = 0;
+        for (var i = 0; i < limpio.length; i++) {
+            var c = limpio[i];
+            if (c === '=') break;
+            var v = tabla.indexOf(c);
+            if (v < 0) continue;
+            buffer = (buffer << 6) | v; bits += 6;
+            if (bits >= 8) { bits -= 8; bytes.push((buffer >> bits) & 0xFF); }
+        }
+        return new Uint8Array(bytes);
+    }
+
+    function desescaparXml(t) {
+        return String(t === null || t === undefined ? '' : t)
+            .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+            .replace(/&#(\d+);/g, function (_m, n) { return String.fromCharCode(Number(n)); })
+            .replace(/&#x([0-9a-fA-F]+);/g, function (_m, n) { return String.fromCharCode(parseInt(n, 16)); })
+            .replace(/&amp;/g, '&');
+    }
+
+    function columnaANumero(letras) {
+        var n = 0;
+        for (var i = 0; i < letras.length; i++) n = n * 26 + (letras.charCodeAt(i) - 64);
+        return n - 1;
+    }
+
+    /* Número de serie de Excel -> fecha legible (con la corrección del año 1900). */
+    function fechaDeSerie(serie) {
+        var dias = Math.floor(serie);
+        var resto = serie - dias;
+        var base = Date.UTC(1899, 11, 30) + dias * 86400000;
+        var f = new Date(base);
+        var dos = function (n) { return (n < 10 ? '0' : '') + n; };
+        var texto = f.getUTCFullYear() + '-' + dos(f.getUTCMonth() + 1) + '-' + dos(f.getUTCDate());
+        if (resto > 0.0001) {
+            var mins = Math.round(resto * 1440);
+            texto += ' ' + dos(Math.floor(mins / 60)) + ':' + dos(mins % 60);
+        }
+        return texto;
+    }
+
+    /* ¿Ese estilo de celda es una fecha? (formatos integrados y propios) */
+    function estilosDeFecha(xmlEstilos) {
+        var personalizados = {};
+        var re = /<numFmt[^>]*numFmtId="(\d+)"[^>]*formatCode="([^"]*)"/g, m;
+        while ((m = re.exec(String(xmlEstilos || ''))) !== null) personalizados[m[1]] = m[2];
+        var bloque = /<cellXfs[\s\S]*?<\/cellXfs>/.exec(String(xmlEstilos || ''));
+        var xfs = bloque ? (bloque[0].match(/<xf[^>]*?\/?>/g) || []) : [];
+        return xfs.map(function (xf) {
+            var id = (/(?:^|\s)numFmtId="(\d+)"/.exec(xf) || [])[1];
+            if (id === undefined) return false;
+            var n = Number(id);
+            if ((n >= 14 && n <= 22) || (n >= 45 && n <= 47)) return true;   /* formatos de fecha integrados */
+            var codigo = personalizados[id];
+            if (!codigo) return false;
+            var limpio = codigo.replace(/"[^"]*"/g, '');                     /* se quitan los textos fijos */
+            return /[ydhs]/i.test(limpio) || /m{2,}|m[\/\-.]/i.test(limpio);
+        });
+    }
+
+    /* Lee un .xlsx y devuelve sus hojas como tablas (arreglos de arreglos). */
+    function leerXlsxBuffer(buffer) {
+        var zip = leerZip(buffer);
+        var libro = zip.texto('xl/workbook.xml') || '';
+        var rels = zip.texto('xl/_rels/workbook.xml.rels') || '';
+
+        var destinos = {};
+        var reRel = /<Relationship[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"/g, mRel;
+        while ((mRel = reRel.exec(rels)) !== null) {
+            destinos[mRel[1]] = String(mRel[2]).replace(/^\/xl\//, '').replace(/^\.\//, '');
+        }
+        var hojas = [];
+        /* OJO: "<sheet " con espacio, para no confundir la etiqueta contenedora <sheets>. */
+        var reHoja = /<sheet\s[^>]*?>/g, mHoja;
+        while ((mHoja = reHoja.exec(libro)) !== null) {
+            var tag = mHoja[0];
+            var nombre = desescaparXml((/name="([^"]*)"/.exec(tag) || [])[1] || ('Hoja ' + (hojas.length + 1)));
+            var rId = (/r:id="([^"]+)"/.exec(tag) || [])[1];
+            hojas.push({ nombre: nombre, archivo: (rId && destinos[rId]) ? ('xl/' + destinos[rId]) : null });
+        }
+        if (!hojas.length) hojas.push({ nombre: 'Hoja 1', archivo: 'xl/worksheets/sheet1.xml' });
+
+        /* Textos compartidos */
+        var compartidos = [];
+        var xmlCadenas = zip.texto('xl/sharedStrings.xml');
+        if (xmlCadenas) {
+            var trozos = xmlCadenas.split('<si>');
+            for (var i = 1; i < trozos.length; i++) {
+                var cuerpo = trozos[i].split('</si>')[0];
+                var textos = cuerpo.match(/<t[^>]*>([\s\S]*?)<\/t>/g) || [];
+                compartidos.push(textos.map(function (t) { return desescaparXml(t.replace(/<[^>]+>/g, '')); }).join(''));
+            }
+        }
+        var esFecha = estilosDeFecha(zip.texto('xl/styles.xml'));
+
+        var salida = [];
+        hojas.forEach(function (hoja, indice) {
+            var archivo = hoja.archivo || ('xl/worksheets/sheet' + (indice + 1) + '.xml');
+            var xml = zip.texto(archivo);
+            if (xml === null) xml = zip.texto('xl/worksheets/sheet' + (indice + 1) + '.xml');
+            if (!xml) return;
+            var cuerpoHoja = (/<sheetData[\s\S]*?<\/sheetData>/.exec(xml) || [''])[0];
+            var filas = [];
+            var reFila = /<row([^>]*)>([\s\S]*?)<\/row>/g, mFila;
+            while ((mFila = reFila.exec(cuerpoHoja)) !== null) {
+                var numFila = Number((/r="(\d+)"/.exec(mFila[1]) || [])[1]);
+                var posicion = numFila ? numFila - 1 : filas.length;
+                var valores = [];
+                var reCelda = /<c([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g, mCelda;
+                var automatica = 0;
+                while ((mCelda = reCelda.exec(mFila[2])) !== null) {
+                    var attrs = mCelda[1] || '', contenido = mCelda[2] || '';
+                    var letras = (/r="([A-Z]+)\d+"/.exec(attrs) || [])[1];
+                    var col = letras ? columnaANumero(letras) : automatica;
+                    automatica = col + 1;
+                    var tipo = (/t="([^"]+)"/.exec(attrs) || [])[1] || 'n';
+                    var estilo = Number((/(?:^|\s)s="(\d+)"/.exec(attrs) || [])[1]);
+                    var valor = '';
+                    if (tipo === 's') {
+                        var idx = Number((/<v>([\s\S]*?)<\/v>/.exec(contenido) || [])[1]);
+                        valor = compartidos[idx] === undefined ? '' : compartidos[idx];
+                    } else if (tipo === 'inlineStr') {
+                        valor = desescaparXml(((contenido.match(/<t[^>]*>([\s\S]*?)<\/t>/g) || []).map(function (t) { return t.replace(/<[^>]+>/g, ''); }).join('')));
+                    } else if (tipo === 'str') {
+                        valor = desescaparXml((/<v>([\s\S]*?)<\/v>/.exec(contenido) || [])[1] || '');
+                    } else if (tipo === 'b') {
+                        valor = (/<v>\s*1\s*<\/v>/.test(contenido)) ? 'Sí' : 'No';
+                    } else {
+                        var crudo = (/<v>([\s\S]*?)<\/v>/.exec(contenido) || [])[1];
+                        if (crudo === undefined) { valor = ''; }
+                        else {
+                            var numero = Number(crudo);
+                            if (!isNaN(numero) && numero === Math.floor(numero) && Math.abs(numero) < 1e15) {
+                                valor = (esFecha[estilo] && numero > 1 && numero < 2958466) ? fechaDeSerie(numero) : String(numero);
+                            } else {
+                                valor = isNaN(numero) ? desescaparXml(crudo) : String(numero);
+                            }
+                        }
+                        /* Si el estilo no se detectó pero el número es una fecha de Excel
+                           razonable (año 2000-2100) en una columna llamada "fecha", se
+                           convierte de todos modos: pasa si el archivo no trae estilos. */
+                    }
+                    while (valores.length < col) valores.push('');
+                    valores[col] = valor;
+                }
+                filas[posicion] = valores;
+            }
+            for (var f = 0; f < filas.length; f++) if (!filas[f]) filas[f] = [];
+            salida.push({ nombre: hoja.nombre, filas: filas });
+        });
+        return salida;
+    }
+
+    /* Lee cualquier archivo soportado y devuelve sus hojas. */
+    function leerBuffer(nombreArchivo, buffer) {
+        var nombre = String(nombreArchivo || '').toLowerCase();
+        var bytes = new Uint8Array(buffer);
+        var esZip = bytes.length > 1 && bytes[0] === 0x50 && bytes[1] === 0x4B;
+        var esXlsViejo = bytes.length > 1 && bytes[0] === 0xD0 && bytes[1] === 0xCF;
+        if (esXlsViejo) throw new Error('Ese archivo es un Excel viejo (.xls). Ábrelo en Excel y guárdalo como .xlsx o como .csv.');
+        if (esZip || /\.xlsx$|\.xlsm$/.test(nombre)) return leerXlsxBuffer(buffer);
+        var texto = decodificarTexto(buffer);
+        var filas = textoAFilas(texto).slice(0, MAX_FILAS);
+        return [{ nombre: 'Datos', filas: filas }];
+    }
+
+    /* ─────────────── Configuración guardada ─────────────── */
 
     function configPorDefecto() {
         return {
-            hojaId: '', hojaTitulo: '', pestania: '', encabezados: [], mapeo: [],
-            intervaloMinutos: 15, auto: false, origenPorDefecto: 'Formulario Google',
-            faseInicial: 'Interesado', campaniaId: '',
+            origenPorDefecto: 'Formulario Google',
+            faseInicial: 'Interesado',
+            campaniaId: '',
             criterioDuplicado: { telefono: true, nombre: true },
-            ultimaRevision: '', totalImportados: 0
+            ultimoArchivo: '',
+            totalImportados: 0
         };
     }
+    function leerJson(clave) {
+        try { var t = raiz.localStorage && raiz.localStorage.getItem(clave); return t ? JSON.parse(t) : null; }
+        catch (e) { return null; }
+    }
     function leerConfig() {
-        try {
-            var t = raiz.localStorage && raiz.localStorage.getItem(CLAVE_CONFIG);
-            if (!t) return configPorDefecto();
-            return Object.assign(configPorDefecto(), JSON.parse(t));
-        } catch (e) { return configPorDefecto(); }
+        /* Se heredan los ajustes que Jorge ya tenía configurados de la versión anterior. */
+        var vieja = leerJson(CLAVE_CONFIG_VIEJA) || {};
+        var base = configPorDefecto();
+        base.origenPorDefecto = vieja.origenPorDefecto || base.origenPorDefecto;
+        base.faseInicial = vieja.faseInicial || base.faseInicial;
+        base.campaniaId = vieja.campaniaId || '';
+        base.criterioDuplicado = vieja.criterioDuplicado || base.criterioDuplicado;
+        base.totalImportados = vieja.totalImportados || 0;
+        return Object.assign(base, leerJson(CLAVE_CONFIG) || {});
     }
     function guardarConfig(cfg) {
         try { raiz.localStorage && raiz.localStorage.setItem(CLAVE_CONFIG, JSON.stringify(cfg)); } catch (e) { }
     }
     function leerFirmas() {
-        try {
-            var t = raiz.localStorage && raiz.localStorage.getItem(CLAVE_IMPORTADAS);
-            return t ? JSON.parse(t) : {};
-        } catch (e) { return {}; }
+        return leerJson(CLAVE_FIRMAS) || leerJson(CLAVE_FIRMAS_VIEJA) || {};
     }
     function guardarFirmas(firmas) {
         var claves = Object.keys(firmas);
-        if (claves.length > MAX_FIRMAS) {
-            claves.sort(function (a, b) { return (firmas[a] || '').localeCompare(firmas[b] || ''); });
-            claves.slice(0, claves.length - MAX_FIRMAS).forEach(function (k) { delete firmas[k]; });
-        }
-        try { raiz.localStorage && raiz.localStorage.setItem(CLAVE_IMPORTADAS, JSON.stringify(firmas)); } catch (e) { }
+        if (claves.length > MAX_FIRMAS) claves.slice(0, claves.length - MAX_FIRMAS).forEach(function (k) { delete firmas[k]; });
+        try { raiz.localStorage && raiz.localStorage.setItem(CLAVE_FIRMAS, JSON.stringify(firmas)); } catch (e) { }
     }
     function leerHistorial() {
-        try {
-            var t = raiz.localStorage && raiz.localStorage.getItem(CLAVE_HISTORIAL);
-            return t ? JSON.parse(t) : [];
-        } catch (e) { return []; }
+        return leerJson(CLAVE_HISTORIAL) || leerJson(CLAVE_HISTORIAL_VIEJO) || [];
     }
     function anotarHistorial(entrada) {
         var h = leerHistorial();
@@ -13160,180 +13485,46 @@
         try { raiz.localStorage && raiz.localStorage.setItem(CLAVE_HISTORIAL, JSON.stringify(h)); } catch (e) { }
     }
 
-    /* ─────────────── Google: permiso y lectura de la hoja ─────────────── */
-
-    function firebaseListo() {
-        return typeof raiz.firebase !== 'undefined' && raiz.firebase.auth && typeof raiz.firebase.auth === 'function';
-    }
-
-    /* Pide permiso de lectura de hojas de cálculo reutilizando el login de Google
-       que ya tiene el CRM (no hace falta configurar nada nuevo en Google Cloud,
-       más que aceptar la pantalla de permisos la primera vez). */
-    function conectar() {
-        return new Promise(function (resolver, rechazar) {
-            if (!firebaseListo()) { rechazar(new Error('El CRM no tiene Firebase cargado todavía.')); return; }
-            var auth = raiz.firebase.auth();
-            var proveedor = new raiz.firebase.auth.GoogleAuthProvider();
-            proveedor.addScope(SCOPE_HOJAS);
-            /* prompt=consent obliga a Google a devolver el permiso nuevo. */
-            proveedor.setCustomParameters({ prompt: 'consent' });
-            /* Se re-autentica LA MISMA cuenta con la que ya entró al CRM. No se
-               permite cambiar de usuario aquí: si no, alguien podría pedir el
-               permiso con otra cuenta de Google y dejar la sesión en otra identidad. */
-            var usuario = auth.currentUser;
-            var peticion = (usuario && typeof usuario.reauthenticateWithPopup === 'function')
-                ? usuario.reauthenticateWithPopup(proveedor)
-                : auth.signInWithPopup(proveedor);
-            peticion.then(function (resultado) {
-                var credencial = resultado && resultado.credential;
-                var token = credencial && credencial.accessToken;
-                if (!token) { rechazar(new Error('Google no devolvió el permiso de hojas de cálculo.')); return; }
-                estado.token = token;
-                estado.conectado = true;
-                estado.motivo = '';
-                estado.ultimoError = null;
-                estado.explicacion = '';
-                /* Se apunta con qué cuenta se conectó y se le pregunta a Google
-                   qué permisos entregó de verdad (no se da por hecho). */
-                var u = auth.currentUser;
-                estado.cuenta = (u && u.email) || estado.cuenta || '';
-                verificarPermisos().then(function () { resolver({ ok: true }); });
-            }).catch(function (e) {
-                estado.conectado = false;
-                estado.motivo = (e && (e.code || e.message)) || 'error';
-                rechazar(e);
-            });
-        });
-    }
-
-    function urlHoja(rango) {
-        return 'https://sheets.googleapis.com/v4/spreadsheets/' + encodeURIComponent(estado.hoja.id) +
-            '/values/' + encodeURIComponent(rango) + '?majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE';
-    }
-
-    function extraerIdHoja(texto) {
-        var t = String(texto || '').trim();
-        var m = t.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-        if (m) return m[1];
-        if (/^[a-zA-Z0-9-_]{20,}$/.test(t)) return t;
-        return '';
-    }
-
-    /* Traduce el error crudo de Google a algo que Jorge pueda accionar, SIN
-       esconder el mensaje original (que es el que dice qué falta exactamente). */
-    function explicarError(status, cuerpo) {
-        var t = String(cuerpo || '');
-        if (/SERVICE_DISABLED|has not been used in project|is disabled/i.test(t)) {
-            estado.apiHojas = 'desactivada';
-            return 'La API de Hojas de cálculo de Google NO está activada en tu proyecto de Google. ' +
-                'Es un clic (gratis): entra al enlace que aparece abajo, elige tu proyecto y pulsa "Habilitar". ' +
-                'Espera 1 minuto y vuelve a pulsar "Conectar con Google".';
-        }
-        if (/insufficient authentication scopes|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(t)) {
-            return 'Google entregó la sesión pero SIN el permiso de Hojas de cálculo. ' +
-                'Vuelve a pulsar "Conectar con Google" y en la pantalla de Google marca/acepta la casilla de Hojas de cálculo.';
-        }
-        if (/caller does not have permission|PERMISSION_DENIED/i.test(t)) {
-            return 'La hoja de cálculo no es de la cuenta de Google conectada (o no te la compartieron). ' +
-                'Revisa que la hoja sea de la cuenta que aparece arriba como "Cuenta conectada".';
-        }
-        if (/not found|NOT_FOUND|Unable to parse range/i.test(t)) {
-            return 'No se encontró esa hoja o esa pestaña. Copia otra vez el enlace completo de la hoja y elige la pestaña correcta.';
-        }
-        if (status === 401) return 'La sesión con Google venció (dura ~1 hora). Pulsa "Conectar con Google" otra vez.';
-        return 'Google rechazó la petición (' + status + '). El detalle exacto está abajo.';
-    }
-
-    function enlaceActivarApi(cuerpo) {
-        var m = String(cuerpo || '').match(/https:\/\/console\.developers\.google\.com[^"\s\\]+/);
-        return m ? m[0].replace(/\\u003d/g, '=').replace(/\\u0026/g, '&') : 'https://console.cloud.google.com/apis/library/sheets.googleapis.com';
-    }
-
-    function pedir(url) {
-        if (!estado.token) return Promise.reject(new Error('Falta conectar con Google.'));
-        return raiz.fetch(url, { headers: { Authorization: 'Bearer ' + estado.token } }).then(function (r) {
-            if (!r.ok) {
-                return r.text().then(function (t) {
-                    estado.ultimoError = {
-                        status: r.status, cuerpo: String(t || '').slice(0, 1200), url: url,
-                        cuando: new Date().toLocaleString('es-MX')
-                    };
-                    estado.explicacion = explicarError(r.status, t);
-                    estado.enlaceApi = enlaceActivarApi(t);
-                    if (r.status === 401 || r.status === 403) {
-                        estado.conectado = false;
-                        estado.motivo = (r.status === 401) ? 'sesión de Google vencida' : 'Google rechazó el permiso';
-                    }
-                    var e = new Error(estado.explicacion + '  (' + r.status + ')');
-                    e.detalle = estado.ultimoError;
-                    throw e;
-                });
-            }
-            estado.ultimoError = null;
-            estado.explicacion = '';
-            return r.json();
-        });
-    }
-
-    /* ¿Qué permisos entregó Google de verdad? Se le pregunta a Google por el
-       mismo token: así se sabe si falta el permiso de Hojas de cálculo. */
-    function verificarPermisos() {
-        if (!estado.token) return Promise.resolve(null);
-        return raiz.fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(estado.token))
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (d) {
-                if (!d) { estado.permisoHojas = 'sin verificar'; return null; }
-                estado.cuenta = d.email || estado.cuenta || '';
-                estado.scopes = String(d.scope || '');
-                estado.permisoHojas = estado.scopes.indexOf('spreadsheets') !== -1 ? 'concedido' : 'no concedido';
-                if (estado.permisoHojas === 'no concedido') {
-                    estado.explicacion = 'Google entregó la sesión pero SIN el permiso de Hojas de cálculo. ' +
-                        'Pulsa "Conectar con Google" otra vez y acepta la casilla de Hojas de cálculo.';
-                }
-                return d;
-            })
-            .catch(function () { estado.permisoHojas = 'sin verificar'; return null; });
-    }
-
-    function leerPestanias(idHoja) {
-        return pedir('https://sheets.googleapis.com/v4/spreadsheets/' + encodeURIComponent(idHoja) + '?fields=properties.title,sheets.properties').then(function (d) {
-            estado.hoja = {
-                id: idHoja,
-                titulo: (d.properties && d.properties.title) || '',
-                pestanias: (d.sheets || []).map(function (s) { return { titulo: s.properties.title, gid: s.properties.sheetId }; })
-            };
-            return estado.hoja;
-        });
-    }
-
-    function leerValores(pestania) {
-        var rango = "'" + String(pestania).replace(/'/g, "''") + "'!A1:Z" + MAX_FILAS;
-        return pedir(urlHoja(rango)).then(function (d) { return d.values || []; });
-    }
-
-    /* ─────────────── Revisión y análisis ─────────────── */
+    /* ─────────────── Análisis ─────────────── */
 
     function analizarConFilas(filas, cfg) {
-        if (!filas.length) return { encabezados: [], mapeo: [], analisis: { nuevas: [], duplicadas: [], repetidas: [], vacias: 0 } };
+        if (!filas || !filas.length) {
+            estado.encabezados = null; estado.filas = null;
+            estado.analisis = { nuevas: [], duplicadas: [], repetidas: [], vacias: 0 };
+            return { encabezados: [], mapeo: [], analisis: estado.analisis };
+        }
         var encabezados = filas[0].map(function (h, i) { return limpiarValor(h) || ('Columna ' + (i + 1)); });
         var mapeo = (cfg.mapeo && cfg.mapeo.length === encabezados.length) ? cfg.mapeo : detectarMapeo(encabezados);
         var cuerpo = filas.slice(1);
         var analisis = analizarFilas(cuerpo, mapeo, cfg, raiz.prospectos || [], leerFirmas());
         estado.encabezados = encabezados;
+        estado.mapeo = mapeo;
         estado.filas = cuerpo;
         estado.analisis = analisis;
+        cfg.encabezados = encabezados;
+        cfg.mapeo = mapeo;
+        guardarConfig(cfg);
         return { encabezados: encabezados, mapeo: mapeo, analisis: analisis };
     }
 
-    function revisar() {
+    function analizarTexto(texto, nombreFuente) {
+        var filas = textoAFilas(texto).slice(0, MAX_FILAS);
+        if (filas.length < 2) throw new Error('Hacen falta la fila de títulos y al menos un prospecto.');
+        estado.archivo = { nombre: nombreFuente || 'Texto pegado', hojas: [{ nombre: 'Pegado', filas: filas }] };
+        estado.hojaElegida = 'Pegado';
+        return analizarConFilas(filas, leerConfig());
+    }
+
+    function elegirHoja(nombreHoja) {
+        if (!estado.archivo) throw new Error('Primero carga un archivo.');
+        var hoja = estado.archivo.hojas.filter(function (h) { return h.nombre === nombreHoja; })[0] || estado.archivo.hojas[0];
+        estado.hojaElegida = hoja.nombre;
         var cfg = leerConfig();
-        if (!estado.conectado || !estado.token) return Promise.reject(new Error('Primero conecta tu cuenta de Google.'));
-        if (!cfg.hojaId) return Promise.reject(new Error('Falta el enlace de la hoja de cálculo.'));
-        if (!cfg.pestania) return Promise.reject(new Error('Falta elegir la pestaña de respuestas.'));
-        if (!estado.hoja || estado.hoja.id !== cfg.hojaId) {
-            return leerPestanias(cfg.hojaId).then(function () { return leerValores(cfg.pestania); }).then(function (filas) { return analizarConFilas(filas, cfg); });
+        /* Si la hoja cambió, el mapeo anterior ya no sirve: se vuelve a detectar. */
+        if (!cfg.encabezados || !estado.encabezados || cfg.encabezados.join('|') !== (hoja.filas[0] || []).map(function (h) { return limpiarValor(h) || ''; }).join('|')) {
+            cfg.mapeo = [];
         }
-        return leerValores(cfg.pestania).then(function (filas) { return analizarConFilas(filas, cfg); });
+        return analizarConFilas(hoja.filas, cfg);
     }
 
     /* ─────────────── Importación ─────────────── */
@@ -13348,11 +13539,11 @@
             telefono: cand.telefono,
             email: cand.email,
             faseActual: cand.faseActual,
-            historialFases: [{ fase: cand.faseActual, fecha: fecha, notas: 'Alta automática desde formulario de Google' }],
+            historialFases: [{ fase: cand.faseActual, fecha: fecha, notas: 'Alta automática importando un archivo' }],
             notasGenerales: cand.notasGenerales,
             clienteId: null,
             fechaRegistro: fecha,
-            /* Campos extra que el formulario sí captura y que las campañas usan
+            /* Campos extra que sí captura el formulario y que las campañas usan
                como criterios de elegibilidad. */
             ciudad: cand.ciudad || '',
             origen: cand.origen || '',
@@ -13360,12 +13551,12 @@
             fechaEvento: cand.fechaEvento || '',
             fechaNacimiento: cand.fechaNacimiento || '',
             presupuesto: cand.presupuesto || '',
-            fuenteCaptacion: 'Formulario Google',
-            firmaFormulario: cand._firma
+            fuenteCaptacion: 'Importación de archivo',
+            firmaImportacion: cand._firma
         };
         raiz.prospectos.push(nuevo);
         if (typeof raiz.registrarHistorial === 'function') {
-            raiz.registrarHistorial('prospecto', 'crear', 'Se creó prospecto desde el formulario de Google: "' + nuevo.nombre + '"', { id: nuevo.id, nombre: nuevo.nombre });
+            raiz.registrarHistorial('prospecto', 'crear', 'Se creó prospecto importando un archivo: "' + nuevo.nombre + '"', { id: nuevo.id, nombre: nuevo.nombre });
         }
         if (typeof raiz.marcarSucia === 'function') raiz.marcarSucia('prospectos', nuevo.id);
         return nuevo;
@@ -13385,7 +13576,7 @@
                 if (cfg.campaniaId && typeof raiz.crearMotor === 'function' && raiz.App && raiz.App.almacen) {
                     try {
                         var motor = raiz.crearMotor(raiz.App.almacen);
-                        var r = motor.agregarParticipacion({ campaniaId: cfg.campaniaId, prospectoId: nuevo.id, origen: 'Formulario Google' });
+                        var r = motor.agregarParticipacion({ campaniaId: cfg.campaniaId, prospectoId: nuevo.id, origen: 'Importación de archivo' });
                         if (r && r.ok) conCampania++;
                     } catch (e2) { /* la campaña es opcional: no rompe la importación */ }
                 }
@@ -13396,7 +13587,6 @@
 
         guardarFirmas(firmas);
         cfg.totalImportados = (cfg.totalImportados || 0) + creados.length;
-        cfg.ultimaRevision = new Date().toISOString();
         guardarConfig(cfg);
 
         /* Guardar y repintar: si algo de esto falla, los prospectos YA quedaron
@@ -13405,52 +13595,30 @@
             if (typeof raiz.guardarDatos === 'function') raiz.guardarDatos();
             if (typeof raiz.renderizarProspectos === 'function') raiz.renderizarProspectos();
         } catch (e) {
-            if (typeof console !== 'undefined' && console.warn) console.warn('Captación: no se pudo guardar o repintar.', e);
+            if (typeof console !== 'undefined' && console.warn) console.warn('Importación: no se pudo guardar o repintar.', e);
         }
-        anotarHistorial({ fecha: new Date().toISOString(), creados: creados.length, conCampania: conCampania, errores: errores.length, fuente: 'Google Sheets' });
+        anotarHistorial({
+            fecha: new Date().toISOString(), creados: creados.length, conCampania: conCampania,
+            errores: errores.length, fuente: 'Archivo', archivo: (estado.archivo && estado.archivo.nombre) || '', hoja: estado.hojaElegida || ''
+        });
         if (typeof raiz.mostrarNotificacion === 'function') {
             try {
-                raiz.mostrarNotificacion('Se agregaron ' + creados.length + ' prospecto(s) del formulario' + (conCampania ? ' (' + conCampania + ' a la campaña)' : '') + (errores.length ? ' · ' + errores.length + ' con error' : ''), errores.length ? 'warning' : 'success');
+                raiz.mostrarNotificacion('Se agregaron ' + creados.length + ' prospecto(s) del archivo' + (conCampania ? ' (' + conCampania + ' a la campaña)' : '') + (errores.length ? ' · ' + errores.length + ' con error' : ''), errores.length ? 'warning' : 'success');
             } catch (e) { }
         }
         return { creados: creados, conCampania: conCampania, errores: errores };
     }
 
-    /* ─────────────── Revisión automática periódica ─────────────── */
-
-    function programarRevision() {
-        if (estado.temporizador) { raiz.clearInterval(estado.temporizador); estado.temporizador = null; }
-        var cfg = leerConfig();
-        if (!cfg.auto || !cfg.hojaId || !cfg.pestania) return;
-        var minutos = Math.max(5, Number(cfg.intervaloMinutos) || 15);
-        estado.temporizador = raiz.setInterval(function () {
-            if (!estado.conectado || !estado.token) return; /* sin token no se puede: no molesta */
-            revisar().then(function (r) {
-                var nuevas = r.analisis.nuevas;
-                if (!nuevas.length) return;
-                var res = importar(nuevas);
-                if (res.creados) {
-                    anotarHistorial({ fecha: new Date().toISOString(), creados: res.creados.length, automatico: true, fuente: 'Google Sheets' });
-                }
-            }).catch(function (e) {
-                var msg = (e && e.message) || String(e);
-                if (msg !== estado.ultimoAviso) {
-                    estado.ultimoAviso = msg;
-                    if (typeof raiz.mostrarNotificacion === 'function') raiz.mostrarNotificacion('Captación automática: ' + msg, 'warning');
-                }
-            });
-        }, minutos * 60 * 1000);
-    }
-
-    function detenerRevision() {
-        if (estado.temporizador) { raiz.clearInterval(estado.temporizador); estado.temporizador = null; }
-    }
-
     /* ─────────────── Interfaz ─────────────── */
 
-    function esc(v) { return (typeof raiz.escapeHTML === 'function') ? raiz.escapeHTML(String(v === undefined || v === null ? '' : v)) : String(v === undefined || v === null ? '' : v); }
-
+    function esc(v) {
+        if (typeof raiz.escapeHTML === 'function') return raiz.escapeHTML(String(v === undefined || v === null ? '' : v));
+        return String(v === undefined || v === null ? '' : v).replace(/[&<>"]/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+        });
+    }
     function esAdmin() { return (typeof raiz.esAdmin === 'function') ? raiz.esAdmin() : true; }
+    function aviso(msg, tipo) { if (typeof raiz.mostrarNotificacion === 'function') raiz.mostrarNotificacion(msg, tipo || 'info'); }
 
     function filaTablaHtml(cand, tipo) {
         var marcado = tipo === 'nueva' ? ' checked' : '';
@@ -13466,18 +13634,16 @@
             '</tr>';
     }
 
-    function pintarRevision(r, contenedor) {
-        var a = r.analisis;
-        var html = '' +
-            '<div class="metricas-container">' +
+    function pintarRevision(a) {
+        a = a || { nuevas: [], duplicadas: [], repetidas: [], vacias: 0 };
+        var html = '<div class="metricas-container">' +
             '  <div class="metrica-card"><div class="metrica-icono"><i class="fas fa-user-plus"></i></div><div class="metrica-info"><span class="metrica-valor">' + a.nuevas.length + '</span><span class="metrica-etiqueta">Nuevos</span></div></div>' +
             '  <div class="metrica-card"><div class="metrica-icono"><i class="fas fa-clone"></i></div><div class="metrica-info"><span class="metrica-valor">' + a.duplicadas.length + '</span><span class="metrica-etiqueta">Duplicados (no se guardan)</span></div></div>' +
             '  <div class="metrica-card"><div class="metrica-icono"><i class="fas fa-clock-rotate-left"></i></div><div class="metrica-info"><span class="metrica-valor">' + a.repetidas.length + '</span><span class="metrica-etiqueta">Ya importados antes</span></div></div>' +
             '  <div class="metrica-card"><div class="metrica-icono"><i class="fas fa-eraser"></i></div><div class="metrica-info"><span class="metrica-valor">' + a.vacias + '</span><span class="metrica-etiqueta">Filas sin datos útiles</span></div></div>' +
             '</div>';
-
         if (!a.nuevas.length && !a.duplicadas.length && !a.repetidas.length) {
-            return html + '<div class="lista-ok"><i class="fas fa-circle-check"></i> No hay respuestas nuevas en la hoja.</div>';
+            return html + '<div class="detalle-lista-vacia" style="margin-top:12px;">Aquí verás el resultado después de cargar el archivo.</div>';
         }
         var filas = a.nuevas.map(function (c) { return filaTablaHtml(c, 'nueva'); }).join('') +
             a.duplicadas.map(function (c) { return filaTablaHtml(c, 'duplicada'); }).join('') +
@@ -13486,10 +13652,10 @@
             '<th></th><th>Nombre</th><th>Teléfono</th><th>Evento</th><th>Situación</th></tr></thead><tbody>' + filas + '</tbody></table></div>';
         if (a.nuevas.length) {
             html += '<div class="form-acciones" style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">' +
-                '<button class="btn-secundario" id="cap-todos">Marcar / desmarcar todos</button>' +
-                '<button class="btn-primario" id="cap-importar"><i class="fas fa-file-import"></i> Importar <span id="cap-cuantos">' + a.nuevas.length + '</span></button>' +
+                '<button class="btn-secundario" id="imp-todos">Marcar / desmarcar todos</button>' +
+                '<button class="btn-primario" id="imp-importar"><i class="fas fa-file-import"></i> Importar <span id="imp-cuantos">' + a.nuevas.length + '</span></button>' +
                 '</div>' +
-                '<div id="cap-confirmar" style="margin-top:12px;"></div>';
+                '<div id="imp-confirmar" style="margin-top:12px;"></div>';
         } else {
             html += '<div class="lista-aviso" style="margin-top:12px;"><i class="fas fa-circle-info"></i> Ninguna fila nueva para importar: todas ya existen o ya se importaron.</div>';
         }
@@ -13502,16 +13668,17 @@
         }).join('');
     }
 
-    function pintarMapeo(r, cfg) {
-        if (!r.encabezados.length) return '<div class="detalle-lista-vacia">Todavía no se han leído los encabezados de la hoja.</div>';
-        return '<div class="nota-tareas">Así se leerán las columnas de tu formulario. Casi siempre queda bien solo; puedes corregir lo que quieras.</div>' +
-            '<div class="tabla-scroll"><table class="tabla-datos"><thead><tr><th>Columna del formulario</th><th>Se guarda como</th></tr></thead><tbody>' +
-            r.encabezados.map(function (h, i) {
-                var m = r.mapeo.filter(function (x) { return x.indice === i; })[0] || { campo: 'ignorar' };
+    function pintarMapeo(cfg) {
+        if (!estado.encabezados) return '<div class="detalle-lista-vacia">Primero carga un archivo para ver sus columnas.</div>';
+        var mapeo = estado.mapeo || detectarMapeo(estado.encabezados);
+        return '<div class="nota-tareas">Así se leerán las columnas de tu archivo. Casi siempre queda bien solo; corrige lo que quieras y guárdalo (se recuerda para la próxima).</div>' +
+            '<div class="tabla-scroll"><table class="tabla-datos"><thead><tr><th>Columna del archivo</th><th>Se guarda como</th></tr></thead><tbody>' +
+            estado.encabezados.map(function (h, i) {
+                var m = mapeo.filter(function (x) { return x.indice === i; })[0] || { campo: 'ignorar' };
                 return '<tr><td>' + esc(h) + '</td><td><select data-mapeo="' + i + '" style="background:var(--color-bg-primario);color:var(--color-texto-primario);border:1px solid var(--color-borde);border-radius:6px;padding:6px 8px;">' + camposSelect(m.campo) + '</select></td></tr>';
             }).join('') + '</tbody></table></div>' +
             '<div class="form-acciones" style="display:flex;justify-content:flex-end;margin-top:12px;">' +
-            '<button class="btn-primario" id="cap-guardar-mapeo"><i class="fas fa-floppy-disk"></i> Guardar cómo se leen las columnas</button></div>';
+            '<button class="btn-primario" id="imp-guardar-mapeo"><i class="fas fa-floppy-disk"></i> Guardar cómo se leen las columnas</button></div>';
     }
 
     function campaniasActivas() {
@@ -13519,145 +13686,111 @@
         return lista.filter(function (c) { return c && c.estado === 'activa'; });
     }
 
-    function cuerpoConfiguracion(cfg) {
+    function cuerpoArchivo(cfg) {
+        var hojas = (estado.archivo && estado.archivo.hojas) || [];
+        var selector = '';
+        if (hojas.length > 1) {
+            selector = '<div class="form-grupo"><label>¿Qué hoja del archivo?</label><select id="imp-hoja">' +
+                hojas.map(function (h) {
+                    return '<option value="' + esc(h.nombre) + '"' + (h.nombre === estado.hojaElegida ? ' selected' : '') + '>' + esc(h.nombre) + ' (' + Math.max(0, h.filas.length - 1) + ' filas)</option>';
+                }).join('') + '</select></div>';
+        }
+        var nombreArchivo = estado.archivo ? ('<div class="lista-aviso" style="margin-top:10px;"><i class="fas fa-file-lines"></i><div>Archivo cargado: <strong>' + esc(estado.archivo.nombre) + '</strong>' + (estado.hojaElegida ? ' · hoja <strong>' + esc(estado.hojaElegida) + '</strong>' : '') + '</div></div>') : '';
+        return '' +
+            '<div class="nota-tareas"><i class="fas fa-circle-info"></i> ' +
+            'En tu hoja de respuestas de Google: <strong>Archivo → Descargar → Microsoft Excel (.xlsx)</strong> o <strong>CSV</strong>. ' +
+            'También sirve cualquier tabla que tengas en Excel. El archivo se lee en este equipo: no se sube a ningún lado ni pide permisos.</div>' +
+            '<div id="imp-zona" style="margin-top:12px;border:2px dashed var(--color-borde);border-radius:10px;padding:22px 16px;text-align:center;">' +
+            '  <div style="font-size:26px;color:var(--color-acento);"><i class="fas fa-file-arrow-up"></i></div>' +
+            '  <div style="margin:8px 0;font-size:14px;">Arrastra aquí tu archivo <strong>.xlsx</strong> o <strong>.csv</strong></div>' +
+            '  <div style="color:var(--color-texto-secundario);font-size:12.5px;margin-bottom:12px;">o elígelo con el botón</div>' +
+            '  <input type="file" id="imp-archivo" accept=".xlsx,.xlsm,.csv,.tsv,.txt" style="display:none;">' +
+            '  <button class="btn-primario" id="imp-elegir"><i class="fas fa-folder-open"></i> Elegir archivo</button>' +
+            '</div>' +
+            selector + nombreArchivo +
+            '<details style="margin-top:14px;"><summary style="cursor:pointer;color:var(--color-texto-secundario);font-size:12.5px;">…o pega las filas directamente (por ejemplo copiadas de la hoja)</summary>' +
+            '<div class="form-grupo" style="margin-top:10px;"><textarea id="imp-pegar" style="min-height:120px;" placeholder="Nombre\tTeléfono\tCorreo…"></textarea></div>' +
+            '<div class="form-acciones" style="display:flex;justify-content:flex-end;"><button class="btn-secundario" id="imp-analizar-pegado"><i class="fas fa-magnifying-glass"></i> Analizar lo pegado</button></div>' +
+            '</details>' +
+            '<div class="seccion-bloque-titulo" style="margin-top:20px;"><i class="fas fa-list-check"></i> Qué va a entrar</div>' +
+            '<div id="imp-revision">' + pintarRevision(estado.analisis) + '</div>';
+    }
+
+    function cuerpoAjustes(cfg) {
         var activas = campaniasActivas();
         return '' +
-            '<div class="form-grupo"><label>Enlace o identificador de la hoja de respuestas</label>' +
-            '<input type="text" id="cap-hoja" value="' + esc(cfg.hojaId) + '" placeholder="https://docs.google.com/spreadsheets/d/…"></div>' +
             '<div class="row-2col">' +
-            '  <div class="form-grupo"><label>Pestaña de respuestas</label><select id="cap-pestania">' +
-            (cfg.pestania ? '<option value="' + esc(cfg.pestania) + '" selected>' + esc(cfg.pestania) + '</option>' : '<option value="">(conecta para ver las pestañas)</option>') +
-            '</select></div>' +
-            '  <div class="form-grupo"><label>Fase inicial del prospecto</label><select id="cap-fase">' +
+            '  <div class="form-grupo"><label>Origen con el que se registran</label><input type="text" id="imp-origen" value="' + esc(cfg.origenPorDefecto) + '"></div>' +
+            '  <div class="form-grupo"><label>Fase inicial del prospecto</label><select id="imp-fase">' +
             ['Interesado', 'Cotización', 'Negociación', 'Contrato', 'Frecuente', 'Inactivo'].map(function (f) {
                 return '<option value="' + f + '"' + (f === cfg.faseInicial ? ' selected' : '') + '>' + f + '</option>';
             }).join('') + '</select></div>' +
             '</div>' +
-            '<div class="row-2col">' +
-            '  <div class="form-grupo"><label>Origen con el que se registran</label><input type="text" id="cap-origen" value="' + esc(cfg.origenPorDefecto) + '"></div>' +
-            '  <div class="form-grupo"><label>Agregar a la campaña (opcional)</label><select id="cap-campania"><option value="">No agregar a ninguna</option>' +
+            '<div class="form-grupo"><label>Agregar a la campaña (opcional)</label><select id="imp-campania"><option value="">No agregar a ninguna</option>' +
             activas.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === cfg.campaniaId ? ' selected' : '') + '>' + esc(c.nombre) + '</option>'; }).join('') +
             '</select></div>' +
-            '</div>' +
             '<div class="form-grupo"><label>Evitar duplicados comparando</label>' +
             '  <div style="display:flex;gap:16px;flex-wrap:wrap;padding-top:6px;">' +
-            '    <label class="fila-check" style="flex:0 0 auto;"><input type="checkbox" id="cap-dup-tel"' + (cfg.criterioDuplicado.telefono ? ' checked' : '') + '><span class="dato-principal">Teléfono</span></label>' +
-            '    <label class="fila-check" style="flex:0 0 auto;"><input type="checkbox" id="cap-dup-nombre"' + (cfg.criterioDuplicado.nombre ? ' checked' : '') + '><span class="dato-principal">Nombre</span></label>' +
-            '  </div></div>' +
-            '<div class="row-2col">' +
-            '  <div class="form-grupo"><label>Revisar la hoja cada (minutos)</label><input type="number" id="cap-intervalo" min="5" value="' + esc(cfg.intervaloMinutos) + '"></div>' +
-            '  <div class="form-grupo"><label>Revisión automática</label>' +
-            '    <label class="fila-check" style="padding-top:10px;"><input type="checkbox" id="cap-auto"' + (cfg.auto ? ' checked' : '') + '><span class="dato-principal">Agregar los nuevos sola, sin preguntar<small>Si está apagada, solo te avisa y tú decides.</small></span></label>' +
+            '    <label class="fila-check" style="flex:0 0 auto;"><input type="checkbox" id="imp-dup-tel"' + (cfg.criterioDuplicado.telefono ? ' checked' : '') + '><span class="dato-principal">Teléfono</span></label>' +
+            '    <label class="fila-check" style="flex:0 0 auto;"><input type="checkbox" id="imp-dup-nombre"' + (cfg.criterioDuplicado.nombre ? ' checked' : '') + '><span class="dato-principal">Nombre</span></label>' +
             '  </div>' +
+            '  <div class="nota-tareas" style="margin-top:8px;">El teléfono se compara por los últimos 10 dígitos; el nombre sin acentos, sin mayúsculas y en cualquier orden. Si el nombre coincide pero el teléfono es distinto, se marca aparte para que tú decidas.</div>' +
             '</div>' +
-            '<div class="lista-avisos"><i class="fas fa-shield-halved"></i><div>El permiso que se pide es <strong>solo lectura</strong> de hojas de cálculo y el token <strong>no se guarda</strong>: al cerrar el CRM hay que volver a conectar. La configuración sí se recuerda en este equipo.</div></div>' +
-            bloqueDiagnostico() +
-            '<div class="form-acciones" style="display:flex;gap:10px;justify-content:flex-end;">' +
-            '  <button class="btn-secundario" id="cap-guardar"><i class="fas fa-floppy-disk"></i> Guardar configuración</button>' +
-            '  <button class="btn-primario" id="cap-revisar"><i class="fas fa-rotate"></i> Revisar ahora</button>' +
-            '</div>';
-    }
-
-    /* Diagnóstico a la vista: qué cuenta, qué permisos y qué dijo Google
-       exactamente la última vez. Sin esto, un "rechazó el permiso" es adivinar. */
-    function bloqueDiagnostico() {
-        if (!estado.conectado && !estado.ultimoError && !estado.cuenta) return '';
-        var permiso = estado.permisoHojas === 'concedido'
-            ? '<span class="etiqueta-part positiva">Permiso de Hojas: concedido</span>'
-            : (estado.permisoHojas === 'no concedido'
-                ? '<span class="etiqueta-part negativa">Permiso de Hojas: NO concedido</span>'
-                : '<span class="etiqueta-part neutra">Permiso de Hojas: sin verificar</span>');
-        var html = '<div class="seccion-bloque-titulo" style="margin-top:18px;"><i class="fas fa-stethoscope"></i> Diagnóstico de la conexión</div>' +
-            '<div class="detalle-etiquetas" style="margin-bottom:10px;">' +
-            '<span class="etiqueta-part">Cuenta conectada: ' + esc(estado.cuenta || '—') + '</span>' + permiso +
-            (estado.apiHojas === 'desactivada' ? '<span class="etiqueta-part negativa">API de Hojas: desactivada</span>' : '') +
-            (estado.scopes ? '<span class="etiqueta-part neutra">' + esc(estado.scopes.split(' ').map(function (s) { return s.replace('https://www.googleapis.com/auth/', ''); }).join(', ')) + '</span>' : '') +
-            '</div>';
-        if (estado.explicacion) {
-            html += '<div class="lista-avisos" style="border-left:4px solid var(--color-naranja);">' +
-                '<i class="fas fa-triangle-exclamation" style="color:var(--color-naranja);"></i>' +
-                '<div>' + esc(estado.explicacion) +
-                (estado.enlaceApi ? '<br><br><a href="' + esc(estado.enlaceApi) + '" target="_blank" rel="noopener" class="btn-secundario" style="display:inline-block;text-decoration:none;"><i class="fas fa-arrow-up-right-from-square"></i> Abrir la página para activar la API de Hojas de cálculo</a>' +
-                    '<div style="margin-top:8px;font-size:11.5px;color:var(--color-texto-secundario);">Si el botón no abre, copia y pega este enlace en el navegador:<br>' +
-                    '<code style="user-select:all;word-break:break-all;">' + esc(estado.enlaceApi) + '</code></div>' : '') +
-                '</div></div>';
-        }
-        if (estado.ultimoError) {
-            html += '<details style="margin-top:10px;"><summary style="cursor:pointer;color:var(--color-texto-secundario);font-size:12.5px;">Ver el mensaje exacto de Google (' + esc(estado.ultimoError.status) + ' · ' + esc(estado.ultimoError.cuando) + ')</summary>' +
-                '<pre style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;background:var(--color-bg-terciario);padding:10px;border-radius:6px;margin-top:8px;">' + esc(estado.ultimoError.cuerpo) + '</pre></details>';
-        }
-        html += '<div class="form-acciones" style="display:flex;justify-content:flex-start;margin-top:10px;">' +
-            '<button class="btn-secundario" id="cap-diagnostico"><i class="fas fa-vial"></i> Volver a revisar permisos y hoja</button></div>';
-        return html;
-    }
-
-    function cuerpoPegado() {
-        return '<div class="nota-tareas">Si prefieres no dar permiso a Google: en la hoja de respuestas usa <strong>Archivo → Descargar → CSV</strong>, ábrelo y pega aquí todo el contenido (o copia las filas directamente de la hoja). Se usa el mismo control de duplicados.</div>' +
-            '<div class="form-grupo"><label>Pega las filas (incluyendo la fila de títulos)</label><textarea id="cap-pegar" style="min-height:150px;" placeholder="Nombre\tTeléfono\tCorreo…"></textarea></div>' +
-            '<div class="form-acciones" style="display:flex;justify-content:flex-end;"><button class="btn-primario" id="cap-analizar-pegado"><i class="fas fa-magnifying-glass"></i> Analizar lo pegado</button></div>';
+            '<div class="form-acciones" style="display:flex;justify-content:flex-end;"><button class="btn-primario" id="imp-guardar-ajustes"><i class="fas fa-floppy-disk"></i> Guardar ajustes</button></div>';
     }
 
     function cuerpoHistorial() {
         var h = leerHistorial();
-        if (!h.length) return '<div class="detalle-lista-vacia">Todavía no se ha importado nada desde el formulario.</div>';
-        return '<div class="tabla-scroll"><table class="tabla-datos"><thead><tr><th>Cuándo</th><th>Prospectos</th><th>Campaña</th><th>Errores</th><th>Modo</th></tr></thead><tbody>' +
+        if (!h.length) return '<div class="detalle-lista-vacia">Todavía no se ha importado nada.</div>';
+        return '<div class="tabla-scroll"><table class="tabla-datos"><thead><tr><th>Cuándo</th><th>Prospectos</th><th>Campaña</th><th>Errores</th><th>Archivo</th></tr></thead><tbody>' +
             h.map(function (x) {
-                return '<tr><td>' + esc((x.fecha || '').replace('T', ' ').slice(0, 16)) + '</td><td>' + esc(x.creados) + '</td><td>' + esc(x.conCampania || 0) + '</td><td>' + esc(x.errores || 0) + '</td><td>' + (x.automatico ? 'Automático' : 'A mano') + '</td></tr>';
+                return '<tr><td>' + esc((x.fecha || '').replace('T', ' ').slice(0, 16)) + '</td><td>' + esc(x.creados) + '</td><td>' + esc(x.conCampania || 0) + '</td><td>' + esc(x.errores || 0) + '</td><td>' + esc(x.archivo || x.fuente || '—') + '</td></tr>';
             }).join('') + '</tbody></table></div>' +
             '<div class="form-acciones" style="display:flex;justify-content:flex-end;margin-top:12px;">' +
-            '<button class="btn-peligro" id="cap-olvidar"><i class="fas fa-eraser"></i> Olvidar las filas ya importadas</button></div>' +
-            '<div id="cap-olvidar-zona" style="margin-top:12px;"></div>';
+            '<button class="btn-peligro" id="imp-olvidar"><i class="fas fa-eraser"></i> Olvidar las filas ya importadas</button></div>' +
+            '<div id="imp-olvidar-zona" style="margin-top:12px;"></div>';
     }
 
     function cuerpoPanel(pestaniaActiva) {
         var cfg = leerConfig();
-        var estadoConexion = estado.conectado
-            ? '<span class="etiqueta-part positiva">Conectado con Google</span>'
-            : '<span class="etiqueta-part negativa">Sin conectar</span>';
         var tabs = [
-            { id: 'conexion', etiqueta: 'Conexión', icono: 'fa-plug' },
+            { id: 'archivo', etiqueta: 'Importar archivo', icono: 'fa-file-arrow-up' },
             { id: 'columnas', etiqueta: 'Cómo se leen las columnas', icono: 'fa-table-columns' },
-            { id: 'revisar', etiqueta: 'Revisar e importar', icono: 'fa-file-import' },
-            { id: 'pegado', etiqueta: 'Pegar filas (sin permisos)', icono: 'fa-paste' },
+            { id: 'ajustes', etiqueta: 'Ajustes', icono: 'fa-sliders' },
             { id: 'historial', etiqueta: 'Historial', icono: 'fa-clock-rotate-left' }
         ];
-        var html = '<div class="detalle-header"><div class="mosaico-titulo" style="font-size:17px;">Prospectos desde tu formulario de Google</div>' +
-            '<div class="detalle-etiquetas">' + estadoConexion +
-            (estado.cuenta ? '<span class="etiqueta-part neutra">' + esc(estado.cuenta) + '</span>' : '') +
-            (cfg.hojaTitulo ? '<span class="etiqueta-part">' + esc(cfg.hojaTitulo) + '</span>' : '') +
-            (cfg.pestania ? '<span class="etiqueta-part">' + esc(cfg.pestania) + '</span>' : '') +
+        var html = '<div class="detalle-header"><div class="mosaico-titulo" style="font-size:17px;">Importar prospectos desde un archivo</div>' +
+            '<div class="detalle-etiquetas">' +
+            '<span class="etiqueta-part positiva">Sin permisos ni conexión: se lee en tu equipo</span>' +
+            (estado.archivo ? '<span class="etiqueta-part">' + esc(estado.archivo.nombre) + '</span>' : '') +
             '<span class="etiqueta-part neutra">' + (cfg.totalImportados || 0) + ' importado(s)</span></div>' +
-            '<div class="acciones-ficha">' +
-            '  <button class="btn-primario" id="cap-conectar"><i class="fab fa-google"></i> ' + (estado.conectado ? 'Reconectar con Google' : 'Conectar con Google') + '</button>' +
-            (estado.motivo ? '<span class="etiqueta-part aviso">' + esc(estado.motivo) + '</span>' : '') +
-            '</div></div>' +
+            '</div>' +
             '<div class="tabs">' + tabs.map(function (t) {
-                return '<button class="tab' + (t.id === pestaniaActiva ? ' activo' : '') + '" data-cap-tab="' + t.id + '"><i class="fas ' + t.icono + '"></i><span class="etiqueta-tab">' + esc(t.etiqueta) + '</span></button>';
+                return '<button class="tab' + (t.id === pestaniaActiva ? ' activo' : '') + '" data-imp-tab="' + t.id + '"><i class="fas ' + t.icono + '"></i><span class="etiqueta-tab">' + esc(t.etiqueta) + '</span></button>';
             }).join('') + '</div>' +
-            '<div id="cap-cuerpo"></div>';
-        return { html: html, tabs: tabs };
+            '<div id="imp-cuerpo"></div>';
+        return html;
     }
 
-    var pestaniaActual = 'conexion';
+    var pestaniaActual = 'archivo';
 
     function abrirPanel(pestania) {
-        if (typeof raiz.App !== 'undefined' && raiz.App && typeof raiz.App.abrirModal === 'function') {
-            pestaniaActual = pestania || pestaniaActual || 'conexion';
-            var p = cuerpoPanel(pestaniaActual);
-            raiz.App.abrirModal('Captación desde formulario de Google', p.html, { ancho: true });
+        if (raiz.App && typeof raiz.App.abrirModal === 'function') {
+            pestaniaActual = pestania || pestaniaActual || 'archivo';
+            raiz.App.abrirModal('Importar prospectos desde un archivo', cuerpoPanel(pestaniaActual), { ancho: true });
             pintarCuerpo();
             conectarTabs();
             return true;
         }
-        if (typeof raiz.mostrarNotificacion === 'function') raiz.mostrarNotificacion('No se pudo abrir la ventana de captación.', 'error');
+        aviso('No se pudo abrir la ventana de importación.', 'error');
         return false;
     }
 
     function conectarTabs() {
         if (typeof document === 'undefined') return;
-        Array.prototype.forEach.call(document.querySelectorAll('[data-cap-tab]'), function (b) {
+        Array.prototype.forEach.call(document.querySelectorAll('[data-imp-tab]'), function (b) {
             b.onclick = function () {
-                pestaniaActual = b.getAttribute('data-cap-tab');
+                pestaniaActual = b.getAttribute('data-imp-tab');
                 abrirPanel(pestaniaActual);
             };
         });
@@ -13665,21 +13798,13 @@
 
     function pintarCuerpo() {
         if (typeof document === 'undefined') return;
-        var caja = document.getElementById('cap-cuerpo');
+        var caja = document.getElementById('imp-cuerpo');
         if (!caja) return;
         var cfg = leerConfig();
-        if (pestaniaActual === 'columnas') {
-            caja.innerHTML = estado.encabezados ? pintarMapeo({ encabezados: estado.encabezados, mapeo: estado.mapeo || detectarMapeo(estado.encabezados) }, cfg)
-                : '<div class="detalle-lista-vacia">Primero conecta Google y pulsa "Revisar ahora" para leer los títulos de tu formulario.</div>';
-        } else if (pestaniaActual === 'revisar') {
-            caja.innerHTML = estado.analisis ? pintarRevision({ analisis: estado.analisis }, caja) : '<div class="detalle-lista-vacia">Todavía no se ha revisado la hoja. Pulsa "Revisar ahora".</div>';
-        } else if (pestaniaActual === 'pegado') {
-            caja.innerHTML = cuerpoPegado();
-        } else if (pestaniaActual === 'historial') {
-            caja.innerHTML = cuerpoHistorial();
-        } else {
-            caja.innerHTML = cuerpoConfiguracion(cfg);
-        }
+        if (pestaniaActual === 'columnas') caja.innerHTML = pintarMapeo(cfg);
+        else if (pestaniaActual === 'ajustes') caja.innerHTML = cuerpoAjustes(cfg);
+        else if (pestaniaActual === 'historial') caja.innerHTML = cuerpoHistorial();
+        else caja.innerHTML = cuerpoArchivo(cfg);
         conectarCuerpo();
     }
 
@@ -13687,188 +13812,157 @@
         var cfg = leerConfig();
         var v = function (id) { var el = document.getElementById(id); return el ? el.value : null; };
         var c = function (id) { var el = document.getElementById(id); return el ? !!el.checked : null; };
-        var idHoja = extraerIdHoja(v('cap-hoja'));
-        if (v('cap-hoja') !== null) { cfg.hojaId = idHoja || String(v('cap-hoja') || '').trim(); }
-        if (v('cap-pestania')) cfg.pestania = v('cap-pestania');
-        if (v('cap-fase')) cfg.faseInicial = v('cap-fase');
-        if (v('cap-origen') !== null) cfg.origenPorDefecto = v('cap-origen');
-        if (v('cap-campania') !== null) cfg.campaniaId = v('cap-campania');
-        if (v('cap-intervalo')) cfg.intervaloMinutos = Math.max(5, Number(v('cap-intervalo')) || 15);
-        if (c('cap-auto') !== null) cfg.auto = c('cap-auto');
-        if (c('cap-dup-tel') !== null || c('cap-dup-nombre') !== null) {
-            cfg.criterioDuplicado = { telefono: c('cap-dup-tel') !== false, nombre: c('cap-dup-nombre') !== false };
+        if (v('imp-origen') !== null) cfg.origenPorDefecto = v('imp-origen');
+        if (v('imp-fase')) cfg.faseInicial = v('imp-fase');
+        if (v('imp-campania') !== null) cfg.campaniaId = v('imp-campania');
+        if (c('imp-dup-tel') !== null || c('imp-dup-nombre') !== null) {
+            cfg.criterioDuplicado = { telefono: c('imp-dup-tel') !== false, nombre: c('imp-dup-nombre') !== false };
         }
         guardarConfig(cfg);
         return cfg;
     }
 
+    /* Procesa un archivo ya elegido (o soltado). */
+    function procesarArchivo(archivo) {
+        return new Promise(function (resolver, rechazar) {
+            if (!archivo) { rechazar(new Error('No se eligió ningún archivo.')); return; }
+            var lector = new FileReader();
+            lector.onerror = function () { rechazar(new Error('No se pudo leer el archivo.')); };
+            lector.onload = function () {
+                try {
+                    var hojas = leerBuffer(archivo.name, lector.result);
+                    if (!hojas.length || !hojas[0].filas.length) { rechazar(new Error('El archivo no tiene datos que se puedan leer.')); return; }
+                    estado.archivo = { nombre: archivo.name, hojas: hojas };
+                    var cfg = leerConfig();
+                    cfg.ultimoArchivo = archivo.name;
+                    cfg.encabezados = null;
+                    cfg.mapeo = [];
+                    guardarConfig(cfg);
+                    elegirHoja(hojas[0].nombre);
+                    resolver({ hojas: hojas, analisis: estado.analisis });
+                } catch (e) { rechazar(e); }
+            };
+            lector.readAsArrayBuffer(archivo);
+        });
+    }
+
     function conectarCuerpo() {
         if (typeof document === 'undefined') return;
-        var aviso = function (msg, tipo) { if (typeof raiz.mostrarNotificacion === 'function') raiz.mostrarNotificacion(msg, tipo || 'info'); };
 
-        var bConectar = document.getElementById('cap-conectar');
-        if (bConectar) bConectar.onclick = function () {
-            bConectar.disabled = true;
-            bConectar.textContent = 'Esperando a Google…';
-            conectar().then(function () {
-                var cfg = leerConfig();
-                if (estado.permisoHojas === 'no concedido') {
-                    aviso('Google no entregó el permiso de Hojas de cálculo. Vuelve a intentarlo aceptando esa casilla.', 'error');
-                    return null;
-                }
-                if (cfg.hojaId) return leerPestanias(cfg.hojaId).then(function (h) {
-                    cfg.hojaTitulo = h.titulo;
-                    if (!cfg.pestania && h.pestanias.length) cfg.pestania = h.pestanias[0].titulo;
-                    guardarConfig(cfg);
-                });
-                return null;
-            }).then(function () {
-                if (estado.ultimoError) aviso(estado.explicacion || 'Google rechazó la petición.', 'error');
-                else aviso('Listo: permiso concedido y hoja leída.', 'success');
-                abrirPanel(pestaniaActual);
-            }).catch(function (e) {
-                aviso('No se pudo conectar: ' + ((e && e.message) || e), 'error');
-                bConectar.disabled = false;
-                abrirPanel(pestaniaActual);
-            });
-        };
-
-        /* Volver a revisar permisos y hoja, mostrando el detalle exacto de Google. */
-        var bDiagnostico = document.getElementById('cap-diagnostico');
-        if (bDiagnostico) bDiagnostico.onclick = function () {
-            var cfg = leerConfig();
-            bDiagnostico.disabled = true;
-            bDiagnostico.textContent = 'Revisando…';
-            verificarPermisos().then(function () {
-                if (!cfg.hojaId) { aviso('Falta el enlace de la hoja.', 'warning'); return null; }
-                return leerPestanias(cfg.hojaId).then(function (h) {
-                    cfg.hojaTitulo = h.titulo;
-                    if (!cfg.pestania && h.pestanias.length) cfg.pestania = h.pestanias[0].titulo;
-                    guardarConfig(cfg);
-                });
-            }).then(function () {
-                if (estado.ultimoError) aviso(estado.explicacion || 'Google rechazó la petición.', 'error');
-                else aviso('Todo bien: los permisos y la hoja responden.', 'success');
-                abrirPanel('conexion');
-            }).catch(function (e) {
-                aviso((e && e.message) || String(e), 'error');
-                abrirPanel('conexion');
-            });
-        };
-
-        var bGuardar = document.getElementById('cap-guardar');
-        if (bGuardar) bGuardar.onclick = function () {
-            var cfg = leerFormulario();
-            programarRevision();
-            aviso('Configuración guardada.', 'success');
-            abrirPanel(pestaniaActual);
-        };
-
-        var bRevisar = document.getElementById('cap-revisar');
-        if (bRevisar) bRevisar.onclick = function () {
-            leerFormulario();
-            bRevisar.disabled = true;
-            revisar().then(function (r) {
-                aviso(r.analisis.nuevas.length + ' respuesta(s) nueva(s), ' + r.analisis.duplicadas.length + ' duplicada(s).');
-                pestaniaActual = 'revisar';
-                abrirPanel(pestaniaActual);
-            }).catch(function (e) {
-                aviso((e && e.message) || String(e), 'error');
-                bRevisar.disabled = false;
-            });
-        };
-
-        /* Pestañas disponibles: al conectar se llenan. */
-        var selPestania = document.getElementById('cap-pestania');
-        if (selPestania && estado.hoja && estado.hoja.pestanias && estado.hoja.pestanias.length) {
-            var cfgP = leerConfig();
-            selPestania.innerHTML = estado.hoja.pestanias.map(function (p) {
-                return '<option value="' + esc(p.titulo) + '"' + (p.titulo === cfgP.pestania ? ' selected' : '') + '>' + esc(p.titulo) + '</option>';
-            }).join('');
+        var bElegir = document.getElementById('imp-elegir');
+        var entrada = document.getElementById('imp-archivo');
+        if (bElegir && entrada) {
+            bElegir.onclick = function () { entrada.click(); };
+            entrada.onchange = function () {
+                if (!entrada.files || !entrada.files.length) return;
+                importarArchivoElegido(entrada.files[0]);
+            };
         }
 
-        var bGuardarMapeo = document.getElementById('cap-guardar-mapeo');
+        /* Arrastrar y soltar */
+        var zona = document.getElementById('imp-zona');
+        if (zona) {
+            zona.ondragover = function (e) { e.preventDefault(); zona.style.borderColor = 'var(--color-acento)'; };
+            zona.ondragleave = function () { zona.style.borderColor = 'var(--color-borde)'; };
+            zona.ondrop = function (e) {
+                e.preventDefault();
+                zona.style.borderColor = 'var(--color-borde)';
+                var archivos = e.dataTransfer && e.dataTransfer.files;
+                if (archivos && archivos.length) importarArchivoElegido(archivos[0]);
+            };
+        }
+
+        var selHoja = document.getElementById('imp-hoja');
+        if (selHoja) selHoja.onchange = function () {
+            try {
+                elegirHoja(selHoja.value);
+                aviso('Hoja "' + selHoja.value + '" leída.');
+                abrirPanel('archivo');
+            } catch (e) { aviso((e && e.message) || String(e), 'error'); }
+        };
+
+        var bAnalizarPegado = document.getElementById('imp-analizar-pegado');
+        if (bAnalizarPegado) bAnalizarPegado.onclick = function () {
+            var el = document.getElementById('imp-pegar');
+            var texto = el ? el.value : '';
+            if (!texto.trim()) { aviso('Pega primero las filas.', 'error'); return; }
+            try {
+                analizarTexto(texto, 'Texto pegado');
+                aviso(estado.analisis.nuevas.length + ' nueva(s), ' + estado.analisis.duplicadas.length + ' duplicada(s).');
+                abrirPanel('archivo');
+            } catch (e) { aviso((e && e.message) || String(e), 'error'); }
+        };
+
+        var bGuardarMapeo = document.getElementById('imp-guardar-mapeo');
         if (bGuardarMapeo) bGuardarMapeo.onclick = function () {
+            if (!estado.encabezados) { aviso('Todavía no hay columnas leídas.', 'error'); return; }
             var cfg = leerConfig();
-            if (!estado.encabezados) { aviso('Todavía no hay encabezados leídos.', 'error'); return; }
-            var mapeo = estado.encabezados.map(function (h, i) {
+            cfg.mapeo = estado.encabezados.map(function (h, i) {
                 var sel = document.querySelector('[data-mapeo="' + i + '"]');
                 return { columna: h, indice: i, campo: sel ? sel.value : 'ignorar' };
             });
-            cfg.mapeo = mapeo;
             guardarConfig(cfg);
+            estado.mapeo = cfg.mapeo;
+            if (estado.filas) {
+                estado.analisis = analizarFilas(estado.filas, cfg.mapeo, cfg, raiz.prospectos || [], leerFirmas());
+            }
             aviso('Listo: así se leerán las columnas.', 'success');
-            if (estado.filas) analizarConFilas([estado.encabezados].concat(estado.filas), leerConfig());
-            abrirPanel('revisar');
+            abrirPanel('archivo');
         };
 
-        var bTodos = document.getElementById('cap-todos');
+        var bGuardarAjustes = document.getElementById('imp-guardar-ajustes');
+        if (bGuardarAjustes) bGuardarAjustes.onclick = function () {
+            leerFormulario();
+            aviso('Ajustes guardados.', 'success');
+            abrirPanel('archivo');
+        };
+
+        var bTodos = document.getElementById('imp-todos');
         if (bTodos) bTodos.onclick = function () {
             var cajas = document.querySelectorAll('[data-cand]:not([disabled])');
             var algunoLibre = Array.prototype.some.call(cajas, function (c) { return !c.checked; });
             Array.prototype.forEach.call(cajas, function (c) { c.checked = algunoLibre; });
             actualizarCuantos();
         };
-        Array.prototype.forEach.call(document.querySelectorAll('[data-cand]:not([disabled])'), function (c) {
-            c.onchange = actualizarCuantos;
-        });
+        Array.prototype.forEach.call(document.querySelectorAll('[data-cand]:not([disabled])'), function (c) { c.onchange = actualizarCuantos; });
 
-        var bImportar = document.getElementById('cap-importar');
+        var bImportar = document.getElementById('imp-importar');
         if (bImportar) bImportar.onclick = function () {
-            var firmas = {};
-            Array.prototype.forEach.call(document.querySelectorAll('[data-cand]:checked'), function (c) { firmas[c.getAttribute('data-cand')] = true; });
-            var sel = (estado.analisis ? estado.analisis.nuevas : []).filter(function (c) { return firmas[c._firma]; });
+            var marcas = {};
+            Array.prototype.forEach.call(document.querySelectorAll('[data-cand]:checked'), function (c) { marcas[c.getAttribute('data-cand')] = true; });
+            var sel = (estado.analisis ? estado.analisis.nuevas : []).filter(function (c) { return marcas[c._firma]; });
             if (!sel.length) { aviso('No marcaste ninguna fila.', 'error'); return; }
             var cfg = leerConfig();
-            var zona = document.getElementById('cap-confirmar');
-            if (!zona) { importar(sel); pestaniaActual = 'historial'; abrirPanel('historial'); return; }
+            var zonaConfirmar = document.getElementById('imp-confirmar');
+            if (!zonaConfirmar) { importar(sel); abrirPanel('historial'); return; }
             /* Confirmación en dos pasos: nada entra sin que Jorge lo confirme. */
-            zona.innerHTML = '<div class="lista-avisos" style="border-left:4px solid var(--color-naranja);">' +
+            zonaConfirmar.innerHTML = '<div class="lista-avisos" style="border-left:4px solid var(--color-naranja);">' +
                 '<i class="fas fa-triangle-exclamation" style="color:var(--color-naranja);"></i>' +
                 '<div>Se van a crear <strong>' + sel.length + '</strong> prospecto(s) nuevo(s)' +
                 (cfg.campaniaId ? ' y se agregarán a la campaña que elegiste' : '') +
                 '. Los duplicados no se tocan. Si algo sale mal, se borran uno por uno desde Prospectos (la papelera los guarda).</div></div>' +
                 '<div class="form-acciones" style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">' +
-                '<button class="btn-secundario" id="cap-cancelar-import"><i class="fas fa-times"></i> Cancelar</button>' +
-                '<button class="btn-primario" id="cap-confirmar-import"><i class="fas fa-check"></i> Sí, importar ' + sel.length + '</button></div>';
-            document.getElementById('cap-cancelar-import').onclick = function () { zona.innerHTML = ''; };
-            document.getElementById('cap-confirmar-import').onclick = function () {
+                '<button class="btn-secundario" id="imp-cancelar"><i class="fas fa-times"></i> Cancelar</button>' +
+                '<button class="btn-primario" id="imp-confirmar-si"><i class="fas fa-check"></i> Sí, importar ' + sel.length + '</button></div>';
+            document.getElementById('imp-cancelar').onclick = function () { zonaConfirmar.innerHTML = ''; };
+            document.getElementById('imp-confirmar-si').onclick = function () {
                 importar(sel);
-                pestaniaActual = 'historial';
                 abrirPanel('historial');
             };
         };
 
-        var bAnalizarPegado = document.getElementById('cap-analizar-pegado');
-        if (bAnalizarPegado) bAnalizarPegado.onclick = function () {
-            var el = document.getElementById('cap-pegar');
-            var texto = el ? el.value : '';
-            if (!texto.trim()) { aviso('Pega primero las filas.', 'error'); return; }
-            var filas = textoAFilas(texto);
-            if (filas.length < 2) { aviso('Hacen falta la fila de títulos y al menos una respuesta.', 'error'); return; }
-            var cfg = leerConfig();
-            if (estado.encabezados) cfg.mapeo = []; /* que se vuelva a detectar con lo pegado */
-            var r = analizarConFilas(filas, cfg);
-            cfg.encabezados = r.encabezados;
-            if (!cfg.mapeo || cfg.mapeo.length !== r.mapeo.length) cfg.mapeo = r.mapeo;
-            guardarConfig(cfg);
-            aviso(r.analisis.nuevas.length + ' nueva(s), ' + r.analisis.duplicadas.length + ' duplicada(s).');
-            pestaniaActual = 'revisar';
-            abrirPanel(pestaniaActual);
-        };
-
-        var bOlvidar = document.getElementById('cap-olvidar');
+        var bOlvidar = document.getElementById('imp-olvidar');
         if (bOlvidar) bOlvidar.onclick = function () {
-            var zona = document.getElementById('cap-olvidar-zona');
+            var zona = document.getElementById('imp-olvidar-zona');
             if (!zona) { guardarFirmas({}); aviso('Listo: se olvidó el registro de filas importadas.', 'success'); return; }
             zona.innerHTML = '<div class="lista-avisos" style="border-left:4px solid var(--color-naranja);">' +
                 '<i class="fas fa-triangle-exclamation" style="color:var(--color-naranja);"></i>' +
-                '<div>Se olvidará la lista de filas ya importadas, así que la próxima revisión volverá a proponerte <strong>todas</strong> las respuestas de la hoja. Los duplicados por teléfono o nombre se siguen detectando igual, así que no se van a duplicar solos.</div></div>' +
+                '<div>Se olvidará la lista de filas ya importadas, así que la próxima vez que cargues el mismo archivo volverá a proponerte <strong>todas</strong> las filas. Los duplicados por teléfono o nombre se siguen detectando igual.</div></div>' +
                 '<div class="form-acciones" style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">' +
-                '<button class="btn-secundario" id="cap-cancelar-olvido">Cancelar</button>' +
-                '<button class="btn-peligro" id="cap-confirmar-olvido"><i class="fas fa-eraser"></i> Sí, olvidar</button></div>';
-            document.getElementById('cap-cancelar-olvido').onclick = function () { zona.innerHTML = ''; };
-            document.getElementById('cap-confirmar-olvido').onclick = function () {
+                '<button class="btn-secundario" id="imp-cancelar-olvido">Cancelar</button>' +
+                '<button class="btn-peligro" id="imp-confirmar-olvido"><i class="fas fa-eraser"></i> Sí, olvidar</button></div>';
+            document.getElementById('imp-cancelar-olvido').onclick = function () { zona.innerHTML = ''; };
+            document.getElementById('imp-confirmar-olvido').onclick = function () {
                 guardarFirmas({});
                 aviso('Listo: se olvidó el registro de filas importadas.', 'success');
                 abrirPanel('historial');
@@ -13876,10 +13970,21 @@
         };
     }
 
+    function importarArchivoElegido(archivo) {
+        if (typeof raiz.mostrarNotificacion === 'function') raiz.mostrarNotificacion('Leyendo ' + archivo.name + '…');
+        procesarArchivo(archivo).then(function (r) {
+            var a = r.analisis;
+            aviso(r.hojas.length > 1 ? ('Archivo leído: ' + r.hojas.length + ' hojas · ' + a.nuevas.length + ' nueva(s), ' + a.duplicadas.length + ' duplicada(s).') : (a.nuevas.length + ' nueva(s), ' + a.duplicadas.length + ' duplicada(s).'), 'success');
+            abrirPanel('archivo');
+        }).catch(function (e) {
+            aviso((e && e.message) || String(e), 'error');
+        });
+    }
+
     function actualizarCuantos() {
         if (typeof document === 'undefined') return;
         var n = document.querySelectorAll('[data-cand]:checked').length;
-        var el = document.getElementById('cap-cuantos');
+        var el = document.getElementById('imp-cuantos');
         if (el) el.textContent = n;
     }
 
@@ -13889,27 +13994,22 @@
         if (typeof document === 'undefined') return;
         if (!esAdmin()) return;
         var contenedor = document.querySelector('#seccion-prospectos .header-actions');
-        if (!contenedor || document.getElementById('btn-captacion-formulario')) return;
+        if (!contenedor || document.getElementById('btn-importar-prospectos')) return;
         var boton = document.createElement('button');
         boton.className = 'btn-secundario';
-        boton.id = 'btn-captacion-formulario';
-        boton.innerHTML = '<i class="fas fa-file-arrow-down"></i> Captación desde formulario';
-        boton.onclick = function () { abrirPanel('conexion'); };
+        boton.id = 'btn-importar-prospectos';
+        boton.innerHTML = '<i class="fas fa-file-arrow-up"></i> Importar prospectos';
+        boton.onclick = function () { abrirPanel('archivo'); };
         contenedor.insertBefore(boton, contenedor.firstChild);
     }
 
-    /* ─────────────── Arranque ─────────────── */
-
     function iniciar() {
-        /* Nunca debe romper el arranque del CRM: la captación es opcional. */
         try {
             ponerBoton();
-            programarRevision();
-            /* El botón puede reaparecer al cambiar de sección: se reintenta un par de veces. */
             setTimeout(function () { try { ponerBoton(); } catch (e) { } }, 1500);
             setTimeout(function () { try { ponerBoton(); } catch (e) { } }, 4000);
         } catch (e) {
-            if (typeof console !== 'undefined' && console.warn) console.warn('Captación desde formulario: no se pudo iniciar.', e);
+            if (typeof console !== 'undefined' && console.warn) console.warn('Importar prospectos: no se pudo iniciar.', e);
         }
     }
 
@@ -13919,15 +14019,15 @@
         iniciar: iniciar,
         ponerBoton: ponerBoton,
         abrirPanel: abrirPanel,
-        conectar: conectar,
-        leerPestanias: leerPestanias,
-        leerValores: leerValores,
-        revisar: revisar,
+        procesarArchivo: procesarArchivo,
+        leerBuffer: leerBuffer,
+        leerXlsxBuffer: leerXlsxBuffer,
+        inflar: inflar,
+        leerZip: leerZip,
+        decodificarTexto: decodificarTexto,
+        analizarTexto: analizarTexto,
+        elegirHoja: elegirHoja,
         importar: importar,
-        programarRevision: programarRevision,
-        detenerRevision: detenerRevision,
-        textoAFilas: textoAFilas,
-        detectarSeparador: detectarSeparador,
         /* Utilidades puras: las prueba el banco de pruebas. */
         pruebas: {
             normalizarTelefono: normalizarTelefono,
@@ -13939,11 +14039,17 @@
             buscarDuplicado: buscarDuplicado,
             analizarFilas: analizarFilas,
             textoAFilas: textoAFilas,
-            detectarSeparador: detectarSeparador
+            detectarSeparador: detectarSeparador,
+            fechaDeSerie: fechaDeSerie,
+            estilosDeFecha: estilosDeFecha,
+            leerBuffer: leerBuffer,
+            leerXlsxBuffer: leerXlsxBuffer,
+            decodificarTexto: decodificarTexto,
+            desdeBase64: desdeBase64
         }
     };
 
-    raiz.CaptacionFormularios = API;
+    raiz.ImportarProspectos = API;
 
     if (typeof document !== 'undefined') {
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
