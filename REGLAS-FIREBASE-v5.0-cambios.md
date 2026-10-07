@@ -108,3 +108,35 @@ Jorge decidió que **Operador y Ventas vean Paquetes y Servicios completos, en s
 (o al dueño) en `paquetes` y `serviciosAdicionales`. No hay que tocar las reglas por este cambio; lo único que
 se ajustó fue la interfaz (la sección Servicios dejó de estar oculta y se dibuja para todos, sin botones de
 editar ni eliminar).
+
+## 8. Verificación contra la base real (volcado del 6/10/2026) — dos hallazgos
+
+Jorge exportó **dos respaldos** el 6/10/2026: el del CRM (`registro_pda_2026-10-06.json`, 151 KB) y el
+**volcado completo de Firebase** (`crm-pda-default-rtdb-export.json`, 318 KB). El segundo permitió comprobar
+en los datos reales lo que antes eran sospechas:
+
+**Hallazgo 1 — el candado de administrador estaba roto, confirmado.** En `usuarios` hay **3 registros**:
+**2 con la clave `u_<username>`** y **solo 1 con el UID** (el de quien publicó la lista al último). Las reglas
+preguntan por `child(auth.uid)`, así que **la comprobación solo coincide con un usuario** — y cambia según quién
+publique. El índice `admins/<uid>` de esta propuesta lo arregla.
+
+**Hallazgo 2 — escalada de privilegios ABIERTA (esto es lo importante).** El nodo **`arranque` NO existe** en la
+base. La regla actual permite escribir `usuarios` cuando `root.child('usuarios/arranque').exists() === false`…
+y como ese nodo no existe, **la condición se cumple siempre**: cualquier usuario con correo verificado puede
+escribir **su propio registro con `admin: true`** y volverse administrador. No es teórico: la puerta está abierta
+hoy.
+
+**Corrección aplicada a la propuesta:** se eliminó la cláusula `arranque` (en los 4 lugares donde estaba).
+Ahora escribir `usuarios` —y cambiar `rol`, `admin` o `activo`— exige ser administrador (por el índice) o ser
+el correo del dueño. El arranque inicial sigue cubierto porque la primera cuenta que siembra el CRM es la del
+dueño. El JSON quedó validado después del cambio.
+
+### Orden obligatorio para publicar (por el índice `admins`)
+
+El índice lo escribe **la app de la v5.0**, todavía no publicada. Si se publican las reglas antes, el segundo
+administrador (`jorgefrosas`) perdería sus permisos porque su registro no tiene clave de UID. Entonces:
+
+1. Desplegar la **v5.0**.
+2. Que **cada administrador abra el CRM una vez** (eso publica su casilla en `admins`).
+3. **Publicar las reglas** y probar con una cuenta de cada rol.
+4. Si algo falla: volver a pegar `REGLAS-FIREBASE-v4.8-actuales.txt`.
