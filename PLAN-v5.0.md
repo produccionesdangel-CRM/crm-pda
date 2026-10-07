@@ -108,6 +108,11 @@
       y **encola el historial nuevo** para la nube.
       El rastro de auditoría usa el usuario real: se quitó `var USUARIO = 'Sesión de prueba'` y sus 16 usos pasaron a
       `usuarioDeSesion()`.
+- [x] **Decisiones de Jorge recibidas (6/10/2026)**: las 5 importantes como se recomendaron, nombre del rol
+      **"Ventas"**, Paquetes se queda donde está, puede borrar prospectos y sus tareas, ve solo sus tareas,
+      **sí puede imprimir y enviar comprobantes de pago** (corrección suya), fase comercial hasta Negociación,
+      los Operadores conservan sus permisos, **sin PIN: solo cuenta de Google**, y **autorizó ajustar las reglas
+      de Firebase**. Matriz completa y límites en `PERMISOS-VENTAS.md`.
 - [ ] Fase 3b (interfaz de campañas) · Fase 3c (calendario y panel del prospecto) · Fase 4 (rol de Ventas) · Fase 5 (cierre)
 - [ ] Respaldo exportado y verificado por Jorge (regla de oro, antes de tocar la base real).
 - [ ] `firebase-rules-recomendadas.json` (pedido a la PC de trabajo por el canal).
