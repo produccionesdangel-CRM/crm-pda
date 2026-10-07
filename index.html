@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.6';
+        var BUILD_APP = '2026-10-07.7';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -9209,7 +9209,11 @@
                 return {
                     campanias: campanias, participaciones: participaciones,
                     prospectos: prospectos, clientes: clientes,
-                    tareas: tareas, historial: historial
+                    tareas: tareas, historial: historial,
+                    // FIX v5.0.1: el catalogo real del CRM vive en estas variables
+                    // globales (el asistente de campanas las pide como .paquetes y
+                    // .servicios, y sin esto los desplegables salian vacios).
+                    paquetes: paquetes, servicios: serviciosAdicionales
                 };
             },
             porId: function (coleccion, id) {
