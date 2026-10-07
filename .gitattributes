@@ -1,0 +1,6 @@
+# En este proyecto ya paso: un archivo identico parecia distinto solo por los fines de linea.
+# Todo el texto viaja y se guarda en LF.
+* text=auto eol=lf
+*.jpg binary
+*.jpeg binary
+*.png binary
