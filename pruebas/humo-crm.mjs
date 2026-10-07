@@ -992,5 +992,144 @@ console.log('\n=== 20. Ninguna ventana ni aviso muestra código (reportado por J
     sinGuarda === 0, sinGuarda + ' guarda(s) perdida(s)');
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   23. Captación de prospectos desde un formulario de Google
+   ----------------------------------------------------------------------
+   Lo que NO se puede probar aquí es el permiso de Google (necesita la cuenta
+   de Jorge y una hoja real). Lo que SÍ se prueba es todo el camino de datos,
+   que es donde de verdad se pueden colar duplicados o perderse información:
+   leer los títulos del formulario, mapearlos a los campos del prospecto,
+   detectar duplicados por teléfono y por nombre, no volver a importar la
+   misma fila, y entender un CSV pegado a mano.
+   ══════════════════════════════════════════════════════════════════════ */
+{
+  const c = r.contexto;
+  const cap = c.CaptacionFormularios;
+  comprobar('el módulo de captación desde formulario quedó cargado', !!cap && !!cap.pruebas);
+
+  if (cap && cap.pruebas) {
+    const p = cap.pruebas;
+
+    /* 1) Teléfonos: la misma persona escrita de tres formas. */
+    const tel1 = p.normalizarTelefono('+52 55 1234 5678');
+    const tel2 = p.normalizarTelefono('55-1234-5678');
+    const tel3 = p.normalizarTelefono('(55) 1234 5678');
+    comprobar('el teléfono se compara igual con lada, guiones o paréntesis',
+      tel1 === tel2 && tel2 === tel3 && tel1 === '5512345678', [tel1, tel2, tel3].join(' / '));
+
+    /* 2) Nombres: mismo nombre con acentos, mayúsculas y orden distinto. */
+    comprobar('el nombre se compara sin acentos ni mayúsculas',
+      p.claveNombre('José Pérez') === p.claveNombre('JOSE PEREZ'));
+    comprobar('el nombre se compara aunque venga al revés (apellido primero)',
+      p.claveNombre('Pérez Gómez José') === p.claveNombre('José Pérez Gómez'));
+
+    /* 3) Los títulos del formulario se reconocen solos. */
+    const encabezados = ['Marca temporal', 'Nombre completo', 'Teléfono / WhatsApp', 'Correo electrónico', '¿Qué evento es?', 'Fecha del evento', 'Presupuesto aproximado', 'Un campo raro'];
+    const mapeo = p.detectarMapeo(encabezados);
+    const campoDe = (titulo) => (mapeo.filter(m => m.columna === titulo)[0] || {}).campo;
+    comprobar('reconoce los títulos típicos de un formulario de Google',
+      campoDe('Nombre completo') === 'nombre' &&
+      campoDe('Teléfono / WhatsApp') === 'telefono' &&
+      campoDe('Correo electrónico') === 'email' &&
+      campoDe('Marca temporal') === 'fechaRegistro',
+      JSON.stringify(mapeo.map(m => m.campo)));
+    comprobar('reconoce los campos de evento y presupuesto que usan las campañas',
+      campoDe('¿Qué evento es?') === 'tipoEvento' &&
+      campoDe('Fecha del evento') === 'fechaEvento' &&
+      campoDe('Presupuesto aproximado') === 'presupuesto');
+    comprobar('deja en paz la columna que no reconoce',
+      campoDe('Un campo raro') === 'ignorar');
+
+    /* 4) Una fila del formulario se vuelve un prospecto con los datos del CRM. */
+    const candidato = p.filaAProspecto(
+      ['2026-10-07 09:15:00', 'Ana López Ruiz', '55 4444 5555', 'ana@correo.com', 'XV años', '2027-03-20', '45000', 'lo que sea'],
+      mapeo, { origenPorDefecto: 'Formulario Google', faseInicial: 'Interesado' });
+    comprobar('la fila se convierte en prospecto con nombre, teléfono y correo',
+      candidato.nombre === 'Ana López Ruiz' && candidato.telefono === '55 4444 5555' && candidato.email === 'ana@correo.com',
+      JSON.stringify(candidato));
+    comprobar('los campos de campaña sí se guardan (evento, fecha, presupuesto)',
+      candidato.tipoEvento === 'XV años' && candidato.fechaEvento === '2027-03-20' && candidato.presupuesto === '45000');
+    comprobar('lo que no se mapea no se pierde: queda en las notas',
+      /Un campo raro: lo que sea/.test(candidato.notasGenerales), candidato.notasGenerales);
+
+    /* 5) Duplicados contra los prospectos que ya existen. */
+    const existentes = [
+      { id: 'pro_x', nombre: 'Ana López Ruiz', telefono: '+52 55 4444 5555' },
+      { id: 'pro_y', nombre: 'Carlos Méndez', telefono: '55 9999 0000' }
+    ];
+    const dupTel = p.buscarDuplicado(p.filaAProspecto(['', 'Ana Lopez', '5544445555'], [{ columna: 'Nombre', indice: 1, campo: 'nombre' }, { columna: 'Tel', indice: 2, campo: 'telefono' }], {}), existentes, { telefono: true, nombre: true });
+    comprobar('detecta el duplicado por teléfono aunque el nombre venga distinto',
+      dupTel.duplicado === true && dupTel.tipo === 'telefono', JSON.stringify(dupTel.motivo));
+    const dupNombre = p.buscarDuplicado({ nombre: 'Carlos Mendez', telefono: '55 1111 2222' }, existentes, { telefono: true, nombre: true });
+    comprobar('detecta el mismo nombre con teléfono distinto (y lo marca distinto)',
+      dupNombre.duplicado === true && dupNombre.tipo === 'nombre-con-telefono-distinto', JSON.stringify(dupNombre.motivo));
+    const noDup = p.buscarDuplicado({ nombre: 'Persona Nueva', telefono: '55 7777 8888' }, existentes, { telefono: true, nombre: true });
+    comprobar('un prospecto realmente nuevo no se marca como duplicado', noDup.duplicado === false);
+
+    /* 6) Análisis completo: nuevas, duplicadas y ya importadas antes. */
+    const filas = [
+      ['Nombre completo', 'Teléfono'],
+      ['Ana López Ruiz', '55 4444 5555'],       /* duplicada por teléfono */
+      ['Persona Nueva', '55 7777 8888'],        /* nueva */
+      ['Otra Persona', '55 6666 7777'],         /* nueva pero ya importada antes */
+      ['', '']                                  /* vacía */
+    ];
+    const firmaOtra = p.claveFila(['Otra Persona', '55 6666 7777']);
+    const analisis = p.analizarFilas(filas.slice(1), [
+      { columna: 'Nombre completo', indice: 0, campo: 'nombre' },
+      { columna: 'Teléfono', indice: 1, campo: 'telefono' }
+    ], { criterioDuplicado: { telefono: true, nombre: true } }, existentes, (function () { const f = {}; f[firmaOtra] = 'ya'; return f; })());
+    comprobar('clasifica bien: 1 nueva, 1 duplicada, 1 ya importada y 1 vacía',
+      analisis.nuevas.length === 1 && analisis.duplicadas.length === 1 && analisis.repetidas.length === 1 && analisis.vacias === 1,
+      JSON.stringify({ n: analisis.nuevas.length, d: analisis.duplicadas.length, r: analisis.repetidas.length, v: analisis.vacias }));
+    comprobar('la nueva es la correcta y no la duplicada',
+      analisis.nuevas[0].nombre === 'Persona Nueva', analisis.nuevas[0].nombre);
+
+    /* 7) Pegar filas a mano (sin dar permiso a Google). */
+    const csv = 'Nombre,Teléfono,Comentarios\n"López, Ana",5512345678,"Dijo ""sí, quiero cotizar"""';
+    const filasCsv = p.textoAFilas(csv);
+    comprobar('entiende un CSV con comas y comillas dentro del texto',
+      filasCsv.length === 2 && filasCsv[1][0] === 'López, Ana' && /sí, quiero cotizar/.test(filasCsv[1][2]),
+      JSON.stringify(filasCsv));
+    comprobar('detecta solo el separador que corresponde',
+      p.detectarSeparador('a\tb\tc') === '\t' && p.detectarSeparador('a,b,c') === ',');
+    comprobar('la firma de una fila cambia si cambia algún dato',
+      p.claveFila(['Ana', '55']) !== p.claveFila(['Ana', '56']));
+
+    /* 7-bis) Un teléfono que en realidad es texto no se guarda como número. */
+    const conTexto = p.filaAProspecto(['Llamar después', 'Sin Teléfono'],
+      [{ columna: 'Nombre', indice: 0, campo: 'nombre' }, { columna: 'Tel', indice: 1, campo: 'telefono' }], {});
+    comprobar('un teléfono escrito como texto no se guarda como número',
+      !!conTexto && conTexto.telefono === '' && /Sin Teléfono/.test(conTexto.notasGenerales || ''),
+      conTexto ? JSON.stringify({ tel: conTexto.telefono, notas: conTexto.notasGenerales }) : 'nulo');
+    comprobar('una fila sin nombre ni teléfono válido se descarta',
+      p.filaAProspecto(['', 'no tengo'],
+        [{ columna: 'Nombre', indice: 0, campo: 'nombre' }, { columna: 'Tel', indice: 1, campo: 'telefono' }], {}) === null);
+  }
+
+  /* 8) El botón de la sección de Prospectos se puede poner (solo administradores). */
+  if (cap && typeof cap.ponerBoton === 'function') {
+    c.usuarioActual = { username: 'jorge', nombre: 'Jorge', rol: 'Administrador', admin: true };
+    let errorBoton = null;
+    try { cap.ponerBoton(); } catch (e) { errorBoton = (e && e.message) || String(e); }
+    /* El navegador simulado no indexa por id los elementos creados con
+       createElement, asi que el boton se busca entre los hijos del contenedor. */
+    const contenedor = r.ventana.document.querySelector('#seccion-prospectos .header-actions');
+    const botones = (contenedor.children || []).filter(x => x.id === 'btn-captacion-formulario');
+    comprobar('el botón de captación se crea sin error para el administrador',
+      errorBoton === null && botones.length > 0, errorBoton || 'no se creó el botón');
+    const boton = botones[botones.length - 1];
+    if (boton && typeof boton.onclick === 'function') {
+      let errorAbrir = null;
+      try { boton.onclick({ preventDefault() { } }); } catch (e) { errorAbrir = (e && e.message) || String(e); }
+      comprobar('el botón abre el panel de captación sin error', errorAbrir === null, errorAbrir || '');
+      const cuerpoModal = String((r.elementos.get('modal-body') || {})._html || '');
+      comprobar('el panel dibuja la conexión con Google y sus pestañas',
+        /cap-conectar/.test(cuerpoModal) && /cap-cuerpo/.test(cuerpoModal) && /data-cap-tab/.test(cuerpoModal),
+        'no se dibujó el panel: ' + cuerpoModal.slice(0, 120));
+    }
+  }
+}
+
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);

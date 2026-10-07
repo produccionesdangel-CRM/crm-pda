@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.9';
+        var BUILD_APP = '2026-10-07.11';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -10515,6 +10515,29 @@
     function motor() { return App.motor; }
     function opciones() { return App.opciones.apply(null, arguments); }
 
+    /* Catalogo que se puede OFRECER en una campana: solo lo vigente.
+       Regla de Jorge (7/10): los paquetes y servicios caducados o inactivos no
+       deben aparecer en la lista desplegable; se quedan en el Catalogo como
+       historico informativo. Se usa la misma regla que ya tiene el CRM para
+       pintar la etiqueta: un paquete con vigencia pasada cuenta como caducado. */
+    function catalogoOfertable(lista) {
+        var hoy = Util.hoy();
+        return (lista || []).filter(function (x) {
+            if (!x) return false;
+            var estatus = String(x.estatus || '').toLowerCase();
+            if (estatus.indexOf('caducad') !== -1 || estatus.indexOf('inactiv') !== -1) return false;
+            var v = String(x.vigencia || '').slice(0, 10);
+            if (/^\d{4}-\d{2}-\d{2}$/.test(v) && Util.diasEntre(v, hoy) > 0) return false;
+            return true;
+        });
+    }
+    function notaCatalogo() {
+        var ocultos = ((App.almacen.db.paquetes || []).length - catalogoOfertable(App.almacen.db.paquetes).length) +
+            ((App.almacen.db.servicios || []).length - catalogoOfertable(App.almacen.db.servicios).length);
+        if (!ocultos) return '<i class="fas fa-circle-check"></i> Todo el catalogo vigente esta disponible para ofrecer.';
+        return '<i class="fas fa-eye-slash"></i> Se ocultaron ' + ocultos + ' elemento(s) caducado(s) o inactivo(s): siguen en el Catalogo como historico.';
+    }
+
     /* ═══════════════ Listado de campañas ═══════════════ */
 
     App.renderCampanias = function () {
@@ -11563,15 +11586,16 @@
                 }).join('') : '<div class="editor-vacio">Sin ofertas</div>') + '</div>' +
                 '<div class="row-3col">' +
                 '<div class="form-grupo"><label>Nombre de la oferta</label><input type="text" id="as-oft-nombre" placeholder="ej: Boda Premium de temporada"></div>' +
-                '<div class="form-grupo"><label>Paquete</label><select id="as-oft-paquete"><option value="">Sin paquete</option>' + opciones(App.almacen.db.paquetes, null, function (p) { return p.nombre + ' · ' + Util.moneda(p.precio); }) + '</select></div>' +
-                '<div class="form-grupo"><label>Servicio adicional</label><select id="as-oft-servicio"><option value="">Sin servicio</option>' + opciones(App.almacen.db.servicios, null, function (s) { return s.nombre + ' · ' + Util.moneda(s.precio); }) + '</select></div>' +
+                '<div class="form-grupo"><label>Paquete</label><select id="as-oft-paquete"><option value="">Sin paquete</option>' + opciones(catalogoOfertable(App.almacen.db.paquetes), null, function (p) { return p.nombre + ' · ' + Util.moneda(p.precio); }) + '</select></div>' +
+                '<div class="form-grupo"><label>Servicio adicional</label><select id="as-oft-servicio"><option value="">Sin servicio</option>' + opciones(catalogoOfertable(App.almacen.db.servicios), null, function (s) { return s.nombre + ' · ' + Util.moneda(s.precio); }) + '</select></div>' +
                 '</div><div class="row-3col">' +
                 '<div class="form-grupo"><label>Precio especial de campaña</label><input type="number" id="as-oft-precio" min="0" placeholder="Vacío = precio de catálogo"></div>' +
                 '<div class="form-grupo"><label>Vigencia hasta</label><input type="date" id="as-oft-fin"></div>' +
                 '<div class="form-grupo"><label>O días de vigencia</label><input type="number" id="as-oft-dias" min="0" value="0"></div>' +
                 '</div>' +
                 '<div class="form-grupo"><label>Condiciones</label><input type="text" id="as-oft-condiciones"></div>' +
-                '<button class="btn-secundario" id="as-agregar-oferta"><i class="fas fa-plus"></i> Agregar oferta</button>';
+                '<button class="btn-secundario" id="as-agregar-oferta"><i class="fas fa-plus"></i> Agregar oferta</button>' +
+            '<div class="nota-tareas" style="margin-top:10px;">' + notaCatalogo() + '</div>';
         }
 
         if (paso === 8) {
@@ -12829,5 +12853,965 @@
             }
         })();
     </script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   @JS-CAPTACION-FORMULARIOS — Prospectos automáticos desde Google Forms
+   -----------------------------------------------------------------------
+   Qué hace:
+     · Un botón en Prospectos ("Captación desde formulario") para que Jorge
+       conecte la HOJA DE CÁLCULO donde caen las respuestas de su formulario.
+     · Lee las respuestas con la API de Google Sheets (permiso de SOLO LECTURA).
+     · Mapea las columnas del formulario a los campos del prospecto (automático
+       y ajustable a mano).
+     · Revisa la hoja cada cierto tiempo (o cuando Jorge pulsa "Revisar ahora").
+     · Antes de guardar, muestra qué entraría, qué es duplicado y por qué.
+     · Verifica duplicidad por TELÉFONO y/o NOMBRE contra los prospectos que ya
+       existen, y también contra las filas que ya se importaron antes.
+     · Crea los prospectos con la misma estructura que usa el CRM, deja rastro
+       en el historial y los marca para subir a la nube.
+
+   Decisiones de seguridad:
+     · El token de Google vive SOLO en memoria: nunca se guarda en disco ni en
+       Firebase. Al cerrar la pestaña hay que reconectar (es el precio de no
+       guardar credenciales).
+     · El permiso que se pide es de lectura de hojas de cálculo, nada más.
+     · La configuración (hoja, pestaña, mapeo, intervalo) se guarda en este
+       equipo con localStorage: no son credenciales.
+   ═══════════════════════════════════════════════════════════════════════ */
+(function (raiz) {
+    'use strict';
+
+    var CLAVE_CONFIG = 'pda_captacion_config_v1';
+    var CLAVE_IMPORTADAS = 'pda_captacion_filas_v1';
+    var CLAVE_HISTORIAL = 'pda_captacion_historial_v1';
+    var SCOPE_HOJAS = 'https://www.googleapis.com/auth/spreadsheets.readonly';
+    var MAX_FILAS = 5000;
+    var MAX_FIRMAS = 3000;
+
+    /* Campos del prospecto a los que se puede mapear una columna del formulario. */
+    var CAMPOS = [
+        { id: 'nombre', etiqueta: 'Nombre completo', requerido: true, claves: ['nombre', 'name', 'nombre completo', 'nombres', 'festejado', 'cliente', 'contacto'] },
+        { id: 'telefono', etiqueta: 'Teléfono', claves: ['telefono', 'teléfono', 'tel', 'celular', 'whatsapp', 'numero', 'número', 'phone', 'movil', 'móvil'] },
+        { id: 'email', etiqueta: 'Correo', claves: ['email', 'correo', 'mail', 'e-mail', 'correo electronico', 'correo electrónico'] },
+        { id: 'ciudad', etiqueta: 'Ciudad', claves: ['ciudad', 'municipio', 'localidad', 'lugar', 'zona'] },
+        { id: 'origen', etiqueta: 'Origen', claves: ['origen', 'fuente', 'como nos conociste', 'cómo nos conociste', 'referencia'] },
+        { id: 'tipoEvento', etiqueta: 'Tipo de evento', claves: ['tipo de evento', 'evento', 'tipo', 'servicio', 'que evento', 'qué evento', 'tipo de sesion', 'sesion'] },
+        { id: 'fechaEvento', etiqueta: 'Fecha del evento', claves: ['fecha del evento', 'fecha de evento', 'fecha evento', 'fecha de la boda', 'fecha boda', 'fecha de la sesion', 'fecha de la sesión', 'fecha'] },
+        { id: 'fechaNacimiento', etiqueta: 'Fecha de nacimiento', claves: ['fecha de nacimiento', 'nacimiento', 'cumpleaños', 'cumpleanos', 'cumple'] },
+        { id: 'presupuesto', etiqueta: 'Presupuesto', claves: ['presupuesto', 'prepuesto', 'cuanto', 'cuánto', 'inversion', 'inversión'] },
+        { id: 'notasGenerales', etiqueta: 'Notas (texto libre)', claves: ['notas', 'nota', 'comentarios', 'comentario', 'mensaje', 'observaciones', 'detalles'] },
+        { id: 'fechaRegistro', etiqueta: 'Fecha de registro', claves: ['marca temporal', 'timestamp', 'fecha de registro', 'fecha de envio', 'fecha de envío', 'fecha de respuesta'] },
+        { id: 'ignorar', etiqueta: '— No usar esta columna —', claves: [] }
+    ];
+
+    /* ─────────────── Estado (en memoria) ─────────────── */
+
+    var estado = {
+        token: null,           // token de Google SOLO en memoria
+        conectado: false,
+        motivo: '',
+        hoja: null,            // {id, titulo, pestanias:[{titulo, gid}]}
+        encabezados: null,
+        filas: null,
+        analisis: null,
+        temporizador: null,
+        ultimoAviso: ''
+    };
+
+    /* ─────────────── Utilidades puras (probadas por el banco) ─────────────── */
+
+    function soloDigitos(v) { return String(v === null || v === undefined ? '' : v).replace(/\D+/g, ''); }
+
+    /* Teléfono normalizado para comparar: se queda con los últimos 10 dígitos
+       (los números mexicanos), ignorando ladas de país, espacios y guiones. */
+    function normalizarTelefono(v) {
+        var d = soloDigitos(v);
+        if (d.length > 10) d = d.slice(-10);
+        return d;
+    }
+
+    function sinAcentos(v) {
+        return String(v === null || v === undefined ? '' : v)
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9ñ\s]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function normalizarNombre(v) { return sinAcentos(v); }
+
+    /* Nombre con las palabras ordenadas: atrapa "Pérez Juan" contra "Juan Pérez". */
+    function claveNombre(v) {
+        return normalizarNombre(v).split(' ').filter(Boolean).sort().join(' ');
+    }
+
+    /* Firma estable de una fila: sirve para no volver a importar la misma. */
+    function claveFila(valores) {
+        var t = (valores || []).map(function (v) { return sinAcentos(v); }).join('|');
+        var h = 5381;
+        for (var i = 0; i < t.length; i++) { h = ((h << 5) + h + t.charCodeAt(i)) >>> 0; }
+        return 'f' + h.toString(36) + '_' + t.length;
+    }
+
+    function limpiarValor(v) {
+        var t = String(v === null || v === undefined ? '' : v).trim();
+        return t === '-' ? '' : t;
+    }
+
+    /* ¿Qué campo del prospecto parece cada columna del formulario? */
+    function detectarMapeo(encabezados) {
+        var usados = {};
+        return (encabezados || []).map(function (titulo) {
+            var t = sinAcentos(titulo);
+            var elegido = 'ignorar';
+            if (t) {
+                for (var i = 0; i < CAMPOS.length; i++) {
+                    var campo = CAMPOS[i];
+                    if (!campo.claves.length || usados[campo.id]) continue;
+                    var coincide = campo.claves.some(function (c) {
+                        var clave = sinAcentos(c);
+                        return t === clave || t.indexOf(clave) !== -1 || clave.indexOf(t) !== -1;
+                    });
+                    if (coincide) { elegido = campo.id; usados[campo.id] = true; break; }
+                }
+            }
+            return { columna: String(titulo === undefined ? '' : titulo), indice: (encabezados || []).indexOf(titulo), campo: elegido };
+        });
+    }
+
+    /* Convierte una fila de la hoja en un prospecto candidato, según el mapeo. */
+    function filaAProspecto(fila, mapeo, config) {
+        var datos = {};
+        var extras = {};
+        (mapeo || []).forEach(function (m) {
+            var valor = limpiarValor((fila || [])[m.indice]);
+            if (!valor) return;
+            if (m.campo === 'ignorar') { extras[m.columna] = valor; return; }
+            if (datos[m.campo]) { extras[m.columna] = valor; return; } /* dos columnas al mismo campo: la segunda se conserva en notas */
+            datos[m.campo] = valor;
+        });
+        var nombre = limpiarValor(datos.nombre);
+        var telefonoBruto = limpiarValor(datos.telefono);
+        /* Un teléfono de verdad tiene al menos 7 dígitos: si la persona escribió
+           "Sin teléfono", "no tengo" o "de WhatsApp", no se guarda como número. */
+        var telefono = soloDigitos(telefonoBruto).length >= 7 ? telefonoBruto : '';
+        if (!nombre && !telefono) return null;
+        if (!nombre) nombre = 'Prospecto del formulario ' + telefono;
+
+        var notas = [];
+        if (limpiarValor(datos.notasGenerales)) notas.push(limpiarValor(datos.notasGenerales));
+        if (telefonoBruto && !telefono) notas.push('Teléfono (como lo escribió el formulario): ' + telefonoBruto);
+        Object.keys(extras).forEach(function (k) { if (extras[k]) notas.push(k + ': ' + extras[k]); });
+
+        return {
+            nombre: nombre,
+            telefono: telefono,
+            email: limpiarValor(datos.email),
+            ciudad: limpiarValor(datos.ciudad),
+            origen: limpiarValor(datos.origen) || (config && config.origenPorDefecto) || 'Formulario Google',
+            tipoEvento: limpiarValor(datos.tipoEvento),
+            fechaEvento: limpiarValor(datos.fechaEvento),
+            fechaNacimiento: limpiarValor(datos.fechaNacimiento),
+            presupuesto: limpiarValor(datos.presupuesto),
+            faseActual: limpiarValor(datos.faseActual) || (config && config.faseInicial) || 'Interesado',
+            fechaRegistro: limpiarValor(datos.fechaRegistro) || null,
+            notasGenerales: notas.join(' · '),
+            _firma: claveFila(fila)
+        };
+    }
+
+    /* Busca si ese candidato ya existe: por teléfono y/o por nombre. */
+    function buscarDuplicado(candidato, prospectos, criterio) {
+        var crit = criterio || {};
+        var telCand = normalizarTelefono(candidato.telefono);
+        var nombreCand = normalizarNombre(candidato.nombre);
+        var claveCand = claveNombre(candidato.nombre);
+        var hallados = [];
+        (prospectos || []).forEach(function (p) {
+            if (!p) return;
+            var tel = normalizarTelefono(p.telefono);
+            if (crit.telefono && telCand && tel && tel === telCand) {
+                hallados.push({ motivo: 'teléfono igual', existente: p, tipo: 'telefono' });
+                return;
+            }
+            if (crit.nombre && nombreCand) {
+                var nombre = normalizarNombre(p.nombre);
+                if (nombre && (nombre === nombreCand || claveNombre(p.nombre) === claveCand)) {
+                    var tipo = (telCand && tel && tel !== telCand) ? 'nombre-con-telefono-distinto' : 'nombre';
+                    hallados.push({ motivo: tipo === 'nombre' ? 'nombre igual' : 'mismo nombre, teléfono distinto', existente: p, tipo: tipo });
+                }
+            }
+        });
+        if (!hallados.length) return { duplicado: false };
+        var fuerte = hallados.filter(function (h) { return h.tipo === 'telefono'; })[0];
+        var elegido = fuerte || hallados[0];
+        return { duplicado: true, motivo: elegido.motivo, tipo: elegido.tipo, existente: elegido.existente, otros: hallados.length - 1 };
+    }
+
+    /* Analiza todas las filas de la hoja: nuevas, duplicadas y ya importadas. */
+    function analizarFilas(filas, mapeo, config, prospectos, firmasImportadas) {
+        var nuevas = [], duplicadas = [], repetidas = [], vacias = 0;
+        var firmas = firmasImportadas || {};
+        (filas || []).forEach(function (fila, i) {
+            var cand = filaAProspecto(fila, mapeo, config);
+            if (!cand) { vacias++; return; }
+            cand._fila = i + 2; /* +2: la fila 1 son los encabezados */
+            if (firmas[cand._firma]) { cand._motivo = 'ya se importó antes'; repetidas.push(cand); return; }
+            var dup = buscarDuplicado(cand, prospectos, config.criterioDuplicado || { telefono: true, nombre: true });
+            if (dup.duplicado) {
+                cand._motivo = dup.motivo;
+                cand._existente = dup.existente ? (dup.existente.nombre || '') : '';
+                cand._tipoDuplicado = dup.tipo;
+                duplicadas.push(cand);
+                return;
+            }
+            nuevas.push(cand);
+        });
+        return { nuevas: nuevas, duplicadas: duplicadas, repetidas: repetidas, vacias: vacias };
+    }
+
+    /* Detecta el separador de un texto pegado (CSV o copiado de la hoja). */
+    function detectarSeparador(texto) {
+        var lineas = String(texto || '').split(/\r?\n/).filter(function (l) { return l.trim(); });
+        if (!lineas.length) return '\t';
+        var cuenta = { '\t': 0, ',': 0, ';': 0 };
+        lineas.slice(0, 5).forEach(function (l) {
+            ['\t', ',', ';'].forEach(function (s) { cuenta[s] += (l.split(s).length - 1); });
+        });
+        var mejor = '\t';
+        Object.keys(cuenta).forEach(function (s) { if (cuenta[s] > cuenta[mejor]) mejor = s; });
+        return mejor;
+    }
+
+    /* Parte un texto pegado en filas y columnas, respetando las comillas. */
+    function textoAFilas(texto) {
+        var sep = detectarSeparador(texto);
+        var filas = [];
+        String(texto || '').split(/\r?\n/).forEach(function (linea) {
+            if (!linea.trim()) return;
+            if (sep === '\t') { filas.push(linea.split('\t').map(function (c) { return c.trim(); })); return; }
+            var celdas = [], actual = '', entreComillas = false;
+            for (var i = 0; i < linea.length; i++) {
+                var ch = linea[i];
+                if (ch === '"') { if (entreComillas && linea[i + 1] === '"') { actual += '"'; i++; } else entreComillas = !entreComillas; }
+                else if (ch === sep && !entreComillas) { celdas.push(actual.trim()); actual = ''; }
+                else actual += ch;
+            }
+            celdas.push(actual.trim());
+            filas.push(celdas);
+        });
+        /* Si todas las filas tienen el mismo largo, la primera es el encabezado. */
+        return filas;
+    }
+
+    /* ─────────────── Configuración guardada (localStorage) ─────────────── */
+
+    function configPorDefecto() {
+        return {
+            hojaId: '', hojaTitulo: '', pestania: '', encabezados: [], mapeo: [],
+            intervaloMinutos: 15, auto: false, origenPorDefecto: 'Formulario Google',
+            faseInicial: 'Interesado', campaniaId: '',
+            criterioDuplicado: { telefono: true, nombre: true },
+            ultimaRevision: '', totalImportados: 0
+        };
+    }
+    function leerConfig() {
+        try {
+            var t = raiz.localStorage && raiz.localStorage.getItem(CLAVE_CONFIG);
+            if (!t) return configPorDefecto();
+            return Object.assign(configPorDefecto(), JSON.parse(t));
+        } catch (e) { return configPorDefecto(); }
+    }
+    function guardarConfig(cfg) {
+        try { raiz.localStorage && raiz.localStorage.setItem(CLAVE_CONFIG, JSON.stringify(cfg)); } catch (e) { }
+    }
+    function leerFirmas() {
+        try {
+            var t = raiz.localStorage && raiz.localStorage.getItem(CLAVE_IMPORTADAS);
+            return t ? JSON.parse(t) : {};
+        } catch (e) { return {}; }
+    }
+    function guardarFirmas(firmas) {
+        var claves = Object.keys(firmas);
+        if (claves.length > MAX_FIRMAS) {
+            claves.sort(function (a, b) { return (firmas[a] || '').localeCompare(firmas[b] || ''); });
+            claves.slice(0, claves.length - MAX_FIRMAS).forEach(function (k) { delete firmas[k]; });
+        }
+        try { raiz.localStorage && raiz.localStorage.setItem(CLAVE_IMPORTADAS, JSON.stringify(firmas)); } catch (e) { }
+    }
+    function leerHistorial() {
+        try {
+            var t = raiz.localStorage && raiz.localStorage.getItem(CLAVE_HISTORIAL);
+            return t ? JSON.parse(t) : [];
+        } catch (e) { return []; }
+    }
+    function anotarHistorial(entrada) {
+        var h = leerHistorial();
+        h.unshift(entrada);
+        if (h.length > 60) h.length = 60;
+        try { raiz.localStorage && raiz.localStorage.setItem(CLAVE_HISTORIAL, JSON.stringify(h)); } catch (e) { }
+    }
+
+    /* ─────────────── Google: permiso y lectura de la hoja ─────────────── */
+
+    function firebaseListo() {
+        return typeof raiz.firebase !== 'undefined' && raiz.firebase.auth && typeof raiz.firebase.auth === 'function';
+    }
+
+    /* Pide permiso de lectura de hojas de cálculo reutilizando el login de Google
+       que ya tiene el CRM (no hace falta configurar nada nuevo en Google Cloud,
+       más que aceptar la pantalla de permisos la primera vez). */
+    function conectar() {
+        return new Promise(function (resolver, rechazar) {
+            if (!firebaseListo()) { rechazar(new Error('El CRM no tiene Firebase cargado todavía.')); return; }
+            var auth = raiz.firebase.auth();
+            var proveedor = new raiz.firebase.auth.GoogleAuthProvider();
+            proveedor.addScope(SCOPE_HOJAS);
+            /* prompt=consent obliga a Google a devolver el permiso nuevo. */
+            proveedor.setCustomParameters({ prompt: 'consent' });
+            /* Se re-autentica LA MISMA cuenta con la que ya entró al CRM. No se
+               permite cambiar de usuario aquí: si no, alguien podría pedir el
+               permiso con otra cuenta de Google y dejar la sesión en otra identidad. */
+            var usuario = auth.currentUser;
+            var peticion = (usuario && typeof usuario.reauthenticateWithPopup === 'function')
+                ? usuario.reauthenticateWithPopup(proveedor)
+                : auth.signInWithPopup(proveedor);
+            peticion.then(function (resultado) {
+                var credencial = resultado && resultado.credential;
+                var token = credencial && credencial.accessToken;
+                if (!token) { rechazar(new Error('Google no devolvió el permiso de hojas de cálculo.')); return; }
+                estado.token = token;
+                estado.conectado = true;
+                estado.motivo = '';
+                resolver({ ok: true });
+            }).catch(function (e) {
+                estado.conectado = false;
+                estado.motivo = (e && (e.code || e.message)) || 'error';
+                rechazar(e);
+            });
+        });
+    }
+
+    function urlHoja(rango) {
+        return 'https://sheets.googleapis.com/v4/spreadsheets/' + encodeURIComponent(estado.hoja.id) +
+            '/values/' + encodeURIComponent(rango) + '?majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE';
+    }
+
+    function extraerIdHoja(texto) {
+        var t = String(texto || '').trim();
+        var m = t.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        if (m) return m[1];
+        if (/^[a-zA-Z0-9-_]{20,}$/.test(t)) return t;
+        return '';
+    }
+
+    function pedir(url) {
+        if (!estado.token) return Promise.reject(new Error('Falta conectar con Google.'));
+        return raiz.fetch(url, { headers: { Authorization: 'Bearer ' + estado.token } }).then(function (r) {
+            if (r.status === 401 || r.status === 403) {
+                estado.conectado = false;
+                estado.motivo = 'permiso vencido o insuficiente';
+                return r.text().then(function (t) { throw new Error('Google rechazó el permiso (' + r.status + '). Vuelve a conectar. ' + t.slice(0, 120)); });
+            }
+            if (!r.ok) return r.text().then(function (t) { throw new Error('Error de Google (' + r.status + '): ' + t.slice(0, 160)); });
+            return r.json();
+        });
+    }
+
+    function leerPestanias(idHoja) {
+        return pedir('https://sheets.googleapis.com/v4/spreadsheets/' + encodeURIComponent(idHoja) + '?fields=properties.title,sheets.properties').then(function (d) {
+            estado.hoja = {
+                id: idHoja,
+                titulo: (d.properties && d.properties.title) || '',
+                pestanias: (d.sheets || []).map(function (s) { return { titulo: s.properties.title, gid: s.properties.sheetId }; })
+            };
+            return estado.hoja;
+        });
+    }
+
+    function leerValores(pestania) {
+        var rango = "'" + String(pestania).replace(/'/g, "''") + "'!A1:Z" + MAX_FILAS;
+        return pedir(urlHoja(rango)).then(function (d) { return d.values || []; });
+    }
+
+    /* ─────────────── Revisión y análisis ─────────────── */
+
+    function analizarConFilas(filas, cfg) {
+        if (!filas.length) return { encabezados: [], mapeo: [], analisis: { nuevas: [], duplicadas: [], repetidas: [], vacias: 0 } };
+        var encabezados = filas[0].map(function (h, i) { return limpiarValor(h) || ('Columna ' + (i + 1)); });
+        var mapeo = (cfg.mapeo && cfg.mapeo.length === encabezados.length) ? cfg.mapeo : detectarMapeo(encabezados);
+        var cuerpo = filas.slice(1);
+        var analisis = analizarFilas(cuerpo, mapeo, cfg, raiz.prospectos || [], leerFirmas());
+        estado.encabezados = encabezados;
+        estado.filas = cuerpo;
+        estado.analisis = analisis;
+        return { encabezados: encabezados, mapeo: mapeo, analisis: analisis };
+    }
+
+    function revisar() {
+        var cfg = leerConfig();
+        if (!estado.conectado || !estado.token) return Promise.reject(new Error('Primero conecta tu cuenta de Google.'));
+        if (!cfg.hojaId) return Promise.reject(new Error('Falta el enlace de la hoja de cálculo.'));
+        if (!cfg.pestania) return Promise.reject(new Error('Falta elegir la pestaña de respuestas.'));
+        if (!estado.hoja || estado.hoja.id !== cfg.hojaId) {
+            return leerPestanias(cfg.hojaId).then(function () { return leerValores(cfg.pestania); }).then(function (filas) { return analizarConFilas(filas, cfg); });
+        }
+        return leerValores(cfg.pestania).then(function (filas) { return analizarConFilas(filas, cfg); });
+    }
+
+    /* ─────────────── Importación ─────────────── */
+
+    function crearProspecto(cand, cfg) {
+        var id = (typeof raiz.generarId === 'function') ? raiz.generarId() : ('pro_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+        var fecha = cand.fechaRegistro && /^\d{4}-\d{2}-\d{2}/.test(cand.fechaRegistro) ? cand.fechaRegistro.slice(0, 10) :
+            ((typeof raiz.obtenerFechaActual === 'function') ? raiz.obtenerFechaActual() : new Date().toISOString().slice(0, 10));
+        var nuevo = {
+            id: id,
+            nombre: cand.nombre,
+            telefono: cand.telefono,
+            email: cand.email,
+            faseActual: cand.faseActual,
+            historialFases: [{ fase: cand.faseActual, fecha: fecha, notas: 'Alta automática desde formulario de Google' }],
+            notasGenerales: cand.notasGenerales,
+            clienteId: null,
+            fechaRegistro: fecha,
+            /* Campos extra que el formulario sí captura y que las campañas usan
+               como criterios de elegibilidad. */
+            ciudad: cand.ciudad || '',
+            origen: cand.origen || '',
+            tipoEvento: cand.tipoEvento || '',
+            fechaEvento: cand.fechaEvento || '',
+            fechaNacimiento: cand.fechaNacimiento || '',
+            presupuesto: cand.presupuesto || '',
+            fuenteCaptacion: 'Formulario Google',
+            firmaFormulario: cand._firma
+        };
+        raiz.prospectos.push(nuevo);
+        if (typeof raiz.registrarHistorial === 'function') {
+            raiz.registrarHistorial('prospecto', 'crear', 'Se creó prospecto desde el formulario de Google: "' + nuevo.nombre + '"', { id: nuevo.id, nombre: nuevo.nombre });
+        }
+        if (typeof raiz.marcarSucia === 'function') raiz.marcarSucia('prospectos', nuevo.id);
+        return nuevo;
+    }
+
+    function importar(seleccion) {
+        var cfg = leerConfig();
+        var lista = seleccion || [];
+        var creados = [], conCampania = 0, errores = [];
+        var firmas = leerFirmas();
+
+        lista.forEach(function (cand) {
+            try {
+                var nuevo = crearProspecto(cand, cfg);
+                firmas[cand._firma] = new Date().toISOString();
+                creados.push(nuevo);
+                if (cfg.campaniaId && typeof raiz.crearMotor === 'function' && raiz.App && raiz.App.almacen) {
+                    try {
+                        var motor = raiz.crearMotor(raiz.App.almacen);
+                        var r = motor.agregarParticipacion({ campaniaId: cfg.campaniaId, prospectoId: nuevo.id, origen: 'Formulario Google' });
+                        if (r && r.ok) conCampania++;
+                    } catch (e2) { /* la campaña es opcional: no rompe la importación */ }
+                }
+            } catch (e) {
+                errores.push((cand && cand.nombre ? cand.nombre : 'una fila') + ': ' + ((e && e.message) || e));
+            }
+        });
+
+        guardarFirmas(firmas);
+        cfg.totalImportados = (cfg.totalImportados || 0) + creados.length;
+        cfg.ultimaRevision = new Date().toISOString();
+        guardarConfig(cfg);
+
+        /* Guardar y repintar: si algo de esto falla, los prospectos YA quedaron
+           creados en memoria, así que no se debe reportar como error de importación. */
+        try {
+            if (typeof raiz.guardarDatos === 'function') raiz.guardarDatos();
+            if (typeof raiz.renderizarProspectos === 'function') raiz.renderizarProspectos();
+        } catch (e) {
+            if (typeof console !== 'undefined' && console.warn) console.warn('Captación: no se pudo guardar o repintar.', e);
+        }
+        anotarHistorial({ fecha: new Date().toISOString(), creados: creados.length, conCampania: conCampania, errores: errores.length, fuente: 'Google Sheets' });
+        if (typeof raiz.mostrarNotificacion === 'function') {
+            try {
+                raiz.mostrarNotificacion('Se agregaron ' + creados.length + ' prospecto(s) del formulario' + (conCampania ? ' (' + conCampania + ' a la campaña)' : '') + (errores.length ? ' · ' + errores.length + ' con error' : ''), errores.length ? 'warning' : 'success');
+            } catch (e) { }
+        }
+        return { creados: creados, conCampania: conCampania, errores: errores };
+    }
+
+    /* ─────────────── Revisión automática periódica ─────────────── */
+
+    function programarRevision() {
+        if (estado.temporizador) { raiz.clearInterval(estado.temporizador); estado.temporizador = null; }
+        var cfg = leerConfig();
+        if (!cfg.auto || !cfg.hojaId || !cfg.pestania) return;
+        var minutos = Math.max(5, Number(cfg.intervaloMinutos) || 15);
+        estado.temporizador = raiz.setInterval(function () {
+            if (!estado.conectado || !estado.token) return; /* sin token no se puede: no molesta */
+            revisar().then(function (r) {
+                var nuevas = r.analisis.nuevas;
+                if (!nuevas.length) return;
+                var res = importar(nuevas);
+                if (res.creados) {
+                    anotarHistorial({ fecha: new Date().toISOString(), creados: res.creados.length, automatico: true, fuente: 'Google Sheets' });
+                }
+            }).catch(function (e) {
+                var msg = (e && e.message) || String(e);
+                if (msg !== estado.ultimoAviso) {
+                    estado.ultimoAviso = msg;
+                    if (typeof raiz.mostrarNotificacion === 'function') raiz.mostrarNotificacion('Captación automática: ' + msg, 'warning');
+                }
+            });
+        }, minutos * 60 * 1000);
+    }
+
+    function detenerRevision() {
+        if (estado.temporizador) { raiz.clearInterval(estado.temporizador); estado.temporizador = null; }
+    }
+
+    /* ─────────────── Interfaz ─────────────── */
+
+    function esc(v) { return (typeof raiz.escapeHTML === 'function') ? raiz.escapeHTML(String(v === undefined || v === null ? '' : v)) : String(v === undefined || v === null ? '' : v); }
+
+    function esAdmin() { return (typeof raiz.esAdmin === 'function') ? raiz.esAdmin() : true; }
+
+    function filaTablaHtml(cand, tipo) {
+        var marcado = tipo === 'nueva' ? ' checked' : '';
+        var deshabilitado = tipo === 'nueva' ? '' : ' disabled';
+        var color = tipo === 'nueva' ? 'var(--color-verde)' : (tipo === 'duplicada' ? 'var(--color-naranja)' : 'var(--color-texto-secundario)');
+        var motivo = tipo === 'nueva' ? 'nuevo' : (cand._motivo || '');
+        return '<tr>' +
+            '<td><input type="checkbox" data-cand="' + esc(cand._firma) + '"' + marcado + deshabilitado + '></td>' +
+            '<td>' + esc(cand.nombre) + (cand._existente ? '<br><small style="color:var(--color-texto-secundario);">ya existe: ' + esc(cand._existente) + '</small>' : '') + '</td>' +
+            '<td>' + esc(cand.telefono || '—') + '</td>' +
+            '<td>' + esc(cand.tipoEvento || '—') + '</td>' +
+            '<td><span style="color:' + color + ';">' + esc(motivo) + '</span></td>' +
+            '</tr>';
+    }
+
+    function pintarRevision(r, contenedor) {
+        var a = r.analisis;
+        var html = '' +
+            '<div class="metricas-container">' +
+            '  <div class="metrica-card"><div class="metrica-icono"><i class="fas fa-user-plus"></i></div><div class="metrica-info"><span class="metrica-valor">' + a.nuevas.length + '</span><span class="metrica-etiqueta">Nuevos</span></div></div>' +
+            '  <div class="metrica-card"><div class="metrica-icono"><i class="fas fa-clone"></i></div><div class="metrica-info"><span class="metrica-valor">' + a.duplicadas.length + '</span><span class="metrica-etiqueta">Duplicados (no se guardan)</span></div></div>' +
+            '  <div class="metrica-card"><div class="metrica-icono"><i class="fas fa-clock-rotate-left"></i></div><div class="metrica-info"><span class="metrica-valor">' + a.repetidas.length + '</span><span class="metrica-etiqueta">Ya importados antes</span></div></div>' +
+            '  <div class="metrica-card"><div class="metrica-icono"><i class="fas fa-eraser"></i></div><div class="metrica-info"><span class="metrica-valor">' + a.vacias + '</span><span class="metrica-etiqueta">Filas sin datos útiles</span></div></div>' +
+            '</div>';
+
+        if (!a.nuevas.length && !a.duplicadas.length && !a.repetidas.length) {
+            return html + '<div class="lista-ok"><i class="fas fa-circle-check"></i> No hay respuestas nuevas en la hoja.</div>';
+        }
+        var filas = a.nuevas.map(function (c) { return filaTablaHtml(c, 'nueva'); }).join('') +
+            a.duplicadas.map(function (c) { return filaTablaHtml(c, 'duplicada'); }).join('') +
+            a.repetidas.map(function (c) { return filaTablaHtml(c, 'repetida'); }).join('');
+        html += '<div class="tabla-scroll"><table class="tabla-datos"><thead><tr>' +
+            '<th></th><th>Nombre</th><th>Teléfono</th><th>Evento</th><th>Situación</th></tr></thead><tbody>' + filas + '</tbody></table></div>';
+        if (a.nuevas.length) {
+            html += '<div class="form-acciones" style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">' +
+                '<button class="btn-secundario" id="cap-todos">Marcar / desmarcar todos</button>' +
+                '<button class="btn-primario" id="cap-importar"><i class="fas fa-file-import"></i> Importar <span id="cap-cuantos">' + a.nuevas.length + '</span></button>' +
+                '</div>' +
+                '<div id="cap-confirmar" style="margin-top:12px;"></div>';
+        } else {
+            html += '<div class="lista-aviso" style="margin-top:12px;"><i class="fas fa-circle-info"></i> Ninguna fila nueva para importar: todas ya existen o ya se importaron.</div>';
+        }
+        return html;
+    }
+
+    function camposSelect(actual) {
+        return CAMPOS.map(function (c) {
+            return '<option value="' + c.id + '"' + (c.id === actual ? ' selected' : '') + '>' + esc(c.etiqueta) + '</option>';
+        }).join('');
+    }
+
+    function pintarMapeo(r, cfg) {
+        if (!r.encabezados.length) return '<div class="detalle-lista-vacia">Todavía no se han leído los encabezados de la hoja.</div>';
+        return '<div class="nota-tareas">Así se leerán las columnas de tu formulario. Casi siempre queda bien solo; puedes corregir lo que quieras.</div>' +
+            '<div class="tabla-scroll"><table class="tabla-datos"><thead><tr><th>Columna del formulario</th><th>Se guarda como</th></tr></thead><tbody>' +
+            r.encabezados.map(function (h, i) {
+                var m = r.mapeo.filter(function (x) { return x.indice === i; })[0] || { campo: 'ignorar' };
+                return '<tr><td>' + esc(h) + '</td><td><select data-mapeo="' + i + '" style="background:var(--color-bg-primario);color:var(--color-texto-primario);border:1px solid var(--color-borde);border-radius:6px;padding:6px 8px;">' + camposSelect(m.campo) + '</select></td></tr>';
+            }).join('') + '</tbody></table></div>' +
+            '<div class="form-acciones" style="display:flex;justify-content:flex-end;margin-top:12px;">' +
+            '<button class="btn-primario" id="cap-guardar-mapeo"><i class="fas fa-floppy-disk"></i> Guardar cómo se leen las columnas</button></div>';
+    }
+
+    function campaniasActivas() {
+        var lista = (raiz.App && raiz.App.almacen && raiz.App.almacen.db && raiz.App.almacen.db.campanias) || [];
+        return lista.filter(function (c) { return c && c.estado === 'activa'; });
+    }
+
+    function cuerpoConfiguracion(cfg) {
+        var activas = campaniasActivas();
+        return '' +
+            '<div class="form-grupo"><label>Enlace o identificador de la hoja de respuestas</label>' +
+            '<input type="text" id="cap-hoja" value="' + esc(cfg.hojaId) + '" placeholder="https://docs.google.com/spreadsheets/d/…"></div>' +
+            '<div class="row-2col">' +
+            '  <div class="form-grupo"><label>Pestaña de respuestas</label><select id="cap-pestania">' +
+            (cfg.pestania ? '<option value="' + esc(cfg.pestania) + '" selected>' + esc(cfg.pestania) + '</option>' : '<option value="">(conecta para ver las pestañas)</option>') +
+            '</select></div>' +
+            '  <div class="form-grupo"><label>Fase inicial del prospecto</label><select id="cap-fase">' +
+            ['Interesado', 'Cotización', 'Negociación', 'Contrato', 'Frecuente', 'Inactivo'].map(function (f) {
+                return '<option value="' + f + '"' + (f === cfg.faseInicial ? ' selected' : '') + '>' + f + '</option>';
+            }).join('') + '</select></div>' +
+            '</div>' +
+            '<div class="row-2col">' +
+            '  <div class="form-grupo"><label>Origen con el que se registran</label><input type="text" id="cap-origen" value="' + esc(cfg.origenPorDefecto) + '"></div>' +
+            '  <div class="form-grupo"><label>Agregar a la campaña (opcional)</label><select id="cap-campania"><option value="">No agregar a ninguna</option>' +
+            activas.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === cfg.campaniaId ? ' selected' : '') + '>' + esc(c.nombre) + '</option>'; }).join('') +
+            '</select></div>' +
+            '</div>' +
+            '<div class="form-grupo"><label>Evitar duplicados comparando</label>' +
+            '  <div style="display:flex;gap:16px;flex-wrap:wrap;padding-top:6px;">' +
+            '    <label class="fila-check" style="flex:0 0 auto;"><input type="checkbox" id="cap-dup-tel"' + (cfg.criterioDuplicado.telefono ? ' checked' : '') + '><span class="dato-principal">Teléfono</span></label>' +
+            '    <label class="fila-check" style="flex:0 0 auto;"><input type="checkbox" id="cap-dup-nombre"' + (cfg.criterioDuplicado.nombre ? ' checked' : '') + '><span class="dato-principal">Nombre</span></label>' +
+            '  </div></div>' +
+            '<div class="row-2col">' +
+            '  <div class="form-grupo"><label>Revisar la hoja cada (minutos)</label><input type="number" id="cap-intervalo" min="5" value="' + esc(cfg.intervaloMinutos) + '"></div>' +
+            '  <div class="form-grupo"><label>Revisión automática</label>' +
+            '    <label class="fila-check" style="padding-top:10px;"><input type="checkbox" id="cap-auto"' + (cfg.auto ? ' checked' : '') + '><span class="dato-principal">Agregar los nuevos sola, sin preguntar<small>Si está apagada, solo te avisa y tú decides.</small></span></label>' +
+            '  </div>' +
+            '</div>' +
+            '<div class="lista-avisos"><i class="fas fa-shield-halved"></i><div>El permiso que se pide es <strong>solo lectura</strong> de hojas de cálculo y el token <strong>no se guarda</strong>: al cerrar el CRM hay que volver a conectar. La configuración sí se recuerda en este equipo.</div></div>' +
+            '<div class="form-acciones" style="display:flex;gap:10px;justify-content:flex-end;">' +
+            '  <button class="btn-secundario" id="cap-guardar"><i class="fas fa-floppy-disk"></i> Guardar configuración</button>' +
+            '  <button class="btn-primario" id="cap-revisar"><i class="fas fa-rotate"></i> Revisar ahora</button>' +
+            '</div>';
+    }
+
+    function cuerpoPegado() {
+        return '<div class="nota-tareas">Si prefieres no dar permiso a Google: en la hoja de respuestas usa <strong>Archivo → Descargar → CSV</strong>, ábrelo y pega aquí todo el contenido (o copia las filas directamente de la hoja). Se usa el mismo control de duplicados.</div>' +
+            '<div class="form-grupo"><label>Pega las filas (incluyendo la fila de títulos)</label><textarea id="cap-pegar" style="min-height:150px;" placeholder="Nombre\tTeléfono\tCorreo…"></textarea></div>' +
+            '<div class="form-acciones" style="display:flex;justify-content:flex-end;"><button class="btn-primario" id="cap-analizar-pegado"><i class="fas fa-magnifying-glass"></i> Analizar lo pegado</button></div>';
+    }
+
+    function cuerpoHistorial() {
+        var h = leerHistorial();
+        if (!h.length) return '<div class="detalle-lista-vacia">Todavía no se ha importado nada desde el formulario.</div>';
+        return '<div class="tabla-scroll"><table class="tabla-datos"><thead><tr><th>Cuándo</th><th>Prospectos</th><th>Campaña</th><th>Errores</th><th>Modo</th></tr></thead><tbody>' +
+            h.map(function (x) {
+                return '<tr><td>' + esc((x.fecha || '').replace('T', ' ').slice(0, 16)) + '</td><td>' + esc(x.creados) + '</td><td>' + esc(x.conCampania || 0) + '</td><td>' + esc(x.errores || 0) + '</td><td>' + (x.automatico ? 'Automático' : 'A mano') + '</td></tr>';
+            }).join('') + '</tbody></table></div>' +
+            '<div class="form-acciones" style="display:flex;justify-content:flex-end;margin-top:12px;">' +
+            '<button class="btn-peligro" id="cap-olvidar"><i class="fas fa-eraser"></i> Olvidar las filas ya importadas</button></div>' +
+            '<div id="cap-olvidar-zona" style="margin-top:12px;"></div>';
+    }
+
+    function cuerpoPanel(pestaniaActiva) {
+        var cfg = leerConfig();
+        var estadoConexion = estado.conectado
+            ? '<span class="etiqueta-part positiva">Conectado con Google</span>'
+            : '<span class="etiqueta-part negativa">Sin conectar</span>';
+        var tabs = [
+            { id: 'conexion', etiqueta: 'Conexión', icono: 'fa-plug' },
+            { id: 'columnas', etiqueta: 'Cómo se leen las columnas', icono: 'fa-table-columns' },
+            { id: 'revisar', etiqueta: 'Revisar e importar', icono: 'fa-file-import' },
+            { id: 'pegado', etiqueta: 'Pegar filas (sin permisos)', icono: 'fa-paste' },
+            { id: 'historial', etiqueta: 'Historial', icono: 'fa-clock-rotate-left' }
+        ];
+        var html = '<div class="detalle-header"><div class="mosaico-titulo" style="font-size:17px;">Prospectos desde tu formulario de Google</div>' +
+            '<div class="detalle-etiquetas">' + estadoConexion +
+            (cfg.hojaTitulo ? '<span class="etiqueta-part">' + esc(cfg.hojaTitulo) + '</span>' : '') +
+            (cfg.pestania ? '<span class="etiqueta-part">' + esc(cfg.pestania) + '</span>' : '') +
+            '<span class="etiqueta-part neutra">' + (cfg.totalImportados || 0) + ' importado(s)</span></div>' +
+            '<div class="acciones-ficha">' +
+            '  <button class="btn-primario" id="cap-conectar"><i class="fab fa-google"></i> ' + (estado.conectado ? 'Reconectar con Google' : 'Conectar con Google') + '</button>' +
+            (estado.motivo ? '<span class="etiqueta-part aviso">' + esc(estado.motivo) + '</span>' : '') +
+            '</div></div>' +
+            '<div class="tabs">' + tabs.map(function (t) {
+                return '<button class="tab' + (t.id === pestaniaActiva ? ' activo' : '') + '" data-cap-tab="' + t.id + '"><i class="fas ' + t.icono + '"></i><span class="etiqueta-tab">' + esc(t.etiqueta) + '</span></button>';
+            }).join('') + '</div>' +
+            '<div id="cap-cuerpo"></div>';
+        return { html: html, tabs: tabs };
+    }
+
+    var pestaniaActual = 'conexion';
+
+    function abrirPanel(pestania) {
+        if (typeof raiz.App !== 'undefined' && raiz.App && typeof raiz.App.abrirModal === 'function') {
+            pestaniaActual = pestania || pestaniaActual || 'conexion';
+            var p = cuerpoPanel(pestaniaActual);
+            raiz.App.abrirModal('Captación desde formulario de Google', p.html, { ancho: true });
+            pintarCuerpo();
+            conectarTabs();
+            return true;
+        }
+        if (typeof raiz.mostrarNotificacion === 'function') raiz.mostrarNotificacion('No se pudo abrir la ventana de captación.', 'error');
+        return false;
+    }
+
+    function conectarTabs() {
+        if (typeof document === 'undefined') return;
+        Array.prototype.forEach.call(document.querySelectorAll('[data-cap-tab]'), function (b) {
+            b.onclick = function () {
+                pestaniaActual = b.getAttribute('data-cap-tab');
+                abrirPanel(pestaniaActual);
+            };
+        });
+    }
+
+    function pintarCuerpo() {
+        if (typeof document === 'undefined') return;
+        var caja = document.getElementById('cap-cuerpo');
+        if (!caja) return;
+        var cfg = leerConfig();
+        if (pestaniaActual === 'columnas') {
+            caja.innerHTML = estado.encabezados ? pintarMapeo({ encabezados: estado.encabezados, mapeo: estado.mapeo || detectarMapeo(estado.encabezados) }, cfg)
+                : '<div class="detalle-lista-vacia">Primero conecta Google y pulsa "Revisar ahora" para leer los títulos de tu formulario.</div>';
+        } else if (pestaniaActual === 'revisar') {
+            caja.innerHTML = estado.analisis ? pintarRevision({ analisis: estado.analisis }, caja) : '<div class="detalle-lista-vacia">Todavía no se ha revisado la hoja. Pulsa "Revisar ahora".</div>';
+        } else if (pestaniaActual === 'pegado') {
+            caja.innerHTML = cuerpoPegado();
+        } else if (pestaniaActual === 'historial') {
+            caja.innerHTML = cuerpoHistorial();
+        } else {
+            caja.innerHTML = cuerpoConfiguracion(cfg);
+        }
+        conectarCuerpo();
+    }
+
+    function leerFormulario() {
+        var cfg = leerConfig();
+        var v = function (id) { var el = document.getElementById(id); return el ? el.value : null; };
+        var c = function (id) { var el = document.getElementById(id); return el ? !!el.checked : null; };
+        var idHoja = extraerIdHoja(v('cap-hoja'));
+        if (v('cap-hoja') !== null) { cfg.hojaId = idHoja || String(v('cap-hoja') || '').trim(); }
+        if (v('cap-pestania')) cfg.pestania = v('cap-pestania');
+        if (v('cap-fase')) cfg.faseInicial = v('cap-fase');
+        if (v('cap-origen') !== null) cfg.origenPorDefecto = v('cap-origen');
+        if (v('cap-campania') !== null) cfg.campaniaId = v('cap-campania');
+        if (v('cap-intervalo')) cfg.intervaloMinutos = Math.max(5, Number(v('cap-intervalo')) || 15);
+        if (c('cap-auto') !== null) cfg.auto = c('cap-auto');
+        if (c('cap-dup-tel') !== null || c('cap-dup-nombre') !== null) {
+            cfg.criterioDuplicado = { telefono: c('cap-dup-tel') !== false, nombre: c('cap-dup-nombre') !== false };
+        }
+        guardarConfig(cfg);
+        return cfg;
+    }
+
+    function conectarCuerpo() {
+        if (typeof document === 'undefined') return;
+        var aviso = function (msg, tipo) { if (typeof raiz.mostrarNotificacion === 'function') raiz.mostrarNotificacion(msg, tipo || 'info'); };
+
+        var bConectar = document.getElementById('cap-conectar');
+        if (bConectar) bConectar.onclick = function () {
+            bConectar.disabled = true;
+            bConectar.textContent = 'Esperando a Google…';
+            conectar().then(function () {
+                var cfg = leerConfig();
+                if (cfg.hojaId) return leerPestanias(cfg.hojaId).then(function (h) {
+                    cfg.hojaTitulo = h.titulo;
+                    if (!cfg.pestania && h.pestanias.length) cfg.pestania = h.pestanias[0].titulo;
+                    guardarConfig(cfg);
+                });
+                return null;
+            }).then(function () {
+                aviso('Listo: permiso concedido.', 'success');
+                abrirPanel(pestaniaActual);
+            }).catch(function (e) {
+                aviso('No se pudo conectar: ' + ((e && e.message) || e), 'error');
+                bConectar.disabled = false;
+                abrirPanel(pestaniaActual);
+            });
+        };
+
+        var bGuardar = document.getElementById('cap-guardar');
+        if (bGuardar) bGuardar.onclick = function () {
+            var cfg = leerFormulario();
+            programarRevision();
+            aviso('Configuración guardada.', 'success');
+            abrirPanel(pestaniaActual);
+        };
+
+        var bRevisar = document.getElementById('cap-revisar');
+        if (bRevisar) bRevisar.onclick = function () {
+            leerFormulario();
+            bRevisar.disabled = true;
+            revisar().then(function (r) {
+                aviso(r.analisis.nuevas.length + ' respuesta(s) nueva(s), ' + r.analisis.duplicadas.length + ' duplicada(s).');
+                pestaniaActual = 'revisar';
+                abrirPanel(pestaniaActual);
+            }).catch(function (e) {
+                aviso((e && e.message) || String(e), 'error');
+                bRevisar.disabled = false;
+            });
+        };
+
+        /* Pestañas disponibles: al conectar se llenan. */
+        var selPestania = document.getElementById('cap-pestania');
+        if (selPestania && estado.hoja && estado.hoja.pestanias && estado.hoja.pestanias.length) {
+            var cfgP = leerConfig();
+            selPestania.innerHTML = estado.hoja.pestanias.map(function (p) {
+                return '<option value="' + esc(p.titulo) + '"' + (p.titulo === cfgP.pestania ? ' selected' : '') + '>' + esc(p.titulo) + '</option>';
+            }).join('');
+        }
+
+        var bGuardarMapeo = document.getElementById('cap-guardar-mapeo');
+        if (bGuardarMapeo) bGuardarMapeo.onclick = function () {
+            var cfg = leerConfig();
+            if (!estado.encabezados) { aviso('Todavía no hay encabezados leídos.', 'error'); return; }
+            var mapeo = estado.encabezados.map(function (h, i) {
+                var sel = document.querySelector('[data-mapeo="' + i + '"]');
+                return { columna: h, indice: i, campo: sel ? sel.value : 'ignorar' };
+            });
+            cfg.mapeo = mapeo;
+            guardarConfig(cfg);
+            aviso('Listo: así se leerán las columnas.', 'success');
+            if (estado.filas) analizarConFilas([estado.encabezados].concat(estado.filas), leerConfig());
+            abrirPanel('revisar');
+        };
+
+        var bTodos = document.getElementById('cap-todos');
+        if (bTodos) bTodos.onclick = function () {
+            var cajas = document.querySelectorAll('[data-cand]:not([disabled])');
+            var algunoLibre = Array.prototype.some.call(cajas, function (c) { return !c.checked; });
+            Array.prototype.forEach.call(cajas, function (c) { c.checked = algunoLibre; });
+            actualizarCuantos();
+        };
+        Array.prototype.forEach.call(document.querySelectorAll('[data-cand]:not([disabled])'), function (c) {
+            c.onchange = actualizarCuantos;
+        });
+
+        var bImportar = document.getElementById('cap-importar');
+        if (bImportar) bImportar.onclick = function () {
+            var firmas = {};
+            Array.prototype.forEach.call(document.querySelectorAll('[data-cand]:checked'), function (c) { firmas[c.getAttribute('data-cand')] = true; });
+            var sel = (estado.analisis ? estado.analisis.nuevas : []).filter(function (c) { return firmas[c._firma]; });
+            if (!sel.length) { aviso('No marcaste ninguna fila.', 'error'); return; }
+            var cfg = leerConfig();
+            var zona = document.getElementById('cap-confirmar');
+            if (!zona) { importar(sel); pestaniaActual = 'historial'; abrirPanel('historial'); return; }
+            /* Confirmación en dos pasos: nada entra sin que Jorge lo confirme. */
+            zona.innerHTML = '<div class="lista-avisos" style="border-left:4px solid var(--color-naranja);">' +
+                '<i class="fas fa-triangle-exclamation" style="color:var(--color-naranja);"></i>' +
+                '<div>Se van a crear <strong>' + sel.length + '</strong> prospecto(s) nuevo(s)' +
+                (cfg.campaniaId ? ' y se agregarán a la campaña que elegiste' : '') +
+                '. Los duplicados no se tocan. Si algo sale mal, se borran uno por uno desde Prospectos (la papelera los guarda).</div></div>' +
+                '<div class="form-acciones" style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">' +
+                '<button class="btn-secundario" id="cap-cancelar-import"><i class="fas fa-times"></i> Cancelar</button>' +
+                '<button class="btn-primario" id="cap-confirmar-import"><i class="fas fa-check"></i> Sí, importar ' + sel.length + '</button></div>';
+            document.getElementById('cap-cancelar-import').onclick = function () { zona.innerHTML = ''; };
+            document.getElementById('cap-confirmar-import').onclick = function () {
+                importar(sel);
+                pestaniaActual = 'historial';
+                abrirPanel('historial');
+            };
+        };
+
+        var bAnalizarPegado = document.getElementById('cap-analizar-pegado');
+        if (bAnalizarPegado) bAnalizarPegado.onclick = function () {
+            var el = document.getElementById('cap-pegar');
+            var texto = el ? el.value : '';
+            if (!texto.trim()) { aviso('Pega primero las filas.', 'error'); return; }
+            var filas = textoAFilas(texto);
+            if (filas.length < 2) { aviso('Hacen falta la fila de títulos y al menos una respuesta.', 'error'); return; }
+            var cfg = leerConfig();
+            if (estado.encabezados) cfg.mapeo = []; /* que se vuelva a detectar con lo pegado */
+            var r = analizarConFilas(filas, cfg);
+            cfg.encabezados = r.encabezados;
+            if (!cfg.mapeo || cfg.mapeo.length !== r.mapeo.length) cfg.mapeo = r.mapeo;
+            guardarConfig(cfg);
+            aviso(r.analisis.nuevas.length + ' nueva(s), ' + r.analisis.duplicadas.length + ' duplicada(s).');
+            pestaniaActual = 'revisar';
+            abrirPanel(pestaniaActual);
+        };
+
+        var bOlvidar = document.getElementById('cap-olvidar');
+        if (bOlvidar) bOlvidar.onclick = function () {
+            var zona = document.getElementById('cap-olvidar-zona');
+            if (!zona) { guardarFirmas({}); aviso('Listo: se olvidó el registro de filas importadas.', 'success'); return; }
+            zona.innerHTML = '<div class="lista-avisos" style="border-left:4px solid var(--color-naranja);">' +
+                '<i class="fas fa-triangle-exclamation" style="color:var(--color-naranja);"></i>' +
+                '<div>Se olvidará la lista de filas ya importadas, así que la próxima revisión volverá a proponerte <strong>todas</strong> las respuestas de la hoja. Los duplicados por teléfono o nombre se siguen detectando igual, así que no se van a duplicar solos.</div></div>' +
+                '<div class="form-acciones" style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">' +
+                '<button class="btn-secundario" id="cap-cancelar-olvido">Cancelar</button>' +
+                '<button class="btn-peligro" id="cap-confirmar-olvido"><i class="fas fa-eraser"></i> Sí, olvidar</button></div>';
+            document.getElementById('cap-cancelar-olvido').onclick = function () { zona.innerHTML = ''; };
+            document.getElementById('cap-confirmar-olvido').onclick = function () {
+                guardarFirmas({});
+                aviso('Listo: se olvidó el registro de filas importadas.', 'success');
+                abrirPanel('historial');
+            };
+        };
+    }
+
+    function actualizarCuantos() {
+        if (typeof document === 'undefined') return;
+        var n = document.querySelectorAll('[data-cand]:checked').length;
+        var el = document.getElementById('cap-cuantos');
+        if (el) el.textContent = n;
+    }
+
+    /* ─────────────── Botón en la sección de Prospectos ─────────────── */
+
+    function ponerBoton() {
+        if (typeof document === 'undefined') return;
+        if (!esAdmin()) return;
+        var contenedor = document.querySelector('#seccion-prospectos .header-actions');
+        if (!contenedor || document.getElementById('btn-captacion-formulario')) return;
+        var boton = document.createElement('button');
+        boton.className = 'btn-secundario';
+        boton.id = 'btn-captacion-formulario';
+        boton.innerHTML = '<i class="fas fa-file-arrow-down"></i> Captación desde formulario';
+        boton.onclick = function () { abrirPanel('conexion'); };
+        contenedor.insertBefore(boton, contenedor.firstChild);
+    }
+
+    /* ─────────────── Arranque ─────────────── */
+
+    function iniciar() {
+        /* Nunca debe romper el arranque del CRM: la captación es opcional. */
+        try {
+            ponerBoton();
+            programarRevision();
+            /* El botón puede reaparecer al cambiar de sección: se reintenta un par de veces. */
+            setTimeout(function () { try { ponerBoton(); } catch (e) { } }, 1500);
+            setTimeout(function () { try { ponerBoton(); } catch (e) { } }, 4000);
+        } catch (e) {
+            if (typeof console !== 'undefined' && console.warn) console.warn('Captación desde formulario: no se pudo iniciar.', e);
+        }
+    }
+
+    var API = {
+        estado: estado,
+        CAMPOS: CAMPOS,
+        iniciar: iniciar,
+        ponerBoton: ponerBoton,
+        abrirPanel: abrirPanel,
+        conectar: conectar,
+        leerPestanias: leerPestanias,
+        leerValores: leerValores,
+        revisar: revisar,
+        importar: importar,
+        programarRevision: programarRevision,
+        detenerRevision: detenerRevision,
+        textoAFilas: textoAFilas,
+        detectarSeparador: detectarSeparador,
+        /* Utilidades puras: las prueba el banco de pruebas. */
+        pruebas: {
+            normalizarTelefono: normalizarTelefono,
+            normalizarNombre: normalizarNombre,
+            claveNombre: claveNombre,
+            claveFila: claveFila,
+            detectarMapeo: detectarMapeo,
+            filaAProspecto: filaAProspecto,
+            buscarDuplicado: buscarDuplicado,
+            analizarFilas: analizarFilas,
+            textoAFilas: textoAFilas,
+            detectarSeparador: detectarSeparador
+        }
+    };
+
+    raiz.CaptacionFormularios = API;
+
+    if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
+        else iniciar();
+    }
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
 </body>
 </html>
