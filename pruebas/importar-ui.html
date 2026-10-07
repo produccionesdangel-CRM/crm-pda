@@ -273,6 +273,26 @@
                 bien('se volvió a sembrar el prospecto de prueba (la app recargó datos)');
             }
 
+            /* ANTES de conectar: el ajuste puede estar encendido sin archivo
+               conectado (el caso que reportó Jorge). Tiene que avisarse en claro. */
+            w.localStorage.setItem('pda_importar_config_v1', JSON.stringify({
+                enlazado: true, auto: false, intervaloSegundos: 20,
+                origenPorDefecto: 'Formulario Google', faseInicial: 'Interesado',
+                criterioDuplicado: { telefono: true, nombre: true }
+            }));
+            imp.estado.handle = null;
+            imp.estado.necesitaAutorizar = false;
+            if (typeof imp.detenerRevisionEnlazada === 'function') imp.detenerRevisionEnlazada();
+            var estSinArchivo = imp.estadoEnlazado(JSON.parse(w.localStorage.getItem('pda_importar_config_v1')));
+            comprobar('avisa en claro cuando el ajuste está encendido pero NO hay archivo conectado',
+                estSinArchivo.nivel === 'alerta' && /DETENIDA/.test(estSinArchivo.texto), estSinArchivo.texto);
+            imp.ponerBoton();
+            var contProsp = d.querySelector('#seccion-prospectos .header-actions');
+            var botsProsp = Array.prototype.slice.call(contProsp.children || []).filter(function (x) { return x.id === 'btn-importar-prospectos'; });
+            comprobar('el botón de Prospectos marca el aviso cuando la revisión está detenida',
+                botsProsp.length > 0 && /\u26A0/.test(String(botsProsp[botsProsp.length - 1].innerHTML)),
+                botsProsp.length ? String(botsProsp[botsProsp.length - 1].innerHTML).slice(0, 80) : 'no hay botón');
+
             imp.estado.handle = handleFalso;
             imp.estado.ultimoArchivo = null;
 
@@ -289,6 +309,9 @@
             }).then(function (r) {
                 comprobar('lee el archivo enlazado la primera vez', !!r && r.cambio === true, JSON.stringify(r && { cambio: r.cambio }));
                 var a = imp.estado.analisis;
+                var estConArchivo = imp.estadoEnlazado();
+                comprobar('con el archivo conectado el estado dice que está revisando',
+                    estConArchivo.nivel === 'ok' && /Revisando/.test(estConArchivo.texto), estConArchivo.texto);
                 comprobar('del archivo enlazado detecta 1 duplicada (Ana) y 1 nueva (Diego)',
                     a.duplicadas.length === 1 && a.nuevas.length === 1 && /Diego/.test(a.nuevas[0].nombre),
                     JSON.stringify({ d: a.duplicadas.length, n: a.nuevas.map(function (x) { return x.nombre; }) }));

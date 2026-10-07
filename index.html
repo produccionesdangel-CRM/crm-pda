@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.17';
+        var BUILD_APP = '2026-10-07.18';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -13821,7 +13821,44 @@
         return lista.filter(function (c) { return c && c.estado === 'activa'; });
     }
 
-    /* Bloque del archivo enlazado: se revisa solo y agrega lo nuevo. */
+    /* Estado del archivo enlazado, dicho en claro. Existe porque es muy fácil
+       quedar con "agregar los nuevos sola" marcado en Ajustes sin que haya
+       ningún archivo conectado: el ajuste vive en la configuración y el acceso
+       al archivo en el navegador, y al recargar se puede perder el segundo. */
+    function estadoEnlazado(cfg) {
+        cfg = cfg || leerConfig();
+        if (!soportaEnlazado()) {
+            return { nivel: 'neutro', texto: 'Este navegador no permite dejar un archivo enlazado (pasa en el celular y en Firefox): usa "Elegir archivo".' };
+        }
+        if (!estado.handle) {
+            if (cfg.enlazado) {
+                return {
+                    nivel: 'alerta',
+                    texto: 'El archivo enlazado se perdió al recargar el CRM (el navegador no recordó el acceso). ' +
+                        'La revisión automática está DETENIDA: vuelve a conectarlo para que siga revisando solo.'
+                };
+            }
+            return { nivel: 'neutro', texto: 'Sin archivo enlazado: la revisión automática está detenida.' };
+        }
+        if (estado.necesitaAutorizar || (estado.permisoEnlazado && estado.permisoEnlazado !== 'granted')) {
+            return { nivel: 'alerta', texto: 'Falta autorizar el archivo: la revisión automática está DETENIDA hasta que pulses "Autorizar el archivo".' };
+        }
+        var cada = estado.intervaloProgramado || cfg.intervaloSegundos || 20;
+        var ultima = estado.ultimaRevision
+            ? ('última revisión ' + estado.ultimaRevision.hora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' · ' + estado.ultimaRevision.resultado)
+            : 'esperando la primera revisión';
+        return {
+            nivel: 'ok',
+            texto: 'Revisando "' + (estado.handle.name || cfg.nombreEnlazado || '') + '" cada ' + cada + ' segundos · ' + ultima
+        };
+    }
+
+    function avisoDeEstado(texto, nivel) {
+        var icono = nivel === 'alerta' ? 'fa-triangle-exclamation' : (nivel === 'ok' ? 'fa-circle-check' : 'fa-circle-info');
+        var color = nivel === 'alerta' ? 'var(--color-naranja)' : (nivel === 'ok' ? 'var(--color-verde)' : 'var(--color-acento)');
+        return '<div class="lista-avisos" style="border-left:4px solid ' + color + ';">' +
+            '<i class="fas ' + icono + '" style="color:' + color + ';"></i><div>' + esc(texto) + '</div></div>';
+    }
     function bloqueEnlazado(cfg) {
         var soportado = soportaEnlazado();
         var tiene = !!estado.handle;
@@ -13893,7 +13930,9 @@
                 }).join('') + '</select></div>';
         }
         var nombreArchivo = estado.archivo ? ('<div class="lista-aviso" style="margin-top:10px;"><i class="fas fa-file-lines"></i><div>Archivo cargado: <strong>' + esc(estado.archivo.nombre) + '</strong>' + (estado.hojaElegida ? ' · hoja <strong>' + esc(estado.hojaElegida) + '</strong>' : '') + '</div></div>') : '';
-        return bloqueEnlazado(cfg) +
+        var est = estadoEnlazado(cfg);
+        return avisoDeEstado(est.texto, est.nivel) +
+            bloqueEnlazado(cfg) +
             '<div class="seccion-bloque-titulo" style="margin:18px 0 8px;"><i class="fas fa-file-arrow-up"></i> Importar un archivo a mano</div>' +
             '<div class="nota-tareas"><i class="fas fa-circle-info"></i> ' +
             'En tu hoja de respuestas de Google: <strong>Archivo → Descargar → Microsoft Excel (.xlsx)</strong> o <strong>CSV</strong>. ' +
@@ -13940,7 +13979,10 @@
             '    <label class="fila-check" style="padding-top:10px;"><input type="checkbox" id="imp-auto"' + (cfg.auto ? ' checked' : '') + '><span class="dato-principal">Agregar los nuevos sola, sin preguntar<small>Se guarda solo al marcarlo. Si está apagada, solo te avisa y tú decides.</small></span></label>' +
             '  </div>' +
             '</div>' +
-            '<div id="imp-aviso-ajustes"></div>' +
+            '<div id="imp-aviso-ajustes">' + (function () {
+                var e = estadoEnlazado(cfg);
+                return avisoDeEstado('Estado de la revisión automática: ' + e.texto, e.nivel);
+            })() + '</div>' +
             '<div class="form-acciones" style="display:flex;justify-content:flex-end;"><button class="btn-primario" id="imp-guardar-ajustes"><i class="fas fa-floppy-disk"></i> Guardar ajustes</button></div>';
     }
 
@@ -14286,7 +14328,18 @@
            acaba de conectarlo), no se pisa. */
         if (estado.handle) return Promise.resolve(true);
         return leerHandleGuardado().then(function (handle) {
-            if (!handle) return false;
+            if (!handle) {
+                /* Jorge había conectado un archivo y el navegador no lo recordó: hay
+                   que avisarle, porque la revisión automática queda DETENIDA. */
+                if (leerConfig().enlazado) {
+                    estado.necesitaReconectar = true;
+                    ponerBoton();
+                    if (typeof raiz.mostrarNotificacion === 'function') {
+                        raiz.mostrarNotificacion('El archivo enlazado se perdió al recargar el CRM. Vuelve a conectarlo en "Importar prospectos" para que siga revisando solo.', 'warning');
+                    }
+                }
+                return false;
+            }
             estado.handle = handle;
             var cfg = leerConfig();
             if (!cfg.nombreEnlazado) { cfg.nombreEnlazado = handle.name; guardarConfig(cfg); }
@@ -14300,7 +14353,20 @@
                 programarRevisionEnlazada();
                 return false;
             });
-        }).catch(function () { return false; });
+        }).catch(function () {
+            /* El "acceso" guardado ya no sirve (archivo movido, renombrado o permiso
+               retirado): se descarta y se le pide volver a conectarlo. */
+            estado.handle = null;
+            estado.permisoEnlazado = '';
+            if (leerConfig().enlazado) {
+                estado.necesitaReconectar = true;
+                ponerBoton();
+                if (typeof raiz.mostrarNotificacion === 'function') {
+                    raiz.mostrarNotificacion('El acceso al archivo enlazado ya no sirve (¿lo moviste o lo renombraste?). Vuelve a conectarlo.', 'warning');
+                }
+            }
+            return false;
+        });
     }
 
     function conectarCuerpo() {
@@ -14440,10 +14506,12 @@
                 programarRevisionEnlazada();
                 var av = document.getElementById('imp-aviso-ajustes');
                 if (av) {
-                    av.innerHTML = '<div class="nota-tareas" style="margin-top:8px;"><i class="fas fa-circle-check" style="color:var(--color-verde);"></i> Guardado. ' +
+                    var e2 = estadoEnlazado(cfg);
+                    av.innerHTML = avisoDeEstado('Estado de la revisión automática: ' + e2.texto, e2.nivel) +
+                        '<div class="nota-tareas" style="margin-top:8px;"><i class="fas fa-circle-check" style="color:var(--color-verde);"></i> Guardado. ' +
                         (cfg.auto
-                            ? 'Los prospectos nuevos del archivo se agregarán solos cada ' + (estado.intervaloProgramado || cfg.intervaloSegundos || 20) + ' segundos.'
-                            : 'Solo te avisaré cuando el archivo cambie (revisando cada ' + (estado.intervaloProgramado || cfg.intervaloSegundos || 20) + ' segundos).') +
+                            ? 'Los prospectos nuevos del archivo se agregarán solos.'
+                            : 'Solo te avisaré cuando el archivo cambie.') +
                         '</div>';
                 }
             };
@@ -14526,13 +14594,21 @@
         if (typeof document === 'undefined') return;
         if (!esAdmin()) return;
         var contenedor = document.querySelector('#seccion-prospectos .header-actions');
-        if (!contenedor || document.getElementById('btn-importar-prospectos')) return;
-        var boton = document.createElement('button');
-        boton.className = 'btn-secundario';
-        boton.id = 'btn-importar-prospectos';
-        boton.innerHTML = '<i class="fas fa-file-arrow-up"></i> Importar prospectos';
-        boton.onclick = function () { abrirPanel('archivo'); };
-        contenedor.insertBefore(boton, contenedor.firstChild);
+        if (!contenedor) return;
+        var est = estadoEnlazado();
+        var alerta = est.nivel === 'alerta';
+        var boton = document.getElementById('btn-importar-prospectos');
+        if (!boton) {
+            boton = document.createElement('button');
+            boton.className = 'btn-secundario';
+            boton.id = 'btn-importar-prospectos';
+            boton.onclick = function () { abrirPanel('archivo'); };
+            contenedor.insertBefore(boton, contenedor.firstChild);
+        }
+        /* Si la revisión automática está detenida, se avisa desde el propio botón. */
+        boton.innerHTML = '<i class="fas fa-file-arrow-up"></i> Importar prospectos' +
+            (alerta ? ' <span style="color:var(--color-naranja);">\u26A0</span>' : '');
+        boton.title = alerta ? ('Ojo: ' + est.texto) : 'Importar prospectos desde un archivo';
     }
 
     function iniciar() {
@@ -14583,6 +14659,7 @@
         programarRevisionEnlazada: programarRevisionEnlazada,
         detenerRevisionEnlazada: detenerRevisionEnlazada,
         archivoCambio: archivoCambio,
+        estadoEnlazado: estadoEnlazado,
         /* Utilidades puras: las prueba el banco de pruebas. */
         pruebas: {
             normalizarTelefono: normalizarTelefono,
