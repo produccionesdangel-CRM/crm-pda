@@ -34,6 +34,27 @@ const TIPOS = {
 
 const servidor = http.createServer((peticion, respuesta) => {
   let ruta = decodeURIComponent(peticion.url.split('?')[0]);
+
+  // El teléfono manda aquí el resultado de la medición de arranque y se guarda como texto.
+  if (peticion.method === 'POST' && ruta === '/medicion') {
+    let cuerpo = '';
+    peticion.on('data', t => { cuerpo += t; });
+    peticion.on('end', () => {
+      try {
+        const destino = path.join(RAIZ, 'pruebas', 'mediciones-movil.json');
+        let previas = [];
+        try { previas = JSON.parse(fs.readFileSync(destino, 'utf8')); } catch (e) { previas = []; }
+        if (!Array.isArray(previas)) previas = [];
+        previas.push(JSON.parse(cuerpo));
+        fs.writeFileSync(destino, JSON.stringify(previas, null, 2), 'utf8');
+        console.log('Medición recibida del teléfono: ' + cuerpo.slice(0, 300));
+      } catch (e) { console.warn('No se pudo guardar la medición: ' + e.message); }
+      respuesta.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      respuesta.end('ok');
+    });
+    return;
+  }
+
   if (ruta === '/' || ruta.endsWith('/')) ruta += 'index.html';
   const destino = path.resolve(RAIZ, '.' + ruta);
   // Nunca salir de la carpeta del proyecto.

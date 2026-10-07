@@ -61,3 +61,20 @@ control de versión, historial, respaldo exportado e importación. No hay un cam
   el historial, pero no se puede imponer a nivel de base de datos sin cambiar el modelo de datos.
 - **"Que Ventas no vea Informes" es una vista**: los informes se calculan con datos que ese rol sí necesita.
   La sección está oculta para su rol y el acceso queda bloqueado.
+
+## Medición en el teléfono (7 de octubre de 2026)
+
+Medido **en el teléfono real** (Xiaomi 2412DPC0AG, Android 16, Chrome, **con datos móviles 4G**, no Wi-Fi),
+sobre la página ya publicada:
+
+| Qué se midió | Resultado |
+|---|---|
+| Bajar el archivo publicado | **445 ms** |
+| Leerlo y ejecutarlo (incluye Firebase desde internet) | **824 ms** |
+| **Total hasta tener la aplicación lista** | **1.269 ms ≈ 1,3 segundos** |
+| Peso | 988 KB |
+
+**Conclusión: no hay que aligerarlo.** El archivo creció de 614 KB a ~1 MB, pero en un teléfono real con datos
+móviles abre en **1,3 segundos**, y en Wi-Fi será más rápido. La medición se hizo con
+`pruebas\medir-movil.html` (baja el archivo publicado y cronometra la descarga y la lectura; repartible si se
+quiere repetir).

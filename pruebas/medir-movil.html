@@ -3,40 +3,44 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Medición de arranque</title>
+<title>Medición de arranque del CRM</title>
 <style>
   body { font-family: system-ui, -apple-system, sans-serif; background: #0d0d0d; color: #eee; margin: 0; padding: 18px; }
-  h1 { font-size: 18px; margin: 0 0 14px; }
-  .dato { font-size: 16px; line-height: 1.7; }
+  h1 { font-size: 17px; margin: 0 0 12px; }
+  .dato { font-size: 16px; line-height: 1.8; }
   b { color: #4ade80; }
   .error { color: #f87171; }
-  small { color: #9ca3af; }
+  small { color: #9ca3af; display: block; margin-top: 14px; line-height: 1.5; }
 </style>
 </head>
 <body>
-<h1>Medición de arranque del CRM</h1>
+<h1>Medición de arranque del CRM v5.0</h1>
 <div id="salida" class="dato">Midiendo…</div>
-<small>Esta página no es el CRM: mide cuánto tarda el teléfono en bajarlo y en leerlo.</small>
+<small>Esta página no es el CRM: mide cuánto tarda <strong>este teléfono</strong> en bajar el CRM publicado y en leerlo y ejecutarlo.</small>
 
 <script>
 (async function () {
   const salida = document.getElementById('salida');
+  // Se mide el archivo PUBLICADO (el que usan de verdad), no una copia local.
+  const URL_CRM = 'https://produccionesdangel-crm.github.io/crm-pda/index.html';
   const res = { aparato: navigator.userAgent, cuando: new Date().toISOString() };
   const enviar = async function () {
-    try { await fetch('../medicion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(res) }); } catch (e) { }
+    try { await fetch('/medicion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(res) }); } catch (e) { }
   };
   try {
     res.conexion = (navigator.connection && navigator.connection.effectiveType) || 'sin dato';
+    res.datosAhorrados = (navigator.connection && navigator.connection.saveData) || false;
 
-    // 1) Descarga del archivo tal cual lo baja el teléfono.
+    // 1) Bajarlo tal cual lo baja el teléfono.
     const t0 = performance.now();
-    const r = await fetch('../index.html', { cache: 'no-store' });
+    const r = await fetch(URL_CRM, { cache: 'no-store' });
     const texto = await r.text();
     const t1 = performance.now();
     res.bytes = texto.length;
     res.descargaMs = Math.round(t1 - t0);
+    res.esV5 = /BUILD_APP = '2026-10-07\.1'/.test(texto);
 
-    // 2) Leerlo y ejecutarlo: es lo que de verdad pesa en un archivo único.
+    // 2) Leerlo y ejecutarlo: lo que pesa en un archivo único.
     const t2 = performance.now();
     await new Promise(function (listo, fallo) {
       const marco = document.createElement('iframe');
@@ -54,7 +58,8 @@
     salida.innerHTML = 'Listo.<br>Descarga: <b>' + res.descargaMs + ' ms</b><br>' +
       'Leer y ejecutar: <b>' + res.lecturaMs + ' ms</b><br>' +
       'Total: <b>' + res.totalMs + ' ms</b><br>' +
-      'Peso: <b>' + Math.round(res.bytes / 1024) + ' KB</b>';
+      'Peso: <b>' + Math.round(res.bytes / 1024) + ' KB</b>' +
+      (res.esV5 ? '<br>Es la v5.0 ✅' : '<br><span class="error">NO es la v5.0</span>');
     await enviar();
   } catch (e) {
     res.error = String((e && e.message) || e);
