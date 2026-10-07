@@ -696,6 +696,13 @@ console.log('\n=== 17. Orden seguro del índice de administradores (antes de pub
   comprobar('la lista de usuarios no corta antes de tiempo al índice',
     !/set\(usuariosAObjeto\(\)\)[\s\S]{0,200}return false;[\s\S]{0,200}ref\('admins\//.test(cuerpo),
     'hay un return entre una y otra');
+
+  const login = HTML.slice(HTML.indexOf('function iniciarSesionAplicacion'), HTML.indexOf('function entrarDirectoConGoogle'));
+  comprobar('al ENTRAR se publica la casilla del índice (no solo al gestionar usuarios)',
+    /sincronizarIndiceAdmin\(usuarioActual\)/.test(login),
+    'quien no esté en el índice no tendría forma de inscribirse');
+  comprobar('la publicación del índice al entrar no puede tumbar el arranque',
+    /async function sincronizarIndiceAdmin[\s\S]{0,900}catch \(e\) \{ console\.warn/.test(HTML), 'sin red de seguridad');
 }
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);

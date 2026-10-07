@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.2';
+        var BUILD_APP = '2026-10-07.3';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -6782,6 +6782,11 @@
             usuarioPendienteLogin = null;
             guardarSesion(usuarioActual);
             if (registrarEvento !== false) registrarHistorial('sesion', 'login', 'El usuario "' + usuarioActual.nombre + '" inició sesión con Google', { nombre: usuarioActual.nombre });
+            // Cada quien publica su casilla del índice de administradores AL ENTRAR.
+            // Es lo que consultan las reglas de Firebase: si solo se publicara al
+            // gestionar usuarios, un administrador recién autorizado (o cuyo índice se
+            // perdiera) no tendría forma de inscribirse y quedaría sin permisos.
+            sincronizarIndiceAdmin(usuarioActual);
             iniciarAplicacion();
         }
 
