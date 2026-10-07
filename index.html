@@ -1860,7 +1860,7 @@
         var DIAS_RETENCION_PAPELERA = 30;
         var MAX_PAPELERA = 500;
         var SCHEMA_VERSION = 2;
-        var COLECCIONES_VERSIONADAS = ['paquetes', 'serviciosAdicionales', 'prospectos', 'clientes', 'tareas'];
+        var COLECCIONES_VERSIONADAS = ['paquetes', 'serviciosAdicionales', 'prospectos', 'clientes', 'tareas', 'campanias', 'participaciones'];
         var COLECCIONES_APPEND_ONLY = ['historial', 'papelera'];
 
         var firebaseConfig = {
@@ -2046,6 +2046,8 @@
         var historial = [];
         var usuarios = [];
         var papelera = [];
+        var campanias = [];
+        var participaciones = [];
         var sincronizandoFirebase = false;
         var primerCarga = true;
         var firebaseInicializado = false;
@@ -2314,7 +2316,7 @@
             const MIGRADO_FLAG = 'pda_migrado_idb_v1';
             if (localStorage.getItem(MIGRADO_FLAG) === '1') return false;
             if (almacenFallback) return false;
-            const CLAVES = ['paquetes', 'serviciosAdicionales', 'prospectos', 'clientes', 'tareas', 'historial', 'usuarios', 'papelera'];
+            const CLAVES = ['paquetes', 'serviciosAdicionales', 'prospectos', 'clientes', 'tareas', 'historial', 'usuarios', 'papelera', 'campanias', 'participaciones'];
             let hayDatosLocalStorage = false;
             CLAVES.forEach(function(k) { if (localStorage.getItem(k)) hayDatosLocalStorage = true; });
             if (!hayDatosLocalStorage) { localStorage.setItem(MIGRADO_FLAG, '1'); return false; }
@@ -2945,7 +2947,8 @@
             const datos = {
                 paquetes: paquetes || [], serviciosAdicionales: serviciosAdicionales || [],
                 prospectos: prospectos || [], clientes: clientes || [], tareas: tareas || [],
-                historial: historial || [], papelera: papelera || []
+                historial: historial || [], papelera: papelera || [],
+                campanias: campanias || [], participaciones: participaciones || []
             };
             return almacenGuardarMulti(datos).then(function(r) {
                 marcarGuardadoLocal();
@@ -2960,7 +2963,7 @@
         async function cargarDatosLocal() {
             if (!almacenListo) { console.warn('Almacén no listo, esperando...'); await inicializarAlmacen(); }
             try {
-                const claves = ['paquetes', 'serviciosAdicionales', 'prospectos', 'clientes', 'tareas', 'historial', 'papelera'];
+                const claves = ['paquetes', 'serviciosAdicionales', 'prospectos', 'clientes', 'tareas', 'historial', 'papelera', 'campanias', 'participaciones'];
                 const datos = await almacenCargarMulti(claves);
                 paquetes = datos.paquetes || [];
                 serviciosAdicionales = datos.serviciosAdicionales || [];
@@ -2969,10 +2972,13 @@
                 tareas = datos.tareas || [];
                 historial = datos.historial || [];
                 papelera = datos.papelera || [];
+                campanias = datos.campanias || [];
+                participaciones = datos.participaciones || [];
                 console.log('✅ Datos cargados desde ' + (almacenFallback ? 'localStorage' : 'IndexedDB') + ' → ' + paquetes.length + ' paq, ' + clientes.length + ' cli, ' + prospectos.length + ' prosp, ' + tareas.length + ' tareas, ' + historial.length + ' hist');
             } catch (error) {
                 console.error('Error cargando datos:', error);
                 paquetes = []; serviciosAdicionales = []; prospectos = []; clientes = []; tareas = []; historial = []; papelera = [];
+                campanias = []; participaciones = [];
             }
         }
         // ─────── @JS-ESTADO-GUARDADO ───────
@@ -3198,7 +3204,8 @@
                     usuario: usuarioActual ? usuarioActual.nombre : 'Sistema',
                     paquetes: paquetes || [], serviciosAdicionales: serviciosAdicionales || [],
                     prospectos: prospectos || [], clientes: clientes || [], tareas: tareas || [],
-                    historial: (historial || []).slice(0, 500), papelera: papelera || []
+                    historial: (historial || []).slice(0, 500), papelera: papelera || [],
+                campanias: campanias || [], participaciones: participaciones || []
                 };
                 localStorage.setItem(CLAVE_RESPALDO_SEGURIDAD, JSON.stringify(respaldo));
                 console.log('🧯 Respaldo de seguridad local creado antes de: ' + respaldo.motivo);
@@ -3213,8 +3220,8 @@
         }
         // Detecta una carga que vaciaría el CRM local: casi siempre es un fallo de red o de reglas.
         function cargaRemotaSospechosa(nuevas) {
-            const localTotal = (paquetes.length + serviciosAdicionales.length + prospectos.length + clientes.length + tareas.length);
-            const remoteTotal = (nuevas.paquetes + nuevas.serviciosAdicionales + nuevas.prospectos + nuevas.clientes + nuevas.tareas);
+            const localTotal = (paquetes.length + serviciosAdicionales.length + prospectos.length + clientes.length + tareas.length + campanias.length + participaciones.length);
+            const remoteTotal = (nuevas.paquetes + nuevas.serviciosAdicionales + nuevas.prospectos + nuevas.clientes + nuevas.tareas + nuevas.campanias + nuevas.participaciones);
             if (localTotal < 5) return false;
             if (remoteTotal > localTotal * 0.5) return false;
             return { localTotal: localTotal, remoteTotal: remoteTotal };
@@ -3274,6 +3281,8 @@
                 const resPros = await leerColeccion('prospectos');
                 const resCli = await leerColeccion('clientes');
                 const resTar = await leerColeccion('tareas');
+            const resCamp = await leerColeccion('campanias');
+            const resPart = await leerColeccion('participaciones');
 
                 if (lecturasFallidas.length > 0) {
                     // Si falla una colección con datos, abortar evita que la nube parezca vacía
@@ -3290,6 +3299,8 @@
                 let prospectosR = objetosAArray(resPros.val);
                 let clientesR = objetosAArray(resCli.val);
                 let tareasR = objetosAArray(resTar.val);
+            let campaniasR = objetosAArray(resCamp.val);
+            let participacionesR = objetosAArray(resPart.val);
 
                 if (datosAntiguos && paquetesR.length === 0 && clientesR.length === 0) {
                     console.warn('📦 Migrando estructura antigua...');
@@ -3323,7 +3334,7 @@
                 }
 
                 // Salvaguarda 2: rechazar una carga que vacíe el CRM local.
-                const sospecha = cargaRemotaSospechosa({ paquetes: paquetesR.length, serviciosAdicionales: serviciosR.length, prospectos: prospectosR.length, clientes: clientesR.length, tareas: tareasR.length });
+                const sospecha = cargaRemotaSospechosa({ paquetes: paquetesR.length, serviciosAdicionales: serviciosR.length, prospectos: prospectosR.length, clientes: clientesR.length, tareas: tareasR.length , campanias: campaniasR.length, participaciones: participacionesR.length});
                 if (sospecha && !forzar) {
                     console.error('⛔ Carga remota sospechosa: local=' + sospecha.localTotal + ' remoto=' + sospecha.remoteTotal + '. Carga cancelada.');
                     crearRespaldoSeguridadLocal('carga remota sospechosa');
@@ -3353,6 +3364,7 @@
                 crearRespaldoSeguridadLocal('carga desde Firebase');
 
                 paquetes = paquetesR; serviciosAdicionales = serviciosR; prospectos = prospectosR; clientes = clientesR; tareas = tareasR;
+                campanias = campaniasR; participaciones = participacionesR;
                 if (Array.isArray(historialRemoto) && historialRemoto.length > 0) historial = historialRemoto;
                 if (Array.isArray(papeleraRemota)) papelera = papeleraRemota;
                 ultimaActualizacionRemota = versionData && versionData.ultimaActualizacion ? versionData.ultimaActualizacion : null;
@@ -3606,7 +3618,7 @@
         }
         function exportarCopiaConflicto() {
             try {
-                const copia = { fecha: obtenerFechaHoraActual(), usuario: usuarioActual ? usuarioActual.nombre : 'desconocido', paquetes: paquetes, serviciosAdicionales: serviciosAdicionales, prospectos: prospectos, clientes: clientes, tareas: tareas };
+                const copia = { fecha: obtenerFechaHoraActual(), usuario: usuarioActual ? usuarioActual.nombre : 'desconocido', paquetes: paquetes, serviciosAdicionales: serviciosAdicionales, prospectos: prospectos, clientes: clientes, tareas: tareas, campanias: campanias, participaciones: participaciones };
                 const json = JSON.stringify(copia, null, 2);
                 const blob = new Blob([json], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -6925,7 +6937,7 @@
                     const usuariosSinSecretos = usuarios.map(function(u) {
                         return { username: u.username, nombre: u.nombre, email: correoDeUsuario(u), rol: u.rol, admin: u.admin === true, activo: usuarioEstaActivo(u), fechaCreacion: u.fechaCreacion, ultimoAcceso: u.ultimoAcceso };
                     });
-                    const json = JSON.stringify({ version: VERSION, fechaExportacion: obtenerFechaActual(), paquetes: paquetes, serviciosAdicionales: serviciosAdicionales, prospectos: prospectos, clientes: clientes, tareas: tareas, historial: historial, papelera: papelera, usuarios: usuariosSinSecretos }, null, 2);
+                    const json = JSON.stringify({ version: VERSION, fechaExportacion: obtenerFechaActual(), paquetes: paquetes, serviciosAdicionales: serviciosAdicionales, prospectos: prospectos, clientes: clientes, tareas: tareas, campanias: campanias, participaciones: participaciones, historial: historial, papelera: papelera, usuarios: usuariosSinSecretos }, null, 2);
                     const blob = new Blob([json], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -6946,12 +6958,14 @@
                     try {
                         const d = JSON.parse(ev.target.result);
                         if (!d || typeof d !== 'object' || !Array.isArray(d.paquetes) || !Array.isArray(d.clientes)) { mostrarNotificacion('El archivo no tiene el formato de respaldo esperado.', 'error'); return; }
-                        const resumen = 'Paquetes: ' + (d.paquetes || []).length + '\nServicios: ' + (d.serviciosAdicionales || []).length + '\nProspectos: ' + (d.prospectos || []).length + '\nClientes: ' + (d.clientes || []).length + '\nTareas: ' + (d.tareas || []).length + '\n\nEsto REEMPLAZARÁ todos los datos actuales. ¿Continuar?';
+                        const resumen = 'Paquetes: ' + (d.paquetes || []).length + '\nServicios: ' + (d.serviciosAdicionales || []).length + '\nProspectos: ' + (d.prospectos || []).length + '\nClientes: ' + (d.clientes || []).length + '\nTareas: ' + (d.tareas || []).length + '\nCampañas: ' + (d.campanias || []).length + '\nParticipaciones: ' + (d.participaciones || []).length + '\n\nEsto REEMPLAZARÁ todos los datos actuales. ¿Continuar?';
                         if (!confirm(resumen)) return;
                         crearRespaldoSeguridadLocal('importación de archivo');
                         paquetes = d.paquetes || []; serviciosAdicionales = d.serviciosAdicionales || [];
                         prospectos = d.prospectos || []; clientes = d.clientes || [];
                         tareas = d.tareas || []; historial = Array.isArray(d.historial) ? d.historial : [];
+                campanias = Array.isArray(d.campanias) ? d.campanias : [];
+                participaciones = Array.isArray(d.participaciones) ? d.participaciones : [];
                         papelera = Array.isArray(d.papelera) ? d.papelera : [];
                         // v4.8: la lista de usuarios del archivo NUNCA sobrescribe la autorización.
                         // Solo se completa el correo de usuarios que ya existen y no lo tenían.
@@ -6964,7 +6978,7 @@
                             guardarUsuarios();
                         }
                         // Todo lo importado debe subir a la nube.
-                        ['paquetes', 'serviciosAdicionales', 'prospectos', 'clientes', 'tareas'].forEach(function(col) {
+                        ['paquetes', 'serviciosAdicionales', 'prospectos', 'clientes', 'tareas', 'campanias', 'participaciones'].forEach(function(col) {
                             (window[col] || []).forEach(function(item) { if (item && item.id) marcarSucia(col, item.id); });
                         });
                         await subirRegistroUsuarios();

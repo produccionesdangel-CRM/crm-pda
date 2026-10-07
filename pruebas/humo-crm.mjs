@@ -283,5 +283,35 @@ console.log('\n=== 5. Estructura: menú, secciones y estilos (Fase 1) ===');
     'el CSS de campañas redefine .panel-lateral-body');
 }
 
+console.log('\n=== 6. Capa de datos: las colecciones nuevas entraron al mecanismo existente (Fase 2) ===');
+{
+  const c = r.contexto;
+  comprobar('campanias y participaciones están declaradas como arreglos',
+    Array.isArray(c.campanias) && Array.isArray(c.participaciones),
+    `campanias=${typeof c.campanias} participaciones=${typeof c.participaciones}`);
+  comprobar('entraron a las colecciones versionadas (guardado/versión en la nube)',
+    Array.isArray(c.COLECCIONES_VERSIONADAS) && c.COLECCIONES_VERSIONADAS.includes('campanias') && c.COLECCIONES_VERSIONADAS.includes('participaciones'),
+    (c.COLECCIONES_VERSIONADAS || []).join(', '));
+  comprobar('el outbox persistente las acepta',
+    (() => { c.marcarSucia('campanias', 'prueba-1'); const hay = c.hayEntidadesSucias() && c.contarEntidadesSucias() >= 1; c.limpiarEntidadesSucias(); return hay; })(),
+    'marcarSucia no las registró');
+
+  // De verdad: se guarda y se revisa qué quedó escrito en el almacén.
+  const antes = r.registro.escrituras.length;
+  const ok = await c.guardarDatosLocal();
+  const escritas = r.registro.escrituras.slice(antes);
+  comprobar('guardarDatosLocal() guarda sin error', ok === true, `devolvió ${ok}`);
+  comprobar('el guardado incluye campanias y participaciones',
+    escritas.includes('campanias') && escritas.includes('participaciones'),
+    `se guardaron: ${escritas.join(', ')}`);
+  comprobar('lo guardado son arreglos válidos',
+    Array.isArray(JSON.parse(r.ventana.localStorage.getItem('campanias') || 'null')) &&
+    Array.isArray(JSON.parse(r.ventana.localStorage.getItem('participaciones') || 'null')),
+    'no son arreglos');
+  comprobar('el respaldo exportado incluiría las campañas',
+    /tareas: tareas, campanias: campanias, participaciones: participaciones, historial/.test(HTML),
+    'el export no las incluye');
+}
+
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);
