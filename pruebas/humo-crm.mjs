@@ -673,5 +673,15 @@ console.log('\n=== 15. Regresión: todas las secciones se dibujan (Fase 5) ===')
     'las reglas no lo permiten');
   c.usuarioActual = null;
 }
+console.log('\n=== 16. Identidad de la versión (para verificar el despliegue) ===');
+{
+  comprobar('el archivo se identifica como v5.0', /var VERSION = '5\.0';/.test(HTML), 'no dice 5.0');
+  comprobar('trae sello de compilación', /var BUILD_APP = '\d{4}-\d{2}-\d{2}\.\d+';/.test(HTML),
+    (HTML.match(/var BUILD_APP = '[^']+'/) || ['sin sello'])[0]);
+  comprobar('el menú y la pestaña muestran v5.0',
+    /<title>Registro PDA v5\.0/.test(HTML) && /<div class="version">v5\.0<\/div>/.test(HTML), 'la etiqueta visible no dice 5.0');
+  comprobar('las novedades de la v5.0 están escritas para el usuario',
+    /Novedades en esta versión \(v5\.0\)/.test(HTML) && /Nuevo rol: Ventas/.test(HTML), 'faltan las novedades');
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);

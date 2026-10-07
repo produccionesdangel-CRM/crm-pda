@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Registro PDA v4.8 - Estudio Fotografía</title>
+    <title>Registro PDA v5.0 - Estudio Fotografía</title>
     <link rel="icon" type="image/jpeg" href="https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1260,7 +1260,7 @@
             <div class="login-footer">
                 <a href="#" id="login-btn-diagnostico" style="color:var(--color-texto-secundario);text-decoration:underline;">Ver diagnóstico de este dispositivo</a>
                 <div id="login-diagnostico" style="display:none;text-align:left;margin-top:12px;padding:10px 12px;background-color:var(--color-bg-terciario);border-radius:6px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;"></div>
-                <div style="margin-top:10px;">v4.8 · Software diseñado por <strong>JFR MEDIA</strong><br>
+                <div style="margin-top:10px;">v5.0 · Software diseñado por <strong>JFR MEDIA</strong><br>
                 Acceso restringido a personal autorizado</div>
             </div>
         </div>
@@ -1297,7 +1297,7 @@
             <div class="sidebar-footer">
                 <button class="btn-colapsar" id="btn-colapsar" title="Colapsar menú"><i class="fas fa-chevron-left"></i><span>Colapsar</span></button>
                 <button class="btn-logout" id="btn-logout" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></button>
-                <div class="version">v4.8</div>
+                <div class="version">v5.0</div>
             </div>
         </nav>
 
@@ -1712,15 +1712,19 @@
                     </div>
                 </div>
                 <div class="version-card">
-                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v4.8</span></h3>
+                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v5.0</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">4.8</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">5.0</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
                     </div>
                     <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v4.8)</h4>
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v5.0)</h4>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-bullhorn"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Campañas: Panel y módulo completo</div><div class="changelog-desc">Se agregaron las pestañas <strong>Panel</strong> (después de Informes) y <strong>Campañas</strong>: campañas por etapas, participantes, ofertas, metas y embudo. Solo una campaña activa recibe gente a la vez, y sus tareas se agendan en el calendario. La ficha del prospecto ahora muestra <strong>sus campañas y sus tareas agrupadas por vencimiento</strong>.</div></div></div>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-user-tag"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Nuevo rol: Ventas</div><div class="changelog-desc">Para captación y cobro en mostrador: trabaja prospectos, campañas, tareas, clientes y contratos, puede <strong>agregar pagos</strong> e <strong>imprimir comprobantes</strong>. No ve Informes, no entra a la papelera ni a la gestión de usuarios, no puede sacar respaldos, ve el catálogo de paquetes y servicios <strong>en solo lectura</strong> y su avance de fase comercial llega hasta Negociación.</div></div></div>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-database"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Las campañas entran al respaldo y a la nube</div><div class="changelog-desc">Las campañas y sus participaciones usan <strong>el mismo mecanismo que el resto</strong>: cola de cambios pendientes, control de versión, historial, respaldo exportado e importación. Nada funciona por fuera, así que no se pierden ni se duplican al sincronizar.</div></div></div>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-shield-halved"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Seguridad: el permiso de administrador ahora se verifica de verdad</div><div class="changelog-desc">El CRM publica un índice de administradores que las reglas de la base consultan. Antes ese candado <strong>no funcionaba</strong> (buscaba por un identificador que no coincidía con cómo se guardan los usuarios) y quedaba abierto un camino para que un usuario se diera permisos de administrador. Corregido, y el catálogo de paquetes y servicios ya solo lo puede modificar un administrador.</div></div></div>
                         <div class="changelog-item">
                             <div class="changelog-icono"><i class="fab fa-google"></i></div>
                             <div class="changelog-contenido">
@@ -1833,8 +1837,8 @@
         /* ═══════════════════════════════════════════════════════════ */
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
-        var VERSION = '4.8';
-        var BUILD_APP = '2026-10-05.9';
+        var VERSION = '5.0';
+        var BUILD_APP = '2026-10-07.1';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
