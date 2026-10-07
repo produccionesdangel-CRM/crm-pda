@@ -25,7 +25,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
-export const ARCHIVO = path.resolve(AQUI, '..', 'index.html');
+export const ARCHIVO = process.env.CRM_ARCHIVO ? path.resolve(process.env.CRM_ARCHIVO) : path.resolve(AQUI, '..', 'index.html');
 export const HTML = fs.readFileSync(ARCHIVO, 'utf8');
 /** Ids que existen de verdad en el HTML. Los demás devuelven null, como el navegador. */
 export const IDS = new Set([...HTML.matchAll(/id="([^"]+)"/g)].map(m => m[1]));
@@ -213,12 +213,14 @@ export async function ejecutar(opciones = {}) {
   // Los scripts externos (Firebase desde CDN) no se cargan: ya está el simulador.
   const bloques = [...HTML.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].map(m => m[1]);
   const resultado = { bloques: bloques.length, excepcion: null, ventana, registro, elementos, contexto };
+  const t0 = performance.now();
   try {
     for (const codigo of bloques) new vm.Script(codigo, { filename: 'index.html<script>' }).runInContext(contexto);
   } catch (e) {
     resultado.excepcion = e;
     return resultado;
   }
+  resultado.ms = performance.now() - t0;
   // El arranque es asíncrono: se le da tiempo a que se asienten las promesas.
   for (let i = 0; i < 8; i++) await new Promise(r => setTimeout(r, 12));
   return resultado;
@@ -248,6 +250,7 @@ comprobar('el arranque no reportó "Error en boot"',
   !r.registro.errores.some(e => /Error en boot/i.test(e)),
   r.registro.errores.filter(e => /Error en boot/i.test(e)).join(' | '));
 comprobar('no hubo errores en consola', r.registro.errores.length === 0, r.registro.errores.slice(0, 3).join(' | '));
+console.log('  (peso y tiempo: ' + (fs.statSync(ARCHIVO).size/1024).toFixed(0) + ' KB · el JavaScript se ejecuta en ' + r.ms.toFixed(0) + ' ms · en el teléfono será más lento)');
 
 console.log('\n=== 2. La base del CRM quedó definida ===');
 const faltan = GLOBALES_BASE.filter(n => typeof r.contexto[n] !== 'function');
@@ -373,7 +376,7 @@ console.log('\n=== 7. Puente de la interfaz de campañas con el CRM ===');
   comprobar('el botón de confirmar ejecuta la acción pedida', confirmado === true, `confirmado=${confirmado}`);
 
   comprobar('el puente apunta al almacén y al motor reales',
-    c.App.almacen === c.almacenCampanias && c.App.motor === c.motorCampanias, 'no coinciden');
+    !!c.App && c.App.almacen === c.almacenCampanias && c.App.motor === c.motorCampanias, 'no coinciden');
 }
 console.log('\n=== 8. Las vistas de campañas se pintan (Fase 3b) ===');
 {
@@ -407,6 +410,10 @@ console.log('\n=== 9. Calendario con campañas (Fase 3c) ===');
   const leerGrid = () => String((r.elementos.get('calendario-grid') || {}).innerHTML || '');
   const hoy = c.obtenerFechaActual();
 
+  if (!c.motorCampanias || typeof c.motorCampanias.crearCampania !== 'function') {
+    comprobar('el motor está disponible para el calendario', false, 'este archivo no trae el motor de campañas');
+    console.log('  (se omiten las pruebas del calendario con campañas)');
+  } else {
   const camp = c.motorCampanias.crearCampania({ nombre: 'Campaña calendario' });
   const rp = c.motorCampanias.crearProspecto({ nombre: 'Prospecto calendario' });
   const pros = rp && rp.prospecto ? rp.prospecto : null;
@@ -443,5 +450,7 @@ console.log('\n=== 9. Calendario con campañas (Fase 3c) ===');
     HTML.includes('Solo campañas') && HTML.includes('leyenda-color-seguimiento') && HTML.includes('Tarea de campaña'),
     'falta el filtro o la leyenda');
 }
+  }
+
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);
