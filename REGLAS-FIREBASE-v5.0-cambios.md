@@ -100,3 +100,11 @@ hasta que él mismo vuelva a entrar y publique.
 
 **Pendiente antes de publicar las reglas:** el respaldo exportado y verificado, y la prueba con una cuenta de
 cada rol.
+
+## 7. Decisión del 6/10/2026: catálogo en solo lectura (sin cambios en las reglas)
+
+Jorge decidió que **Operador y Ventas vean Paquetes y Servicios completos, en solo lectura**. Esta propuesta
+**ya lo cumple tal cual**: `.read` abierto a cualquier usuario autenticado y `.write` reservado al administrador
+(o al dueño) en `paquetes` y `serviciosAdicionales`. No hay que tocar las reglas por este cambio; lo único que
+se ajustó fue la interfaz (la sección Servicios dejó de estar oculta y se dibuja para todos, sin botones de
+editar ni eliminar).

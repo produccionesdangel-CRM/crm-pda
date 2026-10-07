@@ -1290,7 +1290,7 @@
         <li class="menu-item" data-seccion="clientes" data-label="Clientes"><i class="fas fa-user-check"></i><span>Clientes</span></li>
                 <li class="menu-item" data-seccion="contratos" data-label="Contratos"><i class="fas fa-file-contract"></i><span>Contratos</span></li>
                 <li class="menu-item" data-seccion="paquetes" data-label="Paquetes"><i class="fas fa-box"></i><span>Paquetes</span></li>
-                <li class="menu-item solo-admin" data-seccion="servicios" data-label="Servicios"><i class="fas fa-tools"></i><span>Servicios</span></li>
+                <li class="menu-item" data-seccion="servicios" data-label="Servicios"><i class="fas fa-tools"></i><span>Servicios</span></li>
                 <li class="menu-item" data-seccion="calendario" data-label="Calendario"><i class="fas fa-calendar-alt"></i><span>Calendario</span></li>
                 <li class="menu-item" data-seccion="configuracion" data-label="Configuración"><i class="fas fa-cog"></i><span>Configuración</span></li>
             </ul>
@@ -6918,7 +6918,6 @@
             document.querySelectorAll('.menu-item').forEach(function(item) {
                 item.addEventListener('click', function() {
                     const seccion = this.dataset.seccion;
-                    if (seccion === 'servicios' && !esAdmin()) { mostrarNotificacion('Solo administradores pueden acceder a esta sección.', 'warning'); return; }
                     cambiarSeccion(seccion);
                     renderizarSeccion(seccion);
                     if (window.innerWidth <= 768) cerrarSidebarMovil();
@@ -7110,7 +7109,7 @@
         /* ─── BOOT ─── */
         function renderizarTodo() {
             actualizarFiltrosInformes();
-            if (esAdmin()) { renderizarPaquetes(); renderizarServicios(); }
+            renderizarPaquetes(); renderizarServicios();
             renderizarProspectos();
             renderizarClientes(); renderizarContratos(); renderizarCalendario();
             renderizarInformes(); renderizarHistorial(); renderizarUsuarios();
@@ -7133,7 +7132,7 @@
                 case 'clientes': renderizarClientes(); break;
                 case 'contratos': renderizarContratos(); break;
                 case 'paquetes': renderizarPaquetes(); break;
-                case 'servicios': if (esAdmin()) renderizarServicios(); break;
+                case 'servicios': renderizarServicios(); break;
                 case 'calendario': renderizarCalendario(); break;
                 case 'panel': if (window.App && typeof App.renderPanel === 'function') App.renderPanel(); break;
                 case 'campanias': if (window.App && typeof App.renderCampanias === 'function') App.renderCampanias(); break;

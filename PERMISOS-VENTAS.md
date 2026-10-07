@@ -30,7 +30,7 @@
 | Calendario | ✅ | tareas de clientes y eventos de campaña |
 | Panel (campañas) | ✅ **solo lo suyo** | sus campañas y sus asignaciones; **sin cifras globales de dinero** |
 | Informes | ❌ | no ve la sección |
-| Paquetes y Servicios | ❌ | no entra a las secciones ni puede crear/editar/borrar nada del catálogo. **Sí ve la lista de precios dentro del formulario de contrato** (así cotiza), que es como el CRM ya funciona |
+| Paquetes y Servicios | 👁️ **solo lectura** | **ve las dos secciones completas**, con sus precios y detalles, pero **no puede crear, editar ni borrar** nada del catálogo (los botones no existen para su rol y los candados del CRM rechazan la operación). Es la decisión de Jorge del 6/10/2026, y aplica **igual para el Operador** |
 | Papelera | ❌ | no la ve en Configuración |
 | Usuarios | ❌ | no puede agregar, editar ni eliminar usuarios |
 | Exportar / Importar respaldo | ❌ | **no puede sacar respaldos de los datos** |
@@ -63,7 +63,24 @@
    Con esto las reglas de Firebase pueden **negar la escritura** en `/paquetes` y `/serviciosAdicionales`, y en la
    interfaz se oculta la sección (guardas dobles).
 
-### 4.1 Una corrección importante sobre el rol Operador
+### 4.1 Paquetes y Servicios: resuelto (decisión de Jorge, 6/10/2026)
+
+**Decisión final:** tanto el **Operador** como el **Ventas** ven las secciones **Paquetes** y **Servicios**
+completas, con precios y detalles, **en solo lectura**: no pueden crear, editar ni borrar nada del catálogo.
+
+Lo que se hizo en la v5.0:
+
+- La sección **Servicios dejó de ser exclusiva de administradores**: se quitó la marca `solo-admin` del menú
+  y el candado que impedía entrar. Ahora se dibuja para cualquier rol.
+- **Paquetes ya era visible**; lo que faltaba era que **Servicios** lo fuera.
+- Los botones de **crear, editar y eliminar** siguen ocultos para quien no es administrador (en las tarjetas,
+  en los detalles y en los botones de *Nuevo*), y **los candados del CRM rechazan la operación** aunque alguien
+  la invoque a mano.
+- Las **reglas de Firebase** propuestas ya coinciden: `.read` abierto para usuarios autenticados y `.write`
+  **solo administrador** en `paquetes` y `serviciosAdicionales`.
+
+Verificado en el banco de pruebas (67/67): un Operador ve los dos listados **sin** los botones de editar ni
+eliminar, y un Administrador **sí** los conserva.
 
 Lo que se creía —"el operador no ve la sección de Paquetes"— **hoy no es así**. Verificado en el archivo:
 
@@ -72,9 +89,7 @@ Lo que se creía —"el operador no ve la sección de Paquetes"— **hoy no es a
 | **Paquetes** | **Todos**, incluido el Operador: el menú (`data-seccion="paquetes"`) no tiene la marca `solo-admin`, y al entrar solo se esconden los botones de *Nuevo*, *Editar* y *Eliminar* (línea 3701). **La lista se ve completa, con precios.** |
 | **Servicios** | Solo administradores: el menú sí trae `solo-admin` (línea 1293) y además hay un candado al entrar (línea 6869). |
 
-**Decisión pendiente (una sola pregunta para Jorge):** ¿se deja igual —Ventas sin la sección de Paquetes y el Operador
-como está hoy—, o se le quita también la sección de Paquetes al Operador para que quede como él lo describió?
-Lo segundo es un cambio de comportamiento para un rol que ya está en uso, así que no se toca sin su autorización.
+*(Pregunta ya respondida: ver 4.1.)*
 
 ## 5. Reglas de Firebase: qué tienen que lograr
 

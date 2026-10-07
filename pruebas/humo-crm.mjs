@@ -521,5 +521,45 @@ console.log('\n=== 11. Índice de administradores para las reglas (Fase 4) ===')
   comprobar('un operador publica su casilla (no se queda sin índice)',
     !!r.registro.llamadas['ref:admins/uid-op-2'], 'no se pidió esa ruta');
 }
+console.log('\n=== 12. Paquetes y Servicios en solo lectura (Fase 4) ===');
+{
+  const c = r.contexto;
+  comprobar('la sección Servicios ya no está marcada como solo-admin',
+    !/class="menu-item solo-admin" data-seccion="servicios"/.test(HTML), 'sigue oculta para no administradores');
+  comprobar('ya no hay candado que impida entrar a Servicios',
+    !/Solo administradores pueden acceder a esta sección/.test(HTML), 'el candado sigue');
+
+  c.paquetes.push({ id: 'paq-1', nombre: 'Paquete de prueba', precio: 1000, descuento: 0, vigencia: '2026-12-31', estatus: 'Activo', items: [] });
+  c.serviciosAdicionales.push({ id: 'ser-1', nombre: 'Servicio de prueba', precio: 500, descuento: 0, vigencia: '2026-12-31' });
+  // En el navegador los <select> traen una opción elegida por defecto; el simulador no la lee,
+  // así que se fija aquí (si no, el filtro de estatus descartaría todo).
+  const fijar = (id, valor) => { const el = r.elementos.get(id); if (el) el.value = valor; };
+  fijar('filtro-estatus-paquete', 'todos'); fijar('orden-paquetes', 'nombre-asc');
+  fijar('filtro-estatus-servicio', 'todos'); fijar('orden-servicios', 'nombre-asc');
+
+  // Un usuario NO administrador (como el Operador o Ventas).
+  c.usuarioActual = { username: 'ana', nombre: 'Ana', rol: 'Operador', admin: false };
+  let error = null;
+  try { c.renderizarSeccion('paquetes'); } catch (e) { error = e.message; }
+  const paq = String((r.elementos.get('lista-paquetes') || {}).innerHTML || '');
+  comprobar('el Operador SÍ ve el listado de Paquetes', error === null && paq.includes('Paquete de prueba'), error || 'no aparece');
+  comprobar('pero no tiene botones de editar ni eliminar paquetes',
+    !paq.includes('CRUD.paquetes.editar') && !paq.includes('CRUD.paquetes.eliminar'), 'aparecen botones de administrador');
+
+  error = null;
+  try { c.renderizarSeccion('servicios'); } catch (e) { error = e.message; }
+  const ser = String((r.elementos.get('lista-servicios') || {}).innerHTML || '');
+  comprobar('el Operador SÍ ve el listado de Servicios', error === null && ser.includes('Servicio de prueba'), error || 'no aparece');
+  comprobar('pero no tiene botones de editar ni eliminar servicios',
+    !ser.includes('CRUD.servicios.editar') && !ser.includes('CRUD.servicios.eliminar'), 'aparecen botones de administrador');
+
+  // Un administrador sí los tiene.
+  c.usuarioActual = { username: 'jorge', nombre: 'Jorge', rol: 'Administrador', admin: true };
+  c.renderizarSeccion('paquetes');
+  const paqAdmin = String((r.elementos.get('lista-paquetes') || {}).innerHTML || '');
+  comprobar('el Administrador sí conserva editar y eliminar',
+    paqAdmin.includes('CRUD.paquetes.editar') && paqAdmin.includes('CRUD.paquetes.eliminar'), 'perdió los botones');
+  c.usuarioActual = null;
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);
