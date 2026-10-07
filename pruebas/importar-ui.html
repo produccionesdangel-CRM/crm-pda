@@ -57,6 +57,16 @@
                 if (!imp) { mal('no cargo el modulo de importacion'); terminar(); return; }
                 bien('el modulo de importacion quedo cargado');
 
+                /* En este entorno de prueba IndexedDB no responde, así que el CRM
+                   reintenta cargar datos y borra lo que la prueba siembra: se
+                   neutraliza el guardado/carga (no es lo que se está probando). */
+                try {
+                    w.guardarDatos = function () { };
+                    w.cargarDatosLocal = function () { return Promise.resolve(); };
+                    w.cargarDesdeFirebase = function () { return Promise.resolve(false); };
+                    w.guardarEnFirebase = function () { return Promise.resolve(false); };
+                } catch (e) { }
+
                 /* Un prospecto que ya existe (para provocar un duplicado por telefono). */
                 w.prospectos.push({ id: 'pro_existente', nombre: 'Ana Lopez Ruiz', telefono: '+52 55 4444 5555', email: '', faseActual: 'Interesado', historialFases: [], notasGenerales: '', clienteId: null, fechaRegistro: '2026-09-01' });
                 var antes = w.prospectos.length;
