@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.4';
+        var BUILD_APP = '2026-10-07.5';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -6969,6 +6969,27 @@
         }
 
         function conectarEventListenersApp() {
+            // ─────── @JS-CAMPANIAS-BOTONES-FIJOS (v5.0) ───────
+            // Los botones de "Nueva campaña" (el del Panel y el de Campañas) y el de
+            // "Limpiar" viven en el HTML fijo de las secciones, no dentro de la lista que
+            // se redibuja, así que no los alcanzaba conectarListadoCampanias(). Sin esto,
+            // los tres se veían pero no hacían nada (reportado por Jorge el 7/10/2026).
+            ['btn-nueva-campania', 'btn-nueva-campania-panel'].forEach(function(id) {
+                var b = document.getElementById(id);
+                if (b) b.onclick = function (ev) { if (ev && ev.preventDefault) ev.preventDefault(); App.asistenteCampania(); };
+            });
+            var btnLimpiar = document.getElementById('btn-limpiar-campanias');
+            if (btnLimpiar) btnLimpiar.onclick = function (ev) {
+                if (ev && ev.preventDefault) ev.preventDefault();
+                [['filtro-campania-estado', 'todas'], ['filtro-campania-tipo', 'todas'],
+                 ['filtro-campania-vigencia', 'todas'], ['filtro-campania-responsable', 'todos']].forEach(function(par) {
+                    var e = document.getElementById(par[0]);
+                    if (e) e.value = par[1];
+                });
+                var buscador = document.getElementById('buscar-campania');
+                if (buscador) buscador.value = '';
+                App.renderCampanias();
+            };
             document.querySelectorAll('.btn-view-toggle').forEach(function(toggle) {
                 const seccion = toggle.dataset.vistaSeccion;
                 if (!seccion) return;

@@ -742,5 +742,61 @@ console.log('\n=== 18. Matriz de permisos en la interfaz (lo que cada rol VE) ==
     vis('btn-nuevo-paquete') !== 'none' && vis('btn-nuevo-servicio') !== 'none');
   c.usuarioActual = null;
 }
+console.log('\n=== 19. Ningún control de las secciones nuevas queda sin conectar ===');
+{
+  // Recorre el HTML de las secciones nuevas y avisa de cualquier id o data-* que
+  // aparezca UNA sola vez en todo el archivo: eso significa que nadie lo usa en JS.
+  const recorte = (desde, hasta) => {
+    const a = HTML.indexOf(desde);
+    const b = HTML.indexOf(hasta, a + 1);
+    return a < 0 || b < 0 ? '' : HTML.slice(a, b);
+  };
+  const panel = recorte('<section id="seccion-panel"', '<section id="seccion-campanias"');
+  const campanias = recorte('<section id="seccion-campanias"', '<section id="seccion-clientes"');
+  const prospectos = recorte('<section id="seccion-prospectos"', '<section id="seccion-campanias"');
+  comprobar('las tres secciones nuevas se pudieron recortar del HTML',
+    panel.length > 500 && campanias.length > 500 && prospectos.length > 500,
+    'panel ' + panel.length + ', campanias ' + campanias.length + ', prospectos ' + prospectos.length);
+
+  // Los contenedores de sección no necesitan código: los maneja el sistema de pestañas.
+  const exentos = ['seccion-panel', 'seccion-campanias', 'seccion-prospectos'];
+  const huerfanos = [];
+  for (const trozo of [panel, campanias, prospectos]) {
+    for (const m of trozo.matchAll(/id="([a-zA-Z0-9_-]+)"/g)) {
+      const id = m[1];
+      if (exentos.includes(id)) continue;
+      const veces = (HTML.match(new RegExp(id.replace(/[-]/g, '\\-'), 'g')) || []).length;
+      if (veces <= 1 && !huerfanos.includes(id)) huerfanos.push(id);
+    }
+  }
+  comprobar('ningún control de Panel, Campañas o Prospectos quedó sin código que lo atienda',
+    huerfanos.length === 0, huerfanos.length ? 'sin conectar: ' + huerfanos.join(', ') : '');
+
+  // Y en concreto, los tres que se reportaron rotos.
+  for (const id of ['btn-nueva-campania', 'btn-nueva-campania-panel', 'btn-limpiar-campanias']) {
+    comprobar('el botón "' + id + '" tiene código que lo atiende',
+      (HTML.match(new RegExp(id, 'g')) || []).length >= 2, 'aparece solo en el HTML');
+  }
+  comprobar('"Nueva campaña" abre el asistente de campaña',
+    /getElementById\(id\)[\s\S]{0,120}App\.asistenteCampania\(\)/.test(HTML), 'no llama al asistente');
+
+  // Prueba funcional: se pulsa el botón de verdad y debe abrirse el asistente.
+  // (Esto es lo que habría cazado el fallo reportado, en vez de solo mirar el código.)
+  const c = r.contexto;
+  c.usuarioActual = { username: 'jorge', nombre: 'Jorge', rol: 'Administrador', admin: true };
+  let errorBoton = null;
+  try {
+    if (typeof c.conectarEventListenersApp === 'function') c.conectarEventListenersApp();
+    const b = r.elementos.get('btn-nueva-campania-panel');
+    if (!b || typeof b.onclick !== 'function') throw new Error('el botón no quedó con manejador');
+    b.onclick({ preventDefault: function () { } });
+  } catch (e) { errorBoton = (e && e.message) || String(e); }
+  comprobar('pulsar "Nueva campaña" del Panel no lanza error y abre el asistente',
+    errorBoton === null && !/No se pudo/.test(errorBoton || ''), errorBoton || '');
+  const pintado = [...r.elementos.values()].map(el => String(el._html || '')).join(' ');
+  comprobar('el asistente de campaña se dibuja con sus pasos',
+    /asistente|Paso 1|Nueva campaña/i.test(pintado), 'no se dibujó el asistente');
+  c.usuarioActual = null;
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);
