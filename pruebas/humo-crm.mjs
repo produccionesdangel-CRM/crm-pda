@@ -122,7 +122,8 @@ export function crearContexto({ conIndexedDB = false } = {}) {
     signOut() { return Promise.resolve(); },
     useDeviceLanguage() { }, fetchSignInMethodsForEmail() { return Promise.resolve([]); }
   };
-  const dbObj = { ref: r => refStub(r), goOnline() { }, goOffline() { }, app: {} };
+  // Se registran las rutas que la app pide a la nube: así se puede comprobar qué publica.
+  const dbObj = { ref: r => { const k = 'ref:' + r; registro.llamadas[k] = (registro.llamadas[k] || 0) + 1; return refStub(r); }, goOnline() { }, goOffline() { }, app: {} };
   const firebase = {
     initializeApp() { return { name: '[simulado]', options: {} }; },
     app: () => ({ name: '[simulado]' }),
@@ -495,6 +496,30 @@ console.log('\n=== 10. Ficha del prospecto con sus campañas (Fase 3c) ===');
       conCampania.some(x => x.includes('tarea-grupo-titulo') || x.includes('Para hoy') || x.includes('Vencidas')),
       'no se ve la agrupación');
   }
+}
+console.log('\n=== 11. Índice de administradores para las reglas (Fase 4) ===');
+{
+  const c = r.contexto;
+  // Sesión simulada de un administrador.
+  c.auth.currentUser = { uid: 'uid-admin-1', email: 'jorge@ejemplo.com', emailVerified: true };
+  c.database = c.firebase.database();
+  c.usuarios.length = 0;
+  c.usuarios.push({ username: 'jorge', nombre: 'Jorge', email: 'jorge@ejemplo.com', rol: 'Administrador', admin: true, activo: true });
+
+  let error = null, ok = null;
+  try { ok = await c.subirRegistroUsuarios(); } catch (e) { error = e.message; }
+  comprobar('el registro de usuarios se publica', error === null && ok === true, error || `devolvió ${ok}`);
+  comprobar('la app publica el índice admins/<uid>',
+    !!r.registro.llamadas['ref:admins/uid-admin-1'], 'no se pidió esa ruta a la nube');
+  comprobar('el registro de usuarios incluye el uid',
+    /uid:\s*\(esUnoMismo && uid\)/.test(HTML), 'no se guarda el uid');
+
+  // Un operador (no administrador) también publica su casilla, pero en falso.
+  c.auth.currentUser = { uid: 'uid-op-2', email: 'ana@ejemplo.com', emailVerified: true };
+  c.usuarios.push({ username: 'ana', nombre: 'Ana', email: 'ana@ejemplo.com', rol: 'Operador', admin: false, activo: true });
+  try { await c.subirRegistroUsuarios(); } catch (e) { /* se reporta abajo */ }
+  comprobar('un operador publica su casilla (no se queda sin índice)',
+    !!r.registro.llamadas['ref:admins/uid-op-2'], 'no se pidió esa ruta');
 }
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);

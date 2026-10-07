@@ -19,6 +19,9 @@
         "email": {
           ".validate": "newData.isString() && (newData.val().toLowerCase() === auth.token.email.toLowerCase() || auth.token.email == 'produccionesdangel@gmail.com' || root.child('admins').child(auth.uid).val() === true)"
         },
+        "uid": {
+          ".validate": "newData.isString() && newData.val().length <= 64"
+        },
         "username": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
         },

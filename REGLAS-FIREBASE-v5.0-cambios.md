@@ -85,3 +85,18 @@ además el correo del dueño (`produccionesdangel@gmail.com`), que es la que en 
 
 > Pendiente antes de publicar las reglas: el cambio chico en la app para que escriba `admins/<uid>`.
 > Sin él, el índice queda vacío y el candado de administrador vuelve a depender del correo del dueño.
+## 6. Avance del índice `admins` (6/10/2026)
+
+Ya está hecho en el código de la v5.0:
+
+- `subirRegistroUsuarios()` publica **`admins/<uid> = true|false`** cada vez que se publica la lista de usuarios
+  (bloque `@JS-INDICES-ADMINS`), y el registro de cada usuario ahora **guarda su `uid`**.
+- Probado en el banco de pruebas: un administrador publica su casilla en `true` y un operador en `false`.
+
+**Pendiente pequeño (Fase 4):** cuando un administrador **desactiva o quita** a otro usuario, hay que borrar
+también su casilla del índice (`admins/<uid>`). Para eso ya se guarda el `uid` dentro del registro, así que el
+administrador puede encontrarlo. Sin ese paso, un administrador degradado conservaría el permiso en las reglas
+hasta que él mismo vuelva a entrar y publique.
+
+**Pendiente antes de publicar las reglas:** el respaldo exportado y verificado, y la prueba con una cuenta de
+cada rol.

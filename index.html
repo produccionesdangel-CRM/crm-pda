@@ -6580,6 +6580,7 @@
                 const clave = (esUnoMismo && uid) ? uid : ('u_' + u.username);
                 obj[clave] = {
                     username: u.username, nombre: u.nombre, email: correoDeUsuario(u),
+                    uid: (esUnoMismo && uid) ? uid : (u.uid || ''),
                     rol: u.rol || 'Operador', admin: u.admin === true, activo: usuarioEstaActivo(u),
                     authProvider: PROVEEDOR_LOGIN,
                     fechaCreacion: u.fechaCreacion || null,
@@ -6616,8 +6617,22 @@
         }
         async function subirRegistroUsuarios() {
             if (!database || !auth || !auth.currentUser) return false;
-            try { await database.ref('usuarios').set(usuariosAObjeto()); return true; }
+            try { await database.ref('usuarios').set(usuariosAObjeto()); }
             catch (e) { console.warn('No se pudo publicar la lista de usuarios en la nube:', e); return false; }
+            // ─────── @JS-INDICE-ADMINS (v5.0) ───────
+            // Las reglas de Firebase necesitan saber quién es administrador. El nodo
+            // 'usuarios' se guarda con la clave 'u_<username>' para los demás y con el
+            // UID solo para uno mismo, así que las reglas NO pueden buscarlo por UID
+            // (el candado de la papelera fallaba salvo para el último que publicó).
+            // Solución: un índice mínimo donde cada quien escribe SOLO su propia casilla.
+            try {
+                const uid = uidActual();
+                if (uid) {
+                    const yo = encontrarUsuarioPorCorreo(auth.currentUser.email);
+                    await database.ref('admins/' + uid).set(!!(yo && yo.admin === true && usuarioEstaActivo(yo)));
+                }
+            } catch (e2) { console.warn('No se pudo publicar el índice de administradores:', e2); }
+            return true;
         }
 
         function mostrarPantallaLogin() {
