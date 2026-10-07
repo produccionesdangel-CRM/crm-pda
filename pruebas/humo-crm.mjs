@@ -798,5 +798,40 @@ console.log('\n=== 19. Ningún control de las secciones nuevas queda sin conecta
     /asistente|Paso 1|Nueva campaña/i.test(pintado), 'no se dibujó el asistente');
   c.usuarioActual = null;
 }
+console.log('\n=== 20. Ninguna ventana ni aviso muestra código (reportado por Jorge) ===');
+{
+  // El título del modal es texto plano (textContent) y las notificaciones escapan el
+  // mensaje (escapeHTML): si alguien les pasa etiquetas, se ven tal cual en pantalla.
+  const primerArgumento = (linea, fn) => {
+    const m = linea.match(fn); if (!m) return null;
+    const resto = linea.slice(m.index + m[0].length);
+    let prof = 0, fin = resto.length;
+    for (let k = 0; k < resto.length; k++) {
+      const ch = resto[k];
+      if (ch === '(') prof++;
+      else if (ch === ')') { if (prof === 0) { fin = k; break; } else prof--; }
+      else if (ch === ',' && prof === 0) { fin = k; break; }
+    }
+    return resto.slice(0, fin);
+  };
+  const malos = [];
+  HTML.split('\n').forEach((linea, idx) => {
+    for (const fn of [/abrirModal\(/, /mostrarNotificacion\(/, /notificar\(/, /App\.confirmar\(/, /registrarHistorial\(/]) {
+      if (!fn.test(linea)) continue;
+      const arg = primerArgumento(linea, fn);
+      if (arg && /<i class=|<\/|\$\{/.test(arg)) malos.push((idx + 1) + ': ' + linea.trim().slice(0, 90));
+    }
+  });
+  comprobar('ninguna ventana ni aviso recibe etiquetas HTML como texto',
+    malos.length === 0, malos.slice(0, 3).join(' || '));
+
+  comprobar('el título de las ventanas de campaña es texto limpio',
+    /App\.abrirModal\('Nueva campaña'|App\.abrirModal\('\+?.*Nueva campaña/.test(HTML) || !/abrirModal\('<i/.test(HTML),
+    'algún título sigue con etiquetas');
+  comprobar('la función del CRM que pone el título sigue siendo de texto plano',
+    /modalTitulo\.textContent = titulo;/.test(HTML), 'cambió la forma de poner el título');
+  comprobar('los avisos siguen escapando el mensaje',
+    /escapeHTML\(mensaje\)/.test(HTML), 'los avisos dejaron de escapar');
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);

@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.5';
+        var BUILD_APP = '2026-10-07.6';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -9949,7 +9949,7 @@
             '</div>' +
             '<div class="form-grupo"><label>Descripción</label><textarea id="ts-descripcion" placeholder="Qué hay que hacer y por qué es aparte de la campaña"></textarea></div>' +
             '<div class="form-grupo"><label>Prospecto</label><input type="text" value="' + esc(p.nombre) + '" disabled></div>';
-        App.abrirModal('<i class="fas fa-thumbtack"></i> Nueva tarea suelta', html);
+        App.abrirModal('Nueva tarea suelta', html);
         var pie = document.createElement('div');
         pie.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;margin-top:18px;';
         pie.innerHTML = '<button class="btn-secundario" id="ts-cancelar">Cancelar</button><button class="btn-primario" id="ts-guardar"><i class="fas fa-plus"></i> Agregar tarea suelta</button>';
@@ -10023,7 +10023,7 @@
                 (t.conteo !== undefined ? '<span class="conteo">' + t.conteo + '</span>' : '') + '</button>';
         }).join('') + '</div>' + cabeceraProspecto(p, resumen) + cuerpo;
 
-        App.abrirModal('<i class="fas fa-user"></i> Ficha del prospecto', html, { ancho: true });
+        App.abrirModal('Ficha del prospecto', html, { ancho: true });
 
         document.querySelectorAll('[data-tab-prospecto]').forEach(function (boton) {
             boton.onclick = function () { App.abrirProspecto(p.id, boton.getAttribute('data-tab-prospecto')); };
@@ -10074,7 +10074,7 @@
             '<div class="form-grupo"><label>Notas</label><textarea id="pro-notas">' + esc(d.notas) + '</textarea></div>' +
             '<div class="lista-avisos"><i class="fas fa-circle-info"></i><div>La <strong>fase comercial</strong> es el estado general del prospecto. La <strong>etapa</strong> es su avance dentro de cada campaña: son cosas distintas y no se mezclan.</div></div>';
 
-        App.abrirModal(p ? '<i class="fas fa-pen"></i> Editar prospecto' : '<i class="fas fa-user-plus"></i> Nuevo prospecto', html);
+        App.abrirModal(p ? 'Editar prospecto' : 'Nuevo prospecto', html);
         var pie = document.createElement('div');
         pie.className = 'form-acciones';
         pie.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;margin-top:18px;';
@@ -10120,7 +10120,7 @@
             '<div class="form-grupo"><label>Valor contratado</label><input type="number" id="cli-valor" value="' + esc(d.valorContratado) + '" min="0"></div>' +
             '</div>' +
             '<div class="form-grupo"><label>Notas</label><textarea id="cli-notas">' + esc(d.notas) + '</textarea></div>';
-        App.abrirModal(c ? '<i class="fas fa-pen"></i> Editar cliente' : '<i class="fas fa-user-plus"></i> Nuevo cliente', html);
+        App.abrirModal(c ? 'Editar cliente' : 'Nuevo cliente', html);
         var pie = document.createElement('div');
         pie.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;margin-top:18px;';
         pie.innerHTML = '<button class="btn-secundario" id="cli-cancelar">Cancelar</button><button class="btn-primario" id="cli-guardar"><i class="fas fa-floppy-disk"></i> Guardar</button>';
@@ -10162,7 +10162,7 @@
             '<div class="form-grupo"><label>Estatus</label><select id="paq-estatus">' + opciones(['Activo', 'Próximo', 'Especial de temporada', 'Inactivo', 'Caducado'], d.estatus) + '</select></div>' +
             '</div>' +
             '<div class="lista-avisos"><i class="fas fa-circle-info"></i><div>Este es el precio <strong>normal</strong> del catálogo. Las campañas solo guardan su condición especial y conservan copia del precio al momento de asignarlo.</div></div>';
-        App.abrirModal(paq ? '<i class="fas fa-pen"></i> Editar paquete' : '<i class="fas fa-box"></i> Nuevo paquete', html);
+        App.abrirModal(paq ? 'Editar paquete' : 'Nuevo paquete', html);
         var pie = document.createElement('div');
         pie.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;margin-top:18px;';
         pie.innerHTML = '<button class="btn-secundario" id="paq-cancelar">Cancelar</button><button class="btn-primario" id="paq-guardar">Guardar</button>';
@@ -10196,7 +10196,7 @@
         var html = '<div class="form-grupo"><label>Nombre *</label><input type="text" id="srv-nombre" value="' + esc(d.nombre) + '"></div>' +
             '<div class="form-grupo"><label>Descripción</label><textarea id="srv-descripcion">' + esc(d.descripcion) + '</textarea></div>' +
             '<div class="form-grupo"><label>Precio de catálogo</label><input type="number" id="srv-precio" value="' + esc(d.precio) + '" min="0"></div>';
-        App.abrirModal(srv ? '<i class="fas fa-pen"></i> Editar servicio' : '<i class="fas fa-tools"></i> Nuevo servicio', html);
+        App.abrirModal(srv ? 'Editar servicio' : 'Nuevo servicio', html);
         var pie = document.createElement('div');
         pie.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;margin-top:18px;';
         pie.innerHTML = '<button class="btn-secundario" id="srv-cancelar">Cancelar</button><button class="btn-primario" id="srv-guardar">Guardar</button>';
@@ -10313,7 +10313,7 @@
                         '<div class="der"><div class="acciones-mini"><button class="btn-ver" data-ir-campania="' + esc(c.id) + '" title="Abrir la campaña"><i class="fas fa-up-right-from-square"></i></button></div></div></div>';
                 }).join('') + '</div>'
                 : '<div class="detalle-lista-vacia">Todavía no hay ninguna campaña creada.</div>';
-            App.abrirModal('<i class="fas fa-triangle-exclamation"></i> No hay campañas activas',
+            App.abrirModal('No hay campañas activas',
                 '<div class="lista-avisos"><i class="fas fa-circle-info"></i><div>Para agregar a ' + esc(p.nombre) +
                 ' a una campaña, esa campaña tiene que estar <strong>activa</strong>. Una campaña en borrador no opera ni genera tareas: primero se activa.</div></div>' +
                 detalle);
@@ -10328,7 +10328,7 @@
             '<div class="form-grupo"><label>Valor potencial</label><input type="number" id="epc-valor" value="' + esc(p.presupuesto || '') + '" min="0"></div>' +
             '<div class="lista-avisos"><i class="fas fa-circle-info"></i><div>No se crea un prospecto nuevo: se registra una <strong>participación</strong> del mismo prospecto. ' +
             'Si la campaña tiene tareas configuradas para su etapa inicial, se crean solas y aparecen en el calendario.</div></div>';
-        App.abrirModal('<i class="fas fa-bullhorn"></i> Agregar a una campaña', html);
+        App.abrirModal('Agregar a una campaña', html);
         var pie = document.createElement('div');
         pie.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;margin-top:18px;';
         pie.innerHTML = '<button class="btn-secundario" id="epc-cancelar">Cancelar</button><button class="btn-primario" id="epc-guardar"><i class="fas fa-plus"></i> Agregar</button>';
@@ -10717,7 +10717,7 @@
                 var ejecutar = function () {
                     var r = motor().cambiarEstadoCampania(camp.id, destino);
                     if (!r.ok) {
-                        App.abrirModal('<i class="fas fa-triangle-exclamation"></i> No se pudo cambiar el estado',
+                        App.abrirModal('No se pudo cambiar el estado',
                             '<div class="lista-errores"><strong>Hay que corregir esto primero:</strong><ul>' +
                             r.errores.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' +
                             '<button class="btn-primario" id="ir-configurar"><i class="fas fa-pen"></i> Configurar la campaña</button>');
@@ -11204,7 +11204,7 @@
             if (el) el.textContent = n;
         }
 
-        App.abrirModal('<i class="fas fa-user-plus"></i> Agregar participantes a ' + esc(camp.nombre), '', { ancho: true });
+        App.abrirModal('Agregar participantes a ' + esc(camp.nombre), '', { ancho: true });
         pintar();
     };
 
@@ -11250,7 +11250,7 @@
             paso: 1,
             borrador: camp ? Util.clonar(camp) : borradorVacio()
         };
-        App.abrirModal('<i class="fas fa-wand-magic-sparkles"></i> ' + (camp ? 'Configurar campaña' : 'Nueva campaña'), '', { ancho: true, alAbrir: pintarAsistente });
+        App.abrirModal('' + (camp ? 'Configurar campaña' : 'Nueva campaña'), '', { ancho: true, alAbrir: pintarAsistente });
         pintarAsistente();
     };
 
@@ -11990,7 +11990,7 @@
             }).join('') + '</div>' : '<div class="detalle-lista-vacia">Sin cambios registrados</div>') +
             '</div>';
 
-        App.abrirModal('<i class="fas fa-diagram-project"></i> Participación en campaña', html, { ancho: true });
+        App.abrirModal('Participación en campaña', html, { ancho: true });
 
         document.getElementById('fp-guardar').onclick = function () {
             var r1 = motor().cambiarEtapa(part.id, document.getElementById('fp-etapa').value);
@@ -12092,7 +12092,7 @@
             '<div class="form-grupo"><label>Tipo de tarea de seguimiento</label><select id="co-tipo-tarea">' + opciones(Catalogos.tiposTarea, 'Seguimiento') + '</select></div>' +
             '<div class="form-grupo"><label>Prioridad</label><select id="co-prioridad">' + opciones(Catalogos.prioridades, 'Normal') + '</select></div>' +
             '</div>';
-        App.abrirModal('<i class="fas fa-phone"></i> Registrar contacto', html);
+        App.abrirModal('Registrar contacto', html);
         var pie = document.createElement('div');
         pie.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;margin-top:18px;';
         pie.innerHTML = '<button class="btn-secundario" id="co-cancelar">Cancelar</button><button class="btn-primario" id="co-guardar">Guardar contacto</button>';
@@ -12139,7 +12139,7 @@
             '<label class="fila-check"><input type="checkbox" id="cv-mover" checked><span class="dato-principal">Mover la participación a la etapa de conversión de la campaña<small>Si la campaña tiene una etapa marcada como conversión.</small></span></label>' +
             (part.ofertaAsignada ? '<div class="item-editor"><div class="nombre-item">Oferta asignada: ' + esc(part.ofertaAsignada.nombre) + '</div>' +
                 '<div class="mosaico-detalle">Se guardará como el paquete contratado del cliente.</div></div>' : '');
-        App.abrirModal('<i class="fas fa-handshake"></i> Registrar conversión', html);
+        App.abrirModal('Registrar conversión', html);
         var pie = document.createElement('div');
         pie.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;margin-top:18px;';
         pie.innerHTML = '<button class="btn-secundario" id="cv-cancelar">Cancelar</button><button class="btn-verde" id="cv-guardar"><i class="fas fa-handshake"></i> Convertir en cliente</button>';
@@ -12383,7 +12383,7 @@
                     '<div class="der"><div class="acciones-mini"><button class="btn-ver" data-abrir-evento="' + esc(ev.id) + '"><i class="fas fa-up-right-from-square"></i></button></div></div></div>';
             }).join('') + '</div>' : '<div class="detalle-lista-vacia">Nada programado este día.</div>') +
             '<button class="btn-primario" style="margin-top:16px;" id="dia-nueva-tarea"><i class="fas fa-plus"></i> Nueva tarea para este día</button>';
-        App.abrirModal('<i class="fas fa-calendar-day"></i> Día', html);
+        App.abrirModal('Día', html);
         document.querySelectorAll('[data-abrir-evento]').forEach(function (el) {
             el.onclick = function () {
                 var info = App.buscarEvento(el.getAttribute('data-abrir-evento'));
@@ -12446,7 +12446,7 @@
             '<div class="form-grupo"><label>Descripción</label><textarea id="ta-descripcion">' + esc(t.descripcion) + '</textarea></div>' +
             '<div class="lista-avisos"><i class="fas fa-circle-info"></i><div>Si la tarea se liga a una <strong>participación</strong>, al completarla se registra el resultado del contacto y se actualiza el seguimiento de la campaña.</div></div>';
 
-        App.abrirModal(existente ? '<i class="fas fa-pen"></i> Editar tarea' : '<i class="fas fa-plus"></i> Nueva tarea', html);
+        App.abrirModal(existente ? 'Editar tarea' : 'Nueva tarea', html);
         var pie = document.createElement('div');
         pie.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;margin-top:18px;';
         pie.innerHTML = '<button class="btn-secundario" id="ta-cancelar">Cancelar</button><button class="btn-primario" id="ta-guardar"><i class="fas fa-floppy-disk"></i> Guardar</button>';
@@ -12501,7 +12501,7 @@
             (t.participacionId ? '<label class="fila-check"><input type="checkbox" id="ct-crear" checked><span class="dato-principal">Programar la tarea del próximo seguimiento<small>Se crea en el calendario con la fecha de arriba.</small></span></label>' : '') +
             (t.participacionId ? '<div class="lista-avisos"><i class="fas fa-circle-info"></i><div>Al guardar se actualiza el último contacto y el próximo seguimiento de la <strong>participación</strong> en la campaña.</div></div>' : '');
 
-        App.abrirModal('<i class="fas fa-circle-check"></i> Completar tarea', html);
+        App.abrirModal('Completar tarea', html);
         var pie = document.createElement('div');
         pie.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;margin-top:18px;';
         pie.innerHTML = '<button class="btn-secundario" id="ct-cancelar">Cancelar</button><button class="btn-verde" id="ct-guardar"><i class="fas fa-circle-check"></i> Marcar como completada</button>';
