@@ -30,7 +30,7 @@
 | Calendario | ✅ | tareas de clientes y eventos de campaña |
 | Panel (campañas) | ✅ **solo lo suyo** | sus campañas y sus asignaciones; **sin cifras globales de dinero** |
 | Informes | ❌ | no ve la sección |
-| Paquetes y Servicios | ❌ | no ve las secciones ni puede crear/editar/borrar |
+| Paquetes y Servicios | ❌ | no entra a las secciones ni puede crear/editar/borrar nada del catálogo. **Sí ve la lista de precios dentro del formulario de contrato** (así cotiza), que es como el CRM ya funciona |
 | Papelera | ❌ | no la ve en Configuración |
 | Usuarios | ❌ | no puede agregar, editar ni eliminar usuarios |
 | Exportar / Importar respaldo | ❌ | **no puede sacar respaldos de los datos** |
@@ -55,15 +55,26 @@
    que **dejar de cargar esas colecciones según el rol** y **negarlas también en las reglas de
    Firebase**. Jorge ya autorizó tocar las reglas; el orden correcto es:
    respaldo exportado y verificado → reglas → código → probar.
-2. **Tensión a resolver (necesita su respuesta):** si Ventas no puede ver el catálogo, ¿cómo elige el
-   paquete al crear un contrato? Dos caminos:
-   - **(a) Recomendado:** el formulario de contrato de Ventas **no muestra el catálogo**. Escribe el
-     monto y el concepto a mano, y el admin asigna después el paquete y el precio definitivo.
-     Coherente con "el contrato nace Por autorizar".
-   - **(b)** Ventas ve una **lista de precios de solo lectura** (nombre y precio) dentro del formulario
-     de contrato, pero no entra a la sección Paquetes ni edita nada del catálogo.
-   Con (a) las reglas pueden negar la lectura de `/paquetes` y `/serviciosAdicionales`; con (b) deben
-   permitirla solo para lectura.
+2. **Catálogo (RESUELTO por Jorge el 6/10/2026):** el usuario de Ventas **sí ve la lista de precios** —lo necesita
+   para cotizar— pero **no entra a la sección Paquetes ni a la de Servicios**, para que no pueda editar ni borrar
+   nada del catálogo. **No hay que construir la lista:** el formulario de contrato **ya** arma el selector de
+   paquetes con su precio y las casillas de servicios adicionales (`mostrarFormularioContrato`, líneas 4802 y 4810).
+   O sea: se cotiza desde el contrato, y el catálogo se administra solo desde una cuenta de administrador.
+   Con esto las reglas de Firebase pueden **negar la escritura** en `/paquetes` y `/serviciosAdicionales`, y en la
+   interfaz se oculta la sección (guardas dobles).
+
+### 4.1 Una corrección importante sobre el rol Operador
+
+Lo que se creía —"el operador no ve la sección de Paquetes"— **hoy no es así**. Verificado en el archivo:
+
+| Sección | Quién la ve hoy |
+|---|---|
+| **Paquetes** | **Todos**, incluido el Operador: el menú (`data-seccion="paquetes"`) no tiene la marca `solo-admin`, y al entrar solo se esconden los botones de *Nuevo*, *Editar* y *Eliminar* (línea 3701). **La lista se ve completa, con precios.** |
+| **Servicios** | Solo administradores: el menú sí trae `solo-admin` (línea 1293) y además hay un candado al entrar (línea 6869). |
+
+**Decisión pendiente (una sola pregunta para Jorge):** ¿se deja igual —Ventas sin la sección de Paquetes y el Operador
+como está hoy—, o se le quita también la sección de Paquetes al Operador para que quede como él lo describió?
+Lo segundo es un cambio de comportamiento para un rol que ya está en uso, así que no se toca sin su autorización.
 
 ## 5. Reglas de Firebase: qué tienen que lograr
 
