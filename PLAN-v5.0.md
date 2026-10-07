@@ -131,8 +131,15 @@
       **"Solo campañas"** (que también aplica a la lista de tareas) y la leyenda tiene sus dos renglones nuevos.
       Nada se duplicó: se amplió el calendario existente, como pedía la auditoría (§7).
       **Verificado: 50/50** — incluye comprobar que el motor **rechaza meter gente en una campaña en borrador**.
-- [ ] Fase 3c (parte 2): **panel del prospecto** con sus campañas y sus tareas agrupadas por vencimiento ·
-      Fase 4 (rol de Ventas) · Fase 5 (cierre)
+- [x] **Fase 3c (parte 2) — Ficha del prospecto**: al abrir un prospecto, si está en alguna campaña, su ficha
+      muestra **sus campañas** (etapa, estado y fecha de seguimiento) y **sus tareas de campaña agrupadas por
+      vencimiento** (vencidas · hoy · próximas · sin fecha, ordenadas por fecha y prioridad). Los cálculos los
+      hace el motor (`resumenCampaniasDeProspecto`, `tareasAgrupadas`); si el prospecto no está en ninguna
+      campaña, **no se dibuja nada** y la ficha queda como estaba. **Verificado: 56/56**.
+      Nota de vocabulario del motor (verificada, no es error): las **participaciones** usan claves en inglés
+      (`campaignId`, `prospectId`) y las **tareas** en español (`campaniaId`, `participacionId`, `prospectoId`).
+- [x] **FASE 3 COMPLETA** (motor integrado: vistas, calendario y ficha del prospecto).
+- [ ] Fase 4 (rol de Ventas: capacidades, guardas, `admins/<uid>` y reglas de Firebase) · Fase 5 (cierre)
 - [ ] Respaldo exportado y verificado por Jorge (regla de oro, antes de tocar la base real).
 - [ ] `firebase-rules-recomendadas.json` (pedido a la PC de trabajo por el canal).
 

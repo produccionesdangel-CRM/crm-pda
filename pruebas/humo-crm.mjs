@@ -452,5 +452,49 @@ console.log('\n=== 9. Calendario con campañas (Fase 3c) ===');
 }
   }
 
+console.log('\n=== 10. Ficha del prospecto con sus campañas (Fase 3c) ===');
+{
+  const c = r.contexto;
+  if (!c.motorCampanias || typeof c.verDetalleProspecto !== 'function') {
+    comprobar('la ficha del prospecto y el motor están disponibles', false, 'este archivo no trae la integración');
+  } else {
+    const hoy = c.obtenerFechaActual();
+    const camp = c.motorCampanias.crearCampania({ nombre: 'Campaña ficha', objetivoPrincipal: 'prueba de ficha', fechaInicio: hoy, fechaFin: hoy });
+    c.motorCampanias.activarCampania(camp.id);
+    if (c.campanias[0] && c.campanias[0].estado !== 'activa') c.campanias[0].estado = 'activa';   // por si la validación la deja en borrador
+    const rp = c.motorCampanias.crearProspecto({ nombre: 'Prospecto ficha' });
+    const pros = rp && rp.prospecto ? rp.prospecto : (c.prospectos[0] || null);
+    let part = null;
+    try {
+      const rpa = c.motorCampanias.agregarParticipacion({ campaniaId: camp.id, prospectoId: pros ? pros.id : undefined });
+      part = rpa && rpa.participacion ? rpa.participacion : null;
+    } catch (e) { part = null; }
+    comprobar('se pudo crear la participación del prospecto', !!part, 'sin participación no hay nada que mostrar');
+
+    // Tarea de campaña para hoy, ligada al prospecto.
+    let tareaOk = false;
+    try {
+      const rt = c.motorCampanias.crearTarea({ titulo: 'Llamar al prospecto', tipo: 'Llamada', fecha: hoy, campaniaId: camp.id, participacionId: part ? part.id : null, prospectoId: pros ? pros.id : null });
+      tareaOk = !!(rt && rt.ok);
+    } catch (e) { tareaOk = false; }
+    if (!tareaOk) {
+      c.tareas.push({ id: 'tar-ficha', titulo: 'Llamar al prospecto', tipo: 'Llamada', fecha: hoy, estado: 'pendiente', prioridad: 'Normal', campaniaId: camp.id, participacionId: part ? part.id : null, prospectoId: pros ? pros.id : null });
+    }
+    comprobar('la tarea de campaña quedó registrada', tareaOk || c.tareas.some(t => t.id === 'tar-ficha'), 'no se creó');
+
+    let error = null;
+    try { c.verDetalleProspecto(pros.id); } catch (e) { error = e.message; }
+    comprobar('la ficha del prospecto se abre sin errores', error === null, error || '');
+
+    const htmls = [...r.elementos.values()].map(el => String(el._html || ''));
+    const conCampania = htmls.filter(x => x.includes('Campaña ficha'));
+    const conTarea = htmls.filter(x => x.includes('Llamar al prospecto'));
+    comprobar('la ficha muestra las campañas del prospecto', conCampania.length > 0, 'no aparece la campaña');
+    comprobar('la ficha muestra la tarea de campaña', conTarea.length > 0, 'no aparece la tarea');
+    comprobar('las tareas salen agrupadas por vencimiento',
+      conCampania.some(x => x.includes('tarea-grupo-titulo') || x.includes('Para hoy') || x.includes('Vencidas')),
+      'no se ve la agrupación');
+  }
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);

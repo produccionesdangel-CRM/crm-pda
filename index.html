@@ -4725,12 +4725,49 @@
             else { abrirPanelLateral('Detalle del cliente', html, { tipo: 'cliente', itemId: clienteId }); marcarItemSeleccionado(clienteId); }
         }
 
+        /* ─────── Campañas dentro de la ficha del prospecto ───────
+           Regla acordada: el panel del prospecto muestra sus campañas y las tareas
+           de campaña agrupadas por vencimiento (vencidas · hoy · próximas · sin
+           fecha), ordenadas por fecha y luego por prioridad. Los cálculos los hace
+           el motor; aquí solo se presenta. Si el prospecto no está en ninguna
+           campaña, no se dibuja nada: la ficha queda como estaba. */
+        function bloqueCampaniasDeProspecto(prospectoId) {
+            if (typeof motorCampanias === 'undefined' || !motorCampanias || !motorCampanias.resumenCampaniasDeProspecto) return '';
+            var resumen = null, grupos = null;
+            try {
+                resumen = motorCampanias.resumenCampaniasDeProspecto(prospectoId);
+                grupos = motorCampanias.tareasAgrupadas({ prospectoId: prospectoId });
+            } catch (e) { console.warn('No se pudo armar el bloque de campañas del prospecto:', e); return ''; }
+            if (!resumen || !resumen.total) return '';
+
+            var etiquetaEstado = (typeof App !== 'undefined' && App.etiquetaEstadoParticipacion)
+                ? App.etiquetaEstadoParticipacion : function (x) { return x || ''; };
+            var filas = (resumen.participaciones || []).map(function (p) {
+                var camp = (typeof App !== 'undefined' && App.almacen && App.almacen.campania) ? App.almacen.campania(p.campaignId) : null;
+                var nombre = camp ? camp.nombre : (p.campaniaNombre || 'Campaña');
+                var etapa = p.etapaNombre || p.etapaId || '';
+                var seg = p.fechaProximoSeguimiento ? ' · Seguimiento: ' + formatearFecha(p.fechaProximoSeguimiento) : '';
+                return '<div class="detalle-campo"><span class="lbl">' + escapeHTML(String(nombre)) + '</span><span class="val">' +
+                    escapeHTML(String(etapa)) + ' · ' + escapeHTML(String(etiquetaEstado(p.estado) || '')) + escapeHTML(seg) + '</span></div>';
+            }).join('');
+
+            var resumenHTML = '<div class="item-sub" style="margin-bottom:8px">' +
+                resumen.total + ' participación(es) · ' + resumen.campaniasActivas + ' campaña(s) activa(s) · ' +
+                resumen.enSeguimiento + ' en seguimiento' + (resumen.convertidas ? ' · ' + resumen.convertidas + ' convertida(s)' : '') +
+                '</div>';
+
+            var tareasHTML = (grupos && grupos.pendientes > 0 && typeof App !== 'undefined' && App.bloqueTareasAgrupadas)
+                ? App.bloqueTareasAgrupadas(grupos, {}) : '';
+
+            return '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-bullhorn"></i> Campañas</div>' +
+                resumenHTML + filas + tareasHTML + '</div>';
+        }
         function verDetalleProspecto(prospectoId) {
             const p = obtenerProspecto(prospectoId);
             if (!p) { mostrarNotificacion('Prospecto no encontrado', 'error'); return; }
             const idVinculado = 'pro_' + prospectoId;
             const tareasVinculadas = tareas.filter(function(t) { return t.clienteId === idVinculado; });
-            const html = construirDetalleEntidad({ tipo: 'prospecto', entidad: p, tareas: tareasVinculadas, idParaTareas: idVinculado, subtitulo: 'Fase: ' + (p.faseActual || 'Sin fase') });
+            const html = construirDetalleEntidad({ tipo: 'prospecto', entidad: p, tareas: tareasVinculadas, idParaTareas: idVinculado, subtitulo: 'Fase: ' + (p.faseActual || 'Sin fase') }) + bloqueCampaniasDeProspecto(prospectoId);
             const esMobil = window.innerWidth <= 768;
             if (esMobil) abrirModal('Detalle del prospecto', html, true);
             else { abrirPanelLateral('Detalle del prospecto', html, { tipo: 'prospecto', itemId: prospectoId }); marcarItemSeleccionado(prospectoId); }
