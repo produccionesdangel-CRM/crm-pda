@@ -683,5 +683,19 @@ console.log('\n=== 16. Identidad de la versión (para verificar el despliegue) =
   comprobar('las novedades de la v5.0 están escritas para el usuario',
     /Novedades en esta versión \(v5\.0\)/.test(HTML) && /Nuevo rol: Ventas/.test(HTML), 'faltan las novedades');
 }
+console.log('\n=== 17. Orden seguro del índice de administradores (antes de publicar reglas) ===');
+{
+  const cuerpo = HTML.slice(HTML.indexOf('async function subirRegistroUsuarios'), HTML.indexOf('function mostrarPantallaLogin'));
+  const iAdmins = cuerpo.indexOf("ref('admins/'");
+  const iUsuarios = cuerpo.indexOf("ref('usuarios')");
+  comprobar('dentro de subirRegistroUsuarios, el índice se publica ANTES que la lista de usuarios',
+    iAdmins > 0 && iUsuarios > 0 && iAdmins < iUsuarios,
+    'admins en ' + iAdmins + ', usuarios en ' + iUsuarios + ' (si el índice va después, un admin sin casilla no puede entrar nunca)');
+  comprobar('la escritura del índice tiene su propia red de seguridad',
+    /catch \(e2\) \{ console\.warn\('No se pudo publicar el índice/.test(HTML), 'sin try/catch propio');
+  comprobar('la lista de usuarios no corta antes de tiempo al índice',
+    !/set\(usuariosAObjeto\(\)\)[\s\S]{0,200}return false;[\s\S]{0,200}ref\('admins\//.test(cuerpo),
+    'hay un return entre una y otra');
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);

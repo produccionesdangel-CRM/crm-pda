@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.1';
+        var BUILD_APP = '2026-10-07.2';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -6655,14 +6655,20 @@
         }
         async function subirRegistroUsuarios() {
             if (!database || !auth || !auth.currentUser) return false;
-            try { await database.ref('usuarios').set(usuariosAObjeto()); }
-            catch (e) { console.warn('No se pudo publicar la lista de usuarios en la nube:', e); return false; }
+
             // ─────── @JS-INDICE-ADMINS (v5.0) ───────
             // Las reglas de Firebase necesitan saber quién es administrador. El nodo
             // 'usuarios' se guarda con la clave 'u_<username>' para los demás y con el
             // UID solo para uno mismo, así que las reglas NO pueden buscarlo por UID
             // (el candado de la papelera fallaba salvo para el último que publicó).
             // Solución: un índice mínimo donde cada quien escribe SOLO su propia casilla.
+            //
+            // ORDEN IMPORTANTE: este índice va PRIMERO, antes de la lista de usuarios.
+            // Las reglas dejan publicar 'usuarios' solo a quien ya figura en el índice,
+            // así que si se publicara después, un administrador que todavía no está en
+            // el índice fallaría al escribir la lista y nunca llegaría a inscribirse:
+            // quedaría sin permisos para siempre. Publicando primero su propia casilla
+            // (que las reglas siempre permiten, es suya), se recupera solo al entrar.
             try {
                 const uid = uidActual();
                 if (uid) {
@@ -6670,6 +6676,9 @@
                     await database.ref('admins/' + uid).set(!!(yo && yo.admin === true && usuarioEstaActivo(yo)));
                 }
             } catch (e2) { console.warn('No se pudo publicar el índice de administradores:', e2); }
+
+            try { await database.ref('usuarios').set(usuariosAObjeto()); }
+            catch (e) { console.warn('No se pudo publicar la lista de usuarios en la nube:', e); return false; }
             return true;
         }
 
