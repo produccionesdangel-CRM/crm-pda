@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.8';
+        var BUILD_APP = '2026-10-07.9';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -2992,6 +2992,48 @@
                 return false;
             });
         }
+        /* Auto-reparacion de registros que vuelven de la nube.
+           Firebase Realtime Database NO guarda arreglos ni objetos vacios: al
+           guardar un registro y volver a leerlo, pierde sus arreglos vacios
+           (pagos, cargos, contratos, historial, items...). Este CRM siempre se
+           defendio leyendo con "|| []" en cada punto; esto lo repara de una vez
+           al entrar los datos, para que ningun codigo nuevo tenga que acordarse.
+           Es idempotente: si el campo ya es un arreglo, no lo toca. */
+        function normalizarRegistros() {
+            (prospectos || []).forEach(function (p) {
+                if (!p || typeof p !== 'object') return;
+                if (!Array.isArray(p.historialFases)) p.historialFases = [];
+                if (!Array.isArray(p.etiquetas)) p.etiquetas = [];
+                if (!Array.isArray(p.tareasRelacionadas)) p.tareasRelacionadas = [];
+            });
+            (clientes || []).forEach(function (c) {
+                if (!c || typeof c !== 'object') return;
+                if (!Array.isArray(c.contratos)) c.contratos = [];
+                c.contratos.forEach(function (co) {
+                    if (!co || typeof co !== 'object') return;
+                    if (!Array.isArray(co.pagos)) co.pagos = [];
+                    if (!Array.isArray(co.cargos)) co.cargos = [];
+                    if (!Array.isArray(co.descuentos)) co.descuentos = [];
+                });
+            });
+            (paquetes || []).forEach(function (p) { if (p && !Array.isArray(p.items)) p.items = []; });
+            (tareas || []).forEach(function (t) { if (t && !Array.isArray(t.tareasRelacionadas)) t.tareasRelacionadas = []; });
+            (participaciones || []).forEach(function (p) {
+                if (!p || typeof p !== 'object') return;
+                if (!Array.isArray(p.historial)) p.historial = [];
+                if (!Array.isArray(p.tareasRelacionadas)) p.tareasRelacionadas = [];
+                if (!p.datosCampania || typeof p.datosCampania !== 'object') p.datosCampania = {};
+            });
+            /* Las campanas ya tienen su propia reparacion (normalizarCampania). */
+            try {
+                if (typeof App !== 'undefined' && App.almacen && typeof App.almacen.normalizarCampania === 'function') {
+                    (campanias || []).forEach(function (c) { App.almacen.normalizarCampania(c); });
+                }
+            } catch (e) { /* si aun no esta listo, la repara el adaptador al leerla */ }
+        }
+        /* Se expone para el banco de pruebas. */
+        if (typeof window !== 'undefined') window.normalizarRegistros = normalizarRegistros;
+
         async function cargarDatosLocal() {
             if (!almacenListo) { console.warn('Almacén no listo, esperando...'); await inicializarAlmacen(); }
             try {
@@ -3006,6 +3048,7 @@
                 papelera = datos.papelera || [];
                 campanias = datos.campanias || [];
                 participaciones = datos.participaciones || [];
+                normalizarRegistros();
                 console.log('✅ Datos cargados desde ' + (almacenFallback ? 'localStorage' : 'IndexedDB') + ' → ' + paquetes.length + ' paq, ' + clientes.length + ' cli, ' + prospectos.length + ' prosp, ' + tareas.length + ' tareas, ' + historial.length + ' hist');
             } catch (error) {
                 console.error('Error cargando datos:', error);
@@ -3350,6 +3393,7 @@
                         guardarUsuarios();
                     }
                     paquetes = paquetesR; serviciosAdicionales = serviciosR; prospectos = prospectosR; clientes = clientesR; tareas = tareasR;
+                    normalizarRegistros();
                     ultimaActualizacionRemota = datosAntiguos.ultimaActualizacion || null;
                     cambiosPendientes = false;
                     await guardarDatosLocal();
@@ -3397,6 +3441,7 @@
 
                 paquetes = paquetesR; serviciosAdicionales = serviciosR; prospectos = prospectosR; clientes = clientesR; tareas = tareasR;
                 campanias = campaniasR; participaciones = participacionesR;
+                normalizarRegistros();
                 if (Array.isArray(historialRemoto) && historialRemoto.length > 0) historial = historialRemoto;
                 if (Array.isArray(papeleraRemota)) papelera = papeleraRemota;
                 ultimaActualizacionRemota = versionData && versionData.ultimaActualizacion ? versionData.ultimaActualizacion : null;

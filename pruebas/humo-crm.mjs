@@ -924,5 +924,73 @@ console.log('\n=== 20. Ninguna ventana ni aviso muestra código (reportado por J
   try { c.App.cerrarModal(); } catch (e) { }
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   22. Los registros que vuelven de la nube pierden sus arreglos vacíos
+   ----------------------------------------------------------------------
+   Firebase no guarda arreglos ni objetos vacíos. Comprobado con los datos
+   reales de Jorge: de 46 clientes, 46 no tienen "pagos", "cargos" ni
+   "descuentos"; 6 de 14 prospectos no tienen "historialFases"; en los
+   contratos anidados faltan "cargos" en 68 de 94.
+
+   El CRM base ya se defiende en cada punto de escritura (esta prueba lo
+   vigila), y ahora además se reparan los registros al entrar los datos.
+   ══════════════════════════════════════════════════════════════════════ */
+{
+  const c = r.contexto;
+  const prospecto = { id: 'pro_danado', nombre: 'Prospecto dañado', faseActual: 'Interesado' };
+  const contrato = { id: 'con_danado', festejado: 'Festejado de prueba', estado: 'Pendiente' };
+  const cliente = { id: 'cli_danado', nombre: 'Cliente dañado', contratos: [contrato] };
+  const paquete = { id: 'paq_danado', nombre: 'Paquete dañado', precio: 1000 };
+  const participacion = { id: 'par_danado', campaignId: 'cmp_prueba_A', prospectId: 'pro_danado', estado: 'registrada' };
+  c.prospectos.push(prospecto);
+  c.clientes.push(cliente);
+  c.paquetes.push(paquete);
+  c.participaciones.push(participacion);
+
+  comprobar('la reparación de registros se expone para poder probarla',
+    typeof c.normalizarRegistros === 'function', 'no existe normalizarRegistros');
+  if (typeof c.normalizarRegistros === 'function') c.normalizarRegistros();
+
+  comprobar('el prospecto recupera historial de fases, etiquetas y tareas',
+    Array.isArray(prospecto.historialFases) && Array.isArray(prospecto.etiquetas) && Array.isArray(prospecto.tareasRelacionadas));
+  comprobar('el cliente recupera su arreglo de contratos',
+    Array.isArray(cliente.contratos));
+  comprobar('el contrato recupera pagos, cargos y descuentos',
+    Array.isArray(contrato.pagos) && Array.isArray(contrato.cargos) && Array.isArray(contrato.descuentos));
+  comprobar('el paquete recupera sus items',
+    Array.isArray(paquete.items));
+  comprobar('la participación recupera historial, tareas y datos de campaña',
+    Array.isArray(participacion.historial) && Array.isArray(participacion.tareasRelacionadas) &&
+    !!participacion.datosCampania && typeof participacion.datosCampania === 'object');
+
+  prospecto.etiquetas.push('una etiqueta');
+  if (typeof c.normalizarRegistros === 'function') c.normalizarRegistros();
+  comprobar('la reparación es idempotente (no borra lo que ya había)',
+    prospecto.etiquetas.length === 1 && prospecto.etiquetas[0] === 'una etiqueta',
+    JSON.stringify(prospecto.etiquetas));
+
+  /* Funcional: una participación sin historial puede registrar un contacto. */
+  let errorContacto = null, registroOk = false;
+  try {
+    const motor = c.crearMotor(c.App.almacen);
+    motor.registrarContacto('par_danado', { resultado: 'noRespondio' });
+    registroOk = Array.isArray(participacion.historial) && participacion.historial.length > 0;
+  } catch (e) { errorContacto = (e && e.message) || String(e); }
+  comprobar('una participación sin historial registra el contacto sin excepción',
+    errorContacto === null && registroOk,
+    errorContacto || ('historial=' + ((participacion.historial || []).length)));
+
+  /* El CRM base conserva sus guardas en los puntos de escritura. */
+  const guardas = [
+    /if \(!co\.pagos\) co\.pagos = \[\];/,                                     /* registrar un pago */
+    /if \(!Array\.isArray\(p\.historialFases\)\) p\.historialFases = \[\];/,   /* cambio de fase de un prospecto */
+    /if \(!Array\.isArray\(c\.contratos\)\) c\.contratos = \[\];/,             /* crear un contrato */
+    /if \(!Array\.isArray\(cli\.contratos\)\) cli\.contratos = \[\];/          /* restaurar un contrato de la papelera */
+  ];
+  const sinGuarda = guardas.filter(g => !g.test(HTML)).length;
+  comprobar('los puntos de escritura del CRM conservan sus guardas (pagos, fases, contratos)',
+    sinGuarda === 0, sinGuarda + ' guarda(s) perdida(s)');
+}
+
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);
