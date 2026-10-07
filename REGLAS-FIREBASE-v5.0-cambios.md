@@ -151,3 +151,48 @@ retirarle el permiso a alguien). Sin este paso, un administrador degradado segui
 
 **Fase 4 cerrada.** Lo que falta es de la Fase 5: suites completas, medición en el teléfono y despliegue, y
 después publicar estas reglas en el orden indicado en el apartado 8.
+
+## 10. Auditoría final: las reglas contra TODO lo que la app escribe (7/10/2026)
+
+Antes de publicar las reglas se hizo un inventario **de cada ruta de base de datos que la app toca** en la v5.0
+(literal y por variable) y se contrastó una por una. Aparecieron **dos fallas que sí habrían roto cosas**:
+
+### Falla 1 (grave) — las campañas quedaban solo para administradores
+La regla de `campanias` pedía ser administrador. Pero el trabajo diario de campañas lo hace **el rol de Ventas**
+(alta, etapas, participantes, seguimientos) y también el Operador. Con esa regla, **ninguno de los dos podría
+guardar nada de una campaña**: el motor funcionaría en pantalla y fallaría al guardar. Corregido: escribir
+campañas y participaciones lo puede hacer **cualquier usuario verificado**, conservando el candado de que **una
+campaña ya eliminada no se puede volver a tocar**.
+
+### Falla 2 — el último acceso no se podía registrar
+La app anota `usuarios/<usuario>/ultimoAcceso` **en cada inicio de sesión**. Como la escritura de `usuarios`
+estaba reservada a administradores, ese apunte fallaba siempre para Operador y Ventas (la columna quedaría vacía
+y el registro lleno de avisos). Corregido con una regla de **un solo campo**: cada usuario puede escribir
+**únicamente su propio `ultimoAcceso`**, identificándose por el correo guardado en su registro.
+
+### Lo que se revisó y estaba bien
+| Ruta | Quién escribe | Regla |
+|---|---|---|
+| `paquetes`, `serviciosAdicionales` | Solo administrador | ✅ correcto (decisión de Jorge) |
+| `papelera` (incluido vaciarla) | Solo administrador | ✅ correcto |
+| `historial` | Cualquiera, **solo anexar** | ✅ correcto (`data.exists() === false`) |
+| `usuarios` (lista completa) | Solo administrador | ✅ correcto |
+| `admins/<uid>` | El propio usuario o un administrador | ✅ correcto |
+| `version`, `versiones/<col>/<id>` | Cualquier usuario verificado | ✅ necesario: la app los actualiza en cada guardado |
+| `prospectos`, `clientes`, `tareas`, `participaciones` | Cualquier usuario verificado | ✅ correcto |
+
+**Cerrar `papelera` y `datos` para los no administradores no rompe el arranque:** la app lee cada colección por
+separado y con red de seguridad (si una está cerrada, conserva la copia local y sigue). Está en el código desde
+la v4.8.2, verificado en la v5.0.
+
+### Lo que las reglas NO pueden vigilar (y queda en la interfaz)
+Decir el **rol** dentro de una regla exigiría identificar al usuario por su UID, y los registros de `usuarios`
+están guardados por nombre de usuario (no por UID), así que no es fiable. Por eso estas quedan como reglas de
+**pantalla**, no de base de datos, y así está documentado:
+
+- Que Ventas **no vea Informes** (es una vista, no un dato).
+- Que Ventas **no active ni pause campañas** (es un cambio de estado sobre un nodo que sí puede escribir).
+- Que Ventas **no edite ni borre pagos** ya registrados (los pagos viven **dentro** del contrato).
+- Que Ventas **no borre clientes ni contratos**.
+- Que Operador y Ventas **no editen el catálogo**: esto **sí** lo vigilan las reglas (solo administrador) además
+  de la interfaz. Doble candado.
