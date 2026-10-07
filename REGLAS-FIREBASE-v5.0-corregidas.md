@@ -36,6 +36,33 @@ Reglas (ahora):  newData.exists() === false ||
 **Es un cambio que solo afloja un candado; no cierra nada ni toca los datos.** No borra, no migra y no
 modifica ningún registro.
 
+## SEGUNDA corrección: las "lápidas" de borrado
+
+Al probar después de publicar la primera corrección, el CRM siguió rechazando guardados, y el mensaje nuevo
+(ya más honesto) lo dejó claro: una transacción en **/prospectos/…** falló con **permission_denied**.
+
+**La causa:** el CRM **borra marcando el registro** con `_eliminado: true` en el mismo nodo (borrado suave,
+para poder recuperarlo). Pero el candado de cada colección exige campos como `['id','nombre','faseActual']`…
+que **una lápida no tiene**:
+
+    lápida = { id, _eliminado: true, _eliminadoPor, _fechaEliminacion, _version, _nombreOriginal }
+
+Resultado: **Firebase rechazaba cada borrado**, el cambio quedaba pendiente para siempre y **atascaba toda la
+sincronización** (la cola tenía 21 cambios y la carga desde la nube se bloqueaba sola para no perder datos).
+
+**El arreglo:** los candados ahora **aceptan la lápida** y siguen exigiendo los campos normales en cualquier
+otro caso:
+
+    newData.exists() === false || newData.child('_eliminado').val() === true || newData.hasChildren([...]) === true
+
+Se aplicó a: `prospectos`, `clientes`, `tareas`, `paquetes`, `serviciosAdicionales`, `campanias`,
+`participaciones`, `historial` y `papelera`. **La seguridad no se relaja**: sigue siendo imposible crear un
+registro sin sus campos obligatorios, y un registro ya eliminado **no se puede volver a escribir** (esa regla
+no se tocó).
+
+**Y el CRM ahora se destranca solo:** si un cambio pendiente es de un registro que ya está eliminado en la
+nube, lo **descarta** (avisa cuántos) y sigue subiendo los demás, en lugar de quedarse atorado.
+
 ## Cómo publicarlo (2 minutos)
 
 > ⚠️ **Antes de tocar las reglas**: tener a mano la versión anterior para volver atrás.

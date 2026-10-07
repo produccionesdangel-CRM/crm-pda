@@ -1289,12 +1289,58 @@ console.log('\n=== 20. Ninguna ventana ni aviso muestra código (reportado por J
     /* Y el caso exacto que estaba roto: la participación trae campaignId/prospectId. */
     const part = alta && alta.participacion;
     if (part) {
+      /* El CRM borra con "lápida": marca el registro con _eliminado:true en el
+         mismo nodo. El candado TIENE que aceptarla, o cada borrado se rechaza y
+         la cola de cambios pendientes se atasca (fue justo lo que pasó). */
+      const lapidas = {
+        prospectos: { id: 'pro_x', _eliminado: true, _eliminadoPor: 'Jorge', _fechaEliminacion: '2026-10-07T19:00:00', _version: 3, _nombreOriginal: 'Ana' },
+        clientes: { id: 'cli_x', _eliminado: true, _version: 2 },
+        tareas: { id: 'tar_x', _eliminado: true, _version: 2 },
+        paquetes: { id: 'paq_x', _eliminado: true, _version: 2 },
+        serviciosAdicionales: { id: 'srv_x', _eliminado: true, _version: 2 },
+        campanias: { id: 'cmp_x', _eliminado: true, _version: 2 },
+        participaciones: { id: 'par_x', _eliminado: true, _version: 2 },
+        papelera: { id: 'pap_x', _eliminado: true, _version: 2 }
+      };
+      const malasLapidas = Object.keys(lapidas).filter(function (col) {
+        const v = (reglas.rules[col] && reglas.rules[col].$id && reglas.rules[col].$id['.validate']) || '';
+        return !evaluarCandado(v, lapidas[col]);
+      });
+      comprobar('las reglas aceptan las lápidas de borrado (borrar en el CRM no queda bloqueado)',
+        malasLapidas.length === 0, malasLapidas.length ? ('rechazan: ' + malasLapidas.join(', ')) : '');
+
+      /* Y sin relajar la seguridad: un registro al que le falta lo obligatorio sigue rechazado. */
+      const incompleto = evaluarCandado(reglas.rules.prospectos.$id['.validate'], { id: 'pro_y', telefono: '55' });
+      comprobar('las reglas siguen rechazando un prospecto sin nombre ni fase', incompleto === false);
+
       comprobar('la participación conserva el id de campaña y de prospecto que las reglas ahora aceptan',
         (part.campaignId !== undefined || part.campaniaId !== undefined) &&
         (part.prospectId !== undefined || part.prospectoId !== undefined),
         JSON.stringify({ campaignId: part.campaignId, prospectId: part.prospectId }));
     }
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   26. El guardado en la nube se destranca solo
+   ----------------------------------------------------------------------
+   Cuando un cambio pendiente es de un registro que YA está eliminado en la
+   nube, las reglas no dejan subirlo nunca (a propósito): si eso no se detecta,
+   ese cambio atasca toda la sincronización (le pasó a Jorge con 21 cambios
+   pendientes). Esta comprobación vigila que el guardado siga siendo tolerante.
+   ══════════════════════════════════════════════════════════════════════ */
+{
+  comprobar('el guardado usa transacciones tolerantes a un rechazo por permisos',
+    /transaccionSegura/.test(HTML) && (HTML.match(/await transaccionSegura\(/g) || []).length >= 2,
+    'si se quitan, un cambio imposible vuelve a atascar la cola');
+  comprobar('el guardado descarta los cambios que ya no se pueden subir (registro eliminado en la nube)',
+    /remoto\._eliminado === true/.test(HTML) && /descartado: true/.test(HTML),
+    'sin esto, la cola queda atorada para siempre');
+  comprobar('el guardado avisa cuando descarta cambios',
+    /Se descartaron ' \+ descartados/.test(HTML), 'falta el aviso al usuario');
+  comprobar('el aviso de estado distingue permisos de red',
+    /Sin permiso en la nube/.test(HTML) && /PERMISSION_DENIED/.test(HTML),
+    'un rechazo por reglas no debe mostrarse como error de red');
 }
 
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);

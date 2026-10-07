@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.19';
+        var BUILD_APP = '2026-10-07.20';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -3096,6 +3096,29 @@
                 sincronizandoFirebase = true;
                 actualizarEstadoSync('syncing', 'Guardando...');
                 const conflictos = [];
+                let descartados = 0;
+
+                /* Transacción tolerante: si Firebase la rechaza por permisos y el
+                   registro ya está eliminado en la nube, ese cambio no se puede subir
+                   nunca (las reglas no dejan tocar lo eliminado): se descarta y se
+                   sigue con los demás en lugar de atascar toda la cola. */
+                const transaccionSegura = async function (refEntidad, aplicar, col, id) {
+                    try {
+                        return await refEntidad.transaction(aplicar);
+                    } catch (error) {
+                        const codigo = String((error && (error.code || error.message)) || error);
+                        if (!/permission_denied|PERMISSION_DENIED/i.test(codigo)) throw error;
+                        let remoto = null;
+                        try { remoto = (await refEntidad.once('value')).val(); } catch (e) { remoto = null; }
+                        if (remoto && remoto._eliminado === true) {
+                            descartados++;
+                            console.warn('🗑️ Descartado un cambio que ya no se puede subir (el registro está eliminado en la nube): ' + col + '/' + id);
+                            delete entidadesSucias[col][id];
+                            return { committed: false, descartado: true };
+                        }
+                        throw error;
+                    }
+                };
 
                 // BLOQUE 1: Colecciones versionadas con transacciones
                 for (const col of COLECCIONES_VERSIONADAS) {
@@ -3134,13 +3157,14 @@
                                 _version: versionLocalEsperada + 1,
                                 _nombreOriginal: entidadLocal ? (entidadLocal.nombre || entidadLocal.festejado || id) : id
                             };
-                            const resultado = await refEntidad.transaction(function(actual) {
+                            const resultado = await transaccionSegura(refEntidad, function(actual) {
                                 if (actual === null) return tombstone;
                                 if (actual._eliminado === true) return actual;
                                 const vRemota = actual._version || 0;
                                 if (vRemota !== versionLocalEsperada && versionLocalEsperada !== 0 && vRemota !== 0) return undefined;
                                 return tombstone;
-                            });
+                            }, col, id);
+                            if (resultado && resultado.descartado) { continue; }
                             if (!resultado.committed) {
                                 conflictos.push({ tipo: col, id: id, nombre: entidadLocal ? (entidadLocal.nombre || entidadLocal.festejado || id) : id, versionLocal: versionLocalEsperada, versionRemota: null, motivo: 'el registro fue modificado remotamente antes de eliminarlo' });
                             }
@@ -3155,7 +3179,7 @@
                             // (red cortada, pestaña cerrada), el reintento NO debe contar como conflicto
                             // ni volver a escribir: se reconoce por el mismo _opId.
                             let yaAplicada = false;
-                            const resultado = await refEntidad.transaction(function(actual) {
+                            const resultado = await transaccionSegura(refEntidad, function(actual) {
                                 if (actual === null) return entidadParaSubir;
                                 if (actual._eliminado === true) return undefined;
                                 if (entidadParaSubir._opId && actual._opId === entidadParaSubir._opId) {
@@ -3165,7 +3189,8 @@
                                 const vRemota = actual._version || 0;
                                 if (vRemota !== versionLocalEsperada && versionLocalEsperada !== 0 && vRemota !== 0) return undefined;
                                 return entidadParaSubir;
-                            });
+                            }, col, id);
+                            if (resultado && resultado.descartado) { continue; }
                             if (resultado.committed) {
                                 if (yaAplicada) {
                                     console.log('♻️ Operación ya aplicada en la nube (reintento idempotente): ' + col + '/' + id);
@@ -3256,6 +3281,12 @@
                 ultimaActualizacionRemota = ahora;
                 cambiosPendientes = false;
                 limpiarEntidadesSucias();
+                if (descartados > 0) {
+                    console.warn('🗑️ Se descartaron ' + descartados + ' cambio(s) que ya no se podían subir (registros eliminados en la nube).');
+                    if (typeof mostrarNotificacion === 'function') {
+                        mostrarNotificacion('Se descartaron ' + descartados + ' cambio(s) de registros ya eliminados en la nube; el resto se subió.', 'warning');
+                    }
+                }
                 actualizarEstadoSync('online', 'Guardado');
                 return true;
             } catch (error) {
