@@ -2355,9 +2355,15 @@
         function esOperador() { return !!(usuarioActual && usuarioActual.admin !== true && usuarioActual.rol !== 'Ventas'); }
         var CAPACIDADES = {
             'Administrador': { 'ver-informes': true,  'imprimir-contrato': true,  'activar-campanias': true,  'ver-papelera': true },
-            'Operador':      { 'ver-informes': true,  'imprimir-contrato': true,  'activar-campanias': false, 'ver-papelera': false },
-            'Ventas':        { 'ver-informes': false, 'imprimir-contrato': false, 'activar-campanias': false, 'ver-papelera': false }
+            'Operador':      { 'ver-informes': true,  'imprimir-contrato': true,  'activar-campanias': false, 'ver-papelera': false, 'editar-pagos': true },
+            'Ventas':        { 'ver-informes': false, 'imprimir-contrato': false, 'activar-campanias': false, 'ver-papelera': false, 'editar-pagos': false }
         };
+        // El rol de Ventas puede mover la fase comercial hasta Negociación: no puede declarar
+        // un contrato cerrado ni marcar al prospecto como cliente frecuente.
+        function fasesDisponiblesParaMiRol() {
+            if (!esVentas()) return FASES_DISPONIBLES.slice();
+            return FASES_DISPONIBLES.filter(function (f) { return f !== 'Contrato' && f !== 'Frecuente'; });
+        }
         function puede(capacidad) {
             if (esAdmin()) return true;
             var rol = (usuarioActual && usuarioActual.rol) || 'Operador';
@@ -4397,7 +4403,7 @@
         function mostrarFormularioProspecto(prospecto) {
             const ee = prospecto !== null && prospecto !== undefined;
             let opf = '';
-            FASES_DISPONIBLES.forEach(function(f) { const sel = prospecto && prospecto.faseActual === f ? 'selected' : ''; opf += '<option value="' + f + '" ' + sel + '>' + f + '</option>'; });
+            fasesDisponiblesParaMiRol().forEach(function(f) { const sel = prospecto && prospecto.faseActual === f ? 'selected' : ''; opf += '<option value="' + f + '" ' + sel + '>' + f + '</option>'; });
             const html = '<form id="form-prospecto"><input type="hidden" id="prospecto-id" value="' + (prospecto ? prospecto.id : '') + '"><div class="form-grupo"><label>Nombre *</label><input type="text" id="prospecto-nombre" required value="' + (prospecto ? prospecto.nombre : '') + '"></div><div class="form-grupo"><label>Teléfono (opcional)</label><input type="text" id="prospecto-telefono" value="' + (prospecto ? prospecto.telefono : '') + '"></div><div class="form-grupo"><label>Email (opcional)</label><input type="email" id="prospecto-email" value="' + (prospecto ? prospecto.email : '') + '"></div><div class="form-grupo"><label>Fase *</label><select id="prospecto-fase" required>' + opf + '</select></div><div class="form-grupo"><label>Notas (opcional)</label><textarea id="prospecto-notas">' + (prospecto ? prospecto.notasGenerales : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-prospecto-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
             abrirModal(ee ? 'Editar Prospecto' : 'Nuevo Prospecto', html);
             document.getElementById('btn-prospecto-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
@@ -4411,6 +4417,7 @@
                 const faseActual = document.getElementById('prospecto-fase').value;
                 const notasGenerales = document.getElementById('prospecto-notas').value.trim();
                 if (!nombre || !faseActual) { mostrarNotificacion('Campos obligatorios faltantes', 'warning'); return; }
+            if (fasesDisponiblesParaMiRol().indexOf(faseActual) === -1) { mostrarNotificacion('Tu rol no puede poner esa fase comercial.', 'warning'); return; }
                 if (email && !esCorreoValido(email)) { mostrarNotificacion('El correo no tiene un formato válido.', 'warning'); return; }
                 if (ee) {
                     const idx = prospectos.findIndex(function(p) { return p.id === id; });
@@ -4953,7 +4960,7 @@
                     const monto = p.monto || 0;
                     const codigo = p.codigo ? '<span class="pago-codigo"><i class="fas fa-fingerprint"></i> ' + p.codigo + '</span>' : '';
                     const regPor = p.registradoPor ? '<span class="pago-registrado-por"><i class="fas fa-user"></i> ' + p.registradoPor + '</span>' : '';
-                    const btnEliminar = (!p.esNotaEliminacion && p.id) ? '<button type="button" class="btn-eliminar-item" onclick="PDA.eliminarMovimientoContrato(\'pago\',\'' + escapeAtributoJS(p.id) + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '';
+                    const btnEliminar = (!p.esNotaEliminacion && p.id && puede('editar-pagos')) ? '<button type="button" class="btn-eliminar-item" onclick="PDA.eliminarMovimientoContrato(\'pago\',\'' + escapeAtributoJS(p.id) + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '';
                     html += '<div class="pago-item ' + claseEliminado + '"><div class="pago-info"><span class="tarjeta-etiqueta" style="background:var(--color-verde);color:#fff;font-size:10px;padding:2px 8px;">' + badge + '</span><span class="pago-monto">' + formatearMoneda(monto) + '</span><span class="pago-fecha">' + formatearFechaHora(p.fecha) + '</span>' + codigo + regPor + (p.nota ? '<span style="font-size:11px;color:var(--color-texto-secundario);width:100%;">' + p.nota + '</span>' : '') + '</div>' + btnEliminar + '</div>';
                 });
                 lista.innerHTML = html || '<p style="color:var(--color-texto-secundario);font-size:13px;text-align:center;padding:12px;">Sin pagos registrados</p>';
@@ -4969,7 +4976,7 @@
                     const badge = c.esNotaEliminacion ? 'NOTA' : 'CARGO';
                     const monto = c.monto || 0;
                     const regPor = c.registradoPor ? '<span class="pago-registrado-por"><i class="fas fa-user"></i> ' + c.registradoPor + '</span>' : '';
-                    const btnEliminar = (!c.esNotaEliminacion && c.id) ? '<button type="button" class="btn-eliminar-item" onclick="PDA.eliminarMovimientoContrato(\'cargo\',\'' + escapeAtributoJS(c.id) + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '';
+                    const btnEliminar = (!c.esNotaEliminacion && c.id && puede('editar-pagos')) ? '<button type="button" class="btn-eliminar-item" onclick="PDA.eliminarMovimientoContrato(\'cargo\',\'' + escapeAtributoJS(c.id) + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '';
                     html += '<div class="cargo-item ' + claseEliminado + '"><div class="cargo-info"><span class="tarjeta-etiqueta" style="background:var(--color-naranja);color:#fff;font-size:10px;padding:2px 8px;">' + badge + '</span><span class="cargo-monto">' + formatearMoneda(monto) + '</span><span class="cargo-fecha">' + formatearFechaHora(c.fecha) + '</span>' + regPor + (c.nota ? '<span style="font-size:11px;color:var(--color-texto-secundario);width:100%;">' + c.nota + '</span>' : '') + '</div>' + btnEliminar + '</div>';
                 });
                 lista.innerHTML = html;
@@ -5162,6 +5169,8 @@
             // Un pago NUNCA se borra físicamente: se ANULA conservando identificador, monto
             // original, quién lo creó y quién lo anuló, cuándo y por qué motivo.
             window.PDA.eliminarMovimientoContrato = function(tipo, idMovimiento) {
+            // Doble guarda: aunque alguien invoque la función a mano, el rol manda.
+            if (!puede('editar-pagos')) { mostrarNotificacion('Tu rol no puede borrar pagos ni cargos ya registrados.', 'warning'); return; }
                 const esPago = tipo === 'pago';
                 const arreglo = esPago ? pagosArr : cargosArr;
                 const indiceReal = arreglo.findIndex(function(m) { return m && m.id === idMovimiento; });
@@ -10639,6 +10648,9 @@
     function conectarBotonesEstado(camp) {
         document.querySelectorAll('[data-estado-campania]').forEach(function (boton) {
             boton.onclick = function () {
+                    // Activar, pausar, finalizar o cancelar una campaña es de administradores
+                    // (decisión de Jorge: solo una campaña activa opera a la vez).
+                    if (!puede('activar-campanias')) { App.notificar('Solo un administrador puede cambiar el estado de una campaña.', 'error'); return; }
                 var destino = boton.getAttribute('data-estado-campania');
                 var ayuda = Catalogos.ayudaEstadoCampania(destino);
                 var ejecutar = function () {
@@ -11804,6 +11816,10 @@
             r = { ok: true, campania: nueva };
         }
 
+            if (activar && !puede('activar-campanias')) {
+                activar = false;
+                App.notificar('La campaña se guardó en borrador: solo un administrador puede activarla.', 'aviso');
+            }
         if (activar) {
             var ra = motor().cambiarEstadoCampania(asi.campaniaId, 'activa');
             if (!ra.ok) { App.notificar(ra.errores[0], 'error'); return; }

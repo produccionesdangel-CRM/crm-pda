@@ -596,5 +596,36 @@ console.log('\n=== 13. Rol de Ventas: capacidades (Fase 4) ===');
   comprobar('el Administrador puede todo', c.puede('ver-informes') && c.puede('imprimir-contrato') && c.puede('activar-campanias') && c.puede('ver-papelera'));
   c.usuarioActual = null;
 }
+console.log('\n=== 14. Rol de Ventas: guardas finas (Fase 4) ===');
+{
+  const c = r.contexto;
+  const comoVentas = () => { c.usuarioActual = { username: 'ana', nombre: 'Ana', rol: 'Ventas', admin: false }; };
+  const comoOperador = () => { c.usuarioActual = { username: 'luis', nombre: 'Luis', rol: 'Operador', admin: false }; };
+
+  comoVentas();
+  comprobar('Ventas NO puede editar ni borrar pagos', c.puede('editar-pagos') === false);
+  const fasesVentas = c.fasesDisponiblesParaMiRol();
+  comprobar('Ventas NO puede poner la fase Contrato', !fasesVentas.includes('Contrato'), fasesVentas.join(', '));
+  comprobar('Ventas NO puede poner la fase Frecuente', !fasesVentas.includes('Frecuente'));
+  comprobar('Ventas SÍ puede mover hasta Negociación',
+    fasesVentas.includes('Interesado') && fasesVentas.includes('Cotización') && fasesVentas.includes('Negociación'));
+
+  comoOperador();
+  comprobar('el Operador SÍ puede editar y borrar pagos (no se le cambió nada)', c.puede('editar-pagos') === true);
+  comprobar('el Operador SÍ conserva todas las fases',
+    c.fasesDisponiblesParaMiRol().includes('Contrato') && c.fasesDisponiblesParaMiRol().includes('Frecuente'));
+
+  c.usuarioActual = { username: 'x', nombre: 'X', rol: 'RolRaro', admin: false };
+  comprobar('un rol desconocido no hereda permisos de más',
+    c.puede('editar-pagos') === true && c.puede('ver-informes') === true && c.puede('activar-campanias') === false);
+
+  comprobar('el cambio de estado de campaña está guardado',
+    /Solo un administrador puede cambiar el estado de una campaña/.test(HTML));
+  comprobar('activar desde el asistente está guardado',
+    /solo un administrador puede activarla/.test(HTML));
+  comprobar('el borrado de movimientos está guardado',
+    /Tu rol no puede borrar pagos ni cargos ya registrados/.test(HTML));
+  c.usuarioActual = null;
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);
