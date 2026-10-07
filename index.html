@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.3';
+        var BUILD_APP = '2026-10-07.4';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -6908,12 +6908,19 @@
             const btnNuevoServ = document.getElementById('btn-nuevo-servicio');
             if (btnNuevoPaq) btnNuevoPaq.style.display = esAdmin() ? '' : 'none';
             if (btnNuevoServ) btnNuevoServ.style.display = esAdmin() ? '' : 'none';
+            // Exportar e importar respaldos es de administradores: la decisión de Jorge es
+            // que el rol de Ventas "solo pueda sincronizar y cargar desde la nube".
+            // Las funciones ya avisaban y no hacían nada; aquí además se oculta la opción.
+            ['btn-exportar-datos', 'btn-importar-datos'].forEach(function(id) {
+                const b = document.getElementById(id);
+                if (b) b.style.display = esAdmin() ? '' : 'none';
+            });
             const papeleraCard = document.getElementById('papelera-card');
             if (papeleraCard) { papeleraCard.style.display = esAdmin() ? 'block' : 'none'; if (esAdmin()) renderizarPapelera(); }
-            if (!esAdmin()) {
-                const seccionActiva = document.querySelector('.seccion.active');
-                if (seccionActiva && seccionActiva.id === 'seccion-servicios') { cambiarSeccion('informes'); renderizarSeccion('informes'); }
-            }
+            // Nota: NO se expulsa a nadie de Paquetes ni de Servicios. La decisión de
+            // producto es que Operador y Ventas VEAN las dos secciones completas, en
+            // solo lectura: los botones de crear/editar/eliminar ya están ocultos y las
+            // funciones de guardado tienen su propio candado (soloAdmin).
         }
 
         /* ─── LISTENERS ─── */

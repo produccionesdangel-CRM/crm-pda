@@ -704,5 +704,43 @@ console.log('\n=== 17. Orden seguro del índice de administradores (antes de pub
   comprobar('la publicación del índice al entrar no puede tumbar el arranque',
     /async function sincronizarIndiceAdmin[\s\S]{0,900}catch \(e\) \{ console\.warn/.test(HTML), 'sin red de seguridad');
 }
+console.log('\n=== 18. Matriz de permisos en la interfaz (lo que cada rol VE) ===');
+{
+  const c = r.contexto;
+  const vis = id => { const el = r.elementos.get(id); return el ? String(el.style.display || '') : '(no existe)'; };
+  const comoVentas = () => { c.usuarioActual = { username: 'ana', nombre: 'Ana', rol: 'Ventas', admin: false }; };
+  const comoOperador = () => { c.usuarioActual = { username: 'luis', nombre: 'Luis', rol: 'Operador', admin: false }; };
+  const comoAdmin = () => { c.usuarioActual = { username: 'jorge', nombre: 'Jorge', rol: 'Administrador', admin: true }; };
+  const aplicar = () => { if (typeof c.aplicarRestriccionesPorRol === 'function') c.aplicarRestriccionesPorRol(); };
+
+  comoVentas(); aplicar();
+  comprobar('Ventas NO ve el botón de exportar respaldo', vis('btn-exportar-datos') === 'none', vis('btn-exportar-datos'));
+  comprobar('Ventas NO ve el botón de importar respaldo', vis('btn-importar-datos') === 'none', vis('btn-importar-datos'));
+  comprobar('Ventas NO ve la papelera', vis('papelera-card') === 'none', vis('papelera-card'));
+  comprobar('Ventas NO ve el botón de nuevo paquete', vis('btn-nuevo-paquete') === 'none', vis('btn-nuevo-paquete'));
+  comprobar('Ventas NO ve el botón de nuevo servicio', vis('btn-nuevo-servicio') === 'none', vis('btn-nuevo-servicio'));
+  if (typeof c.actualizarUIUsuario === 'function') {
+    c.actualizarUIUsuario();
+    comprobar('Ventas NO ve la gestión de usuarios', vis('card-gestion-usuarios') === 'none', vis('card-gestion-usuarios'));
+  }
+  comprobar('el catálogo tiene candado en las funciones (no solo botones ocultos)',
+    /soloAdmin && !esAdmin\(\)/.test(HTML) && /coleccion: 'serviciosAdicionales'[\s\S]{0,200}soloAdmin: true/.test(HTML),
+    'falta el candado de soloAdmin en servicios/paquetes');
+  comprobar('ya no se expulsa a nadie de Servicios (queda visible en solo lectura)',
+    !/seccionActiva\.id === 'seccion-servicios'/.test(HTML), 'sigue el residuo que redirigía a Informes');
+
+  comoOperador(); aplicar();
+  comprobar('el Operador tampoco ve exportar/importar (no los tenía antes)', vis('btn-exportar-datos') === 'none' && vis('btn-importar-datos') === 'none');
+  comprobar('el Operador tampoco ve la papelera', vis('papelera-card') === 'none');
+  comprobar('el Operador SÍ puede ver Informes', c.puede('ver-informes') === true);
+
+  comoAdmin(); aplicar();
+  comprobar('el Administrador sí ve exportar, importar y papelera',
+    vis('btn-exportar-datos') !== 'none' && vis('btn-importar-datos') !== 'none' && vis('papelera-card') !== 'none',
+    vis('btn-exportar-datos') + ' / ' + vis('papelera-card'));
+  comprobar('el Administrador sí ve los botones del catálogo',
+    vis('btn-nuevo-paquete') !== 'none' && vis('btn-nuevo-servicio') !== 'none');
+  c.usuarioActual = null;
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);
