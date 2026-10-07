@@ -117,11 +117,15 @@
       (traduce el `'ok'` de la lite a `'success'`), `confirmar` (conecta el botón del CRM y ejecuta la acción),
       `descargar`, navegación (`seleccionarSeccion`, `renderSeccion`, `renderTodo`) y las pantallas que el CRM ya
       tiene (prospectos, clientes, catálogo, historial, configuración, tema). Verificado **35/35** en el banco.
-- [ ] **Fase 3b (parte 2):** portar `30-vistas.js` (77 KB), `40-campanias.js` (1.733 líneas) y `50-calendario.js`,
-      más el cableado de `60-inicio.js`. **Importante:** esos archivos definen sus propias versiones de `App.*`,
-      así que el puente tiene que quedar **después** de ellos (pisa las de la lite con las del CRM).
-      No se tocan los modales de campaña (tarea, contacto, conversión): ya escriben por el motor.
-- [ ] Fase 3c (calendario y panel del prospecto) · Fase 4 (rol de Ventas) · Fase 5 (cierre)
+- [x] **Fase 3b (parte 2)**: portados `30-vistas.js` (1.169 líneas), `40-campanias.js` (1.734) y `50-calendario.js`
+      (412) **antes** del puente, así las versiones del CRM son las que ganan. No hubo que cablear nada extra: la
+      interfaz se trae sus propias piezas (`App.opciones` resultó ser una **función** que arma `<option>`, no un
+      objeto de configuración) y no publica ningún global fuera de `App`.
+      Cableado del CRM: `renderizarSeccion()` ahora pinta `panel` y `campanias`, y el refresco general
+      (`renderizarTodo`, que también usa el arranque) redibuja las dos vistas.
+      **Verificado: 42/42** — el Panel pinta métricas y embudo, la lista de Campañas se dibuja, **el asistente de
+      campaña arma sus pasos** y el refresco general del CRM no se rompe.
+- [ ] Fase 3c (calendario con eventos de campaña y panel del prospecto con sus tareas) · Fase 4 (rol de Ventas) · Fase 5 (cierre)
 - [ ] Respaldo exportado y verificado por Jorge (regla de oro, antes de tocar la base real).
 - [ ] `firebase-rules-recomendadas.json` (pedido a la PC de trabajo por el canal).
 

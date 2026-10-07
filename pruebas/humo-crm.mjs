@@ -375,5 +375,31 @@ console.log('\n=== 7. Puente de la interfaz de campañas con el CRM ===');
   comprobar('el puente apunta al almacén y al motor reales',
     c.App.almacen === c.almacenCampanias && c.App.motor === c.motorCampanias, 'no coinciden');
 }
+console.log('\n=== 8. Las vistas de campañas se pintan (Fase 3b) ===');
+{
+  const c = r.contexto;
+  const leer = id => String((r.elementos.get(id) || {}).innerHTML || '');
+
+  let error = null;
+  try { c.renderizarSeccion('panel'); } catch (e) { error = e.message; }
+  comprobar('el Panel se pinta sin errores', error === null, error || '');
+  comprobar('el Panel dibuja sus métricas', leer('panel-metricas').length > 20, `caracteres=${leer('panel-metricas').length}`);
+  comprobar('el Panel dibuja el embudo', leer('panel-embudo').length > 5, `caracteres=${leer('panel-embudo').length}`);
+
+  error = null;
+  try { c.renderizarSeccion('campanias'); } catch (e) { error = e.message; }
+  comprobar('la sección Campañas se pinta sin errores', error === null, error || '');
+  comprobar('la lista de campañas tiene contenido', leer('lista-campanias').length > 20, `caracteres=${leer('lista-campanias').length}`);
+
+  error = null;
+  try { c.App.cerrarModal(); c.App.asistenteCampania(c.campanias[0] && c.campanias[0].id); } catch (e) { error = e.message; }
+  const cuerpo = leer('modal-body');
+  comprobar('el asistente de campaña abre y arma sus pasos', error === null && cuerpo.length > 200,
+    error || `caracteres del modal=${cuerpo.length}`);
+
+  error = null;
+  try { c.App.renderTodo(); } catch (e) { error = e.message; }
+  comprobar('el refresco general del CRM no se rompe con las vistas nuevas', error === null, error || '');
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);
