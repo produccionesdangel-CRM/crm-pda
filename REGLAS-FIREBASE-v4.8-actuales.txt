@@ -1,0 +1,128 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "usuarios": {
+      ".read": "auth != null && auth.token.email_verified == true",
+      ".write": "auth != null && auth.token.email_verified == true && (root.child('usuarios').child(auth.uid).exists() || root.child('usuarios/arranque').exists() === false || auth.token.email == 'produccionesdangel@gmail.com')",
+      "$registro": {
+        ".validate": "newData.hasChildren(['username','nombre','email','rol']) === true",
+        "email": {
+          ".validate": "newData.isString() && (newData.val().toLowerCase() === auth.token.email.toLowerCase() || auth.token.email == 'produccionesdangel@gmail.com')"
+        },
+        "username": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+        },
+        "nombre": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120"
+        },
+        "rol": {
+          ".validate": "newData.isString() && (newData.val() === 'Administrador' || newData.val() === 'Operador')"
+        },
+        "admin": {
+          ".validate": "newData.isBoolean()"
+        },
+        "activo": {
+          ".validate": "newData.isBoolean()"
+        },
+        "tienePin": {
+          ".validate": "newData.isBoolean()"
+        },
+        "authProvider": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "fechaCreacion": {
+          ".validate": "newData.isString() && newData.val().length <= 30"
+        },
+        "ultimoAcceso": {
+          ".validate": "newData.isString() && newData.val().length <= 30"
+        }
+      }
+    },
+
+    "version": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email_verified == true",
+      "ultimaActualizacion": { ".validate": "newData.isString()" },
+      "ultimoUsuario": { ".validate": "newData.isString()" },
+      "appVersion": { ".validate": "newData.isString()" },
+      "schemaVersion": { ".validate": "newData.isNumber()" }
+    },
+
+    "paquetes": {
+      ".read": "auth != null",
+      ".indexOn": ["vigencia", "estatus"],
+      "$id": {
+        ".write": "auth != null && auth.token.email_verified == true && (data.exists() === false || data.child('_eliminado').val() !== true)",
+        ".validate": "newData.exists() === false || newData.hasChildren(['id','nombre','precio']) === true"
+      }
+    },
+
+    "serviciosAdicionales": {
+      ".read": "auth != null",
+      ".indexOn": ["vigencia"],
+      "$id": {
+        ".write": "auth != null && auth.token.email_verified == true && (data.exists() === false || data.child('_eliminado').val() !== true)",
+        ".validate": "newData.exists() === false || newData.hasChildren(['id','nombre','precio']) === true"
+      }
+    },
+
+    "prospectos": {
+      ".read": "auth != null",
+      ".indexOn": ["faseActual"],
+      "$id": {
+        ".write": "auth != null && auth.token.email_verified == true && (data.exists() === false || data.child('_eliminado').val() !== true)",
+        ".validate": "newData.exists() === false || newData.hasChildren(['id','nombre','faseActual']) === true"
+      }
+    },
+
+    "clientes": {
+      ".read": "auth != null",
+      "$id": {
+        ".write": "auth != null && auth.token.email_verified == true && (data.exists() === false || data.child('_eliminado').val() !== true)",
+        ".validate": "newData.exists() === false || newData.hasChildren(['id','nombre']) === true"
+      }
+    },
+
+    "tareas": {
+      ".read": "auth != null",
+      ".indexOn": ["fecha", "clienteId"],
+      "$id": {
+        ".write": "auth != null && auth.token.email_verified == true && (data.exists() === false || data.child('_eliminado').val() !== true)",
+        ".validate": "newData.exists() === false || newData.hasChildren(['id','tipo','fecha']) === true"
+      }
+    },
+
+    "versiones": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email_verified == true",
+      "$coleccion": {
+        "$id": { ".validate": "newData.isNumber()" }
+      }
+    },
+
+    "historial": {
+      ".read": "auth != null",
+      "$id": {
+        ".write": "auth != null && auth.token.email_verified == true && data.exists() === false",
+        ".validate": "newData.exists() === false || newData.hasChildren(['id','fecha','entidad','accion']) === true"
+      }
+    },
+
+    "papelera": {
+      ".read": "auth != null && (auth.token.email == 'produccionesdangel@gmail.com' || root.child('usuarios').child(auth.uid).child('admin').val() === true)",
+      ".write": "auth != null && auth.token.email_verified == true && (auth.token.email == 'produccionesdangel@gmail.com' || root.child('usuarios').child(auth.uid).child('admin').val() === true)",
+      "$id": {
+        ".validate": "newData.exists() === false || newData.hasChildren(['id','tipo','item']) === true"
+      }
+    },
+
+    "datos": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
+
+
