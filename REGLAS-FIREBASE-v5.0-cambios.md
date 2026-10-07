@@ -140,3 +140,14 @@ administrador (`jorgefrosas`) perdería sus permisos porque su registro no tiene
 2. Que **cada administrador abra el CRM una vez** (eso publica su casilla en `admins`).
 3. **Publicar las reglas** y probar con una cuenta de cada rol.
 4. Si algo falla: volver a pegar `REGLAS-FIREBASE-v4.8-actuales.txt`.
+
+## 9. Cierre del índice `admins` (7/10/2026)
+
+La app ya **limpia la casilla** del índice cuando un administrador **desactiva**, **cambia de rol** o **quita** a
+un usuario (bloque `sincronizarIndiceAdmin`). Para que eso sea posible, la regla de escritura de `admins/$uid`
+se amplió: cada quien escribe su casilla **y un administrador puede escribir la de otro** (necesario para
+retirarle el permiso a alguien). Sin este paso, un administrador degradado seguiría teniendo permisos hasta que
+él mismo volviera a entrar.
+
+**Fase 4 cerrada.** Lo que falta es de la Fase 5: suites completas, medición en el teléfono y despliegue, y
+después publicar estas reglas en el orden indicado en el apartado 8.

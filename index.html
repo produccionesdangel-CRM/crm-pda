@@ -6242,7 +6242,8 @@
                     usuarios[idx].admin = seriaAdmin;
                     guardarUsuarios();
                 }
-                const ok = await subirRegistroUsuarios();
+                await sincronizarIndiceAdmin(usuarios[idx] || u);
+            const ok = await subirRegistroUsuarios();
                 registrarHistorial('usuario', 'editar', 'Se editó el usuario "' + nn + '" (' + ne + ') como ' + nr, { nombre: nn });
                 guardarDatos(); cerrarModal(); renderizarUsuarios();
                 mostrarNotificacion(ok ? 'Usuario actualizado' : 'Usuario actualizado solo en local; revisa las reglas de Firebase.', ok ? 'success' : 'warning');
@@ -6254,6 +6255,7 @@
             const quedariaInactivo = usuarioEstaActivo(u);
             if (quedariaInactivo && u.admin && adminsActivos().length <= 1) { mostrarNotificacion('No puedes desactivar al único administrador activo.', 'warning'); return; }
             u.activo = !quedariaInactivo;
+            sincronizarIndiceAdmin(u);
             guardarUsuarios();
             subirRegistroUsuarios().then(function(ok) {
                 registrarHistorial('usuario', 'editar', (u.activo ? 'Se reactivó' : 'Se desactivó') + ' el acceso de "' + (u.nombre || username) + '"', { nombre: u.nombre });
@@ -6271,6 +6273,7 @@
                 detalle: 'Esa cuenta de Google dejará de poder entrar al CRM. Los registros que creó se conservan.',
                 onConfirmar: async function() {
                     usuarios = usuarios.filter(function(x) { return x.username !== username; });
+                sincronizarIndiceAdmin(u, true);
                     guardarUsuarios();
                     subirRegistroUsuarios();
                     if (database && estadoSync.modo === 'firebase') {
@@ -9142,6 +9145,18 @@
            se quedaria apuntando a la version vieja. */
         // Cuántos renglones del historial ya se encolaron para la nube (el motor
         // agrega al principio, así que lo nuevo siempre queda al frente).
+        // Mantiene la casilla del usuario en el indice admins (lo que consultan las reglas).
+        // Si se desactiva, se degrada de rol o se quita a alguien, su casilla debe quedar en
+        // falso o desaparecer: si no, conservaria permisos que ya no le tocan.
+        async function sincronizarIndiceAdmin(usuario, quitar) {
+            try {
+                if (!database || !auth || !auth.currentUser || !usuario) return false;
+                var uid = usuario.uid || ((usuarioActual && usuarioActual.username === usuario.username) ? uidActual() : null);
+                if (!uid) return false;
+                await database.ref("admins/" + uid).set(quitar ? null : (usuario.admin === true && usuarioEstaActivo(usuario)));
+                return true;
+            } catch (e) { console.warn("No se pudo actualizar el indice de administradores:", e); return false; }
+        }
         var historialCampaniasEnviado = historial.length;
         var almacenCampanias = {
             get db() {

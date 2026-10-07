@@ -627,5 +627,51 @@ console.log('\n=== 14. Rol de Ventas: guardas finas (Fase 4) ===');
     /Tu rol no puede borrar pagos ni cargos ya registrados/.test(HTML));
   c.usuarioActual = null;
 }
+console.log('\n=== 15. Regresión: todas las secciones se dibujan (Fase 5) ===');
+{
+  const c = r.contexto;
+  c.usuarioActual = { username: 'jorge', nombre: 'Jorge', rol: 'Administrador', admin: true };
+  // Datos mínimos para que cada sección tenga algo que dibujar.
+  if (!c.clientes.some(x => x && x.id === 'cli-reg')) {
+    c.clientes.push({
+      id: 'cli-reg', nombre: 'Cliente de regresión', telefono: '5555555555', email: 'c@ejemplo.com',
+      estado: 'Activo', fechaRegistro: c.obtenerFechaActual(),
+      contratos: [{ id: 'con-reg', clienteId: 'cli-reg', clienteNombre: 'Cliente de regresión', estado: 'Activo',
+        tipo: 'Boda', festejado: 'Festejado', fechaEvento: '2026-12-31', precioBase: 10000,
+        pagos: [{ id: 'pag-reg', monto: 1000, fecha: c.obtenerFechaActual(), codigo: 'C-1', registradoPor: 'Jorge' }],
+        cargos: [] }]
+    });
+  }
+  if (!c.prospectos.some(x => x && x.id === 'pro-reg')) {
+    c.prospectos.push({ id: 'pro-reg', nombre: 'Prospecto de regresión', faseActual: 'Interesado', historialFases: [], telefono: '555', email: '' });
+  }
+  if (!c.tareas.some(x => x && x.id === 'tar-reg')) {
+    c.tareas.push({ id: 'tar-reg', tipo: 'Llamada', descripcion: 'Tarea de regresión', fecha: c.obtenerFechaActual(), completada: false, clienteId: 'cli-reg' });
+  }
+
+  const secciones = ['informes', 'panel', 'prospectos', 'campanias', 'clientes', 'contratos', 'paquetes', 'servicios', 'calendario', 'configuracion'];
+  const problemas = [];
+  for (const s of secciones) {
+    for (const el of r.elementos.values()) el._html = '';
+    try { c.renderizarSeccion(s); } catch (e) { problemas.push(s + ': ' + e.message); continue; }
+    const dibujo = [...r.elementos.values()].some(el => String(el._html || '').length > 30);
+    if (!dibujo) problemas.push(s + ': no dibujó nada');
+  }
+  comprobar('las 10 secciones se dibujan sin errores y con contenido', problemas.length === 0, problemas.join(' | '));
+
+  let error = null;
+  try { c.renderizarTodo(); } catch (e) { error = e.message; }
+  comprobar('el refresco general del CRM sigue funcionando', error === null, error || '');
+
+  comprobar('la app sabe limpiar la casilla del índice de administradores',
+    /async function sincronizarIndiceAdmin/.test(HTML) && /sincronizarIndiceAdmin\(u, true\)/.test(HTML),
+    'falta la limpieza del índice');
+  comprobar('el índice se limpia al desactivar, al cambiar de rol y al quitar',
+    (HTML.match(/sincronizarIndiceAdmin\(/g) || []).length >= 4, 'faltan enganches');
+  comprobar('las reglas dejan al administrador limpiar la casilla de otro',
+    /auth\.uid === \$uid \|\| root\.child\('admins'\)/.test(fs.readFileSync(new URL('../REGLAS-FIREBASE-v5.0-propuesta.json', import.meta.url), 'utf8')),
+    'las reglas no lo permiten');
+  c.usuarioActual = null;
+}
 console.log(`\n${pruebas - fallos}/${pruebas} comprobaciones en verde${fallos ? `  (${fallos} con falla)` : ''}`);
 process.exit(fallos ? 1 : 0);
