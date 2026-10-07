@@ -211,6 +211,21 @@
             });
         }
 
+        /* Espera a que se cumpla algo, revisando cada 250 ms. */
+        function esperarHasta(condicion, limiteMs) {
+            var inicio = Date.now();
+            return new Promise(function (res) {
+                var revisar = function () {
+                    var ok = false;
+                    try { ok = !!condicion(); } catch (e) { ok = false; }
+                    if (ok) { res(true); return; }
+                    if (Date.now() - inicio > (limiteMs || 30000)) { res(false); return; }
+                    setTimeout(revisar, 250);
+                };
+                revisar();
+            });
+        }
+
         /* ¿El navegador deja guardar el acceso al archivo? (se informa, no se califica) */
         function sondaIndexedDB() {
             var w = marco.contentWindow;
@@ -311,7 +326,39 @@
                         'marcados=' + w.prospectos.filter(function (p) { return p.firmaImportacion; }).length);
                 });
             }).then(function () {
-                /* 6) Desconectar (con límite de tiempo: si el navegador se queda
+                /* 6) LA REVISIÓN AUTOMÁTICA POR TEMPORIZADOR (el caso que reportó
+                   Jorge: "tengo marcado agregar los nuevos sola y no los agrega").
+                   Se programa la revisión cada 10 segundos, se cambia el archivo y
+                   se espera a que el propio temporizador lo detecte y lo importe. */
+                var cfgAuto = JSON.parse(w.localStorage.getItem('pda_importar_config_v1') || '{}');
+                cfgAuto.auto = true;
+                cfgAuto.enlazado = true;
+                cfgAuto.intervaloSegundos = 10;
+                cfgAuto.origenPorDefecto = 'Formulario Google';
+                cfgAuto.faseInicial = 'Interesado';
+                cfgAuto.criterioDuplicado = { telefono: true, nombre: true };
+                w.localStorage.setItem('pda_importar_config_v1', JSON.stringify(cfgAuto));
+                imp.estado.revisionesSinLeer = 0;
+                actual = new w.File([csvEnlazado + 'Nueva Persona;55 8888 9999;nueva@correo.com;llego por el temporizador\n'], 'respuestas.csv', { type: 'text/csv', lastModified: 5000 });
+                imp.programarRevisionEnlazada();
+                comprobar('el temporizador de revisión queda programado',
+                    imp.estado.temporizador !== null && imp.estado.intervaloProgramado === 10,
+                    JSON.stringify({ temporizador: !!imp.estado.temporizador, intervalo: imp.estado.intervaloProgramado }));
+                var antesAuto = w.prospectos.length;
+                return esperarHasta(function () {
+                    return w.prospectos.some(function (p) { return /Nueva Persona/.test(p.nombre || ''); });
+                }, 30000).then(function (llego) {
+                    comprobar('el temporizador detecta el archivo cambiado y agrega el prospecto solo',
+                        llego === true,
+                        JSON.stringify({ revisiones: imp.estado.revisiones, ultima: imp.estado.ultimaRevision && imp.estado.ultimaRevision.resultado }));
+                    comprobar('y deja anotado en el registro qué pasó en la última revisión',
+                        !!imp.estado.ultimaRevision && /agregó/i.test(imp.estado.ultimaRevision.resultado),
+                        JSON.stringify(imp.estado.ultimaRevision));
+                    if (llego) bien('el prospecto nuevo entró sin que nadie pulsara nada (prospectos: ' + w.prospectos.length + ')');
+                    imp.detenerRevisionEnlazada();
+                });
+            }).then(function () {
+                /* 7) Desconectar (con límite de tiempo: si el navegador se queda
                    pensando en el almacén, la prueba no se debe colgar). */
                 var resuelto = false;
                 return Promise.race([

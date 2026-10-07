@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.16';
+        var BUILD_APP = '2026-10-07.17';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -12918,8 +12918,46 @@
         handle: null,
         ultimoArchivo: null,  // { nombre, lastModified, size, leido }
         permisoEnlazado: '',
-        temporizador: null
+        temporizador: null,
+        revisiones: 0,            // cuántas veces se ha revisado el archivo
+        registroRevisiones: [],   // últimas 10 revisiones, para poder verlas
+        necesitaAutorizar: false
     };
+
+    /* Deja rastro de cada revisión del archivo enlazado (hora, resultado y
+       detalle). Es lo que permite ver en el panel qué está pasando de verdad,
+       en lugar de adivinar por qué no entró un prospecto. */
+    function anotarRevision(resultado, detalle) {
+        var ahora = new Date();
+        estado.revisiones++;
+        estado.registroRevisiones.unshift({
+            hora: ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            resultado: resultado, detalle: detalle || ''
+        });
+        if (estado.registroRevisiones.length > 10) estado.registroRevisiones.length = 10;
+        estado.ultimaRevision = { hora: ahora, resultado: resultado, detalle: detalle || '' };
+        if (typeof document !== 'undefined') {
+            var el = document.getElementById('imp-enlazado-estado');
+            if (el) el.innerHTML = textoUltimaRevision();
+        }
+    }
+
+    function textoUltimaRevision() {
+        var u = estado.ultimaRevision;
+        if (!u) return '<i class="fas fa-hourglass-start"></i> Todavía no se ha revisado el archivo.';
+        var color = /autoriz|error|no se pudo/i.test(u.resultado) ? 'var(--color-naranja)' : 'var(--color-texto-secundario)';
+        return '<i class="fas fa-clock-rotate-left" style="color:' + color + ';"></i> Última revisión: <strong>' +
+            esc(u.hora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' })) + '</strong> · ' +
+            esc(u.resultado) + (u.detalle ? ' <span style="color:var(--color-texto-secundario);">(' + esc(u.detalle) + ')</span>' : '');
+    }
+
+    /* Fecha de modificación del archivo en corto (para el registro de revisiones). */
+    function fechaLegible(ms) {
+        if (!ms) return '—';
+        try {
+            return new Date(ms).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        } catch (e) { return '—'; }
+    }
 
     /* ─────────────── Utilidades puras ─────────────── */
 
@@ -13540,7 +13578,7 @@
             /* Archivo enlazado (se revisa solo) */
             enlazado: false,
             nombreEnlazado: '',
-            intervaloSegundos: 30,
+            intervaloSegundos: 20,
             auto: false
         };
     }
@@ -13818,11 +13856,24 @@
         html += '<div class="detalle-etiquetas" style="margin-bottom:10px;">' +
             '<span class="etiqueta-part">' + esc(estado.handle.name || cfg.nombreEnlazado || '') + '</span>' +
             '<span class="etiqueta-part neutra">Última lectura: ' + esc(leido) + '</span>' +
-            '<span class="etiqueta-part neutra">Revisa cada ' + esc(cfg.intervaloSegundos || 30) + ' s</span>' +
+            '<span class="etiqueta-part neutra">Revisa cada ' + esc(estado.intervaloProgramado || cfg.intervaloSegundos || 20) + ' s</span>' +
             (cfg.auto ? '<span class="etiqueta-part positiva">Agrega los nuevos sola</span>' : '<span class="etiqueta-part neutra">Solo avisa; tú importas</span>') +
             (a ? '<span class="etiqueta-part">' + a.nuevas.length + ' nueva(s) · ' + a.duplicadas.length + ' duplicada(s)</span>' : '') +
             '</div>' +
-            '<div class="form-acciones" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-start;">' +
+            /* Estado de la última revisión: aquí se ve si de verdad está revisando. */
+            '<div class="nota-tareas" id="imp-enlazado-estado" style="margin-top:0;">' + textoUltimaRevision() + '</div>' +
+            (estado.necesitaAutorizar
+                ? '<div class="lista-avisos" style="border-left:4px solid var(--color-naranja);margin-top:10px;">' +
+                  '<i class="fas fa-key" style="color:var(--color-naranja);"></i><div><strong>El navegador pide autorizar el archivo otra vez</strong> y por eso la revisión automática está detenida. Pulsa <strong>"Autorizar el archivo"</strong> y vuelve a empezar.</div></div>'
+                : '') +
+            (estado.registroRevisiones.length
+                ? '<details style="margin-top:10px;"><summary style="cursor:pointer;color:var(--color-texto-secundario);font-size:12.5px;">Ver las últimas ' + estado.registroRevisiones.length + ' revisiones</summary>' +
+                  '<div class="tabla-scroll" style="margin-top:8px;"><table class="tabla-datos"><thead><tr><th>Hora</th><th>Qué pasó</th><th>Detalle</th></tr></thead><tbody>' +
+                  estado.registroRevisiones.map(function (r) {
+                      return '<tr><td>' + esc(r.hora) + '</td><td>' + esc(r.resultado) + '</td><td>' + esc(r.detalle) + '</td></tr>';
+                  }).join('') + '</tbody></table></div></details>'
+                : '') +
+            '<div class="form-acciones" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-start;margin-top:12px;">' +
             '<button class="btn-secundario" id="imp-revisar-enlazado"><i class="fas fa-rotate"></i> Revisar ahora</button>' +
             (permiso && permiso !== 'granted' ? '<button class="btn-primario" id="imp-autorizar"><i class="fas fa-key"></i> Autorizar el archivo</button>' : '') +
             '<button class="btn-secundario" id="imp-cambiar-enlazado"><i class="fas fa-arrows-rotate"></i> Cambiar archivo</button>' +
@@ -13884,11 +13935,12 @@
             '  <div class="nota-tareas" style="margin-top:8px;">El teléfono se compara por los últimos 10 dígitos; el nombre sin acentos, sin mayúsculas y en cualquier orden. Si el nombre coincide pero el teléfono es distinto, se marca aparte para que tú decidas.</div>' +
             '</div>' +
             '<div class="row-2col">' +
-            '  <div class="form-grupo"><label>Revisar el archivo enlazado cada (segundos)</label><input type="number" id="imp-intervalo" min="10" value="' + esc(cfg.intervaloSegundos || 30) + '"></div>' +
+            '  <div class="form-grupo"><label>Revisar el archivo enlazado cada (segundos)</label><input type="number" id="imp-intervalo" min="10" value="' + esc(cfg.intervaloSegundos || 20) + '"><small style="color:var(--color-texto-secundario);">Se guarda solo al cambiarlo.</small></div>' +
             '  <div class="form-grupo"><label>Cuando el archivo cambie</label>' +
-            '    <label class="fila-check" style="padding-top:10px;"><input type="checkbox" id="imp-auto"' + (cfg.auto ? ' checked' : '') + '><span class="dato-principal">Agregar los nuevos sola, sin preguntar<small>Si está apagada, solo te avisa y tú decides (recomendado al principio).</small></span></label>' +
+            '    <label class="fila-check" style="padding-top:10px;"><input type="checkbox" id="imp-auto"' + (cfg.auto ? ' checked' : '') + '><span class="dato-principal">Agregar los nuevos sola, sin preguntar<small>Se guarda solo al marcarlo. Si está apagada, solo te avisa y tú decides.</small></span></label>' +
             '  </div>' +
             '</div>' +
+            '<div id="imp-aviso-ajustes"></div>' +
             '<div class="form-acciones" style="display:flex;justify-content:flex-end;"><button class="btn-primario" id="imp-guardar-ajustes"><i class="fas fa-floppy-disk"></i> Guardar ajustes</button></div>';
     }
 
@@ -13933,6 +13985,11 @@
             raiz.App.abrirModal('Importar prospectos desde un archivo', cuerpoPanel(pestaniaActual), { ancho: true });
             pintarCuerpo();
             conectarTabs();
+            /* Al abrir el panel, si hay archivo enlazado se revisa de una vez
+               (con un pequeño freno para no repetirlo si acaba de revisarse). */
+            if (estado.handle && (!estado.ultimaRevision || (new Date() - estado.ultimaRevision.hora) > 5000)) {
+                revisarEnlazado(false).catch(function () { });
+            }
             return true;
         }
         aviso('No se pudo abrir la ventana de importación.', 'error');
@@ -14137,22 +14194,35 @@
     }
 
     /* Revisa el archivo enlazado: si cambió, lo vuelve a leer y (si está puesto
-       en automático) agrega los prospectos nuevos. */
+       en automático) agrega los prospectos nuevos. Deja rastro de cada intento. */
     function revisarEnlazado(manual) {
         if (!estado.handle) return Promise.reject(new Error('Todavía no hay un archivo enlazado.'));
+        /* Cada 5 revisiones se lee el archivo completo aunque la fecha y el tamaño
+           no hayan cambiado: así no se escapa un cambio si el programa que guarda
+           el archivo no movió esos datos (pasa con carpetas sincronizadas). */
+        estado.revisionesSinLeer = (estado.revisionesSinLeer || 0) + 1;
+        var forzarLectura = estado.revisionesSinLeer >= 5;
+
         return estado.handle.queryPermission({ mode: 'read' }).then(function (permiso) {
             estado.permisoEnlazado = permiso;
             if (permiso !== 'granted') {
+                estado.necesitaAutorizar = true;
                 detenerRevisionEnlazada();
+                anotarRevision('necesita autorización', 'el navegador pide permiso otra vez');
                 throw new Error('Hay que volver a autorizar el archivo: pulsa "Autorizar".');
             }
+            estado.necesitaAutorizar = false;
             return estado.handle.getFile();
         }).then(function (archivo) {
-            var cambio = archivoCambio(estado.ultimoArchivo, archivo);
+            var cambio = forzarLectura || archivoCambio(estado.ultimoArchivo, archivo);
             if (!cambio) {
-                if (manual && typeof raiz.mostrarNotificacion === 'function') raiz.mostrarNotificacion('El archivo no ha cambiado desde la última revisión.', 'info');
+                anotarRevision('sin cambios', 'archivo guardado el ' + fechaLegible(archivo.lastModified));
+                if (manual && typeof raiz.mostrarNotificacion === 'function') {
+                    raiz.mostrarNotificacion('El archivo no ha cambiado desde la última revisión.', 'info');
+                }
                 return { cambio: false, analisis: estado.analisis };
             }
+            estado.revisionesSinLeer = 0;
             return leerBlob(archivo).then(function (hojas) {
                 estado.archivo = { nombre: archivo.name, hojas: hojas };
                 var cfg = leerConfig();
@@ -14163,8 +14233,10 @@
                 var analisis = estado.analisis || { nuevas: [], duplicadas: [], repetidas: [], vacias: 0 };
                 if (cfg.auto && analisis.nuevas.length) {
                     var res = importar(analisis.nuevas);
+                    anotarRevision('agregó ' + res.creados.length + ' prospecto(s)', forzarLectura ? 'lectura de comprobación' : 'el archivo cambió');
                     return { cambio: true, analisis: analisis, importados: res.creados.length, automatico: true };
                 }
+                anotarRevision(analisis.nuevas.length ? (analisis.nuevas.length + ' nueva(s), esperando tu orden') : 'cambió, sin novedades', 'automático apagado');
                 if (analisis.nuevas.length && typeof raiz.mostrarNotificacion === 'function') {
                     raiz.mostrarNotificacion('El archivo cambió: ' + analisis.nuevas.length + ' respuesta(s) nueva(s). Revísalas en "Importar archivo" y pulsa Importar.', 'success');
                 }
@@ -14178,7 +14250,7 @@
         detenerRevisionEnlazada();
         var cfg = leerConfig();
         if (!cfg.enlazado || !estado.handle || !soportaEnlazado()) return;
-        var segundos = Math.max(10, Number(cfg.intervaloSegundos) || 30);
+        var segundos = Math.max(10, Number(cfg.intervaloSegundos) || 20);
         estado.temporizador = raiz.setInterval(function () {
             if (typeof document !== 'undefined' && document.hidden) return;   /* no molestar si la pestaña está oculta */
             if (!estado.handle) { detenerRevisionEnlazada(); return; }
@@ -14190,9 +14262,20 @@
                 }
             });
         }, segundos * 1000);
+        estado.intervaloProgramado = segundos;
     }
     function detenerRevisionEnlazada() {
         if (estado.temporizador) { raiz.clearInterval(estado.temporizador); estado.temporizador = null; }
+        estado.intervaloProgramado = null;
+    }
+
+    /* Cuando Jorge vuelve a la pestaña del CRM se revisa de inmediato: no tiene
+       que esperar a que le toque el turno al temporizador. */
+    function alVolverALaPestana() {
+        if (typeof document === 'undefined') return;
+        if (document.hidden || !estado.handle) return;
+        if (!estado.temporizador) programarRevisionEnlazada();
+        revisarEnlazado(false).catch(function () { });
     }
 
     /* Al abrir el CRM: recordar el archivo enlazado y, si el navegador todavía da
@@ -14346,6 +14429,26 @@
             abrirPanel('archivo');
         };
 
+        /* Los ajustes que afectan a la revisión automática se guardan SOLOS al
+           cambiarlos: antes había que pulsar "Guardar ajustes" y era muy fácil
+           dejar marcado "agregar los nuevos sola" sin que quedara guardado. */
+        ['imp-auto', 'imp-intervalo', 'imp-dup-tel', 'imp-dup-nombre'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.onchange = function () {
+                var cfg = leerFormulario();
+                programarRevisionEnlazada();
+                var av = document.getElementById('imp-aviso-ajustes');
+                if (av) {
+                    av.innerHTML = '<div class="nota-tareas" style="margin-top:8px;"><i class="fas fa-circle-check" style="color:var(--color-verde);"></i> Guardado. ' +
+                        (cfg.auto
+                            ? 'Los prospectos nuevos del archivo se agregarán solos cada ' + (estado.intervaloProgramado || cfg.intervaloSegundos || 20) + ' segundos.'
+                            : 'Solo te avisaré cuando el archivo cambie (revisando cada ' + (estado.intervaloProgramado || cfg.intervaloSegundos || 20) + ' segundos).') +
+                        '</div>';
+                }
+            };
+        });
+
         var bTodos = document.getElementById('imp-todos');
         if (bTodos) bTodos.onclick = function () {
             var cajas = document.querySelectorAll('[data-cand]:not([disabled])');
@@ -14440,6 +14543,15 @@
             /* Si Jorge ya había conectado un archivo, se retoma (y si el navegador
                todavía da permiso, se revisa de una vez). */
             setTimeout(function () { try { restaurarEnlazado(); } catch (e) { } }, 2500);
+            /* Al volver a la pestaña del CRM se revisa de inmediato. */
+            if (typeof document !== 'undefined' && document.addEventListener) {
+                document.addEventListener('visibilitychange', function () {
+                    try { alVolverALaPestana(); } catch (e) { }
+                });
+                raiz.addEventListener && raiz.addEventListener('focus', function () {
+                    try { alVolverALaPestana(); } catch (e) { }
+                });
+            }
         } catch (e) {
             if (typeof console !== 'undefined' && console.warn) console.warn('Importar prospectos: no se pudo iniciar.', e);
         }
