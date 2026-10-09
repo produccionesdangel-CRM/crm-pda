@@ -374,19 +374,23 @@
            no se parte porque va en una línea). Resultado: las columnas se estiraban según
            los títulos y el calendario se deformaba (medido: de 37 a 178 px en el teléfono y
            de 119 a 220 px en la PC, con solo 5 de 7 columnas a la vista en el celular).
-           Con `minmax(0, 1fr)` las siete miden lo mismo y el texto se recorta con puntos. */
-        .calendario-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+           Con `minmax(0, 1fr)` las siete miden lo mismo y el texto se recorta con puntos.
+           Además la ALTURA de las filas es fija (`grid-auto-rows`): una casilla con tres
+           etiquetas ya no estira su fila. Lo que no cabe se resume en "+N más" y se ve
+           completo en la lista del día. La primera fila (los nombres de los días) queda
+           en `auto` para que no herede esa altura. */
+        .calendario-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: auto; grid-auto-rows: 116px; gap: 2px; }
         .calendario-grid .dia-nombre { text-align: center; padding: 8px 4px; font-weight: 600; font-size: 13px; color: var(--color-texto-secundario); background-color: var(--color-bg-terciario); border-radius: var(--border-radius); min-width: 0; }
         .calendario-grid .dia { min-height: 100px; background-color: var(--color-bg-terciario); border-radius: var(--border-radius); padding: 6px; transition: all 0.2s ease; cursor: pointer; position: relative; min-width: 0; overflow: hidden; }
         .calendario-grid .dia:hover { background-color: var(--color-bg-hover); }
         .calendario-grid .dia.otro-mes { opacity: 0.3; }
-        .calendario-grid .dia.hoy { border: 2px solid var(--color-acento); }
+        .calendario-grid .dia.hoy { box-shadow: inset 0 0 0 2px var(--color-acento); }
         .calendario-grid .dia .numero { font-size: 14px; font-weight: 600; color: var(--color-texto-secundario); margin-bottom: 4px; }
         .calendario-grid .dia .evento { font-size: 10px; padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: all 0.2s ease; pointer-events: auto; }
         .calendario-grid .dia .evento-contrato { background-color: rgba(33, 150, 243, 0.3); border-left: 3px solid var(--color-azul); color: var(--color-texto-primario); }
         .calendario-grid .dia .evento-tarea { background-color: rgba(255, 152, 0, 0.3); border-left: 3px solid var(--color-naranja); color: var(--color-texto-primario); }
         .calendario-grid .dia .evento-completada { background-color: rgba(76, 175, 80, 0.2); border-left: 3px solid var(--color-verde); color: var(--color-texto-secundario); text-decoration: line-through; }
-        .calendario-grid .dia .evento-mas { font-size: 10px; color: var(--color-texto-secundario); text-align: center; padding: 2px; font-weight: 600; }
+        .calendario-grid .dia .evento-mas { font-size: 10px; color: var(--color-acento); text-align: center; padding: 2px; font-weight: 700; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .leyenda-calendario { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--color-borde); }
         .leyenda-calendario .leyenda-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-texto-secundario); }
         .leyenda-calendario .leyenda-color { width: 16px; height: 16px; border-radius: 4px; }
@@ -962,10 +966,10 @@
             .calendario-header h2 { font-size: 18px; text-align: center; }
             .calendario-nav { justify-content: center; }
             .calendario-nav button { padding: 10px 16px; font-size: 15px; min-width: 48px; min-height: 44px; }
-            .calendario-grid { gap: 3px; }
+            .calendario-grid { gap: 3px; grid-auto-rows: 82px; }
             .calendario-grid .dia-nombre { padding: 8px 4px; font-size: 11px; }
             .calendario-grid .dia { min-height: 70px; padding: 5px; }
-            .calendario-grid .dia .numero { font-size: 12px; }
+            .calendario-grid .dia .numero { font-size: 12px; margin-bottom: 2px; }
             .calendario-grid .dia .evento { font-size: 9px; padding: 2px 4px; }
             .calendario-grid .dia .evento-mas { font-size: 9px; }
             .leyenda-calendario { flex-direction: column; gap: 8px; }
@@ -1879,7 +1883,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-08.23';
+        var BUILD_APP = '2026-10-08.24';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -5961,7 +5965,14 @@
             let h = ds.map(function(d) { return '<div class="dia-nombre">' + d + '</div>'; }).join('');
             for (let i = 0; i < pd; i++) h += '<div class="dia otro-mes"><div class="numero">' + (dma - pd + i + 1) + '</div></div>';
             const hy = new Date(), hn = hy.getDate(), hm = hy.getMonth(), ha = hy.getFullYear();
-            const mm = 3;
+            // ─────── @JS-CALENDARIO-TOPE (8/10/2026) ───────
+            // Cuántas etiquetas caben por día ANTES de resumir el resto en "+N más".
+            // En el teléfono son dos: con tres, la fila entera del calendario crecía de
+            // alto y el calendario se deformaba hacia abajo (la fila del 17 con tres
+            // eventos quedaba más alta que las demás). Todo lo que sobra se ve completo
+            // en la lista del día, al tocar la casilla. Las filas miden lo mismo siempre
+            // (ver @CSS-CALENDARIO-UNIFORME), así que la altura no depende de lo que haya.
+            const mm = (typeof window !== 'undefined' && window.innerWidth <= 768) ? 2 : 3;
             for (let d = 1; d <= dm; d++) {
                 const fs = fechaLocalToString(anoActualCal, mesActualCal, d);
                 const eh = (d === hn && mesActualCal === hm && anoActualCal === ha);

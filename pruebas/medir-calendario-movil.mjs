@@ -87,7 +87,9 @@ async function captura(cdp, nombre) {
   console.log('   (captura: pruebas\\capturas\\' + nombre + '.png)');
 }
 
-/* Entra al CRM sin Google (el acceso no se prueba aquí) y siembra un día con datos. */
+/* Entra al CRM sin Google (el acceso no se prueba aquí) y siembra un día con datos.
+   El día de hoy lleva CINCO elementos (3 eventos + 2 tareas) a propósito: es el caso que
+   deformaba la fila del calendario (Jorge lo vio con tres). */
 async function entrarConDatos(cdp) {
   return await evaluar(cdp, `(function () {
     try {
@@ -95,15 +97,51 @@ async function entrarConDatos(cdp) {
       var hoy = new Date();
       var f = hoy.getFullYear() + '-' + ('0' + (hoy.getMonth() + 1)).slice(-2) + '-' + ('0' + hoy.getDate()).slice(-2);
       clientes.length = 0; tareas.length = 0;
+      function contrato(n, festejada) {
+        return { id: 'con-cal-' + n, fechaEvento: f, festejado: festejada, clienteNombre: 'Cliente del calendario',
+          tipo: 'paquete', total: 1000, pagos: [], cargos: [] };
+      }
       clientes.push({ id: 'cli-cal', nombre: 'Cliente del calendario', telefono: '5551234567', estado: 'Activo', fechaRegistro: f,
-        contratos: [{ id: 'con-cal', fechaEvento: f, festejado: 'Festejada de prueba', clienteNombre: 'Cliente del calendario', tipo: 'paquete', total: 1000, pagos: [], cargos: [] }] });
-      tareas.push({ id: 'tar-cal', tipo: 'Llamada', descripcion: 'Confirmar la fecha', fecha: f, completada: false, clienteId: 'cli-cal', creadaPor: 'Prueba' });
+        contratos: [contrato(1, 'Festejada de prueba'), contrato(2, 'Boda de prueba'), contrato(3, 'XV de prueba')] });
+      tareas.push({ id: 'tar-cal-1', tipo: 'Llamada', descripcion: 'Confirmar la fecha', fecha: f, completada: false, clienteId: 'cli-cal', creadaPor: 'Prueba' });
+      tareas.push({ id: 'tar-cal-2', tipo: 'Entrega', descripcion: 'Entregar el material', fecha: f, completada: false, clienteId: 'cli-cal', creadaPor: 'Prueba' });
       window.__hoyCal = f;
       iniciarAplicacion();
       App.seleccionarSeccion('calendario');
       return 'ok';
     } catch (e) { return 'error: ' + (e && e.message ? e.message : e); }
   })()`);
+}
+
+/* Altura de las filas y etiquetas por día (el tope de 2 en el teléfono). */
+async function medirCeldas(cdp) {
+  const m = await evaluar(cdp, `(function () {
+    var grid = document.getElementById('calendario-grid');
+    var celdas = [].slice.call(grid.querySelectorAll('.dia'));
+    var alturas = celdas.map(function (c) { return Math.round(c.getBoundingClientRect().height); });
+    var distintas = alturas.filter(function (v, i) { return alturas.indexOf(v) === i; });
+    var recortadas = celdas.filter(function (c) { return c.scrollHeight > c.clientHeight + 1; }).length;
+    var hoy = document.querySelector('#calendario-grid .dia[data-fecha="' + window.__hoyCal + '"]');
+    var mas = hoy ? hoy.querySelector('.evento-mas') : null;
+    var peor = null;
+    celdas.forEach(function (c) {
+      var dif = c.scrollHeight - c.clientHeight;
+      if (!peor || dif > peor.dif) peor = { dif: dif, fecha: c.getAttribute('data-fecha') || '(otro mes)',
+        scroll: c.scrollHeight, client: c.clientHeight,
+        hijos: [].slice.call(c.children).map(function (h) { return (h.className || 'div') + '=' + Math.round(h.getBoundingClientRect().height); }).join(' ') };
+    });
+    return {
+      altoMin: Math.min.apply(null, alturas), altoMax: Math.max.apply(null, alturas),
+      alturasDistintas: distintas.length, recortadas: recortadas, filas: alturas.length / 7, peor: peor,
+      chips: hoy ? hoy.querySelectorAll('.evento').length : -1,
+      mas: mas ? mas.textContent.trim() : '',
+      textoHoy: hoy ? hoy.textContent.replace(/\\s+/g, ' ').trim() : ''
+    };
+  })()`);
+  console.log('   celdas: alto ' + m.altoMin + '–' + m.altoMax + 'px en ' + m.filas + ' filas (' + m.alturasDistintas +
+    ' altura(s) distinta(s)) · recortadas ' + m.recortadas + ' · día con 5 elementos: ' + m.chips + ' etiqueta(s) + "' + m.mas + '"');
+  if (m.peor && m.peor.dif > 0) console.log('   casilla más apretada: ' + m.peor.fecha + ' necesita ' + m.peor.scroll + 'px y tiene ' + m.peor.client + 'px [' + m.peor.hijos + ']');
+  return m;
 }
 
 /* Rejilla del calendario. */
@@ -238,9 +276,15 @@ async function main() {
     revisar(entrada === 'ok', 'la app entró y dibujó el calendario (' + entrada + ')');
     const g = await medirRejilla(cdp);
     await captura(cdp, 'calendario-movil');
+    const celdas = await medirCeldas(cdp);
     revisar(g.desborde <= 1, 'la rejilla no se desborda (nada de scroll horizontal)');
     revisar(g.uniforme, 'las 7 columnas miden lo mismo (' + g.anchoMin + '–' + g.anchoMax + 'px)');
     revisar(g.visibles === 7, 'se ven las 7 columnas completas (' + g.visibles + '/7)');
+    revisar(celdas.alturasDistintas === 1, 'todas las filas miden lo mismo de alto (' + celdas.altoMin + '–' + celdas.altoMax + 'px)');
+    revisar(celdas.recortadas === 0, 'ninguna casilla corta su contenido');
+    revisar(celdas.chips === 2, 'en el teléfono solo se apilan 2 etiquetas por día (' + celdas.chips + ')');
+    revisar(/\+3 m/.test(celdas.mas), 'la etiqueta dice cuántos quedan dentro ("' + celdas.mas + '")');
+    revisar(/Festejada de prueba/.test(celdas.textoHoy) || /Boda de prueba/.test(celdas.textoHoy), 'las 2 etiquetas son las primeras del día');
     await evaluar(cdp, `(function(){ try { App.seleccionarSeccion('prospectos'); } catch (e) {} return 1; })()`);
     await dormir(250);
     await captura(cdp, 'encabezado-movil-prospectos');
@@ -270,9 +314,11 @@ async function main() {
     console.log('     · día con datos → "' + d.conDatos.titulo + '" · ' + d.conDatos.items + ' elemento(s) · botones ' + d.conDatos.btnTarea + '/' + d.conDatos.btnContrato);
     console.log('       ' + (d.conDatos.texto || '').slice(0, 140));
     revisar(d.conDatos.abierto, 'el día con datos abre su vista');
-    revisar(d.conDatos.items >= 2, 'lista los elementos del día (evento + tarea)');
-    revisar(/Festejada de prueba/.test(d.conDatos.texto), 'aparece el evento del día');
-    revisar(/Confirmar la fecha/.test(d.conDatos.texto), 'aparece la tarea con su descripción');
+    revisar(d.conDatos.items === 5, 'la lista del día muestra TODOS los elementos (5)');
+    revisar(/Festejada de prueba/.test(d.conDatos.texto) && /Boda de prueba/.test(d.conDatos.texto) && /XV de prueba/.test(d.conDatos.texto),
+      'están los 3 eventos');
+    revisar(/Confirmar la fecha/.test(d.conDatos.texto) && /Entregar el material/.test(d.conDatos.texto),
+      'están las 2 tareas con su descripción');
     revisar(d.conDatos.btnTarea && d.conDatos.btnContrato, 'mantiene crear tarea y crear contrato');
     console.log('     · día vacío → "' + d.vacio.titulo + '" · ' + d.vacio.items + ' elemento(s)');
     console.log('       ' + (d.vacio.texto || '').slice(0, 140));
@@ -294,8 +340,13 @@ async function main() {
     await dormir(400);
     console.log('── PC 1280x900');
     const gp = await medirRejilla(cdp);
+    const celdasPc = await medirCeldas(cdp);
+    await captura(cdp, 'calendario-pc');
     revisar(gp.desborde <= 1, 'en la PC tampoco se desborda');
     revisar(gp.uniforme && gp.visibles === 7, 'en la PC las 7 columnas siguen uniformes y completas (' + gp.anchoMin + '–' + gp.anchoMax + 'px)');
+    revisar(celdasPc.alturasDistintas === 1, 'en la PC tampoco cambia el alto de las filas (' + celdasPc.altoMin + '–' + celdasPc.altoMax + 'px)');
+    revisar(celdasPc.recortadas === 0, 'en la PC ninguna casilla corta su contenido');
+    revisar(celdasPc.chips === 3 && /\+2 m/.test(celdasPc.mas), 'en la PC caben 3 etiquetas + el resumen ("' + celdasPc.mas + '")');
     const dp = await probarDia(cdp);
     revisar(dp.conDatos.abierto && dp.conDatos.items >= 2, 'en la PC el día también abre su lista');
     revisar(dp.vacio.abierto && dp.vacio.items === 0, 'en la PC el día vacío se abre vacío');
