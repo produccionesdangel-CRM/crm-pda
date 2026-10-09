@@ -2581,7 +2581,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-09.27';
+        var BUILD_APP = '2026-10-09.28';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -15918,6 +15918,21 @@ input:focus, select:focus, textarea:focus {
         if (!tiene) {
             html += '<div class="nota-tareas">Conecta un archivo <strong>.xlsx</strong>, <strong>.ods</strong> (LibreOffice) o <strong>.csv</strong> y el CRM lo revisará solo: ' +
                 'cuando cambie el archivo, agrega los prospectos nuevos (respetando los duplicados). Se lee en tu equipo; el archivo no se sube a ningún lado.</div>' +
+                /* ─────── @JS-NUBE-NO-ES-ARCHIVO (9/10/2026) ───────
+                   Jorge intentó enlazar su hoja de Google y el archivo que tenía en Drive.
+                   Las dos cosas chocan con lo mismo: lo que se enlaza es un ARCHIVO del
+                   disco. Una hoja de Google no es un archivo (en la PC se ve como un
+                   acceso directo .gsheet y no se puede leer), y un archivo que solo está
+                   en la nube falla al leerse. Se dice aquí, antes de que lo intenten. */
+                '<div class="lista-avisos" style="margin-top:10px;"><i class="fas fa-cloud"></i><div>' +
+                '<strong>Google Sheets no se puede enlazar: no es un archivo.</strong> Tu hoja de respuestas vive en la nube; en la PC aparece como un ' +
+                'acceso directo <strong>.gsheet</strong> que el CRM no puede leer (y por eso ni siquiera aparece al elegir archivo). ' +
+                'Baja la hoja con <strong>Archivo → Descargar → Microsoft Excel (.xlsx)</strong> o <strong>CSV</strong> a una carpeta <strong>de este equipo, fuera de Drive</strong>, ' +
+                'y enlaza <em>ese</em> archivo. Cada vez que quieras traer respuestas nuevas, vuelve a descargarla <strong>encima del mismo archivo</strong>: ' +
+                'el CRM detecta el cambio y agrega solo lo nuevo.<br>' +
+                'Si el archivo sí está en Drive pero <strong>solo en la nube</strong>, el navegador no puede leer su contenido: ' +
+                'ponlo en <strong>"Disponible sin conexión"</strong> o cópialo a una carpeta local.' +
+                '</div></div>' +
                 '<div class="form-acciones" style="display:flex;justify-content:flex-start;margin-top:10px;">' +
                 '<button class="btn-primario" id="imp-enlazar"><i class="fas fa-link"></i> Conectar un archivo que se actualice solo</button></div>';
             return html;
@@ -15951,6 +15966,12 @@ input:focus, select:focus, textarea:focus {
             '<button class="btn-secundario" id="imp-cambiar-enlazado"><i class="fas fa-arrows-rotate"></i> Cambiar archivo</button>' +
             '<button class="btn-peligro" id="imp-desconectar"><i class="fas fa-link-slash"></i> Desconectar</button>' +
             '</div>' +
+            /* Recordatorio corto para quien YA tiene archivo enlazado: es donde Jorge se
+               quedó atorado (quiso cambiar a su hoja de Google y no aparecía al elegir). */
+            '<div class="nota-tareas" style="margin-top:10px;"><i class="fas fa-cloud"></i> ' +
+            'Solo se enlazan <strong>archivos del disco</strong> (.xlsx, .ods, .csv). Una hoja de Google es un acceso directo ' +
+            '<strong>.gsheet</strong> y no se puede leer: descárgala con <strong>Archivo → Descargar → Microsoft Excel (.xlsx)</strong> o <strong>CSV</strong> ' +
+            'a una carpeta de este equipo (fuera de Drive) y usa <strong>"Cambiar archivo"</strong>.</div>' +
             '<div id="imp-enlazado-zona" style="margin-top:12px;"></div>';
         return html;
     }
@@ -16117,7 +16138,31 @@ input:focus, select:focus, textarea:focus {
             if (!archivo) { rechazar(new Error('No se eligió ningún archivo.')); return; }
             if (typeof FileReader === 'undefined') { rechazar(new Error('Este navegador no puede leer archivos.')); return; }
             var lector = new FileReader();
-            lector.onerror = function () { rechazar(new Error('No se pudo leer el archivo.')); };
+            /* ─────── @JS-ERROR-LECTURA (9/10/2026) ───────
+               Antes aquí solo decía "No se pudo leer el archivo." y no había forma de
+               saber por qué. Jorge lo vio con un archivo que tenía en Google Drive:
+               el permiso estaba bien y el archivo aparecía, pero el navegador no pudo
+               leer su contenido. Ahora se dice QUÉ falló y qué hacer, con el nombre
+               del error del navegador (NotReadableError = el contenido no está en el
+               disco, típico de la nube; NotFoundError = el archivo se movió o lo
+               reemplazó el programa que lo sincroniza). */
+            lector.onerror = function () {
+                var err = lector.error;
+                var nombre = (err && err.name) || '';
+                var pista = '';
+                if (nombre === 'NotReadableError') {
+                    pista = ' El sistema no dejó leer el contenido del archivo. Si está en Google Drive o OneDrive y solo está en la nube, ' +
+                        'descárgalo (clic derecho → "Disponible sin conexión") o cópialo a una carpeta de este equipo, y vuelve a enlazarlo.';
+                } else if (nombre === 'NotFoundError') {
+                    pista = ' El archivo ya no está en esa ruta: se movió, se renombró o lo reemplazó el programa que lo sincroniza. ' +
+                        'Vuelve a enlazarlo con "Cambiar archivo".';
+                } else if (nombre === 'SecurityError') {
+                    pista = ' Se perdió el permiso sobre el archivo: vuelve a enlazarlo con "Cambiar archivo".';
+                } else if (nombre === 'AbortError') {
+                    pista = ' La lectura se canceló antes de terminar. Inténtalo otra vez.';
+                }
+                rechazar(new Error('No se pudo leer el archivo' + (nombre ? ' (' + nombre + ')' : '') + '.' + pista));
+            };
             lector.onload = function () {
                 try {
                     var hojas = leerBuffer(archivo.name, lector.result);
