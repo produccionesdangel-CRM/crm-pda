@@ -1883,7 +1883,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-08.25';
+        var BUILD_APP = '2026-10-09.26';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -8074,7 +8074,22 @@
             actualizarBadgesFiltros();
         }
 
+        // ─────── @JS-CABLEADO-UNA-VEZ (9/10/2026) ───────
+        // El cableado de la interfaz se hace UNA sola vez por carga de página.
+        // iniciarAplicacion() puede entrar DOS veces (en el teléfono, al volver de Google:
+        // una por el arranque normal y otra cuando la sesión queda lista — el mismo motivo
+        // que obligó a blindar los filtros plegables aquí abajo). Como el cableado usaba
+        // addEventListener, cada entrada dejaba un escucha MÁS encima del mismo botón:
+        // un solo clic en "mes siguiente" del calendario avanzaba DOS meses (Jorge veía
+        // octubre y al darle siguiente caía en diciembre, sin poder ver noviembre), y los
+        // botones que alternan (menú del teléfono, "ver todos" del historial, tema) se
+        // abrían y cerraban en el mismo toque. Los elementos que se cablean aquí viven en
+        // el HTML fijo (no dentro de las listas que se redibujan), así que no hay nada que
+        // reenganchar en la segunda pasada.
+        var listenersAppListos = false;
         function conectarEventListenersApp() {
+            if (listenersAppListos) return;
+            listenersAppListos = true;
             // ─────── @JS-CAMPANIAS-BOTONES-FIJOS (v5.0) ───────
             // Los botones de "Nueva campaña" (el del Panel y el de Campañas) y el de
             // "Limpiar" viven en el HTML fijo de las secciones, no dentro de la lista que
