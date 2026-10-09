@@ -368,9 +368,16 @@
         .calendario-nav button { background-color: var(--color-bg-terciario); border: 1px solid var(--color-borde); color: var(--color-texto-primario); padding: 6px 12px; border-radius: var(--border-radius); cursor: pointer; transition: all 0.2s ease; }
         .calendario-nav button:hover { background-color: var(--color-bg-hover); }
         .calendario-nav .btn-hoy { background-color: var(--color-acento); color: var(--color-acento-contraste); font-weight: 600; }
-        .calendario-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-        .calendario-grid .dia-nombre { text-align: center; padding: 8px 4px; font-weight: 600; font-size: 13px; color: var(--color-texto-secundario); background-color: var(--color-bg-terciario); border-radius: var(--border-radius); }
-        .calendario-grid .dia { min-height: 100px; background-color: var(--color-bg-terciario); border-radius: var(--border-radius); padding: 6px; transition: all 0.2s ease; cursor: pointer; position: relative; }
+        /* ─────── @CSS-CALENDARIO-UNIFORME (8/10/2026) ───────
+           `repeat(7, 1fr)` NO reparte igual: `1fr` equivale a `minmax(auto, 1fr)`, así que
+           una columna NUNCA baja del ancho mínimo de su contenido (el texto de los eventos
+           no se parte porque va en una línea). Resultado: las columnas se estiraban según
+           los títulos y el calendario se deformaba (medido: de 37 a 178 px en el teléfono y
+           de 119 a 220 px en la PC, con solo 5 de 7 columnas a la vista en el celular).
+           Con `minmax(0, 1fr)` las siete miden lo mismo y el texto se recorta con puntos. */
+        .calendario-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+        .calendario-grid .dia-nombre { text-align: center; padding: 8px 4px; font-weight: 600; font-size: 13px; color: var(--color-texto-secundario); background-color: var(--color-bg-terciario); border-radius: var(--border-radius); min-width: 0; }
+        .calendario-grid .dia { min-height: 100px; background-color: var(--color-bg-terciario); border-radius: var(--border-radius); padding: 6px; transition: all 0.2s ease; cursor: pointer; position: relative; min-width: 0; overflow: hidden; }
         .calendario-grid .dia:hover { background-color: var(--color-bg-hover); }
         .calendario-grid .dia.otro-mes { opacity: 0.3; }
         .calendario-grid .dia.hoy { border: 2px solid var(--color-acento); }
@@ -383,6 +390,33 @@
         .leyenda-calendario { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--color-borde); }
         .leyenda-calendario .leyenda-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-texto-secundario); }
         .leyenda-calendario .leyenda-color { width: 16px; height: 16px; border-radius: 4px; }
+        /* ─────── @CSS-DIA-CALENDARIO (8/10/2026) — vista del día ───────
+           Lista de lo que hay ese día (eventos, tareas y seguimientos) más las acciones.
+           Mismos colores que las etiquetas del calendario, para que se reconozca de un vistazo. */
+        .dia-resumen { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-texto-secundario); margin-bottom: 10px; }
+        .dia-lista { display: flex; flex-direction: column; gap: 8px; }
+        .dia-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--border-radius); background-color: var(--color-bg-terciario); border-left: 3px solid var(--color-borde); cursor: pointer; transition: background-color 0.2s ease; }
+        .dia-item:hover { background-color: var(--color-bg-hover); }
+        .dia-item > i:first-child { flex: 0 0 auto; width: 16px; text-align: center; color: var(--color-texto-secundario); }
+        .dia-item > i:last-child { flex: 0 0 auto; font-size: 11px; color: var(--color-texto-secundario); }
+        .dia-item-texto { flex: 1 1 auto; min-width: 0; }
+        .dia-item-titulo { font-size: 14px; font-weight: 600; color: var(--color-texto-primario); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dia-item-meta { font-size: 12px; color: var(--color-texto-secundario); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dia-item.evento { border-left-color: var(--color-azul); }
+        .dia-item.evento > i:first-child { color: var(--color-azul); }
+        .dia-item.tarea { border-left-color: var(--color-naranja); }
+        .dia-item.tarea > i:first-child { color: var(--color-naranja); }
+        .dia-item.tarea.campania { border-left-color: var(--color-morado); }
+        .dia-item.tarea.campania > i:first-child { color: var(--color-morado); }
+        .dia-item.tarea.completada { border-left-color: var(--color-verde); opacity: 0.75; }
+        .dia-item.tarea.completada .dia-item-titulo { text-decoration: line-through; }
+        .dia-item.seguimiento { border-left-color: var(--color-cian); }
+        .dia-item.seguimiento > i:first-child { color: var(--color-cian); }
+        .dia-vacio { text-align: center; padding: 22px 14px; border-radius: var(--border-radius); background-color: var(--color-bg-terciario); color: var(--color-texto-secundario); }
+        .dia-vacio i { display: block; font-size: 26px; margin-bottom: 8px; color: var(--color-acento); opacity: 0.85; }
+        .dia-vacio small { display: block; margin-top: 6px; font-size: 12px; opacity: 0.85; }
+        .dia-acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+        .dia-acciones button { flex: 1 1 auto; justify-content: center; }
         .leyenda-color-contrato { background-color: rgba(33, 150, 243, 0.3); border-left: 3px solid var(--color-azul); }
         .leyenda-color-tarea { background-color: rgba(255, 152, 0, 0.3); border-left: 3px solid var(--color-naranja); }
         .leyenda-color-completada { background-color: rgba(76, 175, 80, 0.2); border-left: 3px solid var(--color-verde); }
@@ -842,11 +876,19 @@
             .btn-mobile-menu { display: flex !important; position: fixed; top: 16px; left: 16px; width: 48px; height: 48px; background-color: var(--color-acento); color: var(--color-acento-contraste); border: none; border-radius: 50%; cursor: pointer; align-items: center; justify-content: center; font-size: 20px; z-index: 997; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); transition: transform 0.2s ease; }
             .btn-mobile-menu:active { transform: scale(0.92); }
             .btn-mobile-menu.abierto { background-color: var(--color-rojo); }
-            .main-content { padding: 76px 16px 140px 16px; padding-bottom: max(140px, calc(100px + env(safe-area-inset-bottom, 40px))) !important; width: 100vw; }
-            .seccion-header { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; }
-            .seccion-header h1 { font-size: 22px; text-align: left; }
+            /* ─────── @CSS-ENCABEZADO-MOVIL (8/10/2026) ───────
+               Antes el contenido arrancaba a 76 px del borde para no chocar con el botón
+               de menú (FAB) y el título quedaba debajo de él: se perdía toda la franja de
+               arriba y los botones de la sección se estiraban de lado a lado. Ahora el
+               título va AL LADO del FAB (se le deja su carril de 56 px) y los botones
+               conservan su tamaño natural. */
+            .main-content { padding: 14px 16px 140px 16px; padding-bottom: max(140px, calc(100px + env(safe-area-inset-bottom, 40px))) !important; width: 100vw; }
+            .seccion-header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; padding-left: 56px; }
+            .seccion-header h1 { font-size: 20px; line-height: 1.15; text-align: left; }
+            .seccion-header h1 i { margin-right: 8px; }
             .header-actions { width: 100%; flex-wrap: wrap; }
-            .header-actions .btn-primario, .header-actions .btn-secundario, .header-actions .btn-verde, .header-actions .btn-azul { flex: 1 1 auto; justify-content: center; padding: 12px 16px; font-size: 14px; }
+            .seccion-header > .btn-primario, .seccion-header > .btn-secundario, .seccion-header > .btn-verde, .seccion-header > .btn-azul,
+            .header-actions .btn-primario, .header-actions .btn-secundario, .header-actions .btn-verde, .header-actions .btn-azul { flex: 0 1 auto; justify-content: center; padding: 10px 14px; font-size: 13px; min-height: 40px; }
             .sync-status { width: 100%; justify-content: center; padding: 8px 12px; }
             .login-card { padding: 28px 20px; max-width: 100%; margin: 12px; border-radius: 12px; }
             .login-logo img.logo-img-login { width: 110px; height: 110px; }
@@ -920,7 +962,7 @@
             .calendario-header h2 { font-size: 18px; text-align: center; }
             .calendario-nav { justify-content: center; }
             .calendario-nav button { padding: 10px 16px; font-size: 15px; min-width: 48px; min-height: 44px; }
-            .calendario-grid { min-width: 480px; gap: 3px; }
+            .calendario-grid { gap: 3px; }
             .calendario-grid .dia-nombre { padding: 8px 4px; font-size: 11px; }
             .calendario-grid .dia { min-height: 70px; padding: 5px; }
             .calendario-grid .dia .numero { font-size: 12px; }
@@ -973,8 +1015,8 @@
             .lista-acciones button { padding: 10px 12px; font-size: 15px; min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
         }
         @media (max-width: 480px) {
-            .main-content { padding: 76px 12px 140px 12px; padding-bottom: max(140px, calc(100px + env(safe-area-inset-bottom, 40px))) !important; }
-            .seccion-header h1 { font-size: 20px; }
+            .main-content { padding: 14px 12px 140px 12px; padding-bottom: max(140px, calc(100px + env(safe-area-inset-bottom, 40px))) !important; }
+            .seccion-header h1 { font-size: 19px; }
             .mosaico-footer button { padding: 8px 10px; font-size: 15px; }
             .detalle-resumen-financiero { grid-template-columns: 1fr; }
             .detalle-acciones button { flex: 1 1 100%; }
@@ -982,7 +1024,6 @@
             .login-card { padding: 24px 16px; }
             .login-logo img.logo-img-login { width: 90px; height: 90px; }
             .login-titulo { font-size: 20px; }
-            .calendario-grid { min-width: 420px; }
             .calendario-grid .dia { min-height: 60px; padding: 4px; }
             .calendario-grid .dia .numero { font-size: 11px; }
             .calendario-grid .dia .evento { font-size: 8px; }
@@ -1838,7 +1879,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-08.22';
+        var BUILD_APP = '2026-10-08.23';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -5959,19 +6000,104 @@
             for (let i = 1; i <= dr; i++) h += '<div class="dia otro-mes"><div class="numero">' + i + '</div></div>';
             grid.innerHTML = h;
             document.querySelectorAll('.dia:not(.otro-mes)').forEach(function(el) {
-                el.addEventListener('click', function(e) {
-                    if (e.target === this || e.target.classList.contains('numero')) {
-                        const f = this.dataset.fecha;
-                        if (f) mostrarOpcionesDia(f);
-                    }
+                el.addEventListener('click', function() {
+                    // Todo el día es tocable (el número, el hueco y el "+N más").
+                    // Las etiquetas de cada evento paran la propagación y abren su ficha.
+                    const f = this.dataset.fecha;
+                    if (f) mostrarOpcionesDia(f);
                 });
             });
             renderizarListaTareas();
         }
+        /* ─────── @JS-DIA-CALENDARIO (8/10/2026) ───────
+           Vista del día. Antes, tocar un día abría solo tres botones (crear tarea,
+           crear contrato, cancelar) SIN decir qué había ese día. Ahora lista lo mismo
+           que se ve en la casilla (eventos/contratos, tareas y seguimientos de campaña)
+           y conserva las mismas acciones; un día vacío se abre igual, con el aviso.
+           Nota para quien siga: el calendario que corre es ESTE (v4.8). El del portado
+           (`App.renderCalendario` / `App.modalDia`) no está enrutado y no incluye contratos. */
+        function nombreDiaLargo(fecha) {
+            const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+            const p = String(fecha || '').split('-');
+            const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+            if (isNaN(d.getTime())) return formatearFecha(fecha);
+            return dias[d.getDay()] + ' ' + Number(p[2]) + ' de ' + meses[Number(p[1]) - 1];
+        }
+        function nombreCampaniaDia(id) {
+            try { if (id && typeof App !== 'undefined' && App.nombreCampania) return String(App.nombreCampania(id) || ''); } catch (e) { }
+            const c = (campanias || []).filter(function(x) { return x && x.id === id; })[0];
+            return c ? (c.nombre || '') : '';
+        }
         function mostrarOpcionesDia(fecha) {
-            abrirModal('Opciones del día', '<div style="text-align:center;padding:10px;"><h3 style="color:var(--color-acento);margin-bottom:16px;">' + formatearFecha(fecha) + '</h3><div style="display:flex;flex-direction:column;gap:12px;max-width:300px;margin:0 auto;"><button class="btn-primario" id="btn-crear-tarea-dia" style="justify-content:center;"><i class="fas fa-tasks"></i> Crear Tarea</button><button class="btn-azul" id="btn-crear-contrato-dia" style="justify-content:center;"><i class="fas fa-file-contract"></i> Crear Contrato</button><button class="btn-secundario" onclick="cerrarModal();" style="justify-content:center;">Cancelar</button></div></div>');
+            const contratosDia = obtenerContratos().filter(function(c) { return c && c.fechaEvento === fecha; });
+            const tareasDia = tareas.filter(function(t) { return t && t.fecha === fecha; });
+            let seguimientos = [];
+            try {
+                seguimientos = (participaciones || []).filter(function(p) {
+                    if (!p || p.fechaProximoSeguimiento !== fecha) return false;
+                    return ['convertida', 'cancelada', 'noSeleccionada', 'rechazada', 'sinInteres'].indexOf(p.estado) === -1;
+                });
+            } catch (e) { console.warn('No se pudieron leer los seguimientos del día:', e); }
+
+            let items = '';
+            contratosDia.forEach(function(c) {
+                const titulo = c.festejado || c.clienteNombre || 'Evento';
+                items += '<div class="dia-item evento" data-dia-item="contrato" data-a="' + c.clienteId + '" data-b="' + c.id + '">' +
+                    '<i class="fas fa-file-contract"></i><div class="dia-item-texto">' +
+                    '<div class="dia-item-titulo">' + escapeHTML(titulo) + '</div>' +
+                    '<div class="dia-item-meta">Evento · ' + escapeHTML(c.clienteNombre || '') + '</div></div>' +
+                    '<i class="fas fa-chevron-right"></i></div>';
+            });
+            tareasDia.forEach(function(t) {
+                const clase = 'tarea' + (t.completada ? ' completada' : ((t.campaniaId || t.participacionId) ? ' campania' : ''));
+                items += '<div class="dia-item ' + clase + '" data-dia-item="tarea" data-a="' + t.id + '">' +
+                    '<i class="fas ' + (t.completada ? 'fa-check-circle' : 'fa-tasks') + '"></i><div class="dia-item-texto">' +
+                    '<div class="dia-item-titulo">' + escapeHTML(t.tipo || 'Tarea') + (t.completada ? ' (completada)' : '') + '</div>' +
+                    '<div class="dia-item-meta">' + escapeHTML(t.descripcion || '') + '</div></div>' +
+                    '<i class="fas fa-chevron-right"></i></div>';
+            });
+            seguimientos.forEach(function(p) {
+                const pr = (prospectos || []).filter(function(x) { return x && x.id === p.prospectoId; })[0];
+                const camp = nombreCampaniaDia(p.campaignId);
+                items += '<div class="dia-item seguimiento" data-dia-item="seguimiento" data-a="' + p.prospectoId + '">' +
+                    '<i class="fas fa-bullseye"></i><div class="dia-item-texto">' +
+                    '<div class="dia-item-titulo">Seguimiento · ' + escapeHTML((pr && pr.nombre) || 'Prospecto') + '</div>' +
+                    '<div class="dia-item-meta">' + (camp ? 'Campaña: ' + escapeHTML(camp) : 'Campaña') + '</div></div>' +
+                    '<i class="fas fa-chevron-right"></i></div>';
+            });
+
+            const total = contratosDia.length + tareasDia.length + seguimientos.length;
+            const cuerpo =
+                '<div class="dia-resumen">' + formatearFecha(fecha) + ' · ' +
+                (total === 0 ? 'sin tareas ni eventos' : total + (total === 1 ? ' elemento' : ' elementos')) + '</div>' +
+                (total
+                    ? '<div class="dia-lista">' + items + '</div>'
+                    : '<div class="dia-vacio"><i class="fas fa-calendar-day"></i><div>No hay tareas ni eventos este día.</div>' +
+                      '<small>Puedes crear una tarea o un contrato para esta fecha.</small></div>') +
+                '<div class="dia-acciones">' +
+                '<button class="btn-primario" id="btn-crear-tarea-dia"><i class="fas fa-tasks"></i> Crear tarea</button>' +
+                '<button class="btn-azul" id="btn-crear-contrato-dia"><i class="fas fa-file-contract"></i> Crear contrato</button>' +
+                '<button class="btn-secundario" id="btn-cerrar-dia-dia">Cerrar</button>' +
+                '</div>';
+            abrirModal(nombreDiaLargo(fecha), cuerpo);
+
+            document.querySelectorAll('#modal-body [data-dia-item]').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    const tipo = el.getAttribute('data-dia-item');
+                    const a = el.getAttribute('data-a');
+                    const b = el.getAttribute('data-b') || '';
+                    cerrarModal();
+                    setTimeout(function() {
+                        if (tipo === 'contrato') abrirContratoDesdeCalendario(a, b);
+                        else if (tipo === 'tarea') editarTareaDesdeCalendario(a);
+                        else if (tipo === 'seguimiento') verDetalleProspecto(a);
+                    }, 80);
+                });
+            });
             document.getElementById('btn-crear-tarea-dia').addEventListener('click', function() { cerrarModal(); setTimeout(function() { mostrarFormularioTarea(null, null, fecha); }, 100); });
             document.getElementById('btn-crear-contrato-dia').addEventListener('click', function() { cerrarModal(); setTimeout(function() { mostrarFormularioContratoDesdeCalendario(fecha); }, 100); });
+            document.getElementById('btn-cerrar-dia-dia').addEventListener('click', function() { cerrarModal(); });
         }
         function mostrarFormularioContratoDesdeCalendario(fecha) {
             if (clientes.length === 0) { mostrarNotificacion('Registra un cliente primero', 'warning'); return; }
