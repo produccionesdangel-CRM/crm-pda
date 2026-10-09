@@ -2636,7 +2636,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-09.30';
+        var BUILD_APP = '2026-10-09.31';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -8790,7 +8790,21 @@ input:focus, select:focus, textarea:focus {
         function entrarDirectoConGoogle(usuario) {
             usuarioPendienteLogin = usuario;
             esPrimerLoginAdmin = false;
-            registrarUltimoAcceso(usuario.username);
+            /* ─────── @JS-ORDEN-ACCESO (9/10/2026) ───────
+               PRIMERO se publica la marca de administrador (/admins/<uid>) —que es lo
+               que consultan las reglas de Firebase— y DESPUÉS se anota el último
+               acceso. Al revés (como estaba) la anotación salía antes de que existiera
+               la marca y las reglas la rechazaban; en la consola de Jorge se veía:
+                 FIREBASE WARNING: set at /usuarios/jorgefrosas/ultimoAcceso failed:
+                 permission_denied
+               Era cosmético (no frenaba el guardado), pero ensuciaba la consola y el
+               último acceso no quedaba registrado en la nube. Si la marca no se puede
+               publicar, se anota igual: no vale la pena perder el registro por eso. */
+            Promise.resolve(sincronizarIndiceAdmin(usuario)).then(function () {
+                registrarUltimoAcceso(usuario.username);
+            }).catch(function () {
+                registrarUltimoAcceso(usuario.username);
+            });
             iniciarSesionAplicacion(true);
         }
 
