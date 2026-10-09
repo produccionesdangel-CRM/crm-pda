@@ -1838,7 +1838,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-07.21';
+        var BUILD_APP = '2026-10-08.22';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -7009,18 +7009,33 @@
         }
 
         /* ─── LISTENERS ─── */
+        // Bandera: el cableado de los filtros plegables se hace UNA sola vez por carga
+        // de página (ver el porqué en inicializarFiltrosColapsables).
+        var filtrosPlegablesListos = false;
         function inicializarFiltrosColapsables() {
-            document.querySelectorAll('.btn-toggle-filtros').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    const targetId = this.dataset.target;
-                    const contenedor = document.getElementById(targetId);
+            // ─────── @JS-FILTROS-MOVIL (8/10/2026) ───────
+            // El escucha va en el DOCUMENTO y UNA SOLA VEZ, no uno por botón en cada llamada.
+            // Esta función se llama desde conectarEventListenersApp(), y en el TELÉFONO el
+            // arranque entra DOS veces a iniciarAplicacion() (el regreso de Google espera la
+            // sesión y el arranque normal la carga por su lado). Con un escucha por botón y dos
+            // llamadas, cada toque abría y cerraba el panel en el mismo instante: los filtros
+            // NUNCA se veían abrir en el celular. En la PC no se notaba porque ahí el botón
+            // está oculto y los filtros se ven siempre. Con el escucha en el documento también
+            // quedan cubiertos los botones que se dibujan después (p. ej. la pestaña de
+            // Participantes de una campaña).
+            if (!filtrosPlegablesListos) {
+                filtrosPlegablesListos = true;
+                document.addEventListener('click', function(e) {
+                    const btn = (e.target && e.target.closest) ? e.target.closest('.btn-toggle-filtros') : null;
+                    if (!btn) return;
+                    const contenedor = document.getElementById(btn.dataset.target);
                     if (!contenedor) return;
                     const estaAbierto = contenedor.classList.contains('mobile-visible');
                     document.querySelectorAll('.filtros-container.mobile-visible').forEach(function(f) { f.classList.remove('mobile-visible'); });
                     document.querySelectorAll('.btn-toggle-filtros.abierto').forEach(function(b) { b.classList.remove('abierto'); });
-                    if (!estaAbierto) { contenedor.classList.add('mobile-visible'); this.classList.add('abierto'); }
+                    if (!estaAbierto) { contenedor.classList.add('mobile-visible'); btn.classList.add('abierto'); }
                 });
-            });
+            }
             function getVal(id) { const el = document.getElementById(id); return el ? el.value : null; }
             function getInputVal(id) { const el = document.getElementById(id); return el ? el.value : ''; }
             function actualizarBadgesFiltros() {
@@ -7046,6 +7061,9 @@
                 const btnServ = document.querySelector('.btn-toggle-filtros[data-target="filtros-servicios"]');
                 if (btnServ) btnServ.classList.toggle('tiene-filtros', !!servActivo);
             }
+            // Los avisos de "filtros activos" (la etiqueta del botón) sí pueden conectarse dos
+            // veces sin daño: solo vuelven a calcular y pintar la etiqueta. La plegada/desplegada
+            // es la única que NO se podía repetir, y por eso quedó con su bandera arriba.
             ['filtro-fecha-inicio','filtro-fecha-fin','filtro-estado-cliente','filtro-estado-contrato','filtro-paquete','filtro-servicio','filtro-fase-prospecto','buscar-prospecto','filtro-estado-cliente-lista','buscar-cliente','filtro-estado-contrato-lista','filtro-tipo-contrato','buscar-contrato','filtro-tareas-calendario','buscar-calendario','filtro-estatus-paquete','buscar-paquete','orden-paquetes','orden-servicios','buscar-servicio'].forEach(function(id) {
                 const el = document.getElementById(id);
                 if (el) { el.addEventListener('change', actualizarBadgesFiltros); el.addEventListener('input', actualizarBadgesFiltros); }
@@ -10503,17 +10521,14 @@
         document.documentElement.setAttribute('data-theme', tema);
     };
 
-    /* Botón de mostrar/ocultar filtros (mismo comportamiento del CRM). */
+    /* Botón de mostrar/ocultar filtros.
+       ─────── @JS-FILTROS-MOVIL (8/10/2026) ───────
+       Esta versión (la del portado) usaba `style.display` en línea: un SEGUNDO mecanismo que
+       peleaba con la clase `mobile-visible` del CRM y dejaba el panel a medio abrir (el primer
+       toque abría por clase y lo volvía a esconder por estilo). Se deja UN SOLO mecanismo, el
+       del CRM: inicializarFiltrosColapsables(). */
     App.conectarTogglesFiltros = function () {
-        document.querySelectorAll('.btn-toggle-filtros').forEach(function (boton) {
-            boton.onclick = function () {
-                var destino = document.getElementById(boton.getAttribute('data-target'));
-                if (!destino) return;
-                var visible = destino.style.display !== 'none';
-                destino.style.display = visible ? 'none' : 'flex';
-                boton.classList.toggle('activo', !visible);
-            };
-        });
+        try { inicializarFiltrosColapsables(); } catch (e) { console.warn('No se pudieron conectar los filtros plegables:', e); }
         /* Vista mosaico / lista */
         document.querySelectorAll('.btn-view-toggle').forEach(function (grupo) {
             var seccion = grupo.getAttribute('data-vista-seccion');
@@ -10930,7 +10945,15 @@
             botonAgregar +
             '<button class="btn-secundario" id="exportar-participantes"><i class="fas fa-download"></i> Exportar CSV</button>' +
             '</div>' +
-            '<div class="filtros-container">' +
+            /* @JS-FILTROS-MOVIL (8/10/2026) — En el teléfono el CRM pliega los filtros: sin este
+               botón, los de Participantes quedaban escondidos y sin ninguna forma de abrirlos
+               (el CSS los oculta en pantallas de 768 px o menos). En la PC el botón no se ve
+               porque el CRM lo oculta en pantallas grandes. */
+            '<button type="button" class="btn-toggle-filtros" data-target="filtros-participantes">' +
+            '<span><i class="fas fa-filter"></i> Filtros <span class="btn-toggle-filtros-badge">activos</span></span>' +
+            '<i class="fas fa-chevron-down btn-toggle-filtros-icono"></i>' +
+            '</button>' +
+            '<div class="filtros-container" id="filtros-participantes">' +
             '<div class="filtro-grupo"><label>Etapa</label><select id="par-filtro-etapa"><option value="todas">Todas</option>' +
             motor().etapasOrdenadas(camp).map(function (et) { return '<option value="' + esc(et.id) + '">' + esc(et.nombre) + '</option>'; }).join('') + '</select></div>' +
             '<div class="filtro-grupo"><label>Estado</label><select id="par-filtro-estado"><option value="todos">Todos</option>' + opciones(Catalogos.estadosParticipacion) + '</select></div>' +

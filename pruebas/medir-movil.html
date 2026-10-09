@@ -38,7 +38,7 @@
     const t1 = performance.now();
     res.bytes = texto.length;
     res.descargaMs = Math.round(t1 - t0);
-    res.esV5 = /BUILD_APP = '2026-10-07\.1'/.test(texto);
+    res.esV5 = /BUILD_APP = '2026-10-08\./.test(texto);
 
     // 2) Leerlo y ejecutarlo: lo que pesa en un archivo único.
     const t2 = performance.now();
