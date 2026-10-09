@@ -1883,7 +1883,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-08.24';
+        var BUILD_APP = '2026-10-08.25';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -2018,6 +2018,153 @@
             });
             return modificado;
         }
+        /* ─────── @JS-CANDADOS-CAPTURA (v5.0.25) ─────── */
+        // Teléfonos: mexico. Una persona puede escribir el número con guiones, espacios o
+        // paréntesis; eso NO es basura. Lo que sí es basura: letras, emojis, un solo dígito
+        // o 40 dígitos. Estas funciones son el único candado de teléfono de la app.
+        const MIN_DIGITOS_TELEFONO = 10;
+        const MAX_DIGITOS_TELEFONO = 13;
+        // Topes de longitud: un nombre de 500 caracteres o una descripción de 5,000 no son
+        // datos, son basura pegada. Se recortan al guardar (nunca truena, solo se acorta).
+        const MAX_LARGO_NOMBRE = 120;
+        const MAX_LARGO_NOTAS = 2000;
+        const MAX_LARGO_DESCRIPCION = 300;
+        const MIN_ANIO_TAREA = 2000;
+        const MAX_ANIO_TAREA = 2100;
+        // Devuelve solo los dígitos del teléfono (lo que se usa para marcar por WhatsApp).
+        function soloDigitosTelefono(v) { return String(v === null || v === undefined ? '' : v).replace(/\D/g, ''); }
+        // true si el texto trae letras (cualquier alfabeto, no solo el español).
+        function telefonoTieneLetras(v) { return /\p{L}/u.test(String(v === null || v === undefined ? '' : v)); }
+        // ─────── @JS-TEXTO-COMPARABLE (v5.0.25 ronda 2) ───────
+        // Para comparar nombres y descripciones ("¿esto ya existe?"): se quitan acentos,
+        // se pasa a minúsculas y se colapsan los espacios. Sin esto, "Marta  Solís" y
+        // "marta solis" parecían distintos y el duplicado entraba sin aviso.
+        function textoComparable(v) {
+            let s = String(v === null || v === undefined ? '' : v).trim().toLowerCase();
+            try { s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch (e) { /* navegador viejo */ }
+            return s.replace(/\s+/g, ' ').trim();
+        }
+        // Lo mismo para teléfonos: solo los dígitos del número PRINCIPAL, sin la extensión.
+        function telefonoComparable(v) {
+            const r = validarTelefonoCapturado(v);
+            return r && r.digitos ? r.digitos : soloDigitosTelefono(v);
+        }
+        // Una extensión escrita a mano ("878 123 4567 ext 4" o "8781234567 #4") NO es basura:
+        // es el conmutador de una oficina. Se devuelve el número principal y la extensión.
+        // Devuelve { extension } o null si no hay extensión.
+        function extensionDeTelefono(valor) {
+            const s = String(valor === null || valor === undefined ? '' : valor);
+            const m = s.match(/(?:ext\.?|extensión|extension|x|anexo|#)\s*(\d{1,6})\s*$/i);
+            if (!m) return null;
+            const antes = s.slice(0, m.index);
+            // Antes de la extensión tiene que haber un número de verdad (con o sin letras).
+            if (soloDigitosTelefono(antes).length < 2) return null;
+            return { extension: m[1], principal: antes.trim() };
+        }
+        // Analiza un teléfono escrito por una persona y devuelve el veredicto con su motivo.
+        // no aplica = teléfono vacío (es un campo opcional).
+        // Bloquea lo imposible: un solo dígito, puros dígitos repetidos, 40 dígitos o letras
+        // que no sean una extensión. Acepta lo legítimo: 10 dígitos, 11 (con 1 o lada), +52
+        // con espacios, guiones, paréntesis y extensión ("ext 4", "#4").
+        function validarTelefonoCapturado(valor) {
+            const original = String(valor === null || valor === undefined ? '' : valor).trim();
+            if (!original) return { ok: true, noAplica: true, digitos: '', extension: '', motivo: '' };
+            // La extensión se separa antes de medir: es parte legítima del conmutador.
+            const ext = extensionDeTelefono(original);
+            const principalTexto = ext ? ext.principal : original;
+            const digitos = soloDigitosTelefono(principalTexto);
+            if (telefonoTieneLetras(principalTexto)) return { ok: false, digitos: digitos, extension: '', motivo: 'El teléfono no puede llevar letras. Escribe solo el número (10 dígitos).' };
+            if (!digitos) return { ok: false, digitos: digitos, extension: '', motivo: 'El teléfono debe llevar dígitos.' };
+            if (digitos.length < MIN_DIGITOS_TELEFONO) return { ok: false, digitos: digitos, extension: '', motivo: 'El teléfono debe tener al menos ' + MIN_DIGITOS_TELEFONO + ' dígitos (llegaron ' + digitos.length + ').' };
+            if (digitos.length > MAX_DIGITOS_TELEFONO) return { ok: false, digitos: digitos, extension: '', motivo: 'El teléfono tiene demasiados dígitos (' + digitos.length + '). Revisa el número.' };
+            if (/^(\d)\1+$/.test(digitos)) return { ok: false, digitos: digitos, extension: '', motivo: 'Ese teléfono son puros dígitos repetidos. Revisa el número.' };
+            if (principalTexto.indexOf('+') > 0) return { ok: false, digitos: digitos, extension: '', motivo: 'El signo + solo puede ir al principio del teléfono.' };
+            return { ok: true, digitos: digitos, extension: ext ? ext.extension : '', motivo: '' };
+        }
+        // true si el teléfono ya está registrado en otro prospecto o cliente.
+        // Compara por DÍGITOS (así "555-000-9999" y "5550009999" son el mismo número).
+        function telefonoYaRegistrado(valor, opciones) {
+            const op = opciones || {};
+            const objetivo = telefonoComparable(valor);
+            if (!objetivo) return null;
+            const enProspecto = (typeof prospectos !== 'undefined' ? prospectos : []).find(function(p) {
+                return p && p.id !== op.idProspecto && telefonoComparable(p.telefono) === objetivo;
+            });
+            if (enProspecto) return { tipo: 'prospecto', nombre: enProspecto.nombre || 'sin nombre' };
+            const enCliente = (typeof clientes !== 'undefined' ? clientes : []).find(function(c) {
+                return c && c.id !== op.idCliente && telefonoComparable(c.telefono) === objetivo;
+            });
+            if (enCliente) return { tipo: 'cliente', nombre: enCliente.nombre || 'sin nombre' };
+            return null;
+        }
+        // Fechas: formato ISO del <input type=date> y comprobación de que exista de verdad
+        // (2027-02-31 tiene forma correcta pero no es un día real).
+        function fechaISOCapturada(v) {
+            const s = String(v === null || v === undefined ? '' : v).trim();
+            return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null;
+        }
+        function fechaISOExiste(s) {
+            const f = fechaISOCapturada(s);
+            if (!f) return false;
+            const p = f.split('-');
+            const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+            return d.getFullYear() === Number(p[0]) && (d.getMonth() + 1) === Number(p[1]) && d.getDate() === Number(p[2]);
+        }
+        function anioDeFechaISO(s) { const f = fechaISOCapturada(s); return f ? Number(f.substring(0, 4)) : 0; }
+        // El importador de archivos vive en otro bloque del archivo y necesita estos
+        // mismos candados para no guardar HTML ni teléfonos imposibles (P-11, T-15).
+        if (typeof window !== 'undefined') {
+            window.limpiarTextoLibre = limpiarTextoLibre;
+            window.validarTelefonoCapturado = validarTelefonoCapturado;
+            window.esCorreoValido = esCorreoValido;
+        }
+        // true si el id (cliente, o prospecto con el prefijo "pro_") sigue existiendo.
+        // Las tareas guardaban ids fantasma que después nunca aparecían en el detalle de nadie.
+        function referenciaExiste(id) {
+            if (!id) return true;
+            const s = String(id);
+            if (s.indexOf('pro_') === 0) {
+                const pid = s.slice(4);
+                return (typeof prospectos !== 'undefined' ? prospectos : []).some(function(p) { return p && p.id === pid; });
+            }
+            return (typeof clientes !== 'undefined' ? clientes : []).some(function(c) { return c && c.id === s; });
+        }
+
+        // Valida un cliente (nombre, teléfono, correo y estado) ANTES de guardarlo.
+        // El CRUD solo confiaba en el required/type del HTML, así que un pegado o un
+        // autocompletado (dispatchEvent) metía clientes fantasma, teléfonos basura y
+        // estados fuera del catálogo. Devuelve { ok, datos, errores }.
+        function validarClienteCapturado(datos, opciones) {
+            const op = opciones || {};
+            const errores = [];
+            const nombre = limpiarTextoLibre((datos || {}).nombre, 120);
+            const email = String((datos || {}).email === null || (datos || {}).email === undefined ? '' : (datos || {}).email).trim();
+            let estado = String((datos || {}).estado === null || (datos || {}).estado === undefined ? '' : (datos || {}).estado).trim();
+            if (!nombre) errores.push('El nombre del cliente es obligatorio.');
+            if (email && !esCorreoValido(email)) errores.push('El correo "' + email + '" no tiene un formato válido.');
+            if (ESTADOS_CLIENTE.indexOf(estado) === -1) {
+                if (!estado && op.id) estado = op.estadoPrevio && ESTADOS_CLIENTE.indexOf(op.estadoPrevio) !== -1 ? op.estadoPrevio : 'Activo';
+                else errores.push('El estado del cliente no es válido.');
+            }
+            // El teléfono se guarda COMO LO ESCRIBIÓ la persona (con guiones, espacios o
+            // paréntesis, que es como lo conoce); los dígitos se usan para marcar.
+            // El candado solo se aplica si el teléfono CAMBIÓ: un dato viejo con teléfono
+            // basura no puede congelar el registro (no se podría ni corregir el nombre).
+            const telefonoTexto = String((datos || {}).telefono === null || (datos || {}).telefono === undefined ? '' : (datos || {}).telefono).trim();
+            const telPrevio = op.item ? String(op.item.telefono === null || op.item.telefono === undefined ? '' : op.item.telefono).trim() : null;
+            const telefonoCambio = (telPrevio === null) || (telefonoTexto !== telPrevio);
+            let avisoTelefono = '';
+            const revisionTel = validarTelefonoCapturado(telefonoTexto);
+            if (telefonoCambio) {
+                if (!revisionTel.ok) errores.push(revisionTel.motivo);
+            } else if (telefonoTexto && !revisionTel.ok) {
+                avisoTelefono = 'El teléfono guardado (' + telefonoTexto + ') no es válido, pero como no lo cambiaste se conserva. Corrígelo cuando puedas: el botón de WhatsApp no funcionará con él.';
+            }
+            // Aviso (no bloqueo) de teléfono repetido en otro cliente o prospecto.
+            const repetido = telefonoTexto ? telefonoYaRegistrado(telefonoTexto, { idCliente: op.id }) : null;
+            return { ok: errores.length === 0, errores: errores, avisoTelefono: avisoTelefono, nombre: nombre, email: email, estado: estado, telefono: telefonoTexto, digitos: revisionTel.digitos, repetido: repetido };
+        }
+
         // Escapa etiquetas dentro de un bloque HTML que la propia app generó (mosaicos y modales),
         // conservando el marcado legítimo y neutralizando cualquier < > que venga de los datos.
         function escaparEtiquetasEnHTML(html) {
@@ -2543,8 +2690,12 @@
                 if (tot.precioBase > 0 && (tot.totalCargos + monto) > tot.precioBase * FACTOR_CARGOS_EXCESIVOS) {
                     avisos.push('Los cargos extras sumarían ' + formatearMoneda(tot.totalCargos + monto) + ', muy por encima del precio base (' + formatearMoneda(tot.precioBase) + '). Verifica que sea correcto.');
                 }
-                if (tot.cantidadPagos > 0) {
-                    avisos.push('Este cargo eleva el total del contrato a ' + formatearMoneda(tot.totalAPagar + monto) + '. Ya hay pagos registrados por ' + formatearMoneda(tot.totalPagos) + '; el saldo se recalculará.');
+                // Ronda 2 · N-14: un cargo NORMAL no debe frenar al practicante. Antes
+                // cualquier cargo pedía confirmación solo porque el contrato ya tenía pagos;
+                // ahora se avisa únicamente si los cargos se pasan del precio del contrato.
+                // (El candado de cargos excesivos de arriba sigue intacto.)
+                if (tot.precioBase > 0 && (tot.totalCargos + monto) > tot.precioBase && tot.totalCargos <= tot.precioBase) {
+                    avisos.push('Con este cargo los cargos extras (' + formatearMoneda(tot.totalCargos + monto) + ') pasarían del precio del contrato (' + formatearMoneda(tot.precioBase) + '). El saldo se recalculará; verifica que sea correcto.');
                 }
             }
 
@@ -2723,11 +2874,11 @@
             return lista;
         }
         function etiquetaTipoPapelera(tipo) {
-            const etiquetas = { cliente: 'Cliente', contrato: 'Contrato', prospecto: 'Prospecto', tarea: 'Tarea', usuario: 'Usuario', paquete: 'Paquete', servicio: 'Servicio' };
+            const etiquetas = { cliente: 'Cliente', contrato: 'Contrato', prospecto: 'Prospecto', tarea: 'Tarea', usuario: 'Usuario', paquete: 'Paquete', servicio: 'Servicio', participacion: 'Participación en campaña' };
             return etiquetas[tipo] || tipo;
         }
         function iconoTipoPapelera(tipo) {
-            const iconos = { cliente: 'fa-user', contrato: 'fa-file-contract', prospecto: 'fa-users', tarea: 'fa-tasks', usuario: 'fa-user-cog', paquete: 'fa-box', servicio: 'fa-tools' };
+            const iconos = { cliente: 'fa-user', contrato: 'fa-file-contract', prospecto: 'fa-users', tarea: 'fa-tasks', usuario: 'fa-user-cog', paquete: 'fa-box', servicio: 'fa-tools', participacion: 'fa-diagram-project' };
             return iconos[tipo] || 'fa-archive';
         }
         function describirItemPapelera(entrada) {
@@ -3050,6 +3201,19 @@
                 if (!Array.isArray(p.historialFases)) p.historialFases = [];
                 if (!Array.isArray(p.etiquetas)) p.etiquetas = [];
                 if (!Array.isArray(p.tareasRelacionadas)) p.tareasRelacionadas = [];
+                // REPARACIÓN v5.0.25: los prospectos creados por el motor de campañas
+                // (App.motor.crearProspecto) escribían `faseComercial` y se quedaban sin
+                // `faseActual`. El listado de Prospectos reventaba al dibujarlos (P-15) y
+                // Jorge YA tiene prospectos así desde que usa campañas. Aquí se normaliza.
+                if (!p.faseActual) p.faseActual = p.faseComercial || 'Interesado';
+                if (!p.faseComercial) p.faseComercial = p.faseActual;
+                if (typeof p.nombre !== 'string') p.nombre = String(p.nombre === null || p.nombre === undefined ? '' : p.nombre);
+                if (typeof p.telefono !== 'string') p.telefono = String(p.telefono === null || p.telefono === undefined ? '' : p.telefono);
+                if (typeof p.email !== 'string') p.email = String(p.email === null || p.email === undefined ? '' : p.email);
+                if (typeof p.notasGenerales !== 'string') p.notasGenerales = String(p.notasGenerales === null || p.notasGenerales === undefined ? '' : p.notasGenerales);
+                // Un presupuesto en texto o negativo se corrige a un número sano.
+                const pres = Number(p.presupuesto);
+                if (p.presupuesto !== undefined && (!isFinite(pres) || pres < 0)) p.presupuesto = isFinite(pres) && pres > 0 ? pres : 0;
             });
             (clientes || []).forEach(function (c) {
                 if (!c || typeof c !== 'object') return;
@@ -3651,12 +3815,173 @@
         /* ═══════════════════════════════════════════════════════════ */
         /* @JS-UI — Modales, temas, sidebar, confirmaciones             */
         /* ═══════════════════════════════════════════════════════════ */
+        /* ─────── @JS-MODAL-APARCAMIENTO (v5.0.25) ───────
+           Causa raíz de R1/R2/R3: abrirModal() reemplaza TODO #modal-body. Cuando el
+           formulario del contrato abre el modal de anulación o el de confirmación
+           financiera, ese formulario deja de existir y el código que sigue
+           (renderizarPagos, el('cargo-descripcion').value...) revienta.
+           Solución: antes de abrir un modal encima, el formulario se "aparca" en un
+           contenedor oculto DENTRO del propio #modal (así viaja con la clase active y
+           nunca queda visible). Al terminar, se devuelve tal cual: sus nodos y sus
+           escuchadores siguen vivos. */
+        /* ─────── @JS-ANTIRREPETICION (v5.0.25) ───────
+           Un practicante con prisa puede disparar dos veces el envío del mismo
+           formulario en el mismo instante (doble toque, o pegado/autocompletado que
+           dispara el submit). La bandera `guardando` del CRUD no servía porque se
+           limpiaba en el finally del PRIMER manejador, que termina antes del segundo
+           envío. Aquí la marca vive en el propio nodo del formulario y NO se limpia
+           dentro del mismo modal: el segundo envío del mismo formulario sale sin
+           hacer nada. Un formulario nuevo (modal nuevo) es un nodo nuevo, así que
+           nunca se bloquea un guardado legítimo posterior. */
+        // Marca de antirrepetición: vive en el propio nodo del formulario (WeakSet) para que
+        // un formulario nuevo nunca herede la marca de uno viejo.
+        const formulariosEnviados = new WeakSet();
+        // true mientras hay una ventana de confirmación abierta encima de un formulario
+        // que debe devolverse al cerrarla.
+        var retornoModalPendiente = false;
+        // ─────── @JS-ANTIRREPETICION-BLOQUEO (v5.0.25 ronda 2) ───────
+        // Un envío repetido solo se frena cuando HAY una ventana de decisión abierta encima
+        // (confirmación o aviso de error). En cuanto esa ventana se cierra —se confirme,
+        // se cancele o se corrija— el formulario vuelve a estar utilizable, así que el
+        // segundo intento del practicante funciona (V-01, V-02, W-02, A-05, A-06, Z-04).
+        // El doble envío del mismo tick sí se frena: la primera pasada deja la ventana
+        // abierta y la marca puesta (D-04/D-05, A-11, A-12, M-01).
+        function envioDuplicadoBloqueado(form) {
+            return formularioYaEnviado(form) && retornoModalPendiente;
+        }
+
+        function formularioYaEnviado(form) {
+            const r = !form || formulariosEnviados.has(form);
+            if (window.__TRAZA_) window.__TRAZA_.push('  yaEnviado(nodo=' + (form ? form.dataset.nodoId : 'NULL') + ')=' + r);
+            return r;
+        }
+        function marcarFormularioEnviado(form) {
+            if (form) {
+                if (window.__TRAZA_ && !form.dataset.nodoId) form.dataset.nodoId = 'F' + (window.__FN_ = (window.__FN_ || 0) + 1);
+                formulariosEnviados.add(form);
+            }
+            if (window.__TRAZA_) window.__TRAZA_.push('  MARCAR(nodo=' + (form ? form.dataset.nodoId : 'NULL') + ') desde ' + String(new Error().stack).split('\n')[1].trim().slice(0, 60));
+            return form;
+        }
+        // Un formulario con error de captura (nombre vacío, teléfono basura...) se libera
+        // para que el practicante pueda corregir y volver a intentar en la misma ventana.
+        function liberarMarcaFormulario(form) { if (form) formulariosEnviados.delete(form); return form; }
+        function formularioDeEvento(e, idRespaldo) {
+            return (e && e.currentTarget) || document.getElementById(idRespaldo);
+        }
+        // La marca de envío NO se libera al cerrar el modal: vive en el nodo del formulario
+        // y cada ventana nueva trae un formulario nuevo, así que nunca estorba. Ese detalle
+        // es justamente lo que frena el reenvío del formulario ya cerrado (D-11).
+        // Se llama al cerrar el modal (guardado correcto o cancelación) para liberar la marca.
+        // Recorre también el aparcadero: al confirmar una operación el formulario original
+        // vuelve a estar vivo y debe poder guardarse más tarde sin quedar bloqueado.
+        function liberarFormularioModado() {
+            try {
+                ['modal-body', 'modal-aparcadero'].forEach(function(cajaId) {
+                    const caja = document.getElementById(cajaId);
+                    if (!caja) return;
+                    caja.querySelectorAll('form').forEach(function(f) { formulariosEnviados.delete(f); });
+                    if (caja.tagName === 'FORM') formulariosEnviados.delete(caja);
+                });
+            } catch (e) { /* la marca es por nodo: si falla, el nodo se va con el modal */ }
+        }
+
+        function contenedorAparteModales() {
+            const modal = document.getElementById('modal');
+            if (!modal) return null;
+            let caja = document.getElementById('modal-aparcadero');
+            if (!caja) {
+                caja = document.createElement('div');
+                caja.id = 'modal-aparcadero';
+                caja.style.display = 'none';
+                modal.appendChild(caja);
+            }
+            return caja;
+        }
+        // Devuelve cuántos nodos se aparcaron (0 = no había formulario abierto).
+        function aparcarModalAbierto() {
+            try {
+                const body = document.getElementById('modal-body');
+                const caja = contenedorAparteModales();
+                if (!body || !caja || !body.firstChild) return 0;
+                const nodos = [];
+                while (body.firstChild) nodos.push(body.removeChild(body.firstChild));
+                nodos.forEach(function(n) { if (n) caja.appendChild(n); });
+                caja.dataset.titulo = (document.getElementById('modal-titulo') || {}).textContent || '';
+                caja.dataset.aparcado = nodos.length ? '1' : '0';
+                return nodos.length;
+            } catch (e) { console.warn('No se pudo aparcar el modal abierto:', e); return 0; }
+        }
+        function hayModalApartado() {
+            const caja = document.getElementById('modal-aparcadero');
+            return !!(caja && caja.dataset.aparcado === '1' && caja.firstChild);
+        }
+        // Devuelve el contenido aparcado a #modal-body (idempotente).
+        function restaurarModalApartado() {
+            try {
+                const caja = document.getElementById('modal-aparcadero');
+                const body = document.getElementById('modal-body');
+                if (!caja || !body || !hayModalApartado()) return false;
+                while (body.firstChild) body.removeChild(body.firstChild);
+                while (caja.firstChild) body.appendChild(caja.removeChild(caja.firstChild));
+                const titulo = caja.dataset.titulo || '';
+                const elTitulo = document.getElementById('modal-titulo');
+                if (elTitulo && titulo) elTitulo.textContent = titulo;
+                caja.dataset.aparcado = '0';
+                caja.dataset.titulo = '';
+                return true;
+            } catch (e) { console.warn('No se pudo restaurar el modal aparcado:', e); return false; }
+        }
+
+        // Tira lo aparcado sin devolverlo: se usa cuando la app abre una pantalla nueva
+        // desde la raíz (listados, formularios nuevos), no una ventana encima de otra.
+        function descartarModalApartado() {
+            try {
+                const caja = document.getElementById('modal-aparcadero');
+                if (!caja || caja.dataset.aparcado !== '1') return 0;
+                const cuantos = caja.childNodes.length;
+                while (caja.firstChild) caja.removeChild(caja.firstChild);
+                caja.dataset.aparcado = '0';
+                caja.dataset.titulo = '';
+                return cuantos;
+            } catch (e) { return 0; }
+        }
+
+        // Un formulario cerrado se queda en el DOM a propósito (comportamiento histórico del
+        // que dependen varias rutinas), pero eso deja DOS nodos con el mismo id cuando se
+        // vuelve a abrir el mismo formulario. document.getElementById devuelve el primero,
+        // que es el VIEJO: el practicante escribe en el visible y el código lee el muerto
+        // (así se quedaba mudo el botón Guardar del contrato en W-02/V-01).
+        // Se quitan SOLO de #modal-body, que es donde se apilan los formularios cerrados.
+        // Lo que está aparcado (una ventana abierta encima) NO se toca nunca.
+        function tirarFormulariosViejos(html) {
+            try {
+                const body = document.getElementById('modal-body');
+                if (!body) return;
+                const etiquetas = String(html).match(/<form[^>]*\sid="[^"]+"/g) || [];
+                etiquetas.forEach(function(tag) {
+                    const m = tag.match(/id="([^"]+)"/);
+                    if (!m || !m[1]) return;
+                    body.querySelectorAll('form#' + CSS.escape(m[1])).forEach(function(f) {
+                        if (f.parentNode === body) f.parentNode.removeChild(f);
+                    });
+                });
+            } catch (e) { /* si el navegador no trae CSS.escape, no se limpia y nada más pasa */ }
+        }
+
         function abrirModal(titulo, contenidoHTML, anchoAmplio) {
             const modal = document.getElementById('modal');
             const modalTitulo = document.getElementById('modal-titulo');
             const modalBody = document.getElementById('modal-body');
             const modalContent = modal.querySelector('.modal-content');
+            // Comportamiento histórico: reemplaza el contenido y abre. Cuando una ventana
+            // se abre ENCIMA de un formulario que debe sobrevivir, antes se llama a
+            // prepararRetornoModal() y cerrarModal() lo devuelve (ver @JS-MODAL-RETORNO).
+            if (!hayModalApartado()) descartarModalApartado();
             modalTitulo.textContent = titulo;
+            // Primero se quitan del DOM los formularios viejos con el mismo id (los que
+            // quedaron de ventanas anteriores ya cerradas) y después se inserta el nuevo.
+            tirarFormulariosViejos(contenidoHTML);
             modalBody.innerHTML = contenidoHTML;
             if (anchoAmplio) modalContent.classList.add('modal-wide');
             else modalContent.classList.remove('modal-wide');
@@ -3665,8 +3990,104 @@
         function cerrarModal() {
             const modal = document.getElementById('modal');
             const modalContent = modal.querySelector('.modal-content');
-            modal.classList.remove('active');
-            modalContent.classList.remove('modal-wide');
+            const modalBody = document.getElementById('modal-body');
+            // Si esta ventana se abrió encima de un formulario protegido, se le devuelve
+            // tal cual (con sus nodos y escuchadores vivos) y el modal sigue visible: se
+            // cerró la ventana de encima, no todo.
+            if (retornoModalPendiente && hayModalApartado()) {
+                const titulo = (document.getElementById('modal-aparcadero') || { dataset: {} }).dataset.titulo || '';
+                if (modalBody) {
+                    modalBody.innerHTML = '';
+                    while (modalBody.firstChild) modalBody.removeChild(modalBody.firstChild);
+                }
+                restaurarModalApartado();
+                retornoModalPendiente = false;
+                modal.classList.add('active');
+                if (titulo) document.getElementById('modal-titulo').textContent = titulo;
+                // ─────── @JS-REINTENTO-TRAS-CANCELAR (v5.0.25) ───────
+                // El formulario devuelto puede volver a intentarse. Sin liberar aquí la marca de
+                // "ya enviado", cancelar un aviso (contrato gemelo, cargo alto, pago excedido…)
+                // dejaba el botón Guardar MUDO: el segundo intento no hacía nada y el practicante
+                // no podía guardar sin cerrar y volver a abrir la ventana.
+                liberarFormularioModado();
+            } else {
+                retornoModalPendiente = false;
+                // Ojo: a propósito NO se vacía #modal-body. El formulario cerrado se queda
+                // en el DOM (comportamiento histórico del CRM, del que dependen varias
+                // rutinas y pruebas). Un envío repetido se frena con la antirrepetición.
+                modal.classList.remove('active');
+                modalContent.classList.remove('modal-wide');
+                // El formulario se libera SOLO aquí: al cerrarse de verdad el modal. No se
+                // libera cuando se abre una ventana encima, porque el envío que la abrió
+                // todavía está corriendo y el segundo envío del mismo tick debe frenarse.
+                // El formulario cerrado ya no puede volver a guardar: su marca de envío vive
+                // en el nodo, así que un reenvío posterior del mismo formulario no pasa (D-11).
+            }
+        }
+        // Aparca lo que se esté viendo y arma la devolución. Se usa SIEMPRE que se abre
+        // una ventana de confirmación (o de anulación) desde dentro de un formulario.
+        function prepararRetornoModal() {
+            const body = document.getElementById('modal-body');
+            if (!body || !body.firstChild) return false;
+            descartarModalApartado();
+            const n = aparcarModalAbierto();
+            retornoModalPendiente = n > 0;
+            return retornoModalPendiente;
+        }
+        // ─────── @JS-ERROR-SIN-PERDER-DATOS (v5.0.25 ronda 2) ───────
+        // Un diálogo de ERROR también reemplaza #modal-body. Antes el practicante perdía
+        // lo que había escrito (y el teléfono mal tecleado era imposible de corregir).
+        // Ahora el formulario se aparca antes del aviso y vuelve al cerrarlo, igual que
+        // en las confirmaciones. Además se libera la marca de envío del formulario que
+        // falló: el segundo intento tiene que funcionar, no quedarse mudo (V-01, Z-01..Z-04).
+        //
+        // Ojo con el ORDEN y con el doble envío (A-11): la marca se borra en un temporizador
+        // de 0 ms, NO en el acto. Si se borrara aquí mismo, el segundo envío del MISMO tick
+        // volvería a entrar y quedarían DOS formularios aparcados y dos confirmaciones encima.
+        function liberarMarcaAlCerrar(form) {
+            if (!form) return;
+            if (window.__TRAZA_) window.__TRAZA_.push('liberarAlCerrar(nodo=' + (form.dataset ? form.dataset.nodoId : '?') + ')');
+            setTimeout(function() {
+                formulariosEnviados.delete(form);
+                if (window.__TRAZA_) window.__TRAZA_.push('  LIBERADA(nodo=' + (form.dataset ? form.dataset.nodoId : '?') + ')');
+            }, 0);
+        }
+        function mostrarErroresSinPerderElFormulario(titulo, errores, form) {
+            const errs = (errores && errores.length) ? errores : ['Revisa los datos antes de continuar.'];
+            // ── El aviso se muestra DENTRO del formulario (v5.0.25 ronda 2) ──
+            // Un diálogo modal para un error de captura rompe el contexto: o se pierde lo
+            // escrito, o el formulario queda aparcado y el practicante no ve dónde corregir
+            // (los dos casos que reportó el equipo rojo en V-01/A-05 y Z-01..Z-03). El aviso
+            // en línea deja el formulario EN PANTALLA, con todo lo escrito y el foco listo.
+            const aviso = document.getElementById('aviso-errores-formulario');
+            if (aviso) {
+                aviso.style.display = 'block';
+                aviso.innerHTML = '<div style="display:flex;gap:10px;align-items:flex-start;">'
+                    + '<i class="fas fa-ban" style="color:var(--color-rojo);font-size:18px;flex-shrink:0;margin-top:2px;"></i>'
+                    + '<div style="flex:1;"><strong style="display:block;margin-bottom:4px;color:var(--color-rojo);">' + escapeHTML(titulo || 'No se guardó nada') + '</strong>'
+                    + '<ul style="margin:0 0 0 18px;padding:0;">' + errs.map(function(e) { return '<li style="margin-bottom:4px;">' + e + '</li>'; }).join('') + '</ul>'
+                    + '<div style="margin-top:6px;font-size:11.5px;color:var(--color-texto-secundario);">Corrige lo de arriba y vuelve a guardar: nada de lo que escribiste se pierde.</div>'
+                    + '</div></div>';
+                try { aviso.scrollIntoView({ block: 'nearest' }); } catch (eAviso) { /* sin scroll, no pasa nada */ }
+            } else {
+                // Si el formulario no trae la caja de avisos, se cae al diálogo de siempre.
+                if (!hayModalApartado()) prepararRetornoModal();
+                else retornoModalPendiente = true;
+                mostrarErroresFinancieros(titulo, errs);
+            }
+            liberarMarcaAlCerrar(form);
+            reabrirBotonesDeFormulario(form);
+        }
+        // Deja el botón de guardar utilizable otra vez (algunos caminos lo deshabilitan).
+        function reabrirBotonesDeFormulario(form) {
+            try {
+                if (!form) return;
+                form.querySelectorAll('button[type=submit]').forEach(function(b) { b.disabled = false; });
+            } catch (e) { /* si no hay formulario, no hay nada que reabrir */ }
+        }
+        // Caja de avisos DENTRO del formulario: se inyecta como primer hijo.
+        function cajaAvisosDeFormulario() {
+            return '<div id="aviso-errores-formulario" style="display:none;background-color:rgba(244,67,54,0.12);border:1px solid var(--color-rojo);border-left:4px solid var(--color-rojo);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--color-texto-primario);"></div>';
         }
         document.getElementById('modal-cerrar').addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); cerrarModal(); });
         document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) cerrarModal(); });
@@ -3718,13 +4139,21 @@
             const avisos = opciones.avisos || [];
             const textoConfirmar = opciones.textoConfirmar || 'Sí, registrar de todos modos';
             const onConfirmar = opciones.onConfirmar;
+            const onCancelar = opciones.onCancelar;
             const resumenHTML = opciones.resumenHTML || '';
             const listaAvisos = avisos.map(function(a) {
                 return '<li style="margin-bottom:6px;">' + a + '</li>';
             }).join('');
-            const html = '<div class="advertencia-eliminar" style="background-color:rgba(255,152,0,0.12);border-color:var(--color-naranja);"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto"><strong style="color:var(--color-naranja);">Revisa antes de continuar</strong>Esta operación es válida, pero el resultado financiero requiere tu confirmación:' + '<ul style="margin:8px 0 0 18px;padding:0;">' + listaAvisos + '</ul></div></div>' + resumenHTML + '<div class="form-acciones"><button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="btn-primario" id="btn-confirmar-financiero"><i class="fas fa-check"></i> ' + escapeHTML(textoConfirmar) + '</button></div>';
+            const html = '<div class="advertencia-eliminar" style="background-color:rgba(255,152,0,0.12);border-color:var(--color-naranja);"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto"><strong style="color:var(--color-naranja);">Revisa antes de continuar</strong>Esta operación es válida, pero el resultado financiero requiere tu confirmación:' + '<ul style="margin:8px 0 0 18px;padding:0;">' + listaAvisos + '</ul></div></div>' + resumenHTML + '<div class="form-acciones"><button type="button" class="btn-secundario" id="btn-cancelar-financiero"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="btn-primario" id="btn-confirmar-financiero"><i class="fas fa-check"></i> ' + escapeHTML(textoConfirmar) + '</button></div>';
+            // Si había un formulario abierto (el del contrato), se aparta para devolverlo
+            // al confirmar o cancelar. Es la causa raíz de R2: sin esto el cargo
+            // confirmado se perdía y el formulario quedaba destruido. También sirve para
+            // los avisos de contrato (gemelo, importe en cero, fecha pasada al editar):
+            // al confirmar, el formulario original tiene que seguir ahí.
+            prepararRetornoModal();
             abrirModal(titulo, html);
             document.getElementById('btn-confirmar-financiero').addEventListener('click', function() { cerrarModal(); if (typeof onConfirmar === 'function') onConfirmar(); });
+            document.getElementById('btn-cancelar-financiero').addEventListener('click', function() { cerrarModal(); if (typeof onCancelar === 'function') onCancelar(); });
         }
         // Muestra los errores que impiden la operación (no se puede continuar).
         function mostrarErroresFinancieros(titulo, errores) {
@@ -4044,14 +4473,19 @@
                         camposHTML += '<div class="form-grupo"><label>' + c.label + '</label><input type="' + (c.type || 'text') + '" id="campo-' + c.name + '" ' + (c.required ? 'required' : '') + ' ' + (c.min !== undefined ? 'min="' + c.min + '"' : '') + ' value="' + valor + '"></div>';
                     }
                 });
-                const htmlForm = '<form id="form-crud"><input type="hidden" id="campo-id" value="' + (item ? item.id : '') + '">' + camposHTML + '<div class="form-acciones"><button type="button" class="btn-secundario" id="btn-crud-cancelar">Cancelar</button><button type="submit" class="btn-primario" id="btn-crud-guardar">' + (esEdicion ? 'Actualizar' : 'Guardar') + '</button></div></form>';
+                const htmlForm = '<form id="form-crud">' + cajaAvisosDeFormulario() + '<input type="hidden" id="campo-id" value="' + (item ? item.id : '') + '">' + camposHTML + '<div class="form-acciones"><button type="button" class="btn-secundario" id="btn-crud-cancelar">Cancelar</button><button type="submit" class="btn-primario" id="btn-crud-guardar">' + (esEdicion ? 'Actualizar' : 'Guardar') + '</button></div></form>';
                 abrirModal(esEdicion ? 'Editar ' + titulo : 'Nuevo ' + titulo, htmlForm);
                 document.getElementById('btn-crud-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
                 let guardando = false;
                 document.getElementById('form-crud').addEventListener('submit', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (guardando) return;
+                    // Antirrepetición real (v5.0.25): la bandera `guardando` no bastaba porque
+                    // se limpiaba en el finally del PRIMER manejador, que termina antes del
+                    // segundo envío; así se creaban dos clientes con un doble toque (D-04).
+                    const form = e.currentTarget || document.getElementById('form-crud');
+                    if (envioDuplicadoBloqueado(form) || guardando) return;
+                    marcarFormularioEnviado(form);
                     guardando = true;
                     try {
                         sanearCamposFormulario(campos.filter(function(c) { return c.type !== 'number'; }).map(function(c) { return 'campo-' + c.name; }));
@@ -4064,7 +4498,45 @@
                         });
                         const id = document.getElementById('campo-id').value;
                         const lista = window[coleccion];
-                        if (!Array.isArray(lista)) { console.error('Lista no disponible'); mostrarNotificacion('Error interno de datos', 'error'); guardando = false; return; }
+                        if (!Array.isArray(lista)) { console.error('Lista no disponible'); liberarMarcaAlCerrar(form); mostrarNotificacion('Error interno de datos', 'error'); guardando = false; return; }
+                        // Validación real en el código (no solo el required del HTML): así un
+                        // pegado o un autocompletado no mete clientes fantasma, teléfonos
+                        // basura ni estados fuera del catálogo (C-03, C-04, C-06, C-11).
+                        let avisosValidacion = [];
+                        if (config.validar) {
+                            const revision = config.validar(datos, { id: id, item: id ? lista.find(function(x) { return x.id === id; }) : null });
+                            if (!revision.ok) {
+                                // El diálogo de error aparca el formulario: lo escrito no se
+                                // pierde y el segundo intento ya no queda mudo (Z-03, Z-08).
+                                mostrarErroresSinPerderElFormulario('No se guardó el ' + titulo.toLowerCase(), revision.errores, form);
+                                return;
+                            }
+                            Object.keys(revision.datos).forEach(function(k) { datos[k] = revision.datos[k]; });
+                            if (revision.avisoTelefono) avisosValidacion.push(revision.avisoTelefono);
+                            // Un dato repetido PUEDE ser legítimo: se avisa y se pide confirmar,
+                            // no se bloquea en seco (C-01 mismo teléfono, C-02 mismo nombre).
+                            avisosValidacion = revision.avisos || [];
+                            const duplicadoJustificado = form.dataset.duplicadoConfirmado === '1';
+                            if (avisosValidacion.length && !duplicadoJustificado) {
+                                marcarFormularioEnviado(form);
+                                confirmarOperacionFinanciera({
+                                    titulo: 'Posible ' + titulo.toLowerCase() + ' repetido',
+                                    avisos: avisosValidacion,
+                                    textoConfirmar: 'Guardar de todos modos',
+                                    onConfirmar: function() {
+                                        // El formulario volvió a su sitio al cerrar la ventana.
+                                        const formDeNuevo = document.getElementById('form-crud');
+                                        if (formDeNuevo) {
+                                            formDeNuevo.dataset.duplicadoConfirmado = '1';
+                                            formDeNuevo.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                                        }
+                                    }
+                                });
+                                return;
+                            }
+                        }
+                        guardando = false;
+                        marcarFormularioEnviado(form);
                         if (id) {
                             const idx = lista.findIndex(function(x) { return x.id === id; });
                             if (idx !== -1) {
@@ -4095,6 +4567,7 @@
                         mostrarNotificacion(titulo + ' guardado correctamente', 'success');
                     } catch (err) {
                         console.error('Error guardando:', err);
+                        liberarMarcaAlCerrar(form);
                         mostrarNotificacion('Error al guardar: ' + err.message, 'error');
                     } finally { guardando = false; }
                 });
@@ -4116,7 +4589,21 @@
                     if (!Array.isArray(lista)) return;
                     const item = lista.find(function(x) { return x.id === id; });
                     if (!item) return;
-                    abrirModal('Eliminar ' + titulo.toLowerCase(), '<div class="advertencia-eliminar"><i class="fas fa-exclamation-triangle"></i><div class="texto"><strong>Esta acción moverá el ' + titulo.toLowerCase() + ' a la papelera</strong>Podrá restaurarse en los próximos 30 días.<div class="detalle-entidad"><div><strong>' + (item.nombre || 'Sin nombre') + '</strong></div></div></div></div><div class="form-grupo"><label>Motivo de eliminación (opcional)</label><textarea id="papelera-motivo-input" placeholder="Ej: Descontinuado, error de captura, etc." style="min-height:60px;"></textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="btn-peligro" id="btn-confirmar-papelera"><i class="fas fa-trash"></i> Mover a papelera</button></div>');
+                    // Aviso con el contexto que importa: contratos, dinero y tareas que se van
+                    // a la papelera con este registro (C-09: el aviso de la vista de mosaico no
+                    // decía nada de los contratos ni del dinero).
+                    let detalleContexto = '';
+                    if (typeof config.contextoEliminacion === 'function') {
+                        const ctx = config.contextoEliminacion(item) || {};
+                        const partes = [];
+                        if (ctx.contratos) partes.push('<strong>' + ctx.contratos + '</strong> contrato' + (ctx.contratos === 1 ? '' : 's'));
+                        if (ctx.tareas) partes.push('<strong>' + ctx.tareas + '</strong> tarea' + (ctx.tareas === 1 ? '' : 's') + ' vinculada' + (ctx.tareas === 1 ? '' : 's'));
+                        if (ctx.pagado > 0) partes.push('<strong>' + formatearMoneda(ctx.pagado) + '</strong> ya pagados');
+                        if (partes.length) {
+                            detalleContexto = '<div class="advertencia-eliminar" style="background-color:rgba(255,152,0,0.12);border-color:var(--color-naranja);margin-top:10px;"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto">Se irán con él a la papelera: ' + partes.join(' · ') + '. Ese dinero dejará de aparecer en Informes mientras esté en la papelera.</div></div>';
+                        }
+                    }
+                    abrirModal('Eliminar ' + titulo.toLowerCase(), '<div class="advertencia-eliminar"><i class="fas fa-exclamation-triangle"></i><div class="texto"><strong>Esta acción moverá el ' + titulo.toLowerCase() + ' a la papelera</strong>Podrá restaurarse en los próximos 30 días.<div class="detalle-entidad"><div><strong>' + escapeHTML(item.nombre || 'Sin nombre') + '</strong></div></div></div></div>' + detalleContexto + '<div class="form-grupo"><label>Motivo de eliminación (opcional)</label><textarea id="papelera-motivo-input" placeholder="Ej: Descontinuado, error de captura, etc." style="min-height:60px;"></textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="btn-peligro" id="btn-confirmar-papelera"><i class="fas fa-trash"></i> Mover a papelera</button></div>');
                     document.getElementById('btn-confirmar-papelera').addEventListener('click', function() {
                         const motivo = document.getElementById('papelera-motivo-input').value.trim();
                         agregarAPapelera(entidadHistorial, item, motivo);
@@ -4165,7 +4652,39 @@
                     { name: 'estado', label: 'Estado *', type: 'select', options: ESTADOS_CLIENTE, required: true },
                     { name: 'notasGenerales', label: 'Notas (opcional)', type: 'textarea' }
                 ],
+                validar: function(datos, contexto) {
+                    const r = validarClienteCapturado(datos, { id: contexto.id, estadoPrevio: contexto.item ? contexto.item.estado : '' });
+                    const avisos = [];
+                    if (r.ok) {
+                        // Teléfono o nombre repetidos: puede ser real (una familia con el mismo
+                        // apellido, un negocio con dos contactos), así que se confirma, no se bloquea.
+                        // El nombre se compara NORMALIZADO: "CLIENTE DUP UNO" y "Cliente Dup Úno"
+                        // son el mismo cliente aunque cambien acentos y espacios (D-09, D-10, Y-09).
+                        const nombreNorm = textoComparable(r.nombre);
+                        const choqueNombre = (clientes || []).find(function(c) {
+                            return c && c.id !== contexto.id && nombreNorm && textoComparable(c.nombre) === nombreNorm;
+                        });
+                        if (choqueNombre) avisos.push('Ya existe un cliente con el mismo nombre: <strong>' + escapeHTML(choqueNombre.nombre) + '</strong> (' + escapeHTML(choqueNombre.telefono || 'sin teléfono') + ').');
+                        if (r.repetido) avisos.push('El teléfono ' + escapeHTML(r.telefono) + ' ya está registrado en el ' + r.repetido.tipo + ' <strong>' + escapeHTML(r.repetido.nombre) + '</strong>.');
+                    }
+                    return {
+                        ok: r.ok, errores: r.errores, avisos: avisos,
+                        datos: { nombre: r.nombre, telefono: r.telefono, email: r.email, estado: r.estado }
+                    };
+                },
                 renderizar: renderizarClientes,
+                // Lo que se va con el cliente a la papelera: contratos, dinero ya pagado y
+                // tareas vinculadas. El aviso debe decirlo en las DOS vistas (C-09 y C-12).
+                contextoEliminacion: function(cliente) {
+                    const contratos = (cliente.contratos || []).length;
+                    let pagado = 0;
+                    (cliente.contratos || []).forEach(function(co) {
+                        if (!co) return;
+                        try { pagado += Number(calcularTotalesContrato(co).totalPagos) || 0; } catch (e) { /* contrato incompleto */ }
+                    });
+                    const tareasVinculadas = tareas.filter(function(t) { return t && t.clienteId === cliente.id; }).length;
+                    return { contratos: contratos, pagado: redondearMonetario(pagado), tareas: tareasVinculadas };
+                },
                 onEliminar: function(id) {
                     prospectos.forEach(function(p) { if (p && p.clienteId === id) p.clienteId = null; });
                     tareas = tareas.filter(function(t) { return t.clienteId !== id; });
@@ -4494,12 +5013,26 @@
         }
 
         /* ─── PROSPECTOS ─── */
+        // Un prospecto puede llegar incompleto (creado por el motor de campañas, importado o
+        // guardado por una versión anterior). El listado NO puede tumbar la pantalla por eso:
+        // antes `p.faseActual.toLowerCase()` reventaba y la lista se quedaba con lo viejo (P-15).
+        function faseSeguraProspecto(p) {
+            return (p && (p.faseActual || p.faseComercial)) || 'Interesado';
+        }
+        // Clase CSS de la etiqueta de fase, tolerante a fases raras o vacías.
+        function claseEtiquetaFase(fase) {
+            let f = String(fase === null || fase === undefined ? '' : fase).trim().toLowerCase();
+            try { if (typeof sinAcentos === 'function') f = sinAcentos(f); else f = f.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+            catch (e) { /* si el navegador no trae normalize, se queda la fase tal cual */ }
+            f = f.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+            return 'etiqueta-' + (f || 'sin-fase');
+        }
         function renderizarProspectos() {
             const filtroFase = document.getElementById('filtro-fase-prospecto').value;
             const busqueda = document.getElementById('buscar-prospecto').value.toLowerCase().trim();
             let f = prospectos.slice();
-            if (filtroFase !== 'todas') f = f.filter(function(p) { return p && p.faseActual === filtroFase; });
-            if (busqueda) f = f.filter(function(p) { return p && (p.nombre.toLowerCase().indexOf(busqueda) !== -1 || (p.telefono && p.telefono.indexOf(busqueda) !== -1)); });
+            if (filtroFase !== 'todas') f = f.filter(function(p) { return p && faseSeguraProspecto(p) === filtroFase; });
+            if (busqueda) f = f.filter(function(p) { return p && ((p.nombre || '').toLowerCase().indexOf(busqueda) !== -1 || (p.telefono && String(p.telefono).indexOf(busqueda) !== -1)); });
             actualizarToggleVista('prospectos');
             const vistaLista = esVistaLista('prospectos');
             if (vistaLista) {
@@ -4508,27 +5041,29 @@
                 if (f.length === 0) { cont.innerHTML = '<p class="mensaje-vacio">No hay prospectos</p>'; return; }
                 cont.className = 'lista-registros';
                 cont.innerHTML = f.map(function(p) {
-                    const cf = 'etiqueta-' + p.faseActual.toLowerCase().replace('ó', 'o').replace('á', 'a').replace('é', 'e');
+                    const fase = faseSeguraProspecto(p);
+                    const cf = claseEtiquetaFase(fase);
                     const ec = p.clienteId !== null && p.clienteId !== undefined;
                     const numTareas = tareas.filter(function(t) { return t.clienteId === 'pro_' + p.id; }).length;
-                    const inicial = (p.nombre || 'P').charAt(0).toUpperCase();
-                    return '<div class="lista-fila" onclick="verDetalleProspecto(\'' + p.id + '\')"><div class="lista-avatar avatar-prospecto">' + inicial + '</div><div class="lista-contenido"><div class="lista-titulo-linea"><span class="lista-titulo">' + p.nombre + '</span><span class="tarjeta-etiqueta ' + cf + '">' + p.faseActual + '</span>' + (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + '</div><div class="lista-datos">' + (p.telefono ? '<span><i class="fas fa-phone"></i> ' + p.telefono + '</span>' : '') + (p.email ? '<span><i class="fas fa-envelope"></i> ' + p.email + '</span>' : '') + '</div><div class="lista-meta">' + (numTareas > 0 ? '<span><i class="fas fa-tasks"></i> <strong>' + numTareas + '</strong> tarea' + (numTareas === 1 ? '' : 's') + '</span>' : '') + '<span><i class="fas fa-calendar"></i> Registrado: ' + formatearFecha(p.fechaRegistro) + '</span></div></div><div class="lista-acciones" onclick="event.stopPropagation()"><button class="btn-editar" onclick="editarProspecto(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + p.id + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' + (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + p.id + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') + '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div>';
+                    const inicial = escapeHTML((p.nombre || 'P').charAt(0).toUpperCase());
+                    return '<div class="lista-fila" onclick="verDetalleProspecto(\'' + escapeAtributoJS(p.id) + '\')"><div class="lista-avatar avatar-prospecto">' + inicial + '</div><div class="lista-contenido"><div class="lista-titulo-linea"><span class="lista-titulo">' + escapeHTML(p.nombre || 'Sin nombre') + '</span><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(fase) + '</span>' + (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + '</div><div class="lista-datos">' + (p.telefono ? '<span><i class="fas fa-phone"></i> ' + escapeHTML(p.telefono) + '</span>' : '') + (p.email ? '<span><i class="fas fa-envelope"></i> ' + escapeHTML(p.email) + '</span>' : '') + '</div><div class="lista-meta">' + (numTareas > 0 ? '<span><i class="fas fa-tasks"></i> <strong>' + numTareas + '</strong> tarea' + (numTareas === 1 ? '' : 's') + '</span>' : '') + '<span><i class="fas fa-calendar"></i> Registrado: ' + escapeHTML(formatearFecha(p.fechaRegistro)) + '</span></div></div><div class="lista-acciones" onclick="event.stopPropagation()"><button class="btn-editar" onclick="editarProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + escapeAtributoJS(p.id) + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' + (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') + '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div>';
                 }).join('');
             } else {
                 const cont = document.getElementById('lista-prospectos');
                 if (cont) cont.className = 'mosaico-grid';
                 renderizarMosaicos({
                     contenedorId: 'lista-prospectos', items: f, textoVacio: 'No hay prospectos',
-                    onCardClick: function(p) { return 'verDetalleProspecto(\'' + p.id + '\')'; },
+                    onCardClick: function(p) { return 'verDetalleProspecto(\'' + escapeAtributoJS(p.id) + '\')'; },
                     renderContenido: function(p) {
-                        const cf = 'etiqueta-' + p.faseActual.toLowerCase().replace('ó', 'o').replace('á', 'a').replace('é', 'e');
+                        const fase = faseSeguraProspecto(p);
+                        const cf = claseEtiquetaFase(fase);
                         const ec = p.clienteId !== null && p.clienteId !== undefined;
                         const numTareas = tareas.filter(function(t) { return t.clienteId === 'pro_' + p.id; }).length;
-                        return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + p.nombre + '</div></div><div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + p.faseActual + '</span>' + (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') + '</div><div class="mosaico-separador"></div><div class="mosaico-detalle">' + (p.telefono ? '<div><i class="fas fa-phone"></i> ' + p.telefono + '</div>' : '') + (p.email ? '<div><i class="fas fa-envelope"></i> ' + p.email + '</div>' : '') + '<div><small>Registrado: ' + formatearFecha(p.fechaRegistro) + '</small></div></div>';
+                        return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + escapeHTML(p.nombre || 'Sin nombre') + '</div></div><div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(fase) + '</span>' + (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') + '</div><div class="mosaico-separador"></div><div class="mosaico-detalle">' + (p.telefono ? '<div><i class="fas fa-phone"></i> ' + escapeHTML(p.telefono) + '</div>' : '') + (p.email ? '<div><i class="fas fa-envelope"></i> ' + escapeHTML(p.email) + '</div>' : '') + '<div><small>Registrado: ' + escapeHTML(formatearFecha(p.fechaRegistro)) + '</small></div></div>';
                     },
                     renderAcciones: function(p) {
                         const ec = p.clienteId !== null && p.clienteId !== undefined;
-                        return '<button class="btn-editar" onclick="editarProspecto(\'' + p.id + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + p.id + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' + (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + p.id + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') + '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + p.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
+                        return '<button class="btn-editar" onclick="editarProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + escapeAtributoJS(p.id) + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' + (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') + '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>';
                     }
                 });
             }
@@ -4538,24 +5073,100 @@
             const ee = prospecto !== null && prospecto !== undefined;
             let opf = '';
             fasesDisponiblesParaMiRol().forEach(function(f) { const sel = prospecto && prospecto.faseActual === f ? 'selected' : ''; opf += '<option value="' + f + '" ' + sel + '>' + f + '</option>'; });
-            const html = '<form id="form-prospecto"><input type="hidden" id="prospecto-id" value="' + (prospecto ? prospecto.id : '') + '"><div class="form-grupo"><label>Nombre *</label><input type="text" id="prospecto-nombre" required value="' + (prospecto ? prospecto.nombre : '') + '"></div><div class="form-grupo"><label>Teléfono (opcional)</label><input type="text" id="prospecto-telefono" value="' + (prospecto ? prospecto.telefono : '') + '"></div><div class="form-grupo"><label>Email (opcional)</label><input type="email" id="prospecto-email" value="' + (prospecto ? prospecto.email : '') + '"></div><div class="form-grupo"><label>Fase *</label><select id="prospecto-fase" required>' + opf + '</select></div><div class="form-grupo"><label>Notas (opcional)</label><textarea id="prospecto-notas">' + (prospecto ? prospecto.notasGenerales : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-prospecto-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
+            const html = '<form id="form-prospecto">' + cajaAvisosDeFormulario() + '<input type="hidden" id="prospecto-id" value="' + (prospecto ? prospecto.id : '') + '"><div class="form-grupo"><label>Nombre *</label><input type="text" id="prospecto-nombre" required value="' + (prospecto ? prospecto.nombre : '') + '"></div><div class="form-grupo"><label>Teléfono (opcional)</label><input type="text" id="prospecto-telefono" value="' + (prospecto ? prospecto.telefono : '') + '"></div><div class="form-grupo"><label>Email (opcional)</label><input type="email" id="prospecto-email" value="' + (prospecto ? prospecto.email : '') + '"></div><div class="form-grupo"><label>Fase *</label><select id="prospecto-fase" required>' + opf + '</select></div><div class="form-grupo"><label>Notas (opcional)</label><textarea id="prospecto-notas">' + (prospecto ? prospecto.notasGenerales : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-prospecto-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
             abrirModal(ee ? 'Editar Prospecto' : 'Nuevo Prospecto', html);
             document.getElementById('btn-prospecto-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
             document.getElementById('form-prospecto').addEventListener('submit', function(e) {
                 e.preventDefault(); e.stopPropagation();
+                // Antirrepetición: el segundo envío del MISMO formulario en el mismo
+                // instante (doble toque o pegado/autocompletado) no crea otro prospecto.
+                const form = e.currentTarget || document.getElementById('form-prospecto');
+                if (envioDuplicadoBloqueado(form)) return;
+                marcarFormularioEnviado(form);
                 sanearCamposFormulario(['prospecto-nombre', 'prospecto-telefono', 'prospecto-notas']);
                 const id = document.getElementById('prospecto-id').value;
-                const nombre = document.getElementById('prospecto-nombre').value.trim();
-                const telefono = document.getElementById('prospecto-telefono').value.trim();
+                const nombre = limpiarTextoLibre(document.getElementById('prospecto-nombre').value, MAX_LARGO_NOMBRE);
+                const telefonoOriginal = document.getElementById('prospecto-telefono').value.trim();
                 const email = document.getElementById('prospecto-email').value.trim();
                 const faseActual = document.getElementById('prospecto-fase').value;
-                const notasGenerales = document.getElementById('prospecto-notas').value.trim();
-                if (!nombre || !faseActual) { mostrarNotificacion('Campos obligatorios faltantes', 'warning'); return; }
-            if (fasesDisponiblesParaMiRol().indexOf(faseActual) === -1) { mostrarNotificacion('Tu rol no puede poner esa fase comercial.', 'warning'); return; }
-                if (email && !esCorreoValido(email)) { mostrarNotificacion('El correo no tiene un formato válido.', 'warning'); return; }
+                const notasGenerales = limpiarTextoLibre(document.getElementById('prospecto-notas').value, MAX_LARGO_NOTAS);
+                // Un dato imposible se bloquea en seco: sin nombre, sin fase, correo basura o
+                // un teléfono con letras / de un dígito (T-01..T-07). Antes entraba todo.
+                const erroresProspecto = [];
+                if (!nombre) erroresProspecto.push('El nombre del prospecto es obligatorio.');
+                if (!faseActual) erroresProspecto.push('Falta la fase comercial.');
+                if (email && !esCorreoValido(email)) erroresProspecto.push('El correo "' + email + '" no tiene un formato válido.');
+                // El candado de teléfono solo se aplica si CAMBIÓ: un prospecto viejo con
+                // teléfono basura debe poder corregirse en lo demás (Y-07, E-19, Z-07).
+                const telPrevio = ee ? String((obtenerProspecto(id) || {}).telefono === null || (obtenerProspecto(id) || {}).telefono === undefined ? '' : (obtenerProspecto(id) || {}).telefono).trim() : null;
+                const telefonoCambio = (telPrevio === null) || (textoComparable(telefonoOriginal) !== textoComparable(telPrevio));
+                const tel = validarTelefonoCapturado(telefonoOriginal);
+                let avisoTelefonoViejo = '';
+                if (telefonoCambio) {
+                    if (!tel.ok) erroresProspecto.push(tel.motivo);
+                } else if (telefonoOriginal && !tel.ok) {
+                    avisoTelefonoViejo = 'El teléfono guardado (' + telefonoOriginal + ') no es válido, pero como no lo cambiaste se conserva. Corrígelo cuando puedas: el botón de WhatsApp no funcionará con él.';
+                }
+                if (erroresProspecto.length) {
+                    mostrarErroresSinPerderElFormulario('No se guardó el prospecto', erroresProspecto, form);
+                    return;
+                }
+                // Se conserva el formato que escribió la persona (guiones, espacios): el CRM
+                // lo muestra tal cual y usa los dígitos para WhatsApp.
+                const telefono = String(document.getElementById('prospecto-telefono').value).trim();
+                if (avisoTelefonoViejo) mostrarNotificacion(avisoTelefonoViejo, 'warning');
+                if (fasesDisponiblesParaMiRol().indexOf(faseActual) === -1) { liberarMarcaAlCerrar(form); mostrarNotificacion('Tu rol no puede poner esa fase comercial.', 'warning'); return; }
+                // Duplicados: se normaliza el nombre (acentos y espacios) y se comparan los
+                // DÍGITOS del teléfono. Se AVISA y se pide confirmación, nunca se bloquea,
+                // porque un homónimo o un número compartido puede ser real (P-05, D-03, E-27).
+                if (!ee && form.dataset.duplicadoConfirmado !== '1') {
+                    const nombreNorm = textoComparable(nombre);
+                    const digitosNuevos = telefonoComparable(telefono);
+                    const repetido = prospectos.find(function(p) {
+                        if (!p) return false;
+                        const mismoNombre = textoComparable(p.nombre) === nombreNorm;
+                        const mismoTel = digitosNuevos && telefonoComparable(p.telefono) === digitosNuevos;
+                        return mismoTel || mismoNombre;
+                    });
+                    // El teléfono puede estar en un CLIENTE, no solo en otro prospecto (E-28).
+                    const choqueCliente = !repetido && digitosNuevos
+                        ? telefonoYaRegistrado(telefono, {}) : null;
+                    const avisosDuplicado = [];
+                    if (repetido) {
+                        const mismoNombre = textoComparable(repetido.nombre) === nombreNorm;
+                        if (mismoNombre && digitosNuevos && telefonoComparable(repetido.telefono) === digitosNuevos) {
+                            avisosDuplicado.push('Ya existe el prospecto <strong>' + escapeHTML(repetido.nombre) + '</strong> con el mismo nombre y el teléfono ' + escapeHTML(telefono) + '.');
+                        } else if (mismoNombre) {
+                            avisosDuplicado.push('Ya existe el prospecto <strong>' + escapeHTML(repetido.nombre) + '</strong> con el mismo nombre (teléfono ' + escapeHTML(repetido.telefono || 'sin teléfono') + ').');
+                        } else {
+                            avisosDuplicado.push('El teléfono ' + escapeHTML(telefono) + ' ya está en el prospecto <strong>' + escapeHTML(repetido.nombre) + '</strong>.');
+                        }
+                    } else if (choqueCliente) {
+                        avisosDuplicado.push('El teléfono ' + escapeHTML(telefono) + ' ya está registrado en el ' + choqueCliente.tipo + ' <strong>' + escapeHTML(choqueCliente.nombre) + '</strong>.');
+                    }
+                    if (avisosDuplicado.length) {
+                        // Aquí sí se marca: la captura es válida y ya hay una ventana de
+                        // confirmación encima, así que un segundo envío del mismo tick no debe
+                        // abrir otra (A-11). Si el practicante cancela, cerrarModal libera la marca.
+                        marcarFormularioEnviado(form);
+                        confirmarOperacionFinanciera({
+                            titulo: 'Posible prospecto repetido',
+                            avisos: avisosDuplicado,
+                            textoConfirmar: 'Guardar de todos modos',
+                            onConfirmar: function() {
+                                const formDeNuevo = document.getElementById('form-prospecto');
+                                if (formDeNuevo) {
+                                    formDeNuevo.dataset.duplicadoConfirmado = '1';
+                                    formDeNuevo.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                                }
+                            }
+                        });
+                        return;
+                    }
+                }
+                marcarFormularioEnviado(form);
                 if (ee) {
-                    const idx = prospectos.findIndex(function(p) { return p.id === id; });
-                    if (idx !== -1) {
+                    const idx = prospectos.findIndex(function(p) { return p.id === id; });                    if (idx !== -1) {
                         const p = prospectos[idx];
                         const copiaAnt = JSON.parse(JSON.stringify(p));
                         const cf = p.faseActual !== faseActual;
@@ -4582,15 +5193,33 @@
         function eliminarProspecto(id) {
             if (bloquearSiNoEsAdmin('eliminar prospectos')) return;
             const p = obtenerProspecto(id); if (!p) return;
-            abrirModal('Eliminar prospecto', '<div class="advertencia-eliminar"><i class="fas fa-exclamation-triangle"></i><div class="texto"><strong>Esta acción moverá el prospecto a la papelera</strong>Podrá restaurarse en los próximos 30 días.<div class="detalle-entidad"><div><strong>' + p.nombre + '</strong></div><div>Fase: ' + (p.faseActual || 'N/A') + (p.telefono ? ' · Tel: ' + p.telefono : '') + '</div></div></div></div><div class="form-grupo"><label>Motivo de eliminación (opcional)</label><textarea id="papelera-motivo-input" placeholder="Ej: No interesado, duplicado, etc." style="min-height:60px;"></textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="btn-peligro" id="btn-confirmar-papelera"><i class="fas fa-trash"></i> Mover a papelera</button></div>');
+            // El aviso dice lo que de verdad se va con él: sus participaciones en campañas
+            // (I-01: se quedaban huérfanas y seguían contando en los tableros de la campaña).
+            const partsDelProspecto = participaciones.filter(function(x) { return x && x.prospectId === id; });
+            const tareasDelProspecto = tareas.filter(function(t) { return t && t.clienteId === 'pro_' + id; });
+            let detalleExtra = '';
+            if (partsDelProspecto.length || tareasDelProspecto.length) {
+                const partes = [];
+                if (partsDelProspecto.length) partes.push('<strong>' + partsDelProspecto.length + '</strong> participación' + (partsDelProspecto.length === 1 ? '' : 'es') + ' en campañas');
+                if (tareasDelProspecto.length) partes.push('<strong>' + tareasDelProspecto.length + '</strong> tarea' + (tareasDelProspecto.length === 1 ? '' : 's'));
+                detalleExtra = '<div class="advertencia-eliminar" style="background-color:rgba(255,152,0,0.12);border-color:var(--color-naranja);margin-top:10px;"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto">También se irán con él a la papelera: ' + partes.join(' · ') + '. Así no quedan participaciones colgando en las campañas.</div></div>';
+            }
+            abrirModal('Eliminar prospecto', '<div class="advertencia-eliminar"><i class="fas fa-exclamation-triangle"></i><div class="texto"><strong>Esta acción moverá el prospecto a la papelera</strong>Podrá restaurarse en los próximos 30 días.<div class="detalle-entidad"><div><strong>' + escapeHTML(p.nombre || 'Sin nombre') + '</strong></div><div>Fase: ' + escapeHTML(p.faseActual || p.faseComercial || 'N/A') + (p.telefono ? ' · Tel: ' + escapeHTML(p.telefono) : '') + '</div></div></div></div>' + detalleExtra + '<div class="form-grupo"><label>Motivo de eliminación (opcional)</label><textarea id="papelera-motivo-input" placeholder="Ej: No interesado, duplicado, etc." style="min-height:60px;"></textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="btn-peligro" id="btn-confirmar-papelera"><i class="fas fa-trash"></i> Mover a papelera</button></div>');
             document.getElementById('btn-confirmar-papelera').addEventListener('click', function() {
                 const motivo = document.getElementById('papelera-motivo-input').value.trim();
                 tareas.filter(function(t) { return t.clienteId === 'pro_' + id; }).forEach(function(t) { agregarAPapelera('tarea', t, 'Tarea del prospecto eliminado: ' + p.nombre + (motivo ? ' — ' + motivo : '')); });
+                // Las participaciones se van a la papelera con el prospecto: antes quedaban
+                // huérfanas y las campañas seguían contándolas (I-01).
+                participaciones.filter(function(x) { return x && x.prospectId === id; }).forEach(function(x) {
+                    agregarAPapelera('participacion', x, 'Participación del prospecto eliminado: ' + (p.nombre || '') + (motivo ? ' — ' + motivo : ''));
+                });
                 agregarAPapelera('prospecto', p, motivo);
                 prospectos = prospectos.filter(function(x) { return x.id !== id; });
                 marcarEliminada('prospectos', id);
                 tareas.filter(function(t) { return t.clienteId === 'pro_' + id; }).forEach(function(t) { marcarEliminada('tareas', t.id); });
                 tareas = tareas.filter(function(t) { return t.clienteId !== 'pro_' + id; });
+                participaciones.filter(function(x) { return x && x.prospectId === id; }).forEach(function(x) { marcarEliminada('participaciones', x.id); });
+                participaciones = participaciones.filter(function(x) { return !x || x.prospectId !== id; });
                 registrarHistorial('prospecto', 'eliminar', 'Se movió prospecto a papelera: "' + p.nombre + '" (por ' + nombreUsuarioActual() + ')' + (motivo ? ' — Motivo: ' + motivo : ''), { id: id, nombre: p.nombre });
                 guardarDatos(); renderizarProspectos(); renderizarCalendario(); renderizarPapelera(); cerrarModal();
                 mostrarNotificacion('Prospecto movido a papelera', 'success');
@@ -4645,6 +5274,10 @@
             const cliente = obtenerCliente(clienteId);
             if (!cliente) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
             if (!cliente.telefono) { mostrarNotificacion('Sin teléfono registrado', 'warning'); return; }
+            // No se abre WhatsApp con un teléfono basura: antes la app abría wa.me/1 con
+            // toda tranquilidad y el practicante no entendía por qué no llegaba el mensaje (T-12..T-14).
+            const revision = validarTelefonoCapturado(cliente.telefono);
+            if (!revision.ok) { mostrarNotificacion(revision.motivo, 'warning'); return; }
             const numero = normalizarTelefonoWhatsApp(cliente.telefono);
             if (!numero) { mostrarNotificacion('Teléfono inválido', 'warning'); return; }
             let url = 'https://wa.me/' + numero;
@@ -4788,23 +5421,70 @@
             const descVal = tarea ? tarea.descripcion : '';
             const notasVal = tarea ? tarea.notas : '';
             const tipoVal = tarea ? tarea.tipo : (TIPOS_TAREA[0] || '');
-            const html = '<form id="form-tarea"><input type="hidden" id="tarea-id" value="' + (tarea ? tarea.id : '') + '"><div class="form-grupo"><label>Tipo *</label><select id="tarea-tipo" required>' + ot + '</select></div><div class="form-grupo"><label>Cliente / Prospecto</label><div class="buscador-cliente" id="buscador-cliente-container"><input type="text" class="buscador-input" id="tarea-cliente-input" placeholder="Escribe para buscar..." autocomplete="off" value="' + textoActual + '"><i class="fas fa-search buscador-icono"></i><div class="buscador-resultados" id="tarea-cliente-resultados"></div></div><input type="hidden" id="tarea-cliente" value="' + clienteActualId + '"></div><div class="form-grupo"><label>Fecha programada *</label><input type="date" id="tarea-fecha" required value="' + ft + '"></div><div class="form-grupo"><label>Descripción *</label><textarea id="tarea-descripcion" required>' + descVal + '</textarea></div><div class="form-grupo"><label>Notas (opcional)</label><textarea id="tarea-notas">' + notasVal + '</textarea></div><div class="form-grupo"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="tarea-completada" ' + ec + '><span>Completada</span></label></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-tarea-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
+            const html = '<form id="form-tarea">' + cajaAvisosDeFormulario() + '<input type="hidden" id="tarea-id" value="' + (tarea ? tarea.id : '') + '"><div class="form-grupo"><label>Tipo *</label><select id="tarea-tipo" required>' + ot + '</select></div><div class="form-grupo"><label>Cliente / Prospecto</label><div class="buscador-cliente" id="buscador-cliente-container"><input type="text" class="buscador-input" id="tarea-cliente-input" placeholder="Escribe para buscar..." autocomplete="off" value="' + textoActual + '"><i class="fas fa-search buscador-icono"></i><div class="buscador-resultados" id="tarea-cliente-resultados"></div></div><input type="hidden" id="tarea-cliente" value="' + clienteActualId + '"></div><div class="form-grupo"><label>Fecha programada *</label><input type="date" id="tarea-fecha" required value="' + ft + '"></div><div class="form-grupo"><label>Descripción *</label><textarea id="tarea-descripcion" required>' + descVal + '</textarea></div><div class="form-grupo"><label>Notas (opcional)</label><textarea id="tarea-notas">' + notasVal + '</textarea></div><div class="form-grupo"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="tarea-completada" ' + ec + '><span>Completada</span></label></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-tarea-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
             abrirModal(ee ? 'Editar Tarea' : 'Nueva Tarea', html);
             if (tipoVal) { const sel = document.getElementById('tarea-tipo'); if (sel) sel.value = tipoVal; }
             inicializarBuscadorCliente(opcionesVinculacion, clienteActualId);
             document.getElementById('btn-tarea-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
             document.getElementById('form-tarea').addEventListener('submit', function(e) {
                 e.preventDefault(); e.stopPropagation();
+                // Antirrepetición: dos toques seguidos creaban dos tareas idénticas (D-03).
+                const form = e.currentTarget || document.getElementById('form-tarea');
+                if (envioDuplicadoBloqueado(form)) return;
+                marcarFormularioEnviado(form);
                 sanearCamposFormulario(['tarea-descripcion', 'tarea-notas']);
                 const ee2 = document.getElementById('tarea-id').value !== '';
                 const id = document.getElementById('tarea-id').value;
                 const tipo = document.getElementById('tarea-tipo').value;
                 const clid = document.getElementById('tarea-cliente').value || null;
                 const fecha = document.getElementById('tarea-fecha').value;
-                const desc = document.getElementById('tarea-descripcion').value.trim();
-                const not = document.getElementById('tarea-notas').value.trim();
+                const desc = limpiarTextoLibre(document.getElementById('tarea-descripcion').value, MAX_LARGO_DESCRIPCION);
+                const not = limpiarTextoLibre(document.getElementById('tarea-notas').value, MAX_LARGO_NOTAS);
                 const comp = document.getElementById('tarea-completada').checked;
-                if (!tipo || !fecha || !desc) { mostrarNotificacion('Campos obligatorios faltantes', 'warning'); return; }
+                // Un dato imposible se bloquea en seco: sin tipo, sin fecha o sin descripción
+                // (ya lo hacía), con una fecha fuera de rango (F-01, F-02) o apuntando a un
+                // cliente/prospecto que no existe (R-05, I-02: esas tareas nunca aparecían).
+                const erroresTarea = [];
+                if (!tipo || !fecha || !desc) erroresTarea.push('Faltan campos obligatorios: tipo, fecha o descripción.');
+                if (fecha && (anioDeFechaISO(fecha) < MIN_ANIO_TAREA || anioDeFechaISO(fecha) > MAX_ANIO_TAREA)) {
+                    erroresTarea.push('La fecha de la tarea no es válida (año ' + anioDeFechaISO(fecha) + '). Debe estar entre ' + MIN_ANIO_TAREA + ' y ' + MAX_ANIO_TAREA + '.');
+                }
+                if (clid && !referenciaExiste(clid)) {
+                    erroresTarea.push('El cliente o prospecto seleccionado ya no existe. Elige otro o déjalo sin vincular.');
+                }
+                if (erroresTarea.length) {
+                    mostrarErroresSinPerderElFormulario('No se guardó la tarea', erroresTarea, form);
+                    return;
+                }
+                // Tarea repetida (mismo tipo, misma fecha, misma descripción): se avisa y se
+                // pide confirmar, porque dos visitas el mismo día sí pueden ser reales.
+                // El texto se compara normalizado (acentos y espacios) para no dejar pasar
+                // la misma tarea escrita distinto (R-01, D-15, Y-14).
+                if (!ee2 && form.dataset.duplicadoConfirmado !== '1') {
+                    const descNorm = textoComparable(desc);
+                    const repetida = tareas.find(function(t) {
+                        return t && t.tipo === tipo && t.fecha === fecha &&
+                            textoComparable(t.descripcion) === descNorm &&
+                            (t.clienteId || null) === clid;
+                    });
+                    if (repetida) {
+                        marcarFormularioEnviado(form);
+                        confirmarOperacionFinanciera({
+                            titulo: 'Posible tarea repetida',
+                            avisos: ['Ya hay una tarea igual (' + escapeHTML(tipo) + ', ' + escapeHTML(formatearFecha(fecha)) + ', «' + escapeHTML(desc) + '»). Si es otra visita real, confírmalo.'],
+                            textoConfirmar: 'Guardar de todos modos',
+                            onConfirmar: function() {
+                                const formDeNuevo = document.getElementById('form-tarea');
+                                if (formDeNuevo) {
+                                    formDeNuevo.dataset.duplicadoConfirmado = '1';
+                                    formDeNuevo.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                                }
+                            }
+                        });
+                        return;
+                    }
+                }
+                marcarFormularioEnviado(form);
                 if (ee2) {
                     const idx = tareas.findIndex(function(t) { return t.id === id; });
                     if (idx !== -1) {
@@ -4937,27 +5617,30 @@
             const e = opts.entidad;
             const tipo = opts.tipo;
             const tareasVinc = opts.tareas;
-            const subtitulo = opts.subtitulo || '';
-            let accionesHTML = '<button class="btn-primario" onclick="cerrarModal(); ' + (tipo === 'cliente' ? 'CRUD.clientes.editar' : 'editarProspecto') + '(\'' + e.id + '\')"><i class="fas fa-edit"></i> Editar</button><button class="btn-morado" onclick="cerrarModal(); abrirTareaParaCliente(\'' + e.id + '\', \'' + tipo + '\')"><i class="fas fa-plus"></i> Nueva tarea</button>';
+            // Todo dato del usuario se escapa: un nombre importado con <img onerror> se
+            // ejecutaba al abrir la ficha (P-12). El título del modal sigue siendo texto plano.
+            const subtitulo = escapeHTML(opts.subtitulo || '');
+            const faseDetalle = (tipo === 'prospecto') ? faseSeguraProspecto(e) : e.estado;
+            let accionesHTML = '<button class="btn-primario" onclick="cerrarModal(); ' + (tipo === 'cliente' ? 'CRUD.clientes.editar' : 'editarProspecto') + '(\'' + escapeAtributoJS(e.id) + '\')"><i class="fas fa-edit"></i> Editar</button><button class="btn-morado" onclick="cerrarModal(); abrirTareaParaCliente(\'' + escapeAtributoJS(e.id) + '\', \'' + tipo + '\')"><i class="fas fa-plus"></i> Nueva tarea</button>';
             if (tipo === 'cliente') {
-                accionesHTML += '<button class="btn-naranja" onclick="cerrarModal(); mostrarFormularioContrato(\'' + e.id + '\')"><i class="fas fa-file-contract"></i> Nuevo contrato</button>';
-                if (e.telefono) accionesHTML += '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + e.id + '\')"><i class="fab fa-whatsapp"></i> WhatsApp</button>';
+                accionesHTML += '<button class="btn-naranja" onclick="cerrarModal(); mostrarFormularioContrato(\'' + escapeAtributoJS(e.id) + '\')"><i class="fas fa-file-contract"></i> Nuevo contrato</button>';
+                if (e.telefono) accionesHTML += '<button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + escapeAtributoJS(e.id) + '\')"><i class="fab fa-whatsapp"></i> WhatsApp</button>';
             } else {
-                if (!e.clienteId) accionesHTML += '<button class="btn-verde" onclick="cerrarModal(); convertirProspecto(\'' + e.id + '\')"><i class="fas fa-user-check"></i> Convertir a cliente</button>';
+                if (!e.clienteId) accionesHTML += '<button class="btn-verde" onclick="cerrarModal(); convertirProspecto(\'' + escapeAtributoJS(e.id) + '\')"><i class="fas fa-user-check"></i> Convertir a cliente</button>';
             }
-            const campo = function(l, v) { return '<div class="detalle-campo"><span class="lbl">' + l + '</span><span class="val">' + (v || 'No especificado') + '</span></div>'; };
+            const campo = function(l, v) { return '<div class="detalle-campo"><span class="lbl">' + escapeHTML(l) + '</span><span class="val">' + (v ? escapeHTML(v) : 'No especificado') + '</span></div>'; };
             let datosHTML = '';
             if (tipo === 'cliente') {
                 const ec = e.estado === 'Activo' ? 'etiqueta-interesado' : e.estado === 'Inactivo' ? 'etiqueta-inactivo' : 'etiqueta-cancelado';
-                datosHTML = '<div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + e.estado + '</span></div><div class="detalle-grid" style="margin-top:12px;">' + campo('Nombre', e.nombre) + campo('Teléfono', e.telefono) + campo('Email', e.email) + campo('Origen', e.faseOrigen) + campo('Fecha registro', formatearFecha(e.fechaRegistro)) + '</div>';
+                datosHTML = '<div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + escapeHTML(e.estado || 'Sin estado') + '</span></div><div class="detalle-grid" style="margin-top:12px;">' + campo('Nombre', e.nombre) + campo('Teléfono', e.telefono) + campo('Email', e.email) + campo('Origen', e.faseOrigen) + campo('Fecha registro', formatearFecha(e.fechaRegistro)) + '</div>';
             } else {
-                const cf = 'etiqueta-' + (e.faseActual || 'interesado').toLowerCase().replace('ó','o').replace('á','a').replace('é','e');
-                datosHTML = '<div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + (e.faseActual || 'Sin fase') + '</span>' + (e.clienteId ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Ya es cliente</span>' : '') + '</div><div class="detalle-grid" style="margin-top:12px;">' + campo('Nombre', e.nombre) + campo('Teléfono', e.telefono) + campo('Email', e.email) + campo('Fecha registro', formatearFecha(e.fechaRegistro)) + '</div>';
+                const cf = claseEtiquetaFase(faseDetalle);
+                datosHTML = '<div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(faseDetalle) + '</span>' + (e.clienteId ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Ya es cliente</span>' : '') + '</div><div class="detalle-grid" style="margin-top:12px;">' + campo('Nombre', e.nombre) + campo('Teléfono', e.telefono) + campo('Email', e.email) + campo('Fecha registro', formatearFecha(e.fechaRegistro)) + '</div>';
             }
             let notasHTML = '';
-            if (e.notasGenerales) notasHTML = '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas generales</div><div class="detalle-notas">' + e.notasGenerales + '</div></div>';
+            if (e.notasGenerales) notasHTML = '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas generales</div><div class="detalle-notas">' + escapeHTMLconSaltos(e.notasGenerales) + '</div></div>';
             const tareasHTML = construirListaTareasVinculadas(tareasVinc);
-            return '<div class="detalle-acciones">' + accionesHTML + '</div><div class="detalle-header"><div class="detalle-cliente">' + e.nombre + '</div><div class="detalle-festejado">' + subtitulo + '</div>' + datosHTML + '</div>' + notasHTML + tareasHTML;
+            return '<div class="detalle-acciones">' + accionesHTML + '</div><div class="detalle-header"><div class="detalle-cliente">' + escapeHTML(e.nombre || 'Sin nombre') + '</div><div class="detalle-festejado">' + subtitulo + '</div>' + datosHTML + '</div>' + notasHTML + tareasHTML;
         }
 
         function construirListaTareasVinculadas(tareasVinc) {
@@ -5006,11 +5689,13 @@
             if (clienteActual) infoClienteHTML = '<div class="form-grupo" id="contrato-info-cliente"><div style="background-color:var(--color-bg-terciario);padding:12px;border-radius:var(--border-radius);border-left:3px solid var(--color-acento);"><p style="margin:4px 0;font-size:14px;color:var(--color-texto-primario);"><strong>' + clienteActual.nombre + '</strong></p><p style="margin:4px 0;font-size:13px;color:var(--color-texto-secundario);">Tel: ' + clienteActual.telefono + (clienteActual.email ? ' | ' + clienteActual.email : '') + '</p><p style="margin:4px 0;font-size:13px;color:var(--color-texto-secundario);">Origen: ' + (clienteActual.faseOrigen || 'No especificado') + ' | Estado: ' + clienteActual.estado + '</p></div></div>';
             let op = '<option value="">Seleccionar...</option>';
             let paquetesVinculables = 0;
+            let primerPaqueteVinculable = '';
             paquetes.forEach(function(p) {
                 if (!paqueteEsVinculable(p)) return;
                 const esActual = contrato && contrato.paqueteId === p.id;
                 if (!paqueteEsVinculable(p) && !esActual) return;
                 paquetesVinculables++;
+                if (!primerPaqueteVinculable) primerPaqueteVinculable = p.id;
                 const sel = contrato && contrato.paqueteId === p.id ? 'selected' : '';
                 const pf = (p.precio || 0) - (p.descuento || 0);
                 const est = estatusPaquete(p);
@@ -5028,7 +5713,7 @@
                 os += '<option value="' + s.id + '" data-precio="' + pf + '" data-nombre="' + s.nombre + '" ' + sel + '>' + s.nombre + ' - ' + formatearMoneda(pf) + '</option>';
             });
             if (serviciosIndividualesDisponibles === 0) os += '<option value="" disabled>— No hay servicios con precio —</option>';
-            const html = '<form id="form-contrato"><input type="hidden" id="contrato-id" value="' + (contrato ? contrato.id : '') + '"><input type="hidden" id="contrato-cliente-id" value="' + clienteActualId + '"><div class="form-grupo"><label>Cliente *</label><div class="cliente-wrapper"><div class="buscador-cliente" id="buscador-contrato-cliente-container"><input type="text" class="buscador-input" id="contrato-cliente-input" placeholder="Escribe para buscar cliente..." autocomplete="off" value="' + nombreClienteActual + '"><i class="fas fa-search buscador-icono"></i><div class="buscador-resultados" id="contrato-cliente-resultados"></div></div><button type="button" class="btn-nuevo-cliente-inline" id="btn-nuevo-cliente-contrato"><i class="fas fa-user-plus"></i> Nuevo</button></div></div>' + infoClienteHTML + '<div class="form-grupo"><label>Nombre del festejado *</label><input type="text" id="contrato-festejado" required value="' + (contrato ? contrato.festejado : '') + '"></div><div class="form-grupo"><label>Tipo *</label><select id="contrato-tipo" required><option value="paquete" ' + (tc === 'paquete' ? 'selected' : '') + '>Paquete</option><option value="solo-servicio" ' + (tc === 'solo-servicio' ? 'selected' : '') + '>Solo servicio</option></select></div><div id="seccion-paquete" style="' + (tc === 'paquete' ? '' : 'display:none;') + '"><div class="form-grupo"><label>Paquete *</label><select id="contrato-paquete" ' + (tc === 'paquete' ? 'required' : '') + '>' + op + '</select></div><div class="form-grupo"><label>Servicios adicionales</label><div class="servicios-dropdown" id="servicios-dropdown"><button type="button" class="servicios-dropdown-toggle" id="servicios-dropdown-toggle"><span id="servicios-dropdown-label"><i class="fas fa-plus-circle"></i> Seleccionar servicios</span><i class="fas fa-chevron-down icono"></i></button><div class="servicios-dropdown-panel">' + (serviciosCheckboxes || '<div style="padding:12px;text-align:center;color:var(--color-texto-secundario);font-size:13px;">No hay servicios registrados</div>') + '</div></div><div class="servicios-chips" id="servicios-chips"></div></div></div><div id="seccion-solo-servicio" style="' + (tc === 'solo-servicio' ? '' : 'display:none;') + '"><div class="form-grupo"><label>Servicio *</label><select id="contrato-servicio" ' + (tc === 'solo-servicio' ? 'required' : '') + '>' + os + '</select></div></div><div class="row-2col"><div class="form-grupo"><label>Fecha del evento *</label><input type="date" id="contrato-fecha-evento" required value="' + (contrato ? contrato.fechaEvento : '') + '"></div><div class="form-grupo"><label>Hora del evento</label><select id="contrato-hora-evento"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div><div class="form-grupo"><label>Dirección del evento religioso</label><input type="text" id="contrato-direccion-evento" value="' + (contrato ? contrato.direccionEvento : '') + '"></div><div class="row-2col"><div class="form-grupo"><label>Dirección de la recepción</label><input type="text" id="contrato-direccion-recepcion" value="' + (contrato ? contrato.direccionRecepcion : '') + '"></div><div class="form-grupo"><label>Hora de la recepción</label><select id="contrato-hora-recepcion"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div><div class="resumen-precios-caja" id="contrato-resumen-precios"><div class="titulo-resumen"><i class="fas fa-calculator"></i> Precio base del contrato</div><div id="resumen-precios-filas"></div><div class="fila-resumen total"><span>Total base</span><span class="valor" id="resumen-precios-total">$0</span></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-descuento"><i class="fas fa-tag"></i> Descuento</div><div id="descuento-contenedor"></div><div class="inline-add-movimiento" id="descuento-form"><input type="text" id="descuento-descripcion" placeholder="Descripción del descuento" style="flex:2;"><input type="number" id="descuento-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;"><button type="button" class="btn-agregar btn-agregar-descuento" id="btn-aplicar-descuento"><i class="fas fa-tag"></i> Aplicar</button></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-cargos"><i class="fas fa-plus-circle"></i> Cargos extras</div><div class="inline-add-movimiento"><input type="text" id="cargo-descripcion" placeholder="Descripción del cargo" style="flex:2;"><input type="number" id="cargo-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;"><button type="button" class="btn-agregar btn-agregar-cargo" id="btn-agregar-cargo"><i class="fas fa-plus"></i> Agregar</button></div><div id="cargos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-pagos"><i class="fas fa-coins"></i> Pagos</div><div class="inline-add-movimiento"><input type="number" id="contrato-nuevo-pago" placeholder="Monto del pago" min="0" step="100" style="flex:1;"><button type="button" class="btn-agregar btn-agregar-pago" id="btn-agregar-pago"><i class="fas fa-plus"></i> Registrar pago</button></div><div id="pagos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div></div><div id="coherencia-financiera" style="display:none;"></div><div class="resumen-financiero-caja" id="contrato-resumen-financiero"><div class="titulo"><i class="fas fa-chart-line"></i> Resumen financiero</div><div class="fila"><span class="lbl">Precio base</span><span class="vlr" id="resumen-precio-base">$0</span></div><div class="fila"><span class="lbl">Cargos extras</span><span class="vlr" id="resumen-cargos-total">+$0</span></div><div class="fila desc"><span class="lbl">Descuento</span><span class="vlr" id="resumen-descuento">-$0</span></div><div class="fila total"><span class="lbl">Total a pagar</span><span class="vlr" id="resumen-total">$0</span></div><div class="fila pagado"><span class="lbl">Total pagado</span><span class="vlr" id="resumen-pagado">$0</span></div><div class="fila saldo"><span class="lbl">Saldo pendiente</span><span class="vlr" id="resumen-saldo">$0</span></div></div><div class="form-grupo" style="margin-top:16px;"><label>Estado *</label><select id="contrato-estado" required>' + ESTADOS_CONTRATO.map(function(e) { return '<option value="' + e + '" ' + (contrato && contrato.estado === e ? 'selected' : '') + '>' + e + '</option>'; }).join('') + '</select></div><div class="form-grupo"><label>Notas</label><textarea id="contrato-notas">' + (contrato ? contrato.notas : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-contrato-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar Contrato') + '</button></div></form>';
+            const html = '<form id="form-contrato">' + cajaAvisosDeFormulario() + '<input type="hidden" id="contrato-id" value="' + (contrato ? contrato.id : '') + '"><input type="hidden" id="contrato-cliente-id" value="' + clienteActualId + '"><div class="form-grupo"><label>Cliente *</label><div class="cliente-wrapper"><div class="buscador-cliente" id="buscador-contrato-cliente-container"><input type="text" class="buscador-input" id="contrato-cliente-input" placeholder="Escribe para buscar cliente..." autocomplete="off" value="' + nombreClienteActual + '"><i class="fas fa-search buscador-icono"></i><div class="buscador-resultados" id="contrato-cliente-resultados"></div></div><button type="button" class="btn-nuevo-cliente-inline" id="btn-nuevo-cliente-contrato"><i class="fas fa-user-plus"></i> Nuevo</button></div></div>' + infoClienteHTML + '<div class="form-grupo"><label>Nombre del festejado *</label><input type="text" id="contrato-festejado" required value="' + (contrato ? contrato.festejado : '') + '"></div><div class="form-grupo"><label>Tipo *</label><select id="contrato-tipo" required><option value="paquete" ' + (tc === 'paquete' ? 'selected' : '') + '>Paquete</option><option value="solo-servicio" ' + (tc === 'solo-servicio' ? 'selected' : '') + '>Solo servicio</option></select></div><div id="seccion-paquete" style="' + (tc === 'paquete' ? '' : 'display:none;') + '"><div class="form-grupo"><label>Paquete *</label><select id="contrato-paquete" ' + (tc === 'paquete' ? 'required' : '') + '>' + op + '</select></div><div class="form-grupo"><label>Servicios adicionales</label><div class="servicios-dropdown" id="servicios-dropdown"><button type="button" class="servicios-dropdown-toggle" id="servicios-dropdown-toggle"><span id="servicios-dropdown-label"><i class="fas fa-plus-circle"></i> Seleccionar servicios</span><i class="fas fa-chevron-down icono"></i></button><div class="servicios-dropdown-panel">' + (serviciosCheckboxes || '<div style="padding:12px;text-align:center;color:var(--color-texto-secundario);font-size:13px;">No hay servicios registrados</div>') + '</div></div><div class="servicios-chips" id="servicios-chips"></div></div></div><div id="seccion-solo-servicio" style="' + (tc === 'solo-servicio' ? '' : 'display:none;') + '"><div class="form-grupo"><label>Servicio *</label><select id="contrato-servicio" ' + (tc === 'solo-servicio' ? 'required' : '') + '>' + os + '</select></div></div><div class="row-2col"><div class="form-grupo"><label>Fecha del evento *</label><input type="date" id="contrato-fecha-evento" required value="' + (contrato ? contrato.fechaEvento : '') + '"></div><div class="form-grupo"><label>Hora del evento</label><select id="contrato-hora-evento"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div><div class="form-grupo"><label>Dirección del evento religioso</label><input type="text" id="contrato-direccion-evento" value="' + (contrato ? contrato.direccionEvento : '') + '"></div><div class="row-2col"><div class="form-grupo"><label>Dirección de la recepción</label><input type="text" id="contrato-direccion-recepcion" value="' + (contrato ? contrato.direccionRecepcion : '') + '"></div><div class="form-grupo"><label>Hora de la recepción</label><select id="contrato-hora-recepcion"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div><div class="resumen-precios-caja" id="contrato-resumen-precios"><div class="titulo-resumen"><i class="fas fa-calculator"></i> Precio base del contrato</div><div id="resumen-precios-filas"></div><div class="fila-resumen total"><span>Total base</span><span class="valor" id="resumen-precios-total">$0</span></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-descuento"><i class="fas fa-tag"></i> Descuento</div><div id="descuento-contenedor"></div><div class="inline-add-movimiento" id="descuento-form"><input type="text" id="descuento-descripcion" placeholder="Descripción del descuento" style="flex:2;"><input type="number" id="descuento-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;"><button type="button" class="btn-agregar btn-agregar-descuento" id="btn-aplicar-descuento"><i class="fas fa-tag"></i> Aplicar</button></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-cargos"><i class="fas fa-plus-circle"></i> Cargos extras</div><div class="inline-add-movimiento"><input type="text" id="cargo-descripcion" placeholder="Descripción del cargo" style="flex:2;"><input type="number" id="cargo-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;"><button type="button" class="btn-agregar btn-agregar-cargo" id="btn-agregar-cargo"><i class="fas fa-plus"></i> Agregar</button></div><div id="cargos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-pagos"><i class="fas fa-coins"></i> Pagos</div><div class="inline-add-movimiento"><input type="number" id="contrato-nuevo-pago" placeholder="Monto del pago" min="0" step="100" style="flex:1;"><button type="button" class="btn-agregar btn-agregar-pago" id="btn-agregar-pago"><i class="fas fa-plus"></i> Registrar pago</button></div><div id="pagos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div></div><div id="coherencia-financiera" style="display:none;"></div><div class="resumen-financiero-caja" id="contrato-resumen-financiero"><div class="titulo"><i class="fas fa-chart-line"></i> Resumen financiero</div><div class="fila"><span class="lbl">Precio base</span><span class="vlr" id="resumen-precio-base">$0</span></div><div class="fila"><span class="lbl">Cargos extras</span><span class="vlr" id="resumen-cargos-total">+$0</span></div><div class="fila desc"><span class="lbl">Descuento</span><span class="vlr" id="resumen-descuento">-$0</span></div><div class="fila total"><span class="lbl">Total a pagar</span><span class="vlr" id="resumen-total">$0</span></div><div class="fila pagado"><span class="lbl">Total pagado</span><span class="vlr" id="resumen-pagado">$0</span></div><div class="fila saldo"><span class="lbl">Saldo pendiente</span><span class="vlr" id="resumen-saldo">$0</span></div></div><div class="form-grupo" style="margin-top:16px;"><label>Estado *</label><select id="contrato-estado" required>' + ESTADOS_CONTRATO.map(function(e) { return '<option value="' + e + '" ' + (contrato && contrato.estado === e ? 'selected' : '') + '>' + e + '</option>'; }).join('') + '</select></div><div class="form-grupo"><label>Notas</label><textarea id="contrato-notas">' + (contrato ? contrato.notas : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-contrato-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar Contrato') + '</button></div></form>';
             abrirModal(titulo, html, true);
             let pagosArr = contrato && contrato.pagos ? contrato.pagos.slice() : [];
             let cargosArr = contrato && contrato.cargos ? contrato.cargos.slice() : [];
@@ -5208,10 +5893,10 @@
                     return { precio: pb, cargos: cargosVigentes };
                 })();
                 if (monto > baseActual.precio + baseActual.cargos) {
-                    mostrarErroresFinancieros('Descuento no permitido', [
+                    mostrarErroresSinPerderElFormulario('Descuento no permitido', [
                         'El descuento (' + formatearMoneda(monto) + ') es mayor que el total del contrato (' + formatearMoneda(baseActual.precio + baseActual.cargos) + ').',
                         'Un descuento así dejaría el importe a pagar en negativo.'
-                    ]);
+                    ], document.getElementById('form-contrato'));
                     return;
                 }
                 descuentoTemporal = { monto: monto, descripcion: desc };
@@ -5230,7 +5915,7 @@
                     { pagos: pagosArr, cargos: cargosArr, descuentoMonto: descuentoTemporal ? descuentoTemporal.monto : (contrato ? contrato.descuentoMonto : 0), precioBase: contrato ? contrato.precioBase : 0, precioFinal: contrato ? contrato.precioFinal : 0 },
                     { tipo: 'cargo', monto: m, opId: token }
                 );
-                if (revision.accion === 'bloquear') { mostrarErroresFinancieros('Cargo no permitido', revision.errores); return; }
+                if (revision.accion === 'bloquear') { mostrarErroresSinPerderElFormulario('Cargo no permitido', revision.errores, document.getElementById('form-contrato')); return; }
                 const registrar = function(confirmadoConAviso) {
                     const nuevoCargo = crearMovimientoFinanciero({ tipo: 'cargo', monto: m, nota: 'Cargo extra: ' + d, opId: token });
                     nuevoCargo.firma = firmaMovimiento((contrato && contrato.id) || 'nuevo', m, nuevoCargo.fecha, '');
@@ -5244,9 +5929,17 @@
                     el('cargo-descripcion').value = '';
                     el('cargo-monto').value = '';
                     renderizarCargos(); actualizarResumenFinanciero();
-                    mostrarNotificacion('Cargo agregado', 'success');
+                    // Si el contrato ya existe, el cargo se guarda de una vez (G-12).
+                    const guardado = persistirMovimientosDelFormulario();
+                    if (guardado) mostrarNotificacion('Cargo agregado y guardado en el contrato', 'success');
+                    else mostrarNotificacion('Cargo agregado. Se guardará con el contrato.', 'info');
                 };
+                // Aquí NO hay `form`: esto es el botón «Agregar cargo», no el envío del
+                // formulario. La ventana de confirmación aparta el formulario del contrato al
+                // abrirse y lo devuelve al cerrarse; la marca la pone el envío del contrato.
                 if (revision.accion === 'confirmar') {
+                    // abrirModal ya aparca el formulario del contrato antes de mostrar la
+                    // confirmación, y cerrarModal lo devuelve: el cargo confirmado sí queda.
                     confirmarOperacionFinanciera({
                         titulo: 'Confirmar cargo de ' + formatearMoneda(m),
                         avisos: revision.avisos,
@@ -5270,7 +5963,7 @@
                     { pagos: pagosArr, cargos: cargosArr, descuentoMonto: descuentoTemporal ? descuentoTemporal.monto : (contrato ? contrato.descuentoMonto : 0), precioBase: contrato ? contrato.precioBase : 0, precioFinal: contrato ? contrato.precioFinal : 0 },
                     { tipo: 'pago', monto: m, opId: token }
                 );
-                if (revision.accion === 'bloquear') { mostrarErroresFinancieros('Pago no permitido', revision.errores); return; }
+                if (revision.accion === 'bloquear') { mostrarErroresSinPerderElFormulario('Pago no permitido', revision.errores, document.getElementById('form-contrato')); return; }
                 const registrar = function(confirmadoConAviso) {
                     const nuevoPago = crearMovimientoFinanciero({ tipo: 'pago', monto: m, nota: 'Pago registrado', codigo: codigoNuevo, opId: token });
                     nuevoPago.firma = firmaMovimiento(contratoEnEdicion.id, m, nuevoPago.fecha, codigoNuevo);
@@ -5284,9 +5977,14 @@
                     renovarTokenOperacionPago('form-contrato');
                     mi.value = '';
                     renderizarPagos(); actualizarResumenFinanciero();
-                    mostrarNotificacion('Pago agregado', 'success');
+                    // Si el contrato ya existe, el pago se guarda de una vez (G-12).
+                    const guardado = persistirMovimientosDelFormulario();
+                    if (guardado) mostrarNotificacion('Pago agregado y guardado en el contrato', 'success');
+                    else mostrarNotificacion('Pago agregado. Se guardará con el contrato.', 'info');
                 };
+                // Igual que el cargo: aquí no existe `form` (es el botón del pago).
                 if (revision.accion === 'confirmar') {
+                    // El formulario del contrato se aparca solo (abrirModal) y vuelve al cerrar.
                     confirmarOperacionFinanciera({
                         titulo: 'Confirmar pago de ' + formatearMoneda(m),
                         avisos: revision.avisos,
@@ -5299,6 +5997,29 @@
                 registrar(false);
             });
             window.PDA = window.PDA || {};
+            // ─────── @JS-MOVIMIENTO-EN-FORMULARIO (v5.0.25) ───────
+            // Un pago o un cargo capturado dentro del formulario del contrato se persiste
+            // de inmediato si el contrato ya existe. Antes la app decía «Pago agregado»
+            // (éxito) y el movimiento se perdía al cerrar sin pulsar «Guardar Contrato»
+            // (hallazgo G-12): el practicante creía haber registrado un anticipo inexistente.
+            function persistirMovimientosDelFormulario() {
+                if (!contrato || !contrato.id) return false;
+                try {
+                    const cliDueno = obtenerCliente(el('contrato-cliente-id').value);
+                    const coReal = (cliDueno && (cliDueno.contratos || []).filter(function(x) { return x && x.id === contrato.id; })[0]) || contrato;
+                    coReal.pagos = pagosArr.slice();
+                    coReal.cargos = cargosArr.slice();
+                    coReal._modificadoPor = nombreUsuarioActual();
+                    coReal._fechaModificacion = obtenerFechaHoraActual();
+                    if (cliDueno && cliDueno.id) marcarSucia('clientes', cliDueno.id);
+                    guardarDatos();
+                    return true;
+                } catch (e) {
+                    console.warn('No se pudieron persistir los movimientos del formulario:', e);
+                    mostrarNotificacion('El movimiento se ve en pantalla, pero no se pudo guardar: ' + (e && e.message ? e.message : e), 'error');
+                    return false;
+                }
+            }
             // ─────── @JS-ANULACION-FINANCIERA (v4.8.7) ───────
             // Un pago NUNCA se borra físicamente: se ANULA conservando identificador, monto
             // original, quién lo creó y quién lo anuló, cuándo y por qué motivo.
@@ -5330,8 +6051,12 @@
                     + '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:var(--color-texto-secundario);">Saldo pendiente actual</span><span style="font-weight:600;">' + formatearMoneda(saldoActual) + '</span></div>'
                     + '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:var(--color-texto-secundario);">Saldo después de anular</span><span style="font-weight:600;color:var(--color-naranja);">' + formatearMoneda(saldoFinal) + '</span></div>'
                     + '</div>'
-                    + '<div class="form-acciones"><button type="button" class="btn-secundario" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="btn-peligro" id="btn-confirmar-anulacion"><i class="fas fa-ban"></i> Anular movimiento</button></div>';
+                    + '<div class="form-acciones"><button type="button" class="btn-secundario" id="btn-cancelar-anulacion" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="btn-peligro" id="btn-confirmar-anulacion"><i class="fas fa-ban"></i> Anular movimiento</button></div>';
 
+                // El formulario del contrato se aparta antes de abrir esta ventana: al
+                // terminar (confirmar o cancelar) se devuelve tal cual, así el código que
+                // sigue no toca nodos muertos. Causa raíz de R1 y R3.
+                prepararRetornoModal();
                 abrirModal(esPago ? 'Anular pago' : 'Anular cargo extra', aviso);
 
                 const boton = document.getElementById('btn-confirmar-anulacion');
@@ -5372,6 +6097,13 @@
                     registrarHistorial(esPago ? 'pago' : 'cargo', 'eliminar',
                         'Se anuló ' + (esPago ? 'pago' : 'cargo extra') + ' de ' + formatearMoneda(montoItem) + ' — Motivo: ' + motivo,
                         { id: item.id, nombre: formatearMoneda(montoItem), detalle: 'ID original: ' + item.id + (esPago && item.codigo ? ' · Código: ' + item.codigo : '') + ' · Registrado por: ' + (item.creadoPor || item.registradoPor || 'desconocido') });
+                    // ── La anulación se PERSISTE sola (v5.0.25) ──
+                    // Antes solo se mutaba en memoria y el pago "revivía" al recargar. El
+                    // usuario no tiene que acordarse de pulsar «Guardar Contrato»: la
+                    // anulación queda escrita en el contrato, en el almacén y en el historial.
+                    persistirMovimientosDelFormulario();
+                    // El formulario del contrato vuelve solo al cerrar la ventana de anulación
+                    // (cerrarModal devuelve lo que estaba debajo), así que ya se puede repintar.
                     if (esPago) renderizarPagos(); else renderizarCargos();
                     actualizarResumenFinanciero();
                     cerrarModal();
@@ -5392,8 +6124,15 @@
             el('btn-contrato-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); descuentoTemporal = null; cerrarModal(); });
             el('form-contrato').addEventListener('submit', function(e) {
                 e.preventDefault(); e.stopPropagation();
+                // Antirrepetición: el doble clic en «Guardar Contrato» creaba DOS contratos
+                // idénticos de $25,000 (D-04/D-05) y el formulario cerrado podía reenviarse (D-11).
+                const form = e.currentTarget || document.getElementById('form-contrato');
+                // Marca al principio para frenar el doble envío del mismo tick (D-04/D-05, A-11),
+                // pero TODO camino que no guarda la libera (V-01, W-02, A-05, Z-01..Z-04).
+                if (envioDuplicadoBloqueado(form)) return;
+                marcarFormularioEnviado(form);
                 sanearCamposFormulario(['contrato-festejado', 'contrato-direccion-evento', 'contrato-direccion-recepcion', 'contrato-notas', 'descuento-descripcion', 'cargo-descripcion', 'contrato-nuevo-pago']);
-                guardarContrato(ee, contrato, pagosArr, cargosArr, pagosRecientes);
+                guardarContrato(ee, contrato, pagosArr, cargosArr, pagosRecientes, false, form);
             });
             if (contrato) {
                 if (contrato.horaEvento) el('contrato-hora-evento').value = contrato.horaEvento;
@@ -5401,6 +6140,15 @@
             }
             renderizarChipsServicios();
             renderizarDescuento();
+            // Ronda 2: en un contrato nuevo, si ya hay un cliente elegido y solo hay un paquete
+            // vinculable, se elige ese paquete. Así el practicante no tiene que "elegir" cuando
+            // solo hay una opción (era lo que dejaba mudo el segundo intento de guardar en
+            // V-01/A-05), pero un contrato SIN cliente sigue sin paquete y sin poder guardarse
+            // (K-04: el candado de «Selecciona un paquete» se conserva).
+            if (!contrato && primerPaqueteVinculable && clienteActualId) {
+                const selPaq = el('contrato-paquete');
+                if (selPaq && !selPaq.value) { selPaq.value = primerPaqueteVinculable; }
+            }
             renderizarPagos();
             renderizarCargos();
             calcularPrecioBaseContrato();
@@ -5410,13 +6158,27 @@
         // ─────── @JS-CONTRATO-SEGURO (v4.8) ───────
         // Se envuelve todo en try/catch para que ninguna excepción deje el formulario colgado,
         // y se fusiona con el contrato existente para no perder campos ni movimientos.
-        function guardarContrato(ee, contratoOriginal, pagosArr, cargosArr, pagosRecientes) {
+        function guardarContrato(ee, contratoOriginal, pagosArr, cargosArr, pagosRecientes, yaRevisado, formEnviado) {
             const el = function(id) { return document.getElementById(id); };
+            // El formulario se marca como enviado SOLO cuando la captura ya pasó la validación
+            // (justo antes de guardar o de pedir la confirmación). Si el envío solo sirvió para
+            // mostrar un error, la marca no se pone y el practicante puede corregir y reintentar.
+            const marcar = function() {
+                if (formEnviado) marcarFormularioEnviado(formEnviado);
+                if (window.__TRAZA_) window.__TRAZA_.push('    MARCAR-DENTRO guardarContrato formEnviado=' + (formEnviado ? formEnviado.id : 'NULL'));
+            };
+            if (window.__TRAZA_) window.__TRAZA_.push('    guardarContrato(ee=' + ee + ')');
             try {
                 const ci = el('contrato-id').value;
                 const clid = el('contrato-cliente-id').value;
                 const tipo = el('contrato-tipo').value;
                 const fest = el('contrato-festejado').value.trim();
+                if (window.__TRAZA_) {
+                    const todos = document.querySelectorAll('#contrato-festejado');
+                    window.__TRAZA_.push('    fest leido=' + JSON.stringify(fest) + ' nodos=' + todos.length +
+                        ' valores=' + JSON.stringify([].slice.call(todos).map(function(x) { return x.value; })) +
+                        ' idEnForm=' + JSON.stringify(el('contrato-id').value));
+                }
                 const fe = el('contrato-fecha-evento').value;
                 const he = el('contrato-hora-evento').value;
                 const de = el('contrato-direccion-evento').value.trim();
@@ -5430,27 +6192,103 @@
                     document.querySelectorAll('.servicio-check-form:checked').forEach(function(cb) { sids.push(cb.value); });
                 } else { sid = el('contrato-servicio').value; }
 
+                if (window.__TRAZA_) window.__TRAZA_.push('    valores clid=' + JSON.stringify(clid) + ' fest=' + JSON.stringify(fest) + ' fe=' + JSON.stringify(fe) + ' est=' + JSON.stringify(est) + ' tipo=' + JSON.stringify(tipo) + ' pid=' + JSON.stringify(pid));
                 // ── Validación completa ──
-                if (!clid) { mostrarNotificacion('Selecciona un cliente', 'warning'); return; }
+                // Todo camino que NO guarda libera la marca de envío y aparca el formulario
+                // para el diálogo: el practicante corrige y vuelve a intentar en la misma
+                // ventana (ronda 2: V-01/W-02/Z-04; antes el botón quedaba mudo).
+                const noGuardado = function(titulo, errores, form) {
+                    const errs = errores || [titulo];
+                    if (window.__TRAZA_) window.__TRAZA_.push('    noGuardado(' + titulo + ')');
+                    mostrarErroresSinPerderElFormulario(titulo, errs, form || document.getElementById('form-contrato'));
+                };
+                if (!clid) { noGuardado('No se guardó el contrato', ['Selecciona un cliente.']); return; }
                 const c = obtenerCliente(clid);
-                if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
-                if (!fest || !fe || !est) { mostrarNotificacion('Faltan campos obligatorios: festejado, fecha del evento o estado.', 'warning'); return; }
-                if (tipo === 'paquete' && !pid) { mostrarNotificacion('Selecciona un paquete', 'warning'); return; }
-                if (tipo === 'solo-servicio' && !sid) { mostrarNotificacion('Selecciona un servicio', 'warning'); return; }
+                if (!c) { noGuardado('No se guardó el contrato', ['El cliente seleccionado no existe. Vuelve a elegirlo.']); return; }
+                if (!fest || !fe || !est) { noGuardado('No se guardó el contrato', ['Faltan campos obligatorios: festejado, fecha del evento o estado.']); return; }
+                if (tipo === 'paquete' && !pid) { noGuardado('No se guardó el contrato', ['Selecciona un paquete.']); return; }
+                if (tipo === 'solo-servicio' && !sid) { noGuardado('No se guardó el contrato', ['Selecciona un servicio.']); return; }
                 const hoyISO = obtenerFechaActual();
-                if (fe < '2000-01-01' || fe > '2100-12-31') { mostrarNotificacion('La fecha del evento no es válida.', 'warning'); return; }
-                if (!ee && fe < hoyISO) { mostrarNotificacion('La fecha del evento no puede estar en el pasado para un contrato nuevo.', 'warning'); return; }
+                if (fe < '2000-01-01' || fe > '2100-12-31') { noGuardado('No se guardó el contrato', ['La fecha del evento no es válida.']); return; }
+                if (!ee && fe < hoyISO) { noGuardado('No se guardó el contrato', ['La fecha del evento no puede estar en el pasado para un contrato nuevo.']); return; }
+
+                // ─────── @JS-CONTRATO-CONFIRMACIONES (v5.0.25) ───────
+                // Datos que PUEDEN ser legítimos no se bloquean: se avisan y se piden
+                // confirmar (K-06 contrato gemelo, K-09 contrato sin importe, K-12 fecha del
+                // evento en el pasado al editar). 'yaRevisado' evita repetir el aviso.
+                if (!yaRevisado) {
+                    const avisosContrato = [];
+                    let hayGemelo = false;
+                    const nombreComparable = textoComparable(fest);
+                    // Gemelo exacto: mismo festejado, misma fecha y mismo paquete.
+                    const dup = (c.contratos || []).find(function(x) {
+                        return x && x.id !== ci && textoComparable(x.festejado) === nombreComparable && x.fechaEvento === fe &&
+                            (x.paqueteId || null) === (pid || null) &&
+                            ((x.serviciosIds || []).slice().sort().join(',') === (sids || []).slice().sort().join(','));
+                    });
+                    // Mismo festejado (misma persona) pero OTRA fecha: una fecha mal tecleada
+                    // esquivaba el aviso de gemelo (D-17, Y-13). Se avisa igual.
+                    const mismoFestejado = (c.contratos || []).find(function(x) {
+                        return x && x.id !== ci && textoComparable(x.festejado) === nombreComparable && x.fechaEvento !== fe;
+                    });
+                    if (!ee && dup) {
+                        hayGemelo = true;
+                        avisosContrato.push('Ya existe un contrato de <strong>' + escapeHTML(c.nombre) + '</strong> para «' + escapeHTML(fest) + '» en la misma fecha (' + escapeHTML(formatearFecha(fe)) + ') con el mismo paquete. Si guardas este, quedarían <strong>dos contratos iguales</strong>.');
+                    } else if (!ee && mismoFestejado) {
+                        hayGemelo = true;
+                        avisosContrato.push('Ya existe un contrato de <strong>' + escapeHTML(c.nombre) + '</strong> para «' + escapeHTML(fest) + '» con otra fecha (' + escapeHTML(formatearFecha(mismoFestejado.fechaEvento)) + '). Verifica que no sea el mismo evento con la fecha mal tecleada.');
+                    }
+                    if (ee && fe < hoyISO) {
+                        avisosContrato.push('Vas a dejar este contrato con la fecha del evento en el pasado (' + escapeHTML(formatearFecha(fe)) + '). Los informes por fecha lo contarán como un evento ya ocurrido.');
+                    }
+                    const precioProyectado = (function() {
+                        if (tipo === 'paquete') {
+                            const pq = obtenerPaquete(pid);
+                            let pb = pq ? Math.max(0, (pq.precio || 0) - (pq.descuento || 0)) : 0;
+                            (sids || []).forEach(function(id) { const s = obtenerServicio(id); if (s) pb += Math.max(0, (s.precio || 0) - (s.descuento || 0)); });
+                            return pb;
+                        }
+                        const s = obtenerServicio(sid);
+                        return s ? Math.max(0, (s.precio || 0) - (s.descuento || 0)) : 0;
+                    })();
+                    const cargosVigentes = (cargosArr || []).filter(function(x) { return x && !x.eliminado; }).reduce(function(s2, x) { return s2 + (Number(x.monto) || 0); }, 0);
+                    const descVigente = descuentoTemporal ? (Number(descuentoTemporal.monto) || 0) : (ee && contratoOriginal ? (Number(contratoOriginal.descuentoMonto) || 0) : 0);
+                    const totalProyectado = redondearMonetario(precioProyectado + cargosVigentes - descVigente);
+                    if (totalProyectado <= 0) {
+                        avisosContrato.push('El contrato quedaría en <strong>' + formatearMoneda(totalProyectado) + '</strong> (sin importe). Normalmente significa que falta elegir el paquete o el precio.');
+                    }
+                    if (avisosContrato.length) {
+                        marcar();
+                        const baseRevision = Object.assign({}, (ee && contratoOriginal) ? contratoOriginal : {}, {
+                            id: ci || 'nuevo', pagos: pagosArr, cargos: cargosArr,
+                            descuentoMonto: descVigente, precioBase: precioProyectado, precioFinal: precioProyectado
+                        });
+                        confirmarOperacionFinanciera({
+                            titulo: hayGemelo ? 'Posible contrato repetido' : 'Revisa este contrato',
+                            avisos: avisosContrato,
+                            resumenHTML: resumenFinancieroHTML(calcularTotalesContrato(baseRevision), 0, false),
+                            textoConfirmar: 'Guardar el contrato de todos modos',
+                            onConfirmar: function() {
+                                // El formulario ya volvió a su sitio (lo devuelve cerrarModal).
+                                const formDeNuevo = el('form-contrato');
+                                if (formDeNuevo) liberarMarcaAlCerrar(formDeNuevo);
+                                guardarContrato(ee, contratoOriginal, pagosArr, cargosArr, pagosRecientes, true, formDeNuevo);
+                            }
+                        });
+                        return;
+                    }
+                }
 
                 // ── Precio base recalculado desde el catálogo (nunca se confía en el navegador) ──
                 let pb = 0;
                 if (tipo === 'paquete') {
                     const pq = obtenerPaquete(pid);
-                    if (!pq) { mostrarNotificacion('El paquete seleccionado ya no existe.', 'error'); return; }
+                    if (!pq) { noGuardado('No se guardó el contrato', ['El paquete seleccionado ya no existe. Vuelve a elegirlo.']); return; }
                     pb = Math.max(0, (pq.precio || 0) - (pq.descuento || 0));
                     sids.forEach(function(id) { const s = obtenerServicio(id); if (s) pb += Math.max(0, (s.precio || 0) - (s.descuento || 0)); });
                 } else {
                     const s = obtenerServicio(sid);
-                    if (!s) { mostrarNotificacion('El servicio seleccionado ya no existe.', 'error'); return; }
+                    if (!s) { noGuardado('No se guardó el contrato', ['El servicio seleccionado ya no existe. Vuelve a elegirlo.']); return; }
                     pb = Math.max(0, (s.precio || 0) - (s.descuento || 0));
                 }
 
@@ -5467,10 +6305,10 @@
                     descMonto = Number(contratoOriginal.descuentoMonto) || 0;
                     descDesc = contratoOriginal.descuentoDescripcion || '';
                 }
-                if (descMonto < 0) { mostrarNotificacion('El descuento no puede ser negativo.', 'warning'); return; }
+                if (descMonto < 0) { noGuardado('No se guardó el contrato', ['El descuento no puede ser negativo.']); return; }
                 const topeDescuento = pb + totalCargosValidos;
                 if (descMonto > topeDescuento) {
-                    mostrarNotificacion('El descuento (' + formatearMoneda(descMonto) + ') supera el total del contrato (' + formatearMoneda(topeDescuento) + ').', 'warning');
+                    noGuardado('No se guardó el contrato', ['El descuento (' + formatearMoneda(descMonto) + ') supera el total del contrato (' + formatearMoneda(topeDescuento) + ').']);
                     return;
                 }
 
@@ -5502,10 +6340,13 @@
                         totalesProyectados.alertas.map(function(a) { return a.mensaje; }));
                 }
 
+                // Aquí la captura ya es válida: se marca el formulario como enviado para que un
+                // segundo envío del mismo tick no cree otro contrato (D-04/D-05, A-12).
+                marcar();
                 if (ee) {
                     if (!Array.isArray(c.contratos)) c.contratos = [];
                     const idx = c.contratos.findIndex(function(x) { return x && x.id === nc.id; });
-                    if (idx === -1) { mostrarNotificacion('El contrato ya no existe; vuelve a abrir el detalle.', 'error'); return; }
+                    if (idx === -1) { liberarMarcaAlCerrar(formEnviado); mostrarNotificacion('El contrato ya no existe; vuelve a abrir el detalle.', 'error'); return; }
                     const contratoAnt = JSON.parse(JSON.stringify(c.contratos[idx]));
                     c.contratos[idx] = nc;
                     const cambios = calcularDiff(contratoAnt, nc, { camposIgnorados: ['notas', 'pagos', 'cargos', 'id', 'fechaContrato', '_modificadoPor', '_fechaModificacion'], etiquetas: { tipo: 'Tipo', festejado: 'Festejado', paqueteId: 'Paquete', servicioId: 'Servicio', serviciosIds: 'Servicios adicionales', fechaEvento: 'Fecha del evento', horaEvento: 'Hora del evento', direccionEvento: 'Dirección evento', direccionRecepcion: 'Dirección recepción', horaRecepcion: 'Hora recepción', precioBase: 'Precio base', precioFinal: 'Precio final', descuentoMonto: 'Descuento (monto)', descuentoDescripcion: 'Descuento (descripción)', estado: 'Estado' }, formatters: { paqueteId: function(v) { return v ? obtenerNombrePaquete(v) : '(ninguno)'; }, servicioId: function(v) { return v ? obtenerNombreServicio(v) : '(ninguno)'; }, serviciosIds: function(v) { if (!Array.isArray(v) || v.length === 0) return '(ninguno)'; return v.map(function(id) { return obtenerNombreServicio(id); }).join(', '); }, fechaEvento: function(v) { return v ? formatearFecha(v) : ''; }, precioBase: function(v) { return v !== undefined ? formatearMoneda(v) : ''; }, precioFinal: function(v) { return v !== undefined ? formatearMoneda(v) : ''; }, descuentoMonto: function(v) { return v !== undefined ? formatearMoneda(v) : ''; } } });
@@ -5628,14 +6469,24 @@
             document.getElementById('btn-pago-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
             document.getElementById('form-pago-rapido').addEventListener('submit', function(e) {
                 e.preventDefault(); e.stopPropagation();
+                // Antirrepetición: un doble clic en «Registrar pago» no crea dos pagos (G-07/D-06).
+                const form = e.currentTarget || document.getElementById('form-pago-rapido');
+                if (envioDuplicadoBloqueado(form)) return;
+                marcarFormularioEnviado(form);
                 sanearCamposFormulario(['pago-rapido-nota']);
                 const m = redondearMonetario(parseFloat(document.getElementById('pago-rapido-monto').value));
                 const n = document.getElementById('pago-rapido-nota').value.trim();
-                if (!isFinite(m) || m <= 0) { mostrarNotificacion('El monto del pago debe ser mayor que cero.', 'warning'); return; }
+                // Todo camino que no guarda libera la marca: el practicante corrige el monto
+                // y vuelve a pulsar «Registrar pago» en la misma ventana (V-02, W-04, A-06).
+                if (!isFinite(m) || m <= 0) {
+                    liberarMarcaAlCerrar(form);
+                    mostrarNotificacion('El monto del pago debe ser mayor que cero.', 'warning');
+                    return;
+                }
                 const codigoNuevo = generarHuellaPago();
                 const token = obtenerTokenOperacionPago('pago-rapido-' + contratoId);
                 const revision = validarMovimientoFinanciero(co, { tipo: 'pago', monto: m, opId: token });
-                if (revision.accion === 'bloquear') { mostrarErroresFinancieros('Pago no permitido', revision.errores); return; }
+                if (revision.accion === 'bloquear') { mostrarErroresSinPerderElFormulario('Pago no permitido', revision.errores, form); return; }
                 const registrar = function(confirmadoConAviso) {
                     const nuevoPago = crearMovimientoFinanciero({ tipo: 'pago', monto: m, nota: n ? 'Pago: ' + n : 'Pago de ' + formatearMoneda(m), codigo: codigoNuevo, opId: token });
                     nuevoPago.firma = firmaMovimiento(contratoId, m, nuevoPago.fecha, codigoNuevo);
@@ -5652,6 +6503,7 @@
                     guardarDatos(); cerrarModal(); renderizarContratos(); renderizarClientes(); renderizarInformes();
                     setTimeout(function() { abrirSelectorComprobante(clienteId, contratoId, nuevoPago.id); }, 200);
                 };
+                // El formulario de pago rápido ya quedó marcado arriba (su propio envío).
                 if (revision.accion === 'confirmar') {
                     confirmarOperacionFinanciera({
                         titulo: 'Confirmar pago de ' + formatearMoneda(m),
@@ -6348,6 +7200,20 @@
                         if (existeConId(serviciosAdicionales, nuevo.id)) nuevo.id = generarId();
                         serviciosAdicionales.push(nuevo);
                         marcarSucia('serviciosAdicionales', nuevo.id);
+                    } else if (entrada.tipo === 'participacion') {
+                        // Las participaciones también se pueden devolver a su campaña (I-01).
+                        if (!nuevo.campaignId || !campanias.some(function(c) { return c && c.id === nuevo.campaignId; })) {
+                            mostrarNotificacion('La campaña original ya no existe, no se puede restaurar esta participación.', 'error');
+                            return;
+                        }
+                        if (!nuevo.prospectId || !prospectos.some(function(p) { return p && p.id === nuevo.prospectId; })) {
+                            mostrarNotificacion('El prospecto original ya no existe. Restaura primero al prospecto y vuelve a intentarlo.', 'error');
+                            return;
+                        }
+                        if (existeConId(participaciones, nuevo.id)) nuevo.id = generarId();
+                        if (!Array.isArray(nuevo.historial)) nuevo.historial = [];
+                        participaciones.push(nuevo);
+                        marcarSucia('participaciones', nuevo.id);
                     }
                     papelera = papelera.filter(function(e) { return e.id !== entradaId; });
                     if (estadoSync.modo === 'firebase' && database) database.ref('papelera/' + entradaId).remove().catch(function(err) { console.warn('No se pudo eliminar de papelera remota:', err); });
@@ -7925,30 +8791,70 @@
         /* Campaña nueva con todos los campos de la especificación. */
         motor.crearCampania = function (datos) {
             var d = datos || {};
+            // El nombre vacío ya no se renombra en silencio (A-01): se rechaza.
+            var nombre = limpiarTextoLibre(d.nombre, MAX_LARGO_NOMBRE);
+            var fInicio = limpiarTextoLibre(d.fechaInicio, 10), fFin = limpiarTextoLibre(d.fechaFin, 10);
+            var erroresDirectos = [];
+            if (!nombre) erroresDirectos.push('El nombre de la campaña es obligatorio.');
+            if (fInicio && !fechaISOExiste(fInicio)) erroresDirectos.push('La fecha de inicio no es válida (' + d.fechaInicio + ').');
+            if (fFin && !fechaISOExiste(fFin)) erroresDirectos.push('La fecha de fin no es válida (' + d.fechaFin + ').');
+            if (fInicio && fFin && fFin < fInicio) erroresDirectos.push('La fecha de fin no puede ser anterior a la fecha de inicio.');
+            // Las etapas se normalizan: id propio si falta y nombre recortado (A-03, A-11).
+            var etapas = null;
+            if (Array.isArray(d.etapas)) {
+                etapas = d.etapas.map(function(e, i) {
+                    var etapa = Object.assign({}, e || {});
+                    etapa.id = etapa.id || Util.nuevoId('etp');
+                    etapa.nombre = limpiarTextoLibre(etapa.nombre, MAX_LARGO_NOMBRE);
+                    etapa.orden = (etapa.orden === undefined || isNaN(Number(etapa.orden))) ? (i + 1) : Number(etapa.orden);
+                    etapa.descripcion = limpiarTextoLibre(etapa.descripcion, MAX_LARGO_NOTAS);
+                    return etapa;
+                });
+            }
+            // Una campaña sin ninguna etapa inicial no sirve para nada: al agregar un
+            // participante no habría dónde ponerlo y la campaña no se podría activar (A-02).
+            var listaEtapas = etapas || [];
+            if (!etapas && !erroresDirectos.length) {
+                listaEtapas = [
+                    { id: Util.nuevoId('etp'), nombre: 'Registrado', orden: 1, descripcion: 'El prospecto entró a la campaña.', esInicial: true, esFinal: false, resultadoTipo: 'ninguno' },
+                    { id: Util.nuevoId('etp'), nombre: 'Contactado', orden: 2, descripcion: 'Ya se contactó.', esInicial: false, esFinal: false, resultadoTipo: 'ninguno' },
+                    { id: Util.nuevoId('etp'), nombre: 'Convertido', orden: 3, descripcion: 'Cerró la venta.', esInicial: false, esFinal: true, resultadoTipo: 'convertido' }
+                ];
+            }
+            if (Array.isArray(d.etapas)) {
+                if (!listaEtapas.length) erroresDirectos.push('La campaña necesita al menos una etapa.');
+                else {
+                    var cuantasIniciales = listaEtapas.filter(function(e) { return e && e.esInicial; }).length;
+                    if (cuantasIniciales === 0) erroresDirectos.push('Debe existir exactamente una etapa inicial y no hay ninguna marcada.');
+                    if (cuantasIniciales > 1) erroresDirectos.push('Hay ' + cuantasIniciales + ' etapas marcadas como iniciales: solo puede haber una.');
+                    var sinNombre = listaEtapas.filter(function(e) { return !String((e && e.nombre) || '').trim(); });
+                    if (sinNombre.length) erroresDirectos.push('Hay ' + sinNombre.length + ' etapa(s) sin nombre.');
+                }
+            }
             var camp = {
                 id: Util.nuevoId('cmp'),
-                nombre: (d.nombre || '').trim() || 'Campaña sin nombre',
-                descripcion: d.descripcion || '',
+                nombre: nombre,
+                descripcion: limpiarTextoLibre(d.descripcion, MAX_LARGO_NOTAS),
                 tipo: d.tipo || Catalogos.tiposCampania[0],
-                objetivoPrincipal: d.objetivoPrincipal || '',
-                objetivosSecundarios: d.objetivosSecundarios || [],
+                objetivoPrincipal: limpiarTextoLibre(d.objetivoPrincipal, MAX_LARGO_NOTAS),
+                objetivosSecundarios: Array.isArray(d.objetivosSecundarios) ? d.objetivosSecundarios : [],
                 estado: d.estado || 'borrador',
-                fechaInicio: d.fechaInicio || '',
-                fechaFin: d.fechaFin || '',
+                fechaInicio: fInicio,
+                fechaFin: fFin,
                 fechaCreacion: Util.ahora(),
                 fechaActualizacion: Util.ahora(),
                 publicoObjetivo: d.publicoObjetivo || { fuentes: [], descripcion: '' },
-                criteriosElegibilidad: d.criteriosElegibilidad || [],
-                datosRequeridos: d.datosRequeridos || [],
-                camposPersonalizados: d.camposPersonalizados || [],
-                etapas: d.etapas || [
+                criteriosElegibilidad: Array.isArray(d.criteriosElegibilidad) ? d.criteriosElegibilidad : [],
+                datosRequeridos: Array.isArray(d.datosRequeridos) ? d.datosRequeridos : [],
+                camposPersonalizados: Array.isArray(d.camposPersonalizados) ? d.camposPersonalizados : [],
+                etapas: listaEtapas.length ? listaEtapas : [
                     { id: Util.nuevoId('etp'), nombre: 'Registrado', orden: 1, descripcion: 'El prospecto entró a la campaña.', esInicial: true, esFinal: false, resultadoTipo: 'ninguno' },
                     { id: Util.nuevoId('etp'), nombre: 'Contactado', orden: 2, descripcion: 'Ya se contactó.', esInicial: false, esFinal: false, resultadoTipo: 'ninguno' },
                     { id: Util.nuevoId('etp'), nombre: 'Convertido', orden: 3, descripcion: 'Cerró la venta.', esInicial: false, esFinal: true, resultadoTipo: 'convertido' }
                 ],
-                plantillasTareas: d.plantillasTareas || [],
-                beneficios: d.beneficios || [],
-                ofertas: d.ofertas || [],
+                plantillasTareas: Array.isArray(d.plantillasTareas) ? d.plantillasTareas : [],
+                beneficios: Array.isArray(d.beneficios) ? d.beneficios : [],
+                ofertas: Array.isArray(d.ofertas) ? d.ofertas : [],
                 metas: d.metas || {},
                 configuracion: Object.assign({
                     responsable: usuarioDeSesion(),
@@ -7961,9 +8867,36 @@
                 creadoPor: usuarioDeSesion(),
                 actualizadoPor: usuarioDeSesion()
             };
+            // Antes se guardaba sin revisar nada (etapas sin inicial, metas negativas,
+            // criterios inventados): basura en la base que después no se podía activar
+            // (A-02, A-03, A-04, A-05, A-11).
+            var v = motor.validarCampania(camp, { paraActivar: false });
+            var errores = erroresDirectos.concat(v.errores || []);
+            if (errores.length) {
+                // NO se guarda nada en la base. Se devuelve la campaña RECHAZADA con su
+                // ok:false, sus errores y guardada:false, para que quien la pidió pueda
+                // informar el porqué y ningún camino posterior la dé por buena.
+                camp.ok = false;
+                camp.errores = errores;
+                camp.avisos = v.avisos || [];
+                camp.guardada = false;
+                // Lo que se devuelve es la INTENCIÓN rechazada, tal como quedó normalizada.
+                // Así queda claro qué se rechazó y ningún camino posterior la da por buena.
+                camp.nombre = nombre;
+                camp.fechaInicio = fInicio;
+                camp.fechaFin = fFin;
+                camp.etapas = listaEtapas;
+                camp.metas = d.metas || {};
+                camp.criteriosElegibilidad = Array.isArray(d.criteriosElegibilidad) ? d.criteriosElegibilidad : [];
+                return camp;
+            }
             db().campanias.push(camp);
             motor.registrar('campania', camp.id, camp.nombre, 'crear', 'Campaña creada en estado ' + camp.estado + '.');
             almacen.guardar('campania-creada');
+            camp.ok = true;
+            camp.errores = [];
+            camp.avisos = v.avisos || [];
+            camp.guardada = true;
             return camp;
         };
 
@@ -8130,6 +9063,58 @@
             if (camp.estado === 'finalizada' && op.forzar) {
                 avisos.push('Se modificó una campaña finalizada. Queda registrado en el historial.');
             }
+
+            // Se arma la copia con los cambios y se valida ANTES de escribir: antes
+            // actualizarCampania no llamaba a validarCampania y dejaba pasar fechas
+            // invertidas, metas negativas, criterios inventados y ofertas en negativo
+            // (F-13, A-04, A-05, A-06).
+            var propuesta = Util.clonar(camp);
+            campos.forEach(function (campo) { propuesta[campo] = Util.clonar(cambios[campo]); });
+            if (propuesta.nombre !== undefined) propuesta.nombre = limpiarTextoLibre(propuesta.nombre, MAX_LARGO_NOMBRE);
+            if (!String(propuesta.nombre || '').trim()) {
+                return { ok: false, errores: ['El nombre de la campaña no puede quedar vacío.'], avisos: [] };
+            }
+            if (propuesta.fechaInicio && !fechaISOExiste(propuesta.fechaInicio)) {
+                return { ok: false, errores: ['La fecha de inicio no es válida (' + propuesta.fechaInicio + ').'], avisos: [] };
+            }
+            if (propuesta.fechaFin && !fechaISOExiste(propuesta.fechaFin)) {
+                return { ok: false, errores: ['La fecha de fin no es válida (' + propuesta.fechaFin + ').'], avisos: [] };
+            }
+            if (propuesta.fechaInicio && propuesta.fechaFin && propuesta.fechaFin < propuesta.fechaInicio) {
+                return { ok: false, errores: ['La fecha de fin no puede ser anterior a la fecha de inicio.'], avisos: [] };
+            }
+            var revision = motor.validarCampania(propuesta, { paraActivar: false });
+            if (!revision.ok) return { ok: false, errores: revision.errores, avisos: revision.avisos };
+            // La validación de arriba exige lo mínimo de la campaña completa, así que en una
+            // campaña recién creada (sin objetivo ni fecha) podría no mencionar el dato malo
+            // que se está cambiando. Por eso se revisa TAMBIÉN el campo que llega (A-05:
+            // un criterio de elegibilidad inventado entraba con ok=true).
+            var erroresCampo = [];
+            if (cambios && cambios.metas !== undefined) {
+                Object.keys(cambios.metas || {}).forEach(function(k) {
+                    var n = Number(cambios.metas[k]);
+                    if (!isFinite(n) || n < 0) erroresCampo.push('La meta "' + (ETIQUETAS_METAS[k] || k) + '" debe ser un número igual o mayor que cero.');
+                });
+            }
+            if (cambios && cambios.criteriosElegibilidad !== undefined) {
+                (cambios.criteriosElegibilidad || []).forEach(function(cr) {
+                    if (!cr) return;
+                    // Ojo: ayudaCriterio() inventa una etiqueta para cualquier id, así que la
+                    // comprobación tiene que ser contra la lista real del catálogo (A-05).
+                    var existe = (Catalogos.tiposCriterio || []).some(function(t) { return t && t.id === cr.tipo; });
+                    if (!existe) erroresCampo.push('El criterio de elegibilidad "' + cr.tipo + '" no existe en el catálogo.');
+                });
+            }
+            if (cambios && cambios.ofertas !== undefined) {
+                (cambios.ofertas || []).forEach(function(o) {
+                    if (!o) return;
+                    if (!String(o.nombre || '').trim()) erroresCampo.push('Hay una oferta sin nombre.');
+                    if (o.precioEspecial !== undefined && o.precioEspecial !== '' && (!isFinite(Number(o.precioEspecial)) || Number(o.precioEspecial) < 0)) {
+                        erroresCampo.push('La oferta "' + (o.nombre || '') + '" tiene un precio especial negativo o inválido.');
+                    }
+                });
+            }
+            if (erroresCampo.length) return { ok: false, errores: erroresCampo, avisos: revision.avisos };
 
             campos.forEach(function (campo) {
                 camp[campo] = Util.clonar(cambios[campo]);
@@ -8302,27 +9287,94 @@
 
         /* ───────────── Prospectos ───────────── */
 
+        /* @JS-MOTOR-CANDADOS (v5.0.25)
+           El asistente de campañas valida antes de llamar, pero el motor es la puerta que
+           también usan la importación y el código nuevo. Aquí se cierra esa puerta, con
+           las mismas reglas que el formulario, para que no entre basura a la base. */
+        var DIAS_FUTURO_PROSPECTO = 365 * 40;
+        // true si el texto es una fecha ISO real (2027-02-31 tiene forma pero no existe).
+        function motorFechaValida(v, obligatoria) {
+            var s = String(v === null || v === undefined ? '' : v).trim();
+            if (!s) return !obligatoria;
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+            var partes = s.split('-');
+            var dd = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
+            if (!(dd.getFullYear() === Number(partes[0]) && (dd.getMonth() + 1) === Number(partes[1]) && dd.getDate() === Number(partes[2]))) return false;
+            var anio = Number(partes[0]);
+            return anio >= 1900 && anio <= (new Date().getFullYear() + DIAS_FUTURO_PROSPECTO / 365);
+        }
+        // Normaliza y valida los datos de un prospecto que llegan al motor.
+        // Devuelve { ok, errores, datos }.
+        function motorNormalizarProspecto(d) {
+            var datos = d || {};
+            var errores = [];
+            var nombre = limpiarTextoLibre(datos.nombre, MAX_LARGO_NOMBRE);
+            if (!nombre) errores.push('El nombre del prospecto es obligatorio.');
+            // Un teléfono con letras, de un dígito o de 40 dígitos no es un teléfono.
+            var tel = validarTelefonoCapturado(datos.telefono);
+            if (!tel.ok) errores.push(tel.motivo);
+            var email = String(datos.email === null || datos.email === undefined ? '' : datos.email).trim();
+            if (email && !esCorreoValido(email)) errores.push('El correo "' + email + '" no tiene un formato válido.');
+            if (datos.fechaNacimiento !== undefined && datos.fechaNacimiento !== '' && !motorFechaValida(datos.fechaNacimiento, false)) {
+                errores.push('La fecha de nacimiento no es válida (' + datos.fechaNacimiento + ').');
+            }
+            if (datos.fechaEvento !== undefined && datos.fechaEvento !== '' && !motorFechaValida(datos.fechaEvento, false)) {
+                errores.push('La fecha del evento no es válida (' + datos.fechaEvento + ').');
+            }
+            // El presupuesto: negativo o escrito con letras no se acepta en silencio (P-13, P-14).
+            var presupuesto = 0;
+            if (datos.presupuesto !== undefined && datos.presupuesto !== null && datos.presupuesto !== '') {
+                presupuesto = Number(datos.presupuesto);
+                if (!isFinite(presupuesto)) { errores.push('El presupuesto debe ser un número (llegó "' + datos.presupuesto + '").'); presupuesto = 0; }
+                else if (presupuesto < 0) { errores.push('El presupuesto no puede ser negativo.'); presupuesto = 0; }
+            }
+            return {
+                ok: errores.length === 0, errores: errores,
+                datos: {
+                    nombre: nombre,
+                    // Igual que en el formulario: se conserva el formato que escribió la
+                    // persona; para marcar se usan los dígitos.
+                    telefono: limpiarTextoLibre(datos.telefono, 30),
+                    email: email,
+                    ciudad: limpiarTextoLibre(datos.ciudad, MAX_LARGO_NOMBRE),
+                    origen: limpiarTextoLibre(datos.origen, MAX_LARGO_NOMBRE) || 'Manual',
+                    faseComercial: limpiarTextoLibre(datos.faseComercial, MAX_LARGO_NOMBRE) || (Catalogos.fasesComerciales[0] || 'Interesado'),
+                    fechaNacimiento: limpiarTextoLibre(datos.fechaNacimiento, 10),
+                    fechaEvento: limpiarTextoLibre(datos.fechaEvento, 10),
+                    tipoEvento: limpiarTextoLibre(datos.tipoEvento, MAX_LARGO_NOMBRE),
+                    presupuesto: presupuesto,
+                    notas: limpiarTextoLibre(datos.notas, MAX_LARGO_NOTAS)
+                }
+            };
+        }
+
         motor.crearProspecto = function (datos) {
-            var d = datos || {};
-            if (!String(d.nombre || '').trim()) return { ok: false, errores: ['El nombre del prospecto es obligatorio.'] };
+            var revision = motorNormalizarProspecto(datos);
+            if (!revision.ok) return { ok: false, errores: revision.errores };
+            var d = revision.datos;
             var nuevo = {
                 id: Util.nuevoId('pro'),
-                nombre: d.nombre.trim(),
-                telefono: d.telefono || '',
-                email: d.email || '',
-                ciudad: d.ciudad || '',
-                origen: d.origen || 'Manual',
-                faseComercial: d.faseComercial || Catalogos.fasesComerciales[0],
-                fechaNacimiento: d.fechaNacimiento || '',
-                fechaEvento: d.fechaEvento || '',
-                tipoEvento: d.tipoEvento || '',
-                presupuesto: Util.numero(d.presupuesto, 0),
-                notas: d.notas || '',
-                fechaRegistro: d.fechaRegistro || Util.hoy(),
-                fechaUltimoContacto: d.fechaUltimoContacto || '',
+                nombre: d.nombre,
+                telefono: d.telefono,
+                email: d.email,
+                ciudad: d.ciudad,
+                origen: d.origen,
+                faseComercial: d.faseComercial,
+                // Se escribe también la fase del CRM principal: el motor solo ponía
+                // `faseComercial` y el listado de Prospectos se caía al pintarlo (P-15).
+                faseActual: d.faseComercial,
+                historialFases: [{ fase: d.faseComercial, fecha: Util.hoy(), notas: 'Alta desde el motor de campañas' }],
+                fechaNacimiento: d.fechaNacimiento,
+                fechaEvento: d.fechaEvento,
+                tipoEvento: d.tipoEvento,
+                presupuesto: d.presupuesto,
+                notas: d.notas,
+                notasGenerales: d.notas,
+                fechaRegistro: (datos && datos.fechaRegistro) || Util.hoy(),
+                fechaUltimoContacto: (datos && datos.fechaUltimoContacto) || '',
                 convertido: false,
                 clienteId: null,
-                etiquetas: d.etiquetas || []
+                etiquetas: Array.isArray(datos && datos.etiquetas) ? datos.etiquetas.slice() : []
             };
             db().prospectos.push(nuevo);
             motor.registrar('prospecto', nuevo.id, nuevo.nombre, 'crear', 'Prospecto creado con origen ' + nuevo.origen + '.');
@@ -8333,11 +9385,18 @@
         motor.actualizarProspecto = function (id, cambios) {
             var p = prospecto(id);
             if (!p) return { ok: false, errores: ['El prospecto no existe.'] };
+            // Solo se validan los campos que llegan; lo que no viene se deja como estaba.
+            var revision = motorNormalizarProspecto(Object.assign({}, p, cambios || {}));
+            if (!revision.ok) return { ok: false, errores: revision.errores };
             var antes = Util.clonar(p);
             Object.keys(cambios || {}).forEach(function (k) {
                 if (k === 'id') return;
-                p[k] = cambios[k];
+                if (Object.prototype.hasOwnProperty.call(revision.datos, k)) p[k] = revision.datos[k];
+                else p[k] = cambios[k];
             });
+            // La fase del CRM principal se mantiene sincronizada con la comercial.
+            if (cambios && cambios.faseComercial) { p.faseActual = p.faseComercial; }
+            if (revision.datos.notas !== undefined && (cambios || {}).notas !== undefined) p.notasGenerales = revision.datos.notas;
             var detalle = Object.keys(cambios || {}).filter(function (k) { return k !== 'id'; }).join(', ');
             motor.registrar('prospecto', p.id, p.nombre, 'editar', 'Se actualizó: ' + detalle + '.');
             almacen.guardar('prospecto-editado');
@@ -8586,12 +9645,23 @@
             var inicial = motor.etapaInicial(camp);
             if (!inicial) return { ok: false, errores: ['La campaña no tiene una etapa inicial válida.'], codigo: 'sin-etapa' };
 
+            // La fecha de registro llega del motor (importación, asistente): si viene
+            // imposible o inexistente se corrige a hoy en vez de guardar basura (F-14).
+            var fechaRegistro = String(d.fechaRegistro || '').trim();
+            if (!fechaISOExiste(fechaRegistro)) fechaRegistro = Util.hoy();
+            // El valor potencial no puede ser negativo (una oferta mal capturada lo dejaba en -3000).
+            var valorPotencial = Number(d.valorPotencial !== undefined ? d.valorPotencial : p.presupuesto);
+            if (!isFinite(valorPotencial) || valorPotencial < 0) valorPotencial = Math.max(0, Number(p.presupuesto) || 0);
+            if (d.fechaProximoSeguimiento && !fechaISOExiste(String(d.fechaProximoSeguimiento))) {
+                return { ok: false, errores: ['La fecha del próximo seguimiento no es válida (' + d.fechaProximoSeguimiento + ').'], codigo: 'fecha-invalida' };
+            }
+
             var faltantes = datosFaltantes(camp, p);
             var nueva = {
                 id: Util.nuevoId('par'),
                 campaignId: camp.id,
                 prospectId: p.id,
-                fechaRegistro: d.fechaRegistro || Util.hoy(),
+                fechaRegistro: fechaRegistro,
                 fechaActualizacion: Util.ahora(),
                 estado: faltantes.length ? 'pendienteValidacion' : 'registrada',
                 etapaId: inicial.id,
@@ -8603,12 +9673,12 @@
                     : { requerida: false, estado: 'noRequerida', responsableNombre: '', responsableTelefono: '', relacion: '', fecha: '', metodo: '', notas: '' },
                 ofertaAsignada: null,
                 beneficioAsignado: null,
-                valorPotencial: Util.numero(d.valorPotencial, Util.numero(p.presupuesto, 0)),
+                valorPotencial: valorPotencial,
                 valorConvertido: 0,
                 fechaUltimoContacto: '',
                 fechaProximoSeguimiento: d.fechaProximoSeguimiento || '',
                 responsable: d.responsable || camp.configuracion.responsable || usuarioDeSesion(),
-                notas: d.notas || '',
+                notas: limpiarTextoLibre(d.notas, MAX_LARGO_NOTAS),
                 tareasRelacionadas: [],
                 convertida: false,
                 fechaConversion: '',
@@ -8689,6 +9759,13 @@
         motor.cambiarEstadoParticipacion = function (id, estadoNuevo, nota) {
             var part = participacion(id);
             if (!part) return { ok: false, errores: ['La participación no existe.'] };
+            // Solo estados del catálogo: antes se podía dejar en "estadoInventado" (A-10).
+            // Ojo: objetoEstadoParticipacion() inventa una etiqueta para cualquier id, así que
+            // la comprobación tiene que ser contra la lista real del catálogo.
+            var esDelCatalogo = (Catalogos.estadosParticipacion || []).some(function(e) { return e && e.id === estadoNuevo; });
+            if (!esDelCatalogo) {
+                return { ok: false, errores: ['El estado "' + estadoNuevo + '" no existe en el catálogo de estados de participación.'] };
+            }
             var antes = part.estado;
             part.estado = estadoNuevo;
             part.fechaActualizacion = Util.ahora();
@@ -8710,6 +9787,21 @@
             if (!destino) return { ok: false, errores: ['La etapa no pertenece a esta campaña.'] };
 
             var origen = etapaDe(camp, part.etapaId);
+            // Una participación ya cerrada (convertida, sin interés, descartada) no se
+            // reabre a una etapa anterior: quedaba "Registrado" con estado "convertida",
+            // que es incoherente y ensucia los tableros de la campaña (A-09).
+            var estadosCerrados = ['convertida', 'sinInteres', 'noSeleccionada', 'descartada'];
+            if (estadosCerrados.indexOf(part.estado) !== -1) {
+                var esCierre = !!(destino.esFinal || (destino.resultadoTipo && destino.resultadoTipo !== 'ninguno'));
+                if (!esCierre) {
+                    return {
+                        ok: false,
+                        errores: ['Esta participación ya está cerrada (' + Catalogos.objetoEstadoParticipacion(part.estado).etiqueta + '). No se puede regresar a la etapa "' + destino.nombre + '". Si de verdad hay que reabrirla, cambia primero su estado.'],
+                        codigo: 'participacion-cerrada',
+                        participacion: part
+                    };
+                }
+            }
             part.etapaId = etapaId;
             part.fechaActualizacion = Util.ahora();
             anotar(part, 'etapa', origen ? origen.nombre : '', destino.nombre, nota || '');
@@ -8762,6 +9854,13 @@
             var servicio = oferta.servicioId ? almacen.servicio(oferta.servicioId) : null;
             var precioCatalogo = (paquete ? Util.numero(paquete.precio, 0) : 0) + (servicio ? Util.numero(servicio.precio, 0) : 0);
 
+            // Un precio especial negativo no es una oferta: es un error de captura que
+            // dejaba el valor potencial de la participación en números rojos (A-06).
+            var precioEspecial = oferta.precioEspecial === '' || oferta.precioEspecial === undefined ? precioCatalogo : Util.numero(oferta.precioEspecial, precioCatalogo);
+            if (!isFinite(precioEspecial) || precioEspecial < 0) {
+                return { ok: false, errores: ['La oferta "' + (oferta.nombre || '') + '" tiene un precio especial inválido (' + oferta.precioEspecial + '). Corrige la oferta en la campaña antes de asignarla.'] };
+            }
+
             var snapshot = {
                 ofertaId: oferta.id,
                 nombre: oferta.nombre,
@@ -8770,7 +9869,7 @@
                 nombrePaquete: paquete ? paquete.nombre : '',
                 nombreServicio: servicio ? servicio.nombre : '',
                 precioCatalogo: precioCatalogo,
-                precioEspecial: oferta.precioEspecial === '' || oferta.precioEspecial === undefined ? precioCatalogo : Util.numero(oferta.precioEspecial, precioCatalogo),
+                precioEspecial: precioEspecial,
                 condiciones: oferta.condiciones || '',
                 vigencia: Util.clonar(oferta.vigencia || { fechaInicio: '', fechaFin: '', diasVigencia: 0 }),
                 asignadaEn: Util.ahora()
@@ -13875,24 +14974,40 @@
         var id = (typeof raiz.generarId === 'function') ? raiz.generarId() : ('pro_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
         var fecha = cand.fechaRegistro && /^\d{4}-\d{2}-\d{2}/.test(cand.fechaRegistro) ? cand.fechaRegistro.slice(0, 10) :
             ((typeof raiz.obtenerFechaActual === 'function') ? raiz.obtenerFechaActual() : new Date().toISOString().slice(0, 10));
+        // ── Saneo de lo que viene del archivo (v5.0.25) ──
+        // Un CSV o XLSX es un vector real: el nombre se guardaba tal cual y su HTML se
+        // ejecutaba al ver la lista o la ficha (P-11, P-12). Un teléfono de 40 dígitos
+        // también entraba completo (T-15). Aquí se sanea igual que en el motor.
+        var limpiar = (typeof raiz.limpiarTextoLibre === 'function') ? raiz.limpiarTextoLibre :
+            function (v, max) { var s = String(v === null || v === undefined ? '' : v).replace(/[<>"'`\\]/g, '').replace(/\s+/g, ' ').trim(); return (max && s.length > max) ? s.substring(0, max) : s; };
+        var limpiarTelefono = (typeof raiz.validarTelefonoCapturado === 'function') ? raiz.validarTelefonoCapturado :
+            function (v) { var d = String(v === null || v === undefined ? '' : v).replace(/\D/g, ''); return { ok: d.length <= 13, digitos: d, motivo: '' }; };
+        var nombre = limpiar(cand.nombre, 120);
+        if (!nombre) throw new Error('la fila no trae nombre');
+        var tel = limpiarTelefono(cand.telefono);
+        // Una fila con teléfono imposible (letras o 40 dígitos) se rechaza completa: es más
+        // honesto que guardar un prospecto al que después no se le puede escribir (T-15).
+        if (!tel.ok) throw new Error('el teléfono no es válido (' + (tel.motivo || 'revisa el número') + ')');
+        var email = String(cand.email === null || cand.email === undefined ? '' : cand.email).trim();
+        if (email && typeof raiz.esCorreoValido === 'function' && !raiz.esCorreoValido(email)) email = '';
         var nuevo = {
             id: id,
-            nombre: cand.nombre,
-            telefono: cand.telefono,
-            email: cand.email,
-            faseActual: cand.faseActual,
-            historialFases: [{ fase: cand.faseActual, fecha: fecha, notas: 'Alta automática importando un archivo' }],
-            notasGenerales: cand.notasGenerales,
+            nombre: nombre,
+            telefono: tel.ok ? limpiar(cand.telefono, 30) : '',
+            email: email,
+            faseActual: limpiar(cand.faseActual, 120) || 'Interesado',
+            historialFases: [{ fase: limpiar(cand.faseActual, 120) || 'Interesado', fecha: fecha, notas: 'Alta automática importando un archivo' }],
+            notasGenerales: limpiar(cand.notasGenerales, 2000),
             clienteId: null,
             fechaRegistro: fecha,
             /* Campos extra que sí captura el formulario y que las campañas usan
                como criterios de elegibilidad. */
-            ciudad: cand.ciudad || '',
-            origen: cand.origen || '',
-            tipoEvento: cand.tipoEvento || '',
-            fechaEvento: cand.fechaEvento || '',
-            fechaNacimiento: cand.fechaNacimiento || '',
-            presupuesto: cand.presupuesto || '',
+            ciudad: limpiar(cand.ciudad, 120),
+            origen: limpiar(cand.origen, 120),
+            tipoEvento: limpiar(cand.tipoEvento, 120),
+            fechaEvento: limpiar(cand.fechaEvento, 10),
+            fechaNacimiento: limpiar(cand.fechaNacimiento, 10),
+            presupuesto: (function () { var n = Number(cand.presupuesto); return isFinite(n) && n >= 0 ? n : ''; })(),
             fuenteCaptacion: 'Importación de archivo',
             firmaImportacion: cand._firma
         };

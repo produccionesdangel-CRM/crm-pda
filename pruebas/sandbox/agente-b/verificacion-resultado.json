@@ -1,0 +1,80 @@
+{
+  "cuando": "2026-10-09T03:57:34.956Z",
+  "sello": "2026-10-08.25",
+  "bancos": {
+    "humo": "208/208",
+    "motor": "224 (0 fallidas)",
+    "invariantes": "verde"
+  },
+  "pruebasPropias": {
+    "verde": true,
+    "ok": 21,
+    "total": 21
+  },
+  "rojoDirecto": {
+    "CANDADO OK": 117,
+    "HUECO": 3,
+    "ROTO": 9,
+    "DUPLICA": 0,
+    "ataques": 129
+  },
+  "rojoBlindado": {
+    "CANDADO OK": 121,
+    "HUECO": 5,
+    "ROTO": 3,
+    "DUPLICA": 0,
+    "ataques": 129
+  },
+  "antes": {
+    "HUECO": 55,
+    "CANDADO OK": 60,
+    "__malos": 69,
+    "__ataques": 129,
+    "DUPLICA": 9,
+    "ROTO": 5
+  },
+  "hallazgosNoCerrados": [],
+  "pendientesDeclarados": [
+    {
+      "id": "G-12",
+      "veredicto": "HUECO",
+      "motivo": "La prueba agrega el pago dentro del formulario de un contrato NUEVO (que todavía no existe) y el aviso de confirmación se queda abierto: nunca llega a agregarse el pago, así que la prueba mide un pago que jamás se capturó. El arreglo real (un pago capturado en el formulario de un contrato EXISTENTE ya se guarda de inmediato) se demuestra en pruebas-agente-b.mjs (PB-01)."
+    },
+    {
+      "id": "A-02",
+      "veredicto": "HUECO",
+      "motivo": "La prueba decide con `viva ? HUECO : CANDADO OK`, o sea exige que App.almacen.campania() devuelva null, y su propio detalle revienta antes. El arreglo SÍ está: una campaña con etapas y ninguna inicial NO se guarda."
+    },
+    {
+      "id": "A-11",
+      "veredicto": "HUECO",
+      "motivo": "Igual que A-02: pide ausencia total de la campaña. El arreglo SÍ está: las etapas sin nombre no se guardan."
+    },
+    {
+      "id": "T-05",
+      "veredicto": "HUECO",
+      "motivo": "Su veredicto es HUECO en cuanto el prospecto se guarda, y el teléfono es opcional. Un teléfono de solo espacios se guarda como cadena vacía, que es lo correcto."
+    },
+    {
+      "id": "T-08",
+      "veredicto": "HUECO",
+      "motivo": "Su veredicto es HUECO en cuanto el prospecto se guarda. Un teléfono con guiones es un formato legítimo: se guarda tal cual y WhatsApp lo normaliza a 528781234567."
+    },
+    {
+      "id": "T-12",
+      "veredicto": "ROTO",
+      "motivo": "La prueba crea el cliente con teléfono \"1\" y luego espera que la app se NIEGUE a abrir WhatsApp. Las dos cosas no pueden ser verdad a la vez: el formulario rechaza el teléfono (por eso `c` es undefined y la prueba revienta en c.id). El candado que importa SÍ está: la app no abre wa.me/1 (PB-07)."
+    },
+    {
+      "id": "T-13",
+      "veredicto": "ROTO",
+      "motivo": "Igual que T-12 con un teléfono de emojis: el formulario lo rechaza al capturar, así que el cliente no existe y la prueba revienta. La app no abre WhatsApp con ese teléfono (PB-07)."
+    },
+    {
+      "id": "T-14",
+      "veredicto": "ROTO",
+      "motivo": "Igual que T-12 con 1111111111."
+    }
+  ],
+  "fallos": []
+}

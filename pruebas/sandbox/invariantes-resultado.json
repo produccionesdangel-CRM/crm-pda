@@ -1,0 +1,50 @@
+{
+  "cuando": "2026-10-09T05:07:44.750Z",
+  "sello": "2026-10-08.25",
+  "sha256Caja": "d3bd53facf1daa9ec4ee35bd6edda78219cad555c30a2fdeabae284b7624252e",
+  "base": {
+    "huella": "f263f2dc3f5be872",
+    "sumaAPagar": 30000,
+    "sumaPagos": 0
+  },
+  "final": {
+    "huella": "463970c519fa23aa",
+    "sumaAPagar": 30000,
+    "sumaPagos": 25000,
+    "sumaSaldos": 5000,
+    "detalle": [
+      {
+        "clave": "Cliente Invariantes|Festejada Duplicados|con-dup",
+        "totalAPagar": 10000,
+        "totalPagos": 2000,
+        "saldoBruto": 8000,
+        "precioBase": 10000,
+        "descuento": 0,
+        "cantidadPagos": 2,
+        "cantidadCargos": 0,
+        "alertas": "montos_repetidos"
+      },
+      {
+        "clave": "Cliente Invariantes|Festejada Invariantes (corregido)|con-inv",
+        "totalAPagar": 20000,
+        "totalPagos": 23000,
+        "saldoBruto": -3000,
+        "precioBase": 20000,
+        "descuento": 0,
+        "cantidadPagos": 3,
+        "cantidadCargos": 0,
+        "alertas": "pago_excedido"
+      }
+    ]
+  },
+  "aislamiento": {
+    "aislado": true,
+    "fugasDatos": []
+  },
+  "ataques": {
+    "pagoExcedido": "confirmacion",
+    "montoConLetras": "bloqueado",
+    "pagoRepetido": "confirmacion"
+  },
+  "problemas": []
+}

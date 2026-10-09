@@ -1,0 +1,10 @@
+# Resultados crudos de las pruebas: se regeneran corriendo los scripts.
+# Los reportes (HALLAZGOS.md, HALLAZGOS-PASADA2.md, CAMBIOS.md) y los scripts SÍ se versionan.
+pruebas/sandbox/agente-a/resultados*/
+pruebas/sandbox/agente-a/resumen-p2.*
+pruebas/sandbox/agente-b/resumen-antes.json
+# Scripts y notas de depuración momentáneos (los que empiezan con guion bajo)
+pruebas/sandbox/**/_*
+pruebas/sandbox/**/*.log
+# Copia de la caja de arena (vive en temporales; aquí solo por si alguien la deja)
+pruebas/sandbox/_caja/
