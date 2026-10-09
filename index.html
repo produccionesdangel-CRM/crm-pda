@@ -185,8 +185,13 @@
         .paquete-items-servicios-sugeridos .sugerido-chip:hover { border-color: var(--color-acento); color: var(--color-acento); background-color: var(--color-bg-hover); }
         /* ─────── @CSS-ARRASTRAR-ORDEN (9/10/2026) ───────
            Asa para arrastrar y estado mientras se arrastra (items del paquete y
-           sugerencias del catálogo). `touch-action: none` es indispensable: sin eso el
-           teléfono hace scroll en vez de arrastrar. */
+           sugerencias del catálogo).
+           DECISIÓN DE JORGE (9/10/2026): el orden se acomoda en la PC, no en el teléfono
+           ("en celular no pienso moverlos, es más para la PC"). Por eso:
+           - El asa se OCULTA en el teléfono (ahí los renglones quedan como estaban).
+           - `touch-action: none` solo se aplica en la PC. Es indispensable para arrastrar,
+             pero en el teléfono ATORARÍA el scroll al pasar el dedo por encima de un chip,
+             que es justo donde se toca para agregar un servicio. */
         .asa-arrastrar { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
             width: 22px; height: 26px; color: var(--color-texto-secundario); cursor: grab;
             border-radius: 6px; touch-action: none; }
@@ -194,7 +199,12 @@
         .paquete-item-fila.arrastrando, .sugerido-chip.arrastrando { position: relative; z-index: 5;
             box-shadow: 0 14px 26px -12px var(--clay-hundido, rgba(0, 0, 0, 0.45)); }
         .paquete-item-fila.arrastrando { background-color: var(--color-bg-secundario); cursor: grabbing; }
-        .paquete-items-servicios-sugeridos .sugerido-chip { touch-action: none; }
+        @media (min-width: 769px) {
+            .paquete-items-servicios-sugeridos .sugerido-chip { touch-action: none; }
+        }
+        @media (max-width: 768px) {
+            .asa-arrastrar { display: none; }
+        }
         .sugerido-chip.arrastrando { border-style: solid; border-color: var(--color-acento); color: var(--color-acento);
             background-color: var(--color-bg-secundario); cursor: grabbing; }
         /* ─────── FIN @CSS-ARRASTRAR-ORDEN ─────── */
@@ -2651,7 +2661,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-09.32';
+        var BUILD_APP = '2026-10-09.33';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -5576,6 +5586,10 @@ input:focus, select:focus, textarea:focus {
 
             contenedor.addEventListener('pointerdown', function (ev) {
                 if (ev.button !== undefined && ev.button !== 0) return;
+                /* En el teléfono NO se reordena (decisión de Jorge: el orden se acomoda
+                   en la PC). Se corta aquí para que el gesto quede libre para hacer
+                   scroll y no se reordene nada sin querer al deslizar el dedo. */
+                if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) return;
                 var objetivo = ev.target;
                 var fila = (objetivo && objetivo.closest) ? objetivo.closest(selectorFila) : null;
                 if (!fila || !contenedor.contains(fila)) return;

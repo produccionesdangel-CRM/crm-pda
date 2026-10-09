@@ -114,13 +114,13 @@ async function tocar(cdp, selector) {
 }
 
 /* Arrastre con el DEDO (eventos táctiles de verdad, como en el teléfono). */
-async function arrastrarTacto(cdp, selector, dy) {
+async function arrastrarTacto(cdp, selector, dy, dx = 0) {
   const c = await centro(cdp, selector);
   const punto = (x, y) => [{ x, y, radiusX: 2, radiusY: 2, force: 1, id: 1 }];
   await cdp.enviar('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: punto(c.x, c.y) });
   await dormir(40);
   for (let i = 1; i <= 12; i++) {
-    await cdp.enviar('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: punto(c.x, Math.round(c.y + (dy * i) / 12)) });
+    await cdp.enviar('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: punto(Math.round(c.x + (dx * i) / 12), Math.round(c.y + (dy * i) / 12)) });
     await dormir(30);
   }
   await cdp.enviar('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
@@ -276,23 +276,48 @@ async function main() {
     revisar(reabierto.items[0] === 'Tres', 'los items conservan el orden nuevo');
     revisar(reabierto.chips[0] === 'Gamma', 'las sugerencias conservan el orden nuevo');
 
-    console.log('\n7) Arrastre con el DEDO (táctil, como en el teléfono)');
+    console.log('\n7) En el TELÉFONO no se arrastra: el gesto queda para hacer scroll');
     await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 420, height: 900, deviceScaleFactor: 2, mobile: true });
     await cdp.enviar('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
     await dormir(500);
     await evaluar(cdp, `(function () { cerrarModal(); mostrarFormularioPaquete(paquetes[0]); return 1; })()`);
     await dormir(500);
-    const antesTacto = JSON.parse(await evaluar(cdp, leerOrden));
-    const altoTacto = await evaluar(cdp, `(function () {
+    const movil = JSON.parse(await evaluar(cdp, `(function () {
+      var a = document.querySelector('#modal-body .asa-arrastrar');
+      var chip = document.querySelector('#modal-body .sugerido-chip');
+      return JSON.stringify({
+        asa: a ? getComputedStyle(a).display : '(no hay)',
+        chipTouchAction: chip ? getComputedStyle(chip).touchAction : '(no hay)',
+        items: [].slice.call(document.querySelectorAll('#modal-body .paquete-item-fila .item-nombre')).map(function (n) { return n.textContent; }),
+        chips: [].slice.call(document.querySelectorAll('#modal-body .sugerido-chip')).map(function (c) { return c.getAttribute('data-nombre'); })
+      });
+    })()`));
+    console.log('   asa: ' + movil.asa + ' · touch-action del chip: ' + movil.chipTouchAction);
+    revisar(movil.asa === 'none', 'en el teléfono el asa no se ve (no estorba)');
+    revisar(movil.chipTouchAction !== 'none', 'el chip deja hacer scroll con el dedo (no se atora)');
+
+    const altoMovil = await evaluar(cdp, `(function () {
       var f = document.querySelectorAll('#modal-body .paquete-item-fila');
       return f.length > 1 ? Math.round(f[1].getBoundingClientRect().top - f[0].getBoundingClientRect().top) : 40;
     })()`);
-    await arrastrarTacto(cdp, '.paquete-item-fila:nth-child(2) .asa-arrastrar', -(altoTacto * 2));
-    const trasTacto = JSON.parse(await evaluar(cdp, leerOrden));
-    console.log('   antes:   ' + antesTacto.items.join(' · '));
-    console.log('   después: ' + trasTacto.items.join(' · '));
-    revisar(trasTacto.items[0] === antesTacto.items[1] && trasTacto.items[1] === antesTacto.items[0],
-      'con el dedo, el 2º item subió al 1er lugar (el gesto no se pierde como scroll)');
+    await arrastrarTacto(cdp, '.paquete-item-fila:nth-child(2)', -(altoMovil * 2));
+    await arrastrarTacto(cdp, '.sugerido-chip:nth-child(4)', 0, -140);
+    const trasMovil = JSON.parse(await evaluar(cdp, `(function () {
+      return JSON.stringify({
+        items: [].slice.call(document.querySelectorAll('#modal-body .paquete-item-fila .item-nombre')).map(function (n) { return n.textContent; }),
+        chips: [].slice.call(document.querySelectorAll('#modal-body .sugerido-chip')).map(function (c) { return c.getAttribute('data-nombre'); }),
+        catalogo: serviciosAdicionales.map(function (s) { return s.nombre; })
+      });
+    })()`));
+    revisar(trasMovil.items.join(',') === movil.items.join(','), 'deslizar el dedo sobre los items NO los reordena');
+    revisar(trasMovil.chips.join(',') === movil.chips.join(','), 'deslizar el dedo sobre las sugerencias NO las reordena');
+    revisar(trasMovil.catalogo.join(',') === 'Gamma,Alfa,Beta,Delta,Epsilon', 'el catálogo queda intacto');
+
+    const antesTacto = await evaluar(cdp, 'document.querySelectorAll("#modal-body .paquete-item-fila").length');
+    await tocar(cdp, '.sugerido-chip:nth-child(1)');
+    const despuesTacto = await evaluar(cdp, 'document.querySelectorAll("#modal-body .paquete-item-fila").length');
+    console.log('   toque en una sugerencia: ' + antesTacto + ' → ' + despuesTacto + ' item(s)');
+    revisar(despuesTacto === antesTacto + 1, 'en el teléfono, TOCAR una sugerencia sí la agrega');
 
     const errores = cdp.sucesos.filter(s => s.method === 'Runtime.exceptionThrown')
       .map(s => s.params.exceptionDetails.exception?.description || s.params.exceptionDetails.text);
