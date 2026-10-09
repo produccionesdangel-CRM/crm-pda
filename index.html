@@ -183,6 +183,21 @@
         .paquete-items-servicios-sugeridos { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
         .paquete-items-servicios-sugeridos .sugerido-chip { background-color: var(--color-bg-primario); border: 1px dashed var(--color-borde); border-radius: 12px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: var(--color-texto-secundario); transition: all 0.2s ease; }
         .paquete-items-servicios-sugeridos .sugerido-chip:hover { border-color: var(--color-acento); color: var(--color-acento); background-color: var(--color-bg-hover); }
+        /* ─────── @CSS-ARRASTRAR-ORDEN (9/10/2026) ───────
+           Asa para arrastrar y estado mientras se arrastra (items del paquete y
+           sugerencias del catálogo). `touch-action: none` es indispensable: sin eso el
+           teléfono hace scroll en vez de arrastrar. */
+        .asa-arrastrar { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+            width: 22px; height: 26px; color: var(--color-texto-secundario); cursor: grab;
+            border-radius: 6px; touch-action: none; }
+        .asa-arrastrar:hover { color: var(--color-acento); background-color: var(--color-bg-hover); }
+        .paquete-item-fila.arrastrando, .sugerido-chip.arrastrando { position: relative; z-index: 5;
+            box-shadow: 0 14px 26px -12px var(--clay-hundido, rgba(0, 0, 0, 0.45)); }
+        .paquete-item-fila.arrastrando { background-color: var(--color-bg-secundario); cursor: grabbing; }
+        .paquete-items-servicios-sugeridos .sugerido-chip { touch-action: none; }
+        .sugerido-chip.arrastrando { border-style: solid; border-color: var(--color-acento); color: var(--color-acento);
+            background-color: var(--color-bg-secundario); cursor: grabbing; }
+        /* ─────── FIN @CSS-ARRASTRAR-ORDEN ─────── */
         .pantalla-login { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--color-bg-primario); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px; overflow-y: auto; }
         .pantalla-login.oculta { display: none; }
         .login-card { background-color: var(--color-bg-secundario); border: 1px solid var(--color-borde); border-radius: 16px; padding: 40px 36px; max-width: 440px; width: 100%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4); text-align: center; }
@@ -2636,7 +2651,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-09.31';
+        var BUILD_APP = '2026-10-09.32';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -5513,6 +5528,138 @@ input:focus, select:focus, textarea:focus {
             }
         }
 
+        /* ─────── @JS-ARRASTRAR-ORDEN (9/10/2026) ───────
+           Reordenar arrastrando con eventos de PUNTERO: sirve igual con el ratón y con
+           el dedo. El arrastre nativo del navegador (draggable="true") NO funciona en
+           el teléfono, y Jorge trabaja desde el celular, así que aquí no servía.
+           - `selectorFila` localiza los elementos que se reordenan dentro del contenedor.
+           - `alSoltar` se llama al terminar, para que quien lo use guarde el nuevo orden.
+           - Con `soloConAsa: true` (por omisión) solo se arrastra desde el asa (⣿), así
+             no pelea con el campo de cantidad ni con el botón de quitar.
+           - Con `soloConAsa: false` (las sugerencias) hace falta MOVER más de `umbral`
+             píxeles: un toque sin mover sigue agregando el servicio como siempre.
+           - `eje: 'xy'` para lo que se acomoda en VARIAS COLUMNAS (los chips del
+             catálogo): ahí también cuenta el movimiento horizontal. En una lista de una
+             sola columna (los items) el eje vertical basta.
+           DOS TRAMPAS QUE COSTARON UN RATO (probadas con el arnés verificar-orden.mjs):
+           1. NO capturar el puntero al presionar. Si se captura, el clic posterior se
+              entrega al contenedor y no al chip, y TOCAR UNA SUGERENCIA DEJABA DE
+              AGREGARLA. Se captura solo cuando el arrastre arranca de verdad.
+           2. Mirar únicamente el movimiento vertical rompía el arrastre en la PC, donde
+              los chips caben en una sola fila: se arrastraba en horizontal y no pasaba
+              nada. Por eso el modo 'xy'. */
+        function activarArrastre(contenedor, selectorFila, alSoltar, opciones) {
+            if (!contenedor) return;
+            var opt = opciones || {};
+            var soloConAsa = opt.soloConAsa !== false;
+            var umbral = opt.umbral || 6;
+            var dosEjes = opt.eje === 'xy';
+            var activo = null, dx = 0, dy = 0, inicioX = 0, inicioY = 0, pointerId = null, movido = false, ignorarClic = false;
+
+            function filas() { return Array.prototype.slice.call(contenedor.querySelectorAll(selectorFila)); }
+
+            function pintarTransform() {
+                activo.style.transform = dosEjes
+                    ? 'translate(' + dx + 'px, ' + dy + 'px)'
+                    : 'translateY(' + dy + 'px)';
+            }
+
+            function terminar(avisar) {
+                if (!activo) return;
+                var hubo = movido;
+                if (movido) { try { contenedor.releasePointerCapture(pointerId); } catch (e) { } }
+                activo.classList.remove('arrastrando');
+                activo.style.transform = '';
+                activo = null; dx = 0; dy = 0; movido = false; pointerId = null;
+                if (avisar && hubo && typeof alSoltar === 'function') alSoltar();
+            }
+
+            contenedor.addEventListener('pointerdown', function (ev) {
+                if (ev.button !== undefined && ev.button !== 0) return;
+                var objetivo = ev.target;
+                var fila = (objetivo && objetivo.closest) ? objetivo.closest(selectorFila) : null;
+                if (!fila || !contenedor.contains(fila)) return;
+                if (soloConAsa && !(objetivo.closest && objetivo.closest('.asa-arrastrar'))) return;
+                activo = fila;
+                pointerId = ev.pointerId;
+                inicioX = ev.clientX;
+                inicioY = ev.clientY;
+                dx = 0;
+                dy = 0;
+                movido = false;
+                /* Aquí NO se captura el puntero a propósito: ver la trampa 1 de arriba. */
+            });
+
+            contenedor.addEventListener('pointermove', function (ev) {
+                if (!activo || (pointerId !== null && ev.pointerId !== pointerId)) return;
+                dx = ev.clientX - inicioX;
+                dy = ev.clientY - inicioY;
+                var distancia = dosEjes ? Math.sqrt(dx * dx + dy * dy) : Math.abs(dy);
+                if (!movido) {
+                    if (distancia < umbral) return;
+                    movido = true;
+                    activo.classList.add('arrastrando');
+                    ignorarClic = true;
+                    /* Ahora sí: el arrastre ya arrancó y el puntero se captura para que
+                       siga aunque el dedo se salga de la ficha. */
+                    try { contenedor.setPointerCapture(pointerId); } catch (e) { }
+                    /* Si el clic no llegara (se soltó fuera), se libera solo. */
+                    setTimeout(function () { ignorarClic = false; }, 400);
+                }
+                ev.preventDefault();
+                pintarTransform();
+                /* ¿Delante de quién va? Se compara contra la mitad de cada ficha. */
+                var otras = filas().filter(function (f) { return f !== activo; });
+                var destino = null;
+                for (var i = 0; i < otras.length; i++) {
+                    var r = otras[i].getBoundingClientRect();
+                    if (dosEjes) {
+                        /* Varias columnas: cuenta la fila y, dentro de la fila, la
+                           posición horizontal (lectura de arriba-izquierda a
+                           abajo-derecha). */
+                        if (ev.clientY < r.top) { destino = otras[i]; break; }
+                        if (ev.clientY <= r.bottom && ev.clientX < r.left + r.width / 2) { destino = otras[i]; break; }
+                    } else if (ev.clientY < r.top + r.height / 2) {
+                        destino = otras[i]; break;
+                    }
+                }
+                var antes = activo.getBoundingClientRect();
+                if (destino) contenedor.insertBefore(activo, destino);
+                else contenedor.appendChild(activo);
+                var despues = activo.getBoundingClientRect();
+                /* Al moverlo de lugar cambia su posición base: se corrige el
+                   desplazamiento para que no salte debajo del dedo. */
+                if (despues.top !== antes.top) dy = dy - (despues.top - antes.top);
+                if (despues.left !== antes.left) dx = dx - (despues.left - antes.left);
+                pintarTransform();
+            });
+
+            contenedor.addEventListener('pointerup', function () { terminar(true); });
+            /* Si el sistema cancela el gesto, se aplica el orden que quedó a la vista. */
+            contenedor.addEventListener('pointercancel', function () { terminar(true); });
+
+            /* Después de arrastrar, el navegador dispara un clic: se ignora UNA vez para
+               que arrastrar una sugerencia no la agregue a la lista de items. */
+            contenedor.addEventListener('click', function (ev) {
+                if (ignorarClic) { ev.preventDefault(); ev.stopPropagation(); ignorarClic = false; }
+            }, true);
+        }
+
+        /* El catálogo de servicios en el orden que Jorge acomodó a mano. El orden vive
+           en el campo `orden` de cada servicio (se guarda en la nube, así que se respeta
+           en el teléfono y en la otra PC). Los servicios que todavía no tienen orden se
+           quedan donde estaban. */
+        function serviciosOrdenados() {
+            return serviciosAdicionales.map(function (s, i) { return { s: s, i: i }; })
+                .sort(function (a, b) {
+                    var oa = (a.s && typeof a.s.orden === 'number') ? a.s.orden : 999999;
+                    var ob = (b.s && typeof b.s.orden === 'number') ? b.s.orden : 999999;
+                    if (oa !== ob) return oa - ob;
+                    return a.i - b.i;
+                })
+                .map(function (x) { return x.s; });
+        }
+
         function mostrarFormularioPaquete(paquete) {
             if (!esAdmin()) { mostrarNotificacion('Solo administradores pueden gestionar paquetes.', 'warning'); return; }
             const ee = paquete !== null && paquete !== undefined;
@@ -5525,7 +5672,7 @@ input:focus, select:focus, textarea:focus {
             });
             let sugeridosHTML = '';
             if (serviciosAdicionales.length > 0) {
-                sugeridosHTML = '<div style="font-size:11px;color:var(--color-texto-secundario);margin-top:10px;margin-bottom:4px;">Sugerencias del catálogo:</div><div class="paquete-items-servicios-sugeridos" id="paquete-servicios-sugeridos">' + serviciosAdicionales.map(function(s) { return '<span class="sugerido-chip" data-id="' + s.id + '" data-nombre="' + s.nombre + '">+ ' + s.nombre + '</span>'; }).join('') + '</div>';
+                sugeridosHTML = '<div style="font-size:11px;color:var(--color-texto-secundario);margin-top:10px;margin-bottom:4px;">Sugerencias del catálogo: <span style="opacity:.8;">(arrastra para acomodarlas a tu gusto)</span></div><div class="paquete-items-servicios-sugeridos" id="paquete-servicios-sugeridos">' + serviciosOrdenados().map(function(s) { return '<span class="sugerido-chip" data-id="' + s.id + '" data-nombre="' + s.nombre + '">+ ' + s.nombre + '</span>'; }).join('') + '</div>';
             }
             const html = '<form id="form-paquete"><input type="hidden" id="paquete-id" value="' + (ee ? paquete.id : '') + '"><div class="form-grupo"><label>Nombre *</label><input type="text" id="paquete-nombre" required value="' + (ee ? paquete.nombre : '') + '"></div><div class="form-grupo"><label>Descripción *</label><textarea id="paquete-descripcion" required>' + (ee ? paquete.descripcion : '') + '</textarea></div><div class="form-grupo"><label>Items incluidos</label><div class="paquete-items-editor" id="paquete-items-editor"></div><div class="paquete-items-add"><input type="text" id="paquete-item-nombre" placeholder="Nombre del item"><input type="number" id="paquete-item-cantidad" placeholder="Cant." min="1" value="1" style="max-width:80px;"><button type="button" class="btn-add-item" id="btn-add-item-personalizado"><i class="fas fa-plus"></i> Agregar</button></div>' + sugeridosHTML + '</div><div class="row-2col"><div class="form-grupo"><label>Precio *</label><input type="number" id="paquete-precio" required min="0" step="0.01" value="' + (ee ? (paquete.precio || 0) : 0) + '"></div><div class="form-grupo"><label>Descuento (pesos)</label><input type="number" id="paquete-descuento" min="0" step="0.01" value="' + (ee ? (paquete.descuento || 0) : 0) + '"></div></div><div class="row-2col"><div class="form-grupo"><label>Fecha de caducidad *</label><input type="date" id="paquete-vigencia" required value="' + (ee ? paquete.vigencia : '') + '"></div><div class="form-grupo"><label>Estatus *</label><select id="paquete-estatus" required>' + opcionesEstatus + '</select></div></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-paquete-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
             abrirModal(ee ? 'Editar Paquete' : 'Nuevo Paquete', html);
@@ -5537,12 +5684,23 @@ input:focus, select:focus, textarea:focus {
                     const tipo = it.tipo || 'personalizado';
                     const badgeClase = tipo === 'servicio' ? 'item-tipo-servicio' : 'item-tipo-personalizado';
                     const badgeTexto = tipo === 'servicio' ? 'Catálogo' : 'Manual';
-                    return '<div class="paquete-item-fila"><span class="item-tipo-badge ' + badgeClase + '">' + badgeTexto + '</span><span class="item-nombre">' + (it.nombre || 'Sin nombre') + '</span><input type="number" class="item-cantidad" data-idx="' + idx + '" min="1" value="' + (it.cantidad || 1) + '"><button type="button" class="btn-quitar-item" data-idx="' + idx + '" title="Quitar"><i class="fas fa-times"></i></button></div>';
+                    return '<div class="paquete-item-fila" data-k="' + idx + '"><span class="asa-arrastrar" title="Arrastra para ordenar"><i class="fas fa-grip-vertical"></i></span><span class="item-tipo-badge ' + badgeClase + '">' + badgeTexto + '</span><span class="item-nombre">' + (it.nombre || 'Sin nombre') + '</span><input type="number" class="item-cantidad" data-idx="' + idx + '" min="1" value="' + (it.cantidad || 1) + '"><button type="button" class="btn-quitar-item" data-idx="' + idx + '" title="Quitar"><i class="fas fa-times"></i></button></div>';
                 }).join('');
                 editor.querySelectorAll('.item-cantidad').forEach(function(inp) { inp.addEventListener('change', function() { const i = parseInt(this.dataset.idx); const v = parseInt(this.value) || 1; itemsActuales[i].cantidad = v; }); });
                 editor.querySelectorAll('.btn-quitar-item').forEach(function(btn) { btn.addEventListener('click', function() { const i = parseInt(this.dataset.idx); itemsActuales.splice(i, 1); renderizarItemsEditor(); }); });
             }
             renderizarItemsEditor();
+            /* ── Items incluidos: se arrastran desde el asa (⣿) para dejarlos en el orden
+               que Jorge quiera. El orden se guarda con el paquete (arreglo `items`), así
+               que viaja a la nube y la lista de entregas del contrato lo respeta. ── */
+            activarArrastre(editor, '.paquete-item-fila', function () {
+                const nuevoOrden = Array.prototype.slice.call(editor.querySelectorAll('.paquete-item-fila'))
+                    .map(function (f) { return parseInt(f.getAttribute('data-k'), 10); });
+                const reordenados = [];
+                nuevoOrden.forEach(function (k) { if (itemsActuales[k] !== undefined) reordenados.push(itemsActuales[k]); });
+                /* Solo se aplica si el orden leído está completo (por seguridad). */
+                if (reordenados.length === itemsActuales.length) { itemsActuales = reordenados; renderizarItemsEditor(); }
+            });
             document.getElementById('btn-add-item-personalizado').addEventListener('click', function() {
                 const nombreInput = document.getElementById('paquete-item-nombre');
                 const cantInput = document.getElementById('paquete-item-cantidad');
@@ -5564,6 +5722,29 @@ input:focus, select:focus, textarea:focus {
                         renderizarItemsEditor();
                     });
                 });
+                /* ── Sugerencias: se acomodan arrastrando y el orden se GUARDA en el
+                   catálogo (campo `orden` de cada servicio, que sí viaja a la nube).
+                   Un toque sin arrastrar sigue agregando el servicio a la lista. ── */
+                activarArrastre(sugeridos, '.sugerido-chip', function () {
+                    const ids = Array.prototype.slice.call(sugeridos.querySelectorAll('.sugerido-chip'))
+                        .map(function (c) { return c.getAttribute('data-id'); });
+                    const nuevas = [], cambiados = [];
+                    ids.forEach(function (id, i) {
+                        const s = serviciosAdicionales.filter(function (x) { return x && x.id === id; })[0];
+                        if (!s) return;
+                        const nuevo = (i + 1) * 10;
+                        if (s.orden !== nuevo) { s.orden = nuevo; cambiados.push(s); }
+                        nuevas.push(s);
+                    });
+                    /* Solo se aplica si el orden leído cubre todo el catálogo. */
+                    if (nuevas.length !== serviciosAdicionales.length) return;
+                    serviciosAdicionales.length = 0;
+                    nuevas.forEach(function (s) { serviciosAdicionales.push(s); });
+                    cambiados.forEach(function (s) { marcarSucia('serviciosAdicionales', s.id); });
+                    guardarDatos();
+                    if (typeof renderizarServicios === 'function') { try { renderizarServicios(); } catch (e) { } }
+                    mostrarNotificacion('Orden del catálogo guardado', 'success');
+                }, { soloConAsa: false, umbral: 8, eje: 'xy' });
             }
             document.getElementById('btn-paquete-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
             document.getElementById('form-paquete').addEventListener('submit', function(e) {
