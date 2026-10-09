@@ -106,10 +106,20 @@ function guionDatos() {
     function iso(anio, mes, dia) { return anio + '-' + ('0' + mes).slice(-2) + '-' + ('0' + dia).slice(-2); }
     var A = HOY.getFullYear();
 
+    /* Los paquetes llevan sus "Items incluidos" (los que se capturan en Catálogo →
+       Paquetes): son los que alimentan la lista de entregas del contrato. */
     paquetes = [
-      { id: 'paq-boda', nombre: 'Boda Diamante' },
-      { id: 'paq-xv', nombre: 'XV Años Platino' },
-      { id: 'paq-corp', nombre: 'Corporativo Ejecutivo' }
+      { id: 'paq-boda', nombre: 'Boda Diamante', items: [
+        { tipo: 'personalizado', nombre: 'Cobertura completa del evento', cantidad: 1 },
+        { tipo: 'personalizado', nombre: 'Álbum 30x30', cantidad: 1 },
+        { tipo: 'personalizado', nombre: 'Sesión de compromiso', cantidad: 1 },
+        { tipo: 'personalizado', nombre: 'Galería en línea', cantidad: 1 } ] },
+      { id: 'paq-xv', nombre: 'XV Años Platino', items: [
+        { tipo: 'personalizado', nombre: 'Cobertura de la misa y la fiesta', cantidad: 1 },
+        { tipo: 'personalizado', nombre: 'Álbum 25x25', cantidad: 1 } ] },
+      { id: 'paq-corp', nombre: 'Corporativo Ejecutivo', items: [
+        { tipo: 'personalizado', nombre: 'Cobertura del evento', cantidad: 1 },
+        { tipo: 'personalizado', nombre: 'Video resumen', cantidad: 1 } ] }
     ];
     serviciosAdicionales = [
       { id: 'srv-dron', nombre: 'Dron' },
@@ -129,6 +139,7 @@ function guionDatos() {
         tipo: o.tipo || 'paquete', paqueteId: o.paqueteId, serviciosIds: o.serviciosIds || [],
         precioBase: o.precioBase, precioFinal: o.precioFinal, descuentoMonto: o.descuentoMonto || 0,
         cargos: o.cargos || [], pagos: o.pagos || [], estado: o.estado,
+        entregas: o.entregas || {},
         fechaEvento: o.fechaEvento, horaEvento: o.horaEvento, horaRecepcion: o.horaRecepcion || '',
         direccionEvento: o.direccionEvento, direccionRecepcion: o.direccionRecepcion || '',
         fechaRegistro: o.fechaRegistro || iso(A, 8, 14)
@@ -143,6 +154,9 @@ function guionDatos() {
       cliente({ id: 'cli-1', nombre: 'Familia Mendoza Ríos', telefono: '8781234567', email: 'mendoza@correo.com', estado: 'Activo',
         contratos: [ contrato({ id: 'con-1', clienteId: 'cli-1', clienteNombre: 'Familia Mendoza Ríos', festejado: 'Mariana y Diego',
           paqueteId: 'paq-boda', serviciosIds: ['srv-album'], precioBase: 45000, precioFinal: 45000, estado: 'Pendiente',
+          /* Dos cosas ya entregadas, para que la lista se vea con los dos estados. */
+          entregas: { 'Sesión de compromiso': { fecha: iso(A, 8, 30), por: 'Jorge Rosas' },
+                      'Galería en línea': { fecha: iso(A, 9, 28), por: 'Ana (asistente)' } },
           fechaEvento: iso(A, 11, 21), horaEvento: '17:00', horaRecepcion: '20:30',
           direccionEvento: 'Parroquia San José, Piedras Negras', direccionRecepcion: 'Salón Real, Blvd. Juárez',
           cargos: [ cargo(1, 3500, iso(A, 9, 2), 'Jorge Rosas', 'Dron para la ceremonia al aire libre') ],
@@ -566,6 +580,30 @@ async function main() {
       await dormir(450);
       await captura(cdp, 'contratos-' + tema + '.png');
     }
+
+    /* La lista de "qué se ha entregado", desplegada, para poder revisarla
+       (es la funcionalidad que Jorge pidió el 9/10/2026). */
+    const entregas = JSON.parse(await evaluar(cdp, `(function () {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      var s = document.querySelector('.entrega-caja > summary');
+      if (s) s.click();
+      /* La tarjeta queda abajo del panel: se lleva a la vista antes de la captura. */
+      var caja = document.querySelector('.entrega-caja');
+      if (caja && caja.scrollIntoView) caja.scrollIntoView({ block: 'center' });
+      var resumen = document.querySelector('.entrega-caja > summary');
+      return JSON.stringify({
+        hay: !!s,
+        resumen: resumen ? resumen.innerText.replace(/\\s+/g, ' ').trim() : '',
+        filas: document.querySelectorAll('[data-entrega]').length,
+        entregadas: document.querySelectorAll('.entrega-fila.hecha').length
+      });
+    })()`));
+    await dormir(600);
+    await captura(cdp, 'contrato-entregas-dark.png');
+    console.log('   lista de entregas: ' + entregas.filas + ' elemento(s), ' + entregas.entregadas + ' entregado(s) · "' + entregas.resumen + '"');
+    if (!entregas.hay || entregas.filas === 0) throw new Error('La lista de entregas no apareció en el detalle del contrato.');
+    await evaluar(cdp, `(function () { var s = document.querySelector('.entrega-caja > summary'); if (s) s.click(); return 1; })()`);
+    await dormir(300);
 
     /* ── Lo que Jorge pidió, medido y no a ojo ────────────────────────────────
        1. Que las tarjetas de dentro del panel derecho NO tengan barra lateral.

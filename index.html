@@ -1941,6 +1941,41 @@ input:focus, select:focus, textarea:focus {
     box-shadow: inset 0 4px 10px -8px var(--clay-hundido);
 }
         /* ─────── FIN @CSS-CLAY ─────── */
+
+        /* ─────── @CSS-ENTREGAS-CONTRATO (9/10/2026) ───────
+           La lista desplegable de lo que incluye el paquete/servicio, con una
+           palomita por cada elemento entregado. Va DESPUÉS de la capa de arcilla a
+           propósito, para que use las mismas variables --clay-* y se vea como el
+           resto (con un respaldo por si algún día se quita esa capa). */
+        .entrega-caja { margin-top: 14px; }
+        .entrega-caja > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px;
+            padding: 9px 13px; border-radius: var(--clay-r-pill, 999px); font-size: 13px; font-weight: 600;
+            color: var(--color-acento); background: var(--clay-sup-hundida, var(--color-bg-primario));
+            box-shadow: inset 0 4px 9px -7px var(--clay-hundido, rgba(0, 0, 0, 0.3)); }
+        .entrega-caja > summary::-webkit-details-marker { display: none; }
+        .entrega-caja > summary:hover { background: var(--clay-sup-hover, var(--color-bg-terciario)); }
+        .entrega-caja .entrega-flecha { margin-left: auto; font-size: 11px; transition: transform 0.2s ease; }
+        .entrega-caja[open] .entrega-flecha { transform: rotate(180deg); }
+        .entrega-contador { font-weight: 700; }
+        .entrega-lista { list-style: none; margin: 10px 0 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+        .entrega-fila { display: flex; align-items: flex-start; gap: 10px; padding: 9px 11px;
+            border: 1px solid var(--clay-borde, var(--color-borde-suave)); border-radius: var(--clay-r-md, 10px);
+            background: var(--clay-sup, var(--color-bg-terciario)); }
+        .entrega-fila input[type="checkbox"] { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px;
+            accent-color: var(--color-verde); cursor: pointer; }
+        .entrega-texto { flex: 1 1 auto; min-width: 0; }
+        .entrega-nombre { font-size: 13.5px; color: var(--color-texto-primario); }
+        .entrega-fila.hecha .entrega-nombre { text-decoration: line-through; color: var(--color-texto-secundario); }
+        .entrega-cant { font-size: 11px; color: var(--color-texto-secundario); }
+        .entrega-sello { display: block; font-size: 11px; color: var(--color-texto-secundario); margin-top: 3px; }
+        .entrega-nota { font-size: 11.5px; color: var(--color-texto-secundario); margin-top: 10px; }
+        .entrega-caja-vacia { font-size: 12.5px; color: var(--color-texto-secundario); margin-top: 12px; padding: 10px 12px;
+            border-radius: var(--clay-r-sm, 8px); background: var(--clay-sup-hundida, var(--color-bg-primario)); }
+        @media (max-width: 768px) {
+            .entrega-fila { padding: 10px 12px; }
+            .entrega-nombre { font-size: 13px; }
+        }
+        /* ─────── FIN @CSS-ENTREGAS-CONTRATO ─────── */
     </style>
 </head>
 <body>
@@ -2581,7 +2616,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-09.28';
+        var BUILD_APP = '2026-10-09.29';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -7216,6 +7251,126 @@ input:focus, select:focus, textarea:focus {
             });
         }
 
+        /* ─────── @JS-ENTREGAS-CONTRATO (9/10/2026) ───────
+           Revisión visual de lo que INCLUYE el paquete o servicio del contrato, con
+           una palomita por cada cosa ya entregada o cumplida. Jorge lo pidió así:
+           "solo será para revisión visual de que elementos contiene el paquete y qué
+           hemos entregado o cumplido y qué está pendiente". NO toca precios, pagos ni
+           cláusulas: lo único que se guarda es la lista de entregas (quién y cuándo),
+           dentro del propio contrato, en el campo `entregas`.
+
+           De dónde sale la lista: de los "Items incluidos" del paquete (Catálogo →
+           Paquetes) MÁS los servicios adicionales que lleva el contrato. En un
+           contrato de "solo servicio" (sin paquete) la lista son los servicios.
+           Se identifica cada elemento por su NOMBRE, no por su posición: si mañana
+           cambias el orden o agregas items al paquete, las palomitas ya puestas
+           siguen apuntando a lo mismo y lo nuevo aparece sin marcar. */
+        /* Qué contratos tienen la lista desplegada: al marcar una palomita el detalle
+           se vuelve a dibujar, y sin esto la lista se cerraría en cada clic. */
+        var entregasAbiertas = {};
+        function itemsDelContrato(contrato) {
+            if (!contrato) return [];
+            const lista = [];
+            const yaEsta = function(n) { return lista.some(function(x) { return x.nombre.toLowerCase() === String(n).toLowerCase(); }); };
+            if (contrato.tipo === 'paquete' && contrato.paqueteId) {
+                const p = obtenerPaquete(contrato.paqueteId);
+                ((p && p.items) || []).forEach(function(it) {
+                    if (!it || !it.nombre) return;
+                    if (yaEsta(it.nombre)) return;
+                    lista.push({ nombre: it.nombre, cantidad: it.cantidad || 1, origen: it.tipo === 'servicio' ? 'servicio del paquete' : 'paquete' });
+                });
+            }
+            (contrato.serviciosIds || []).forEach(function(id) {
+                const s = obtenerServicio(id);
+                if (!s || !s.nombre) return;
+                if (yaEsta(s.nombre)) return;
+                lista.push({ nombre: s.nombre, cantidad: 1, origen: 'servicio adicional' });
+            });
+            return lista;
+        }
+
+        function entregasDelContrato(contrato) {
+            const e = (contrato && contrato.entregas && typeof contrato.entregas === 'object') ? contrato.entregas : {};
+            return e;
+        }
+
+        /* La caja desplegable que se pinta dentro de "Paquete / Servicio". */
+        function bloqueEntregas(contrato) {
+            const items = itemsDelContrato(contrato);
+            if (items.length === 0) {
+                return '<div class="entrega-caja-vacia">Este ' + (contrato.tipo === 'paquete' ? 'paquete' : 'servicio') +
+                    ' no tiene items capturados, así que no hay lista que revisar. Se agregan en Catálogo → Paquetes → "Items incluidos".</div>';
+            }
+            const entregas = entregasDelContrato(contrato);
+            const hechas = items.filter(function(it) { return !!entregas[it.nombre]; }).length;
+            const filas = items.map(function(it) {
+                const marca = entregas[it.nombre];
+                const hecha = !!marca;
+                const sello = hecha
+                    ? '<span class="entrega-sello"><i class="fas fa-circle-check" style="color:var(--color-verde);"></i> Entregado' +
+                      (marca.fecha ? ' el ' + escapeHTML(formatearFecha(marca.fecha)) : '') + (marca.por ? ' · ' + escapeHTML(String(marca.por)) : '') + '</span>'
+                    : '<span class="entrega-sello" style="color:var(--color-naranja);"><i class="fas fa-hourglass-half"></i> Pendiente de entrega</span>';
+                return '<li class="entrega-fila' + (hecha ? ' hecha' : '') + '">' +
+                    '<input type="checkbox" data-entrega="' + escapeHTML(it.nombre) + '"' + (hecha ? ' checked' : '') + '>' +
+                    '<span class="entrega-texto"><span class="entrega-nombre">' + escapeHTML(it.nombre) +
+                    (it.cantidad > 1 ? ' <span class="entrega-cant">(x' + escapeHTML(String(it.cantidad)) + ')</span>' : '') + '</span>' + sello + '</span></li>';
+            }).join('');
+            const todo = hechas === items.length;
+            return '<details class="entrega-caja"' + (entregasAbiertas[contrato.id] ? ' open' : '') + '>' +
+                '<summary><i class="fas fa-list-check"></i> Qué incluye y qué se ha entregado ' +
+                '<span class="entrega-contador" style="color:' + (todo ? 'var(--color-verde)' : 'var(--color-naranja)') + ';">' +
+                hechas + ' de ' + items.length + '</span>' +
+                '<i class="fas fa-chevron-down entrega-flecha"></i></summary>' +
+                '<ul class="entrega-lista">' + filas + '</ul>' +
+                '<div class="entrega-nota"><i class="fas fa-circle-info"></i> Esta lista es solo para revisar entregas: no cambia el precio, los pagos ni el contrato.</div>' +
+                '</details>';
+        }
+
+        /* Marca o desmarca una entrega y la guarda en el contrato (con quién y cuándo). */
+        function marcarEntregaContrato(clienteId, contratoId, nombreItem, entregado) {
+            const c = obtenerCliente(clienteId);
+            if (!c) return;
+            const co = (c.contratos || []).find(function(x) { return x.id === contratoId; });
+            if (!co) return;
+            if (!co.entregas || typeof co.entregas !== 'object') co.entregas = {};
+            if (entregado) co.entregas[nombreItem] = { fecha: obtenerFechaActual(), por: nombreUsuarioActual() };
+            else delete co.entregas[nombreItem];
+            co._modificadoPor = nombreUsuarioActual();
+            co._fechaModificacion = obtenerFechaHoraActual();
+            marcarSucia('clientes', clienteId);
+            registrarHistorial('contrato', 'editar',
+                (entregado ? 'Se marcó como entregado "' : 'Se desmarcó la entrega de "') + nombreItem + '" en el contrato de ' + c.nombre,
+                { id: contratoId, nombre: c.nombre });
+            guardarDatos();
+            /* El detalle se vuelve a dibujar: se guarda dónde estaba mirando para no
+               devolverlo al principio de la lista en cada palomita. */
+            const cuerpo = document.getElementById('panel-lateral-body') || document.getElementById('modal-body');
+            const scrollPrevio = cuerpo ? cuerpo.scrollTop : 0;
+            verDetalleContrato(clienteId, contratoId);
+            const cuerpoNuevo = document.getElementById('panel-lateral-body') || document.getElementById('modal-body');
+            if (cuerpoNuevo) cuerpoNuevo.scrollTop = scrollPrevio;
+        }
+
+        /* Conecta las palomitas del detalle (sirve igual en el panel y en el modal del teléfono). */
+        function conectarEntregas(clienteId, contratoId) {
+            document.querySelectorAll('[data-entrega]').forEach(function(cb) {
+                cb.addEventListener('change', function(ev) {
+                    ev.stopPropagation();
+                    marcarEntregaContrato(clienteId, contratoId, this.getAttribute('data-entrega'), this.checked);
+                });
+                /* Que tocar la palomita no cierre ni abra el desplegable. */
+                cb.addEventListener('click', function(ev) { ev.stopPropagation(); });
+            });
+            const caja = document.querySelector('.entrega-caja');
+            if (caja) {
+                /* Se recuerda si quedó abierta para que siga abierta al redibujar. */
+                caja.addEventListener('toggle', function() { entregasAbiertas[contratoId] = caja.open; });
+                caja.addEventListener('click', function(ev) { ev.stopPropagation(); });
+                const resumen = caja.querySelector('summary');
+                if (resumen) resumen.addEventListener('click', function(ev) { ev.stopPropagation(); });
+            }
+        }
+
         function verDetalleContrato(clienteId, contratoId) {
             const cliente = obtenerCliente(clienteId);
             if (!cliente) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
@@ -7264,10 +7419,13 @@ input:focus, select:focus, textarea:focus {
                 }).join('');
                 alertasFinancierasHTML = '<div class="advertencia-eliminar" style="background-color:rgba(255,152,0,0.10);border-color:var(--color-naranja);"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto"><strong style="color:var(--color-naranja);">Revisar el estado de cobros</strong><ul style="margin:8px 0 0 18px;padding:0;">' + filas + '</ul><div style="margin-top:8px;font-size:12px;color:var(--color-texto-secundario);">Los importes no se modifican automáticamente: corrígelos desde Editar o anula el movimiento que corresponda.</div></div></div>';
             }
-            const html = '<div class="detalle-acciones"><button class="btn-primario" onclick="editarContrato(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-edit"></i> Editar</button><button class="btn-naranja" onclick="cerrarModal(); agregarPagoRapido(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-coins"></i> Agregar pago</button><button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + clienteId + '\')"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i> WhatsApp cliente</button>' + (esAdmin() ? '<button class="btn-peligro" onclick="cerrarModal(); eliminarContrato(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-trash"></i> Eliminar</button>' : '') + '</div><div class="detalle-header"><div class="detalle-cliente">' + cliente.nombre + '</div><div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + contrato.estado + '</span><span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span></div><div class="detalle-festejado">Festejado: <strong>' + (contrato.festejado || 'No especificado') + '</strong></div></div>' + alertasFinancierasHTML + '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-user"></i> Datos del cliente</div><div class="detalle-grid">' + campo('Nombre', cliente.nombre) + campo('Teléfono', cliente.telefono) + campo('Email', cliente.email) + campo('Estado', cliente.estado) + '</div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-calendar-alt"></i> Información del evento</div><div class="detalle-grid">' + campo('Festejado', contrato.festejado) + campo('Tipo', tl) + campo('Fecha', formatearFecha(contrato.fechaEvento)) + campo('Hora', contrato.horaEvento ? contrato.horaEvento + ' hrs' : 'Sin especificar') + campo('Dirección evento', contrato.direccionEvento) + campo('Dirección recepción', contrato.direccionRecepcion) + campo('Hora recepción', contrato.horaRecepcion ? contrato.horaRecepcion + ' hrs' : 'Sin especificar') + campo('Fecha contrato', formatearFecha(contrato.fechaContrato)) + '</div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-box"></i> Paquete / Servicio</div><div class="detalle-grid"><div class="detalle-campo" style="grid-column:1/-1;"><span class="lbl">Descripción</span><span class="val">' + (in_ || 'No especificado') + '</span></div></div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-chart-line"></i> Resumen financiero</div><div class="detalle-resumen-financiero"><div class="detalle-financiero-card"><div class="lbl">Precio base</div><div class="val">' + formatearMoneda(contrato.precioBase) + '</div></div><div class="detalle-financiero-card"><div class="lbl">Precio final</div><div class="val">' + formatearMoneda(contrato.precioFinal) + '</div></div>' + (tot.totalCargos > 0 ? '<div class="detalle-financiero-card"><div class="lbl">Cargos extras</div><div class="val">' + formatearMoneda(tot.totalCargos) + '</div></div>' : '') + '<div class="detalle-financiero-card destacado"><div class="lbl">Total a pagar</div><div class="val">' + formatearMoneda(tot.totalAPagar) + '</div></div><div class="detalle-financiero-card ok"><div class="lbl">Pagado</div><div class="val">' + formatearMoneda(tot.totalPagos) + '</div></div><div class="detalle-financiero-card ' + (tot.saldoPendiente === 0 ? 'ok' : 'pendiente') + '"><div class="lbl">Saldo pendiente</div><div class="val">' + (tot.saldoPendiente === 0 ? 'Liquidado ' : '') + formatearMoneda(tot.saldoPendiente) + '</div></div></div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-coins"></i> Pagos (' + tot.pagosValidos.length + ')</div><div class="detalle-lista">' + pagosHTML + '</div></div>' + cargosHTML + (contrato.notas ? '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas</div><div class="detalle-notas">' + contrato.notas + '</div></div>' : '') + tareasHTML;
+            const html = '<div class="detalle-acciones"><button class="btn-primario" onclick="editarContrato(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-edit"></i> Editar</button><button class="btn-naranja" onclick="cerrarModal(); agregarPagoRapido(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-coins"></i> Agregar pago</button><button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + clienteId + '\')"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i> WhatsApp cliente</button>' + (esAdmin() ? '<button class="btn-peligro" onclick="cerrarModal(); eliminarContrato(\'' + clienteId + '\',\'' + contrato.id + '\')"><i class="fas fa-trash"></i> Eliminar</button>' : '') + '</div><div class="detalle-header"><div class="detalle-cliente">' + cliente.nombre + '</div><div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + contrato.estado + '</span><span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span></div><div class="detalle-festejado">Festejado: <strong>' + (contrato.festejado || 'No especificado') + '</strong></div></div>' + alertasFinancierasHTML + '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-user"></i> Datos del cliente</div><div class="detalle-grid">' + campo('Nombre', cliente.nombre) + campo('Teléfono', cliente.telefono) + campo('Email', cliente.email) + campo('Estado', cliente.estado) + '</div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-calendar-alt"></i> Información del evento</div><div class="detalle-grid">' + campo('Festejado', contrato.festejado) + campo('Tipo', tl) + campo('Fecha', formatearFecha(contrato.fechaEvento)) + campo('Hora', contrato.horaEvento ? contrato.horaEvento + ' hrs' : 'Sin especificar') + campo('Dirección evento', contrato.direccionEvento) + campo('Dirección recepción', contrato.direccionRecepcion) + campo('Hora recepción', contrato.horaRecepcion ? contrato.horaRecepcion + ' hrs' : 'Sin especificar') + campo('Fecha contrato', formatearFecha(contrato.fechaContrato)) + '</div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-box"></i> Paquete / Servicio</div><div class="detalle-grid"><div class="detalle-campo" style="grid-column:1/-1;"><span class="lbl">Descripción</span><span class="val">' + (in_ || 'No especificado') + '</span></div></div>' + bloqueEntregas(contrato) + '</div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-chart-line"></i> Resumen financiero</div><div class="detalle-resumen-financiero"><div class="detalle-financiero-card"><div class="lbl">Precio base</div><div class="val">' + formatearMoneda(contrato.precioBase) + '</div></div><div class="detalle-financiero-card"><div class="lbl">Precio final</div><div class="val">' + formatearMoneda(contrato.precioFinal) + '</div></div>' + (tot.totalCargos > 0 ? '<div class="detalle-financiero-card"><div class="lbl">Cargos extras</div><div class="val">' + formatearMoneda(tot.totalCargos) + '</div></div>' : '') + '<div class="detalle-financiero-card destacado"><div class="lbl">Total a pagar</div><div class="val">' + formatearMoneda(tot.totalAPagar) + '</div></div><div class="detalle-financiero-card ok"><div class="lbl">Pagado</div><div class="val">' + formatearMoneda(tot.totalPagos) + '</div></div><div class="detalle-financiero-card ' + (tot.saldoPendiente === 0 ? 'ok' : 'pendiente') + '"><div class="lbl">Saldo pendiente</div><div class="val">' + (tot.saldoPendiente === 0 ? 'Liquidado ' : '') + formatearMoneda(tot.saldoPendiente) + '</div></div></div></div><div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-coins"></i> Pagos (' + tot.pagosValidos.length + ')</div><div class="detalle-lista">' + pagosHTML + '</div></div>' + cargosHTML + (contrato.notas ? '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas</div><div class="detalle-notas">' + contrato.notas + '</div></div>' : '') + tareasHTML;
             const esMobil = window.innerWidth <= 768;
             if (esMobil) abrirModal('Detalle del contrato', html, true);
             else { abrirPanelLateral('Detalle del contrato', html, { tipo: 'contrato', itemId: contratoId }); marcarItemSeleccionado(contratoId); }
+            /* Las palomitas de "qué se ha entregado" se conectan después de pintar
+               (sirve igual en el panel de la PC y en el modal del teléfono). */
+            conectarEntregas(clienteId, contratoId);
         }
 
         /* ─── COMPROBANTES ─── */
