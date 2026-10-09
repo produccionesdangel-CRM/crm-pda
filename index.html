@@ -1243,7 +1243,705 @@
             .lista-check { max-height: 260px; }
             .asistente-cuerpo { min-height: 0; }
         }
-        /* ─────── FIN @CSS-CAMPANIAS ─────── */    </style>
+        /* ─────── FIN @CSS-CAMPANIAS ─────── */
+        /* ═══════════════════════════════════════════════════════════════════
+           @CSS-CLAY v5.0 (9/10/2026) — estilo Claymorphism
+           -------------------------------------------------------------------
+           Capa de estilo del CRM: se aplica ENCIMA de todo lo que ya había, así
+           que va al FINAL del bloque de estilos (después del CSS del CRM y de sus
+           bloques de teléfono). No borra nada: solo cambia colores, radios y
+           sombras, y agrega las manchas de fondo de cada tema.
+
+           EL SET DE COLORES ES EL DEL CRM: no se inventó una paleta nueva. Cada
+           tema (Oscuro, Claro, Otoño, Ángel) define sus propios tonos de arcilla
+           a partir de sus variables --color-*.
+
+           REGLAS PARA QUIEN LO TOQUE DESPUÉS (aprendidas a golpes):
+           · NO declarar `position` ni medidas (padding, min-height, font-size,
+             gap) de lo que el bloque @media (max-width: 768px) del CRM ajusta:
+             eso rompe el cajón del menú del teléfono y el alto fijo del calendario.
+           · Para pintar una superficie encima de un color que ya existe usar
+             `background-image`, NUNCA el atajo `background`: el atajo reinicia el
+             color de fondo y el degradado se pinta encima (así se perdió el dorado
+             del botón "Hoy" del calendario).
+           · El calendario tiene el alto de fila FIJO (116 px PC / 82 px teléfono)
+             y un tope de etiquetas por día: en el calendario solo se toca color,
+             radio y sombra. Su arnés (pruebas\medir-calendario-movil.mjs) lo mide.
+           · Las tarjetas llevan relieve hacia AFUERA (luz arriba, sombra abajo);
+             las franjas internas y los campos van HUNDIDOS.
+           · En Otoño y Ángel las tarjetas son MÁS OSCURAS que el fondo (Jorge los
+             pidió invertidos); por eso sus tonos "hundidos" son más oscuros aún.
+           · Los días del mes en curso van RESALTADOS (pastilla de chicle) y los de
+             otros meses hundidos, para distinguirlos de un vistazo.
+           ═══════════════════════════════════════════════════════════════════ */
+/* ── 1. Radios de arcilla (una sola medida para todo el sistema) ─────────── */
+:root {
+    --clay-r-xl: 30px;
+    --clay-r-lg: 24px;
+    --clay-r-md: 18px;
+    --clay-r-sm: 13px;
+    --clay-r-pill: 999px;
+}
+
+/* ── 2. Tokens de arcilla por tema ────────────────────────────────────────
+   Cada tema define: de qué color es el fondo de trabajo, qué manchas lleva,
+   cómo se degrada la superficie de una tarjeta y con qué sombras se moldea.  */
+
+html[data-theme="dark"] {
+    --clay-fondo: #0b0b0d;
+    --clay-manchas:
+        radial-gradient(1180px 800px at 33% 2%, rgba(201, 168, 76, 0.20), rgba(201, 168, 76, 0.07) 36%, transparent 74%),
+        radial-gradient(1080px 740px at 64% 96%, rgba(66, 165, 245, 0.14), rgba(66, 165, 245, 0.05) 38%, transparent 76%),
+        radial-gradient(940px 660px at 15% 62%, rgba(156, 39, 176, 0.10), transparent 72%);
+    --clay-sup: linear-gradient(168deg, #2d2d31 0%, #242427 45%, #1d1d20 100%);
+    --clay-chiclet: linear-gradient(168deg, #3b3b42 0%, #313137 45%, #292930 100%);
+    --clay-marco: linear-gradient(168deg, #242428 0%, #202024 45%, #1a1a1d 100%);
+    --clay-sup-hover: linear-gradient(168deg, #35353c 0%, #2a2a30 45%, #212125 100%);
+    --clay-sup-hundida: linear-gradient(168deg, #141416 0%, #171719 100%);
+    --clay-bandeja: linear-gradient(168deg, #0c0c0e 0%, #101012 100%);
+    --clay-out: 0 24px 44px -18px rgba(0, 0, 0, 0.80), 0 8px 16px -10px rgba(0, 0, 0, 0.62);
+    --clay-out-alto: 0 32px 56px -20px rgba(0, 0, 0, 0.88), 0 10px 20px -10px rgba(0, 0, 0, 0.68);
+    --clay-luz: rgba(255, 255, 255, 0.10);
+    --clay-hundido: rgba(0, 0, 0, 0.62);
+    --clay-borde: rgba(255, 255, 255, 0.06);
+}
+
+html[data-theme="light"] {
+    --clay-fondo: #e3e8f2;
+    --clay-manchas:
+        radial-gradient(1180px 800px at 31% 0%, rgba(146, 110, 6, 0.28), rgba(146, 110, 6, 0.11) 36%, transparent 74%),
+        radial-gradient(1080px 740px at 66% 98%, rgba(12, 72, 156, 0.22), rgba(12, 72, 156, 0.08) 38%, transparent 76%),
+        radial-gradient(940px 660px at 13% 60%, rgba(150, 12, 66, 0.14), transparent 72%);
+    --clay-sup: linear-gradient(168deg, #ffffff 0%, #fafbfd 45%, #f1f3f8 100%);
+    --clay-chiclet: linear-gradient(168deg, #ffffff 0%, #ffffff 55%, #f8fafd 100%);
+    --clay-marco: linear-gradient(168deg, #e6eaf3 0%, #ebeff6 45%, #e2e7f0 100%);
+    --clay-sup-hover: linear-gradient(168deg, #ffffff 0%, #fdfdff 45%, #f5f7fb 100%);
+    --clay-sup-hundida: linear-gradient(168deg, #e7eaf2 0%, #edeff5 100%);
+    --clay-bandeja: linear-gradient(168deg, #dbe1ec 0%, #e3e8f2 100%);
+    --clay-out: 0 24px 42px -20px rgba(31, 41, 55, 0.32), 0 8px 16px -12px rgba(31, 41, 55, 0.18);
+    --clay-out-alto: 0 32px 54px -22px rgba(31, 41, 55, 0.38), 0 10px 20px -12px rgba(31, 41, 55, 0.20);
+    --clay-luz: rgba(255, 255, 255, 0.95);
+    --clay-hundido: rgba(31, 41, 55, 0.16);
+    --clay-borde: rgba(255, 255, 255, 0.80);
+}
+
+/* OTOÑO — INVERTIDO a petición de Jorge: el fondo es CLARO y las tarjetas
+   quedaron con el tono que antes tenía el fondo (más oscuras que el fondo).
+   Por eso la superficie "hundida" (campos, franjas) es MÁS OSCURA que la
+   tarjeta: el hundido tiene que ir hacia adentro, no hacia afuera. */
+html[data-theme="otono"] {
+    --clay-fondo: #fdf8ee;
+    --clay-manchas:
+        radial-gradient(1180px 800px at 31% 0%, rgba(186, 118, 8, 0.26), rgba(186, 118, 8, 0.10) 36%, transparent 74%),
+        radial-gradient(1080px 740px at 66% 98%, rgba(96, 60, 92, 0.18), rgba(96, 60, 92, 0.06) 38%, transparent 76%),
+        radial-gradient(940px 660px at 13% 60%, rgba(84, 106, 32, 0.16), transparent 72%);
+    --clay-sup: linear-gradient(168deg, #e6d9bc 0%, #dccca8 45%, #d0bd93 100%);
+    --clay-chiclet: linear-gradient(168deg, #f3ead9 0%, #ece0c8 45%, #e2d4b6 100%);
+    --clay-marco: linear-gradient(168deg, #dccdaa 0%, #d5c49c 45%, #cdba90 100%);
+    --clay-sup-hover: linear-gradient(168deg, #ece1c8 0%, #e3d5b6 45%, #d8c7a4 100%);
+    --clay-sup-hundida: linear-gradient(168deg, #c6b48c 0%, #cfbf9c 100%);
+    --clay-bandeja: linear-gradient(168deg, #c0b088 0%, #c9ba96 100%);
+    --clay-out: 0 22px 40px -20px rgba(61, 50, 38, 0.30), 0 8px 16px -12px rgba(61, 50, 38, 0.18);
+    --clay-out-alto: 0 30px 52px -22px rgba(61, 50, 38, 0.36), 0 10px 20px -12px rgba(61, 50, 38, 0.20);
+    --clay-luz: rgba(255, 255, 255, 0.72);
+    --clay-hundido: rgba(61, 50, 38, 0.22);
+    --clay-borde: rgba(255, 255, 255, 0.55);
+}
+
+/* ÁNGEL — INVERTIDO igual que otoño: fondo claro, tarjetas con el lavanda que
+   antes era el fondo. */
+html[data-theme="angel"] {
+    --clay-fondo: #fcf9ff;
+    --clay-manchas:
+        radial-gradient(1180px 800px at 31% 0%, rgba(146, 44, 232, 0.22), rgba(146, 44, 232, 0.08) 36%, transparent 74%),
+        radial-gradient(1080px 740px at 66% 98%, rgba(26, 92, 216, 0.17), rgba(26, 92, 216, 0.06) 38%, transparent 76%),
+        radial-gradient(940px 660px at 13% 60%, rgba(4, 132, 90, 0.11), transparent 72%);
+    --clay-sup: linear-gradient(168deg, #e2d6f8 0%, #d5c8f0 45%, #c5b5e4 100%);
+    --clay-chiclet: linear-gradient(168deg, #f2ebfd 0%, #e9dffa 45%, #dccff4 100%);
+    --clay-marco: linear-gradient(168deg, #d3c5ef 0%, #cbbceb 45%, #c1b0e4 100%);
+    --clay-sup-hover: linear-gradient(168deg, #e8defb 0%, #dcd1f4 45%, #cdc0ea 100%);
+    --clay-sup-hundida: linear-gradient(168deg, #bcabe0 0%, #c8b9e8 100%);
+    --clay-bandeja: linear-gradient(168deg, #b4a1db 0%, #bfaee4 100%);
+    --clay-out: 0 22px 40px -20px rgba(123, 44, 191, 0.26), 0 8px 16px -12px rgba(123, 44, 191, 0.16);
+    --clay-out-alto: 0 30px 52px -22px rgba(123, 44, 191, 0.32), 0 10px 20px -12px rgba(123, 44, 191, 0.18);
+    --clay-luz: rgba(255, 255, 255, 0.80);
+    --clay-hundido: rgba(123, 44, 191, 0.20);
+    --clay-borde: rgba(255, 255, 255, 0.58);
+}
+
+/* ── 3. El fondo: manchas grandes de degradado ────────────────────────────
+   Van en el contenedor general y con `fixed`, así que no se mueven al hacer
+   scroll: son ambiente, no contenido. El área de trabajo queda TRANSPARENTE
+   para que las manchas se vean detrás de todo (también detrás de las tarjetas
+   y alrededor del panel lateral, sin costuras).                             */
+.app-container {
+    background-color: var(--clay-fondo);
+    background-image: var(--clay-manchas);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    transition: background-color var(--transition);
+}
+
+.main-content {
+    background-color: transparent;
+    background-image: none;
+}
+
+body { background-color: var(--clay-fondo); }
+
+/* OJO (aprendido a golpes): AQUÍ NO se declara `position` ni `padding` de
+   .sidebar / .main-content / .seccion-header / .mosaico-card. El CSS del CRM
+   tiene un bloque @media (max-width: 768px) que cambia esas mismas propiedades
+   para el teléfono (la barra lateral pasa a ser un cajón `position: fixed`).
+   Como esta capa se inyecta AL FINAL, cualquier `position: relative` aquí
+   anularía el cajón y la barra volvería al flujo, empujando todo el contenido
+   a la derecha en el teléfono. Las medidas móviles se dejan como están. */
+
+/* ── 4. Superficies de arcilla ───────────────────────────────────────────── */
+
+.mosaico-card,
+.metrica-card,
+#lista-tareas .tarjeta-registro,
+.lista-fila {
+    border: 1px solid var(--clay-borde);
+    border-radius: var(--clay-r-lg);
+    background: var(--clay-sup);
+    box-shadow:
+        var(--clay-out),
+        inset 0 2px 0 var(--clay-luz),
+        inset 0 -14px 22px -16px var(--clay-hundido);
+}
+
+.mosaico-card:hover,
+.lista-fila:hover {
+    transform: translateY(-3px);
+    background: var(--clay-sup-hover);
+    border-color: var(--clay-borde);
+    box-shadow:
+        var(--clay-out-alto),
+        inset 0 2px 0 var(--clay-luz),
+        inset 0 -14px 22px -16px var(--clay-hundido),
+        0 0 0 1px rgba(201, 168, 76, 0.18);
+}
+
+.mosaico-card.seleccionado {
+    border: 1px solid var(--color-acento);
+    box-shadow:
+        var(--clay-out-alto),
+        inset 0 2px 0 var(--clay-luz),
+        inset 0 -14px 22px -16px var(--clay-hundido),
+        0 0 0 4px color-mix(in srgb, var(--color-acento) 18%, transparent);
+    background: var(--clay-sup-hover);
+}
+
+/* La franja del dinero dentro de la tarjeta: va HUNDIDA (como presionada). */
+.mosaico-summary {
+    border-radius: var(--clay-r-sm);
+    background: var(--clay-sup-hundida);
+    border: 1px solid var(--clay-borde);
+    box-shadow: inset 0 6px 12px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+    padding: 8px 12px;
+}
+
+.mosaico-separador { border-top: 1px dashed color-mix(in srgb, var(--color-borde) 70%, transparent); }
+
+.mosaico-footer { border-top: 1px solid var(--clay-borde); box-shadow: inset 0 1px 0 var(--clay-luz); }
+
+/* Los botones de ICONO de las tarjetas y las listas (editar, pago, WhatsApp,
+   Google, imprimir, borrar…) NO son pastillas: son iconos sueltos. Hay que
+   devolverles esa forma, porque la regla de botones de la sección 6 también los
+   alcanza (comparten clases) y les dibujaba un brillo arriba que se veía como
+   un arco flotando encima del icono. */
+.mosaico-footer button,
+.lista-acciones button,
+#lista-tareas .tarjeta-acciones button,
+.acciones-mini button {
+    border: none;
+    background: none;
+    box-shadow: none;
+    border-radius: var(--clay-r-sm);
+}
+
+.mosaico-footer button:hover,
+.lista-acciones button:hover,
+#lista-tareas .tarjeta-acciones button:hover,
+.acciones-mini button:hover {
+    background-color: var(--color-bg-hover);
+    box-shadow: none;
+}
+
+.mosaico-footer button:active,
+.lista-acciones button:active,
+#lista-tareas .tarjeta-acciones button:active,
+.acciones-mini button:active {
+    box-shadow: none;
+    transform: none;
+}
+
+/* Barra de filtros: panel de arcilla con los campos hundidos dentro. */
+.filtros-container {
+    border: 1px solid var(--clay-borde);
+    border-radius: var(--clay-r-lg);
+    background: var(--clay-sup);
+    box-shadow:
+        var(--clay-out),
+        inset 0 2px 0 var(--clay-luz),
+        inset 0 -14px 22px -16px var(--clay-hundido);
+    padding: 18px 22px;
+}
+
+/* Encabezado de sección: la línea dura se cambia por un degradado.
+   OJO: no se toca `padding-bottom` (el móvil lo ajusta a 10 px). */
+.seccion-header {
+    border-bottom: none;
+    position: relative;
+}
+
+.seccion-header::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-borde) 12%, var(--color-borde) 88%, transparent);
+}
+
+.metrica-card { border: 1px solid var(--clay-borde); background: var(--clay-sup); }
+.metrica-icono {
+    background: var(--clay-sup-hundida);
+    box-shadow: inset 0 5px 10px -7px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+}
+
+/* ── 5. Panel lateral derecho: tableta de arcilla flotante ───────────────── */
+.panel-lateral {
+    /* El panel va como BANDEJA (superficie hundida) y las tarjetas de adentro
+       son las que resaltan. Si el panel y las tarjetas fueran del mismo color
+       (como estaba antes), en el tema Claro quedaban blanco sobre blanco: se
+       perdía la jerarquía. */
+    background: var(--clay-bandeja);
+    border-left: none;
+    border-radius: var(--clay-r-xl);
+    margin: 14px 16px 14px 0;
+    height: calc(100vh - 28px);
+    box-shadow:
+        var(--clay-out-alto),
+        inset 0 2px 0 var(--clay-luz),
+        inset 0 -18px 28px -20px var(--clay-hundido);
+}
+
+.panel-lateral-header {
+    background: transparent;
+    border-bottom: 1px solid var(--clay-borde);
+    box-shadow: inset 0 -1px 0 var(--clay-luz);
+    border-radius: var(--clay-r-xl) var(--clay-r-xl) 0 0;
+    padding: 22px 26px;
+}
+
+.panel-lateral-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: 0.2px;
+}
+
+.panel-lateral-header h2 i { color: var(--color-acento); }
+
+.panel-lateral-body { padding: 22px 26px; }
+
+/* Bloques internos del detalle: mismos relieves, un escalón más chico.
+   Sin tocar `padding`: el móvil ya los acomoda. */
+.detalle-acciones {
+    /* Resaltada sobre la bandeja del panel, igual que las tarjetas de sección. */
+    background: var(--clay-sup);
+    border: 1px solid var(--clay-borde);
+    border-radius: var(--clay-r-md);
+    box-shadow: 0 14px 26px -18px var(--clay-hundido), inset 0 1px 0 var(--clay-luz);
+}
+
+.detalle-header { border-bottom: none; box-shadow: inset 0 -1px 0 var(--clay-borde); }
+
+/* Las tarjetas de dentro del panel derecho: MISMO aspecto de arcilla que las
+   tarjetas del listado. A petición de Jorge se les quita la barra de color del
+   lado izquierdo (la del CRM, que se veía como una sombra pegada al canto).
+   Va con `!important` porque el CRM la vuelve a pintar de azul/morado con
+   `!important` en las secciones de tareas, y adentro de algunas secciones la
+   pone en línea (style="border-left-color:…"). */
+.detalle-seccion,
+.detalle-seccion-tareas,
+.detalle-seccion-sueltas {
+    background: var(--clay-sup);
+    border: 1px solid var(--clay-borde);
+    border-left: none !important;
+    border-radius: var(--clay-r-lg);
+    box-shadow:
+        var(--clay-out),
+        inset 0 2px 0 var(--clay-luz),
+        inset 0 -14px 22px -16px var(--clay-hundido);
+    padding: 18px 20px;
+}
+
+/* Las tareas del cliente dentro del panel: también sin barra lateral. El estado
+   se sigue distinguiendo por el color del borde y del título. */
+.tarea-vinculada {
+    border: 1px solid var(--clay-borde);
+    border-left: none !important;
+    border-radius: var(--clay-r-md);
+    background: var(--clay-sup);
+    box-shadow: 0 12px 22px -16px var(--clay-hundido), inset 0 1px 0 var(--clay-luz);
+}
+
+.tarea-vinculada.tarea-pendiente { border-color: color-mix(in srgb, var(--color-naranja) 45%, transparent); }
+.tarea-vinculada.tarea-completada { border-color: color-mix(in srgb, var(--color-verde) 45%, transparent); }
+
+/* Los avisos (alerta, error, ok) traían la misma barra lateral. Se cambian por
+   una tarjeta de arcilla con el borde COMPLETO del color del aviso: se sigue
+   entendiendo igual, sin la línea pegada al canto. */
+.advertencia-eliminar,
+.lista-avisos,
+.lista-errores,
+.lista-ok,
+.papelera-aviso {
+    border-radius: var(--clay-r-md);
+    border-left: none !important;
+    box-shadow: 0 14px 26px -18px var(--clay-hundido), inset 0 1px 0 var(--clay-luz);
+}
+
+.lista-avisos, .papelera-aviso { border: 1px solid color-mix(in srgb, var(--color-amarillo) 48%, transparent); }
+.lista-errores, .advertencia-eliminar { border: 1px solid color-mix(in srgb, var(--color-rojo) 48%, transparent); }
+.lista-ok { border: 1px solid color-mix(in srgb, var(--color-verde) 48%, transparent); }
+
+.detalle-lista-item,
+.detalle-financiero-card,
+.resumen-financiero,
+.resumen-financiero-caja {
+    background: var(--clay-sup);
+    border: 1px solid var(--clay-borde);
+    border-radius: var(--clay-r-md);
+    box-shadow: 0 10px 20px -14px var(--clay-hundido), inset 0 1px 0 var(--clay-luz);
+}
+
+.detalle-lista-item { border-color: var(--clay-borde); }
+
+.detalle-lista-item .codigo {
+    border-radius: var(--clay-r-pill);
+    background: var(--clay-sup-hundida);
+    border-color: var(--clay-borde);
+    box-shadow: inset 0 3px 6px -4px var(--clay-hundido);
+}
+
+.advertencia-eliminar { border-radius: var(--clay-r-md); }
+
+/* ── 6. Botones: pastilla de arcilla ─────────────────────────────────────── */
+.btn-primario, .btn-secundario, .btn-verde, .btn-azul, .btn-naranja, .btn-cian, .btn-morado,
+.btn-imprimir, .btn-calendar, .btn-filtrar, .btn-limpiar, .btn-peligro, .btn-whatsapp, .btn-email {
+    border-radius: var(--clay-r-pill);
+    border: 1px solid var(--clay-borde);
+    box-shadow:
+        0 10px 18px -12px var(--clay-hundido),
+        inset 0 2px 0 rgba(255, 255, 255, 0.30),
+        inset 0 -6px 10px -8px rgba(0, 0, 0, 0.35);
+}
+
+.btn-primario { padding: 11px 22px; }
+.btn-secundario { padding: 9px 18px; }
+
+.btn-primario:hover, .btn-verde:hover, .btn-azul:hover, .btn-naranja:hover,
+.btn-cian:hover, .btn-morado:hover, .btn-peligro:hover, .btn-whatsapp:hover, .btn-email:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    box-shadow:
+        0 16px 26px -14px var(--clay-hundido),
+        inset 0 2px 0 rgba(255, 255, 255, 0.35),
+        inset 0 -6px 10px -8px rgba(0, 0, 0, 0.35);
+}
+
+.btn-secundario:hover {
+    transform: translateY(-2px);
+    background: var(--clay-sup-hover);
+    box-shadow:
+        0 16px 26px -14px var(--clay-hundido),
+        inset 0 2px 0 var(--clay-luz),
+        inset 0 -6px 10px -8px var(--clay-hundido);
+}
+
+/* Al presionar, el botón se HUNDE (es el gesto que da la sensación de arcilla). */
+.btn-primario:active, .btn-secundario:active, .btn-verde:active, .btn-azul:active,
+.btn-naranja:active, .btn-cian:active, .btn-morado:active, .btn-peligro:active,
+.btn-whatsapp:active, .btn-email:active, .btn-imprimir:active, .btn-calendar:active {
+    transform: translateY(0);
+    box-shadow:
+        inset 0 5px 10px -5px rgba(0, 0, 0, 0.45),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.18);
+}
+
+/* Selector Mosaico / Lista: una sola pieza de arcilla con dos caras. */
+.btn-view-toggle {
+    border: 1px solid var(--clay-borde);
+    border-radius: var(--clay-r-pill);
+    background: var(--clay-sup-hundida);
+    box-shadow: inset 0 5px 10px -7px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+    padding: 3px;
+    gap: 4px;
+}
+
+.btn-view-toggle button { border-radius: var(--clay-r-pill); }
+.btn-view-toggle button.active {
+    box-shadow: 0 6px 12px -8px var(--clay-hundido), inset 0 2px 0 rgba(255, 255, 255, 0.30);
+}
+
+/* ── 7. Campos: hundidos en la arcilla ───────────────────────────────────── */
+.filtro-grupo input, .filtro-grupo select,
+input[type="text"], input[type="number"], input[type="date"], input[type="time"],
+input[type="email"], input[type="tel"], select, textarea {
+    background: var(--clay-sup-hundida);
+    border: 1px solid var(--clay-borde);
+    border-radius: var(--clay-r-sm);
+    box-shadow: inset 0 5px 12px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.filtro-grupo input:focus, .filtro-grupo select:focus,
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--color-acento) 55%, transparent);
+    box-shadow:
+        inset 0 5px 12px -8px var(--clay-hundido),
+        inset 0 -1px 0 var(--clay-luz),
+        0 0 0 4px color-mix(in srgb, var(--color-acento) 16%, transparent);
+}
+
+.filtro-grupo label { letter-spacing: 0.7px; }
+
+/* ── 8. Etiquetas de estado: pastillas con volumen ──────────────────────── */
+.tarjeta-etiqueta {
+    border-radius: var(--clay-r-pill);
+    padding: 3px 12px;
+    letter-spacing: 0.3px;
+    box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.45), inset 0 2px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* ── 9. Barra lateral ─────────────────────────────────────────────────────
+   OJO (defecto real que Jorge vio en OTOÑO): aquí NO se puede dejar la barra
+   transparente. En Otoño la barra lateral es OSCURA con texto claro
+   (--color-sidebar-bg #4a3f2e y --color-sidebar-texto #d8cbb3) mientras el
+   fondo de trabajo es claro: al quitarle su color, el texto claro quedaba
+   sobre el fondo claro y los nombres del menú DESAPARECÍAN (solo se intuían
+   al pasar el cursor, que oscurece la fila). Cada tema conserva SU color de
+   barra lateral; lo que se le agrega es el volumen de arcilla. */
+.sidebar {
+    background-color: var(--color-sidebar-bg);
+    background-image: linear-gradient(180deg,
+        color-mix(in srgb, var(--color-sidebar-bg) 93%, #ffffff 7%),
+        color-mix(in srgb, var(--color-sidebar-bg) 95%, #000000 5%));
+    border-right: 1px solid var(--clay-borde);
+    box-shadow: 18px 0 40px -28px rgba(0, 0, 0, 0.55);
+}
+
+.logo { background-color: transparent; border-bottom: 1px solid var(--clay-borde); }
+.logo img.logo-img-sidebar { box-shadow: 0 8px 16px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+
+.menu-item { border-radius: var(--clay-r-md); }
+.menu-item.active {
+    box-shadow:
+        0 12px 22px -14px rgba(0, 0, 0, 0.5),
+        inset 0 2px 0 rgba(255, 255, 255, 0.16),
+        inset 0 -8px 14px -12px rgba(0, 0, 0, 0.5);
+}
+
+.sidebar-footer { background-color: transparent; border-top: 1px solid var(--clay-borde); }
+
+/* ── 10. Modales, tablas y barras de desplazamiento ──────────────────────── */
+.modal-content, .modal-contenido {
+    border-radius: var(--clay-r-xl);
+    border: 1px solid var(--clay-borde);
+    background: var(--clay-sup);
+    box-shadow:
+        0 40px 70px -30px rgba(0, 0, 0, 0.7),
+        inset 0 2px 0 var(--clay-luz),
+        inset 0 -18px 28px -20px var(--clay-hundido);
+}
+
+.modal-header, .modal-footer { border-color: var(--clay-borde); }
+
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-texto-secundario) 30%, transparent);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: var(--clay-r-pill);
+}
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--color-texto-secundario) 50%, transparent); background-clip: content-box; }
+
+/* ── 11. Teléfono: el mismo aire de arcilla, con radios un poco menores ────
+   Las tarjetas del teléfono son más angostas y muy redondeadas parecerían
+   pastillas. Aquí SOLO se ajustan radios; ninguna medida de acomodo del CRM
+   se toca (ver la nota de la sección 3).                                    */
+@media (max-width: 768px) {
+    .mosaico-card,
+    .metrica-card,
+    #lista-tareas .tarjeta-registro,
+    .lista-fila { border-radius: var(--clay-r-md); }
+
+    .filtros-container { border-radius: var(--clay-r-md); }
+    .panel-lateral { border-radius: var(--clay-r-lg); }
+    .panel-lateral-header { border-radius: var(--clay-r-lg) var(--clay-r-lg) 0 0; }
+}
+
+/* ── 12. Calendario ───────────────────────────────────────────────────────
+   El calendario ya trae sus propias medidas (filas de alto FIJO: 116 px en la
+   PC y 82 px en el teléfono, con el tope de etiquetas por día). Aquí SOLO se
+   toca color, radio y sombra — nunca `padding`, `min-height`, `font-size` ni
+   `gap`, porque de eso dependen esas medidas y el bloque móvil del CRM también
+   las ajusta. */
+.calendario-container {
+    /* El marco del calendario va un escalón MÁS PROFUNDO que los días: así las
+       pastillas del mes se levantan de verdad (en el tema Claro, blanco sobre
+       blanco no se notaba). Los días de otros meses siguen hundidos aquí. */
+    background: var(--clay-marco);
+    border: 1px solid var(--clay-borde);
+    border-radius: var(--clay-r-xl);
+    box-shadow:
+        var(--clay-out),
+        inset 0 2px 0 var(--clay-luz),
+        inset 0 -16px 26px -18px var(--clay-hundido);
+}
+
+.calendario-grid .dia-nombre {
+    background-color: var(--clay-sup-hundida);
+    border-radius: var(--clay-r-sm);
+    box-shadow: inset 0 3px 8px -6px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+    letter-spacing: 0.4px;
+}
+
+/* ── Los días del MES QUE SE ESTÁ VIENDO: pastilla de chicle ──────────────
+   A petición de Jorge: en vez de ir cavados en la arcilla, cada día resalta
+   como si fuera un BOTÓN (relieve hacia afuera: luz arriba, sombra abajo), para
+   que se vean mejor las etiquetas que llevan dentro. */
+.calendario-grid .dia:not(.otro-mes) {
+    background-image: var(--clay-chiclet);
+    border: 1px solid var(--clay-borde);
+    border-radius: var(--clay-r-md);
+    box-shadow:
+        0 12px 20px -14px var(--clay-hundido),
+        inset 0 2px 0 var(--clay-luz),
+        inset 0 -10px 16px -14px var(--clay-hundido);
+}
+
+.calendario-grid .dia:not(.otro-mes):hover {
+    background-image: var(--clay-sup-hover);
+    transform: translateY(-1px);
+    box-shadow:
+        0 18px 28px -14px var(--clay-hundido),
+        inset 0 2px 0 var(--clay-luz),
+        inset 0 -10px 16px -14px var(--clay-hundido);
+}
+
+/* El día de HOY: la misma pastilla, con el anillo del color de acento. El CRM
+   lo hace con una sombra interior justamente para no perder alto: se respeta. */
+.calendario-grid .dia.hoy {
+    box-shadow:
+        inset 0 0 0 2px var(--color-acento),
+        0 14px 24px -14px var(--clay-hundido),
+        inset 0 2px 0 var(--clay-luz);
+}
+
+/* Los días del mes ANTERIOR y del SIGUIENTE se quedan como estaban (hundidos y
+   apagados): así se distingue de un vistazo lo que sí es del mes que se ve. */
+.calendario-grid .dia.otro-mes {
+    background-image: none;
+    background-color: var(--clay-sup-hundida);
+    border: 1px solid transparent;
+    border-radius: var(--clay-r-md);
+    box-shadow: inset 0 4px 10px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+}
+
+.calendario-grid .dia.otro-mes:hover {
+    transform: none;
+    background-color: var(--clay-sup-hundida);
+    box-shadow: inset 0 4px 10px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+}
+
+/* Las etiquetas de cada día: pastillas de arcilla. Se les quita la barra del
+   canto izquierdo (el color ya lo da el fondo de la etiqueta, igual que en la
+   leyenda de abajo). */
+.calendario-grid .dia .evento {
+    border: none;
+    border-radius: var(--clay-r-pill);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.leyenda-calendario .leyenda-color {
+    border: none;
+    border-radius: var(--clay-r-sm);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 8px -5px rgba(0, 0, 0, 0.4);
+}
+
+/* Los botones del mes (‹ › Hoy) son pastillas de arcilla como los demás.
+   OJO: se usa `background-image` y NO el atajo `background`, porque el atajo
+   también reinicia `background-color`; y como el degradado se pinta ENCIMA del
+   color, el botón "Hoy" perdía el dorado del CRM y quedaba texto oscuro sobre
+   fondo oscuro (ilegible). Con `background-image` el dorado se conserva y aquí
+   abajo se le quita el degradado para que se vea el color de acento. */
+.calendario-nav button {
+    border-radius: var(--clay-r-pill);
+    border: 1px solid var(--clay-borde);
+    background-image: var(--clay-sup-hundida);
+    box-shadow: inset 0 4px 9px -7px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+}
+
+.calendario-nav button:hover {
+    background-image: var(--clay-sup-hover);
+    box-shadow: 0 12px 22px -14px var(--clay-hundido), inset 0 1px 0 var(--clay-luz);
+}
+
+.calendario-nav .btn-hoy,
+.calendario-nav .btn-hoy:hover {
+    background-image: none;
+    background-color: var(--color-acento);
+    box-shadow: 0 12px 22px -14px var(--clay-hundido), inset 0 2px 0 rgba(255, 255, 255, 0.30);
+}
+
+.calendario-nav .btn-hoy:hover { background-color: var(--color-acento-hover); }
+
+/* La lista de tareas de abajo: el contenedor también es arcilla. */
+#lista-tareas {
+    background: var(--clay-sup);
+    border: 1px solid var(--clay-borde);
+    border-radius: var(--clay-r-lg);
+    box-shadow:
+        var(--clay-out),
+        inset 0 2px 0 var(--clay-luz),
+        inset 0 -14px 22px -16px var(--clay-hundido);
+}
+
+/* Las filas de la VISTA DEL DÍA (el modal que abre al tocar un día): mismo trato
+   que las tarjetas del panel. Se les quita la barra del canto izquierdo, y el
+   color de cada tipo se conserva en el borde completo y en el icono — que el CRM
+   ya pinta de su color (azul evento, naranja tarea, morado campaña, verde
+   completada, cian seguimiento). */
+.dia-item {
+    background: var(--clay-sup);
+    border: 1px solid var(--clay-borde);
+    border-left: none !important;
+    border-radius: var(--clay-r-md);
+    box-shadow: 0 12px 22px -16px var(--clay-hundido), inset 0 1px 0 var(--clay-luz);
+}
+
+.dia-item:hover { background: var(--clay-sup-hover); }
+
+.dia-item.evento { border-color: color-mix(in srgb, var(--color-azul) 40%, transparent); }
+.dia-item.tarea { border-color: color-mix(in srgb, var(--color-naranja) 40%, transparent); }
+.dia-item.tarea.campania { border-color: color-mix(in srgb, var(--color-morado) 40%, transparent); }
+.dia-item.tarea.completada { border-color: color-mix(in srgb, var(--color-verde) 40%, transparent); }
+.dia-item.seguimiento { border-color: color-mix(in srgb, var(--color-cian) 40%, transparent); }
+
+.dia-vacio {
+    background: var(--clay-sup-hundida);
+    border-radius: var(--clay-r-md);
+    box-shadow: inset 0 4px 10px -8px var(--clay-hundido);
+}
+        /* ─────── FIN @CSS-CLAY ─────── */
+    </style>
 </head>
 <body>
     <!-- ─────── @HTML-MOBILE-MENU ─────── -->
@@ -1883,7 +2581,7 @@
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-09.26';
+        var BUILD_APP = '2026-10-09.27';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
