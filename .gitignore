@@ -8,3 +8,6 @@ pruebas/sandbox/**/_*
 pruebas/sandbox/**/*.log
 # Copia de la caja de arena (vive en temporales; aquí solo por si alguien la deja)
 pruebas/sandbox/_caja/
+
+# Paquete de distribución para la otra PC (se reenvía por Telegram, no se versiona)
+pruebas/*.zip
