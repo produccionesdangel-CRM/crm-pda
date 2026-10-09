@@ -1971,9 +1971,29 @@ input:focus, select:focus, textarea:focus {
         .entrega-nota { font-size: 11.5px; color: var(--color-texto-secundario); margin-top: 10px; }
         .entrega-caja-vacia { font-size: 12.5px; color: var(--color-texto-secundario); margin-top: 12px; padding: 10px 12px;
             border-radius: var(--clay-r-sm, 8px); background: var(--clay-sup-hundida, var(--color-bg-primario)); }
+
+        /* El resumen de entregas que va en CADA TARJETA del listado (Mosaico y
+           Lista), debajo del saldo: ámbar si falta algo, verde si está completa y
+           gris apagado cuando el paquete no tiene items capturados. Los colores
+           salen del tema (--color-naranja / --color-verde), así que cambian solos
+           con Oscuro, Claro, Otoño y Ángel. */
+        .entrega-chip { display: flex; align-items: center; gap: 7px; margin-top: 8px; padding: 7px 11px;
+            border-radius: var(--clay-r-sm, 8px); font-size: 12px; font-weight: 600; border: 1px solid transparent; }
+        .entrega-chip.pendiente { color: var(--color-naranja);
+            background-color: color-mix(in srgb, var(--color-naranja) 15%, transparent);
+            border-color: color-mix(in srgb, var(--color-naranja) 38%, transparent); }
+        .entrega-chip.completa { color: var(--color-verde);
+            background-color: color-mix(in srgb, var(--color-verde) 15%, transparent);
+            border-color: color-mix(in srgb, var(--color-verde) 38%, transparent); }
+        .entrega-chip.sin-lista { color: var(--color-texto-secundario); font-weight: 500;
+            background-color: color-mix(in srgb, var(--color-texto-secundario) 10%, transparent);
+            border-color: color-mix(in srgb, var(--color-texto-secundario) 22%, transparent); }
+        /* En la vista de Lista la fila es más angosta: el chip no se estira de lado. */
+        .lista-fila .entrega-chip { display: inline-flex; margin-top: 6px; }
         @media (max-width: 768px) {
             .entrega-fila { padding: 10px 12px; }
             .entrega-nombre { font-size: 13px; }
+            .entrega-chip { font-size: 11.5px; padding: 6px 10px; }
         }
         /* ─────── FIN @CSS-ENTREGAS-CONTRATO ─────── */
     </style>
@@ -2616,7 +2636,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-09.29';
+        var BUILD_APP = '2026-10-09.30';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -7142,7 +7162,7 @@ input:focus, select:focus, textarea:focus {
                     const cl = obtenerCliente(c.clienteId);
                     const tieneTelefono = cl && cl.telefono && normalizarTelefonoWhatsApp(cl.telefono);
                     const inicial = (c.clienteNombre || 'C').charAt(0).toUpperCase();
-                    return '<div class="lista-fila" onclick="verDetalleContrato(\'' + c.clienteId + '\',\'' + c.id + '\')"><div class="lista-avatar avatar-contrato">' + inicial + '</div><div class="lista-contenido"><div class="lista-titulo-linea"><span class="lista-titulo">' + c.clienteNombre + '</span><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span><span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span>' + (liq ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Liquidado</span>' : '') + alertaFin + '</div><div class="lista-datos"><span><i class="fas fa-star"></i> ' + (c.festejado || 'Sin festejado') + '</span><span><i class="fas fa-calendar"></i> ' + formatearFecha(c.fechaEvento) + he + '</span></div><div class="lista-meta"><span><i class="fas fa-box"></i> <strong>' + in_ + '</strong></span><span><i class="fas fa-coins"></i> Pagado: <strong>' + formatearMoneda(tot.totalPagos) + '</strong></span>' + etiquetaSaldo + '</div></div><div class="lista-acciones" onclick="event.stopPropagation()"><button class="btn-editar" onclick="editarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-pago" onclick="agregarPagoRapido(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Agregar pago"><i class="fas fa-coins"></i></button><button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.clienteId + '\')" title="WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button><button class="btn-calendar" onclick="crearEventoGoogleCalendar(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Google Calendar"><i class="fab fa-google"></i></button><button class="btn-imprimir" onclick="generarVistaImpresion(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Imprimir"><i class="fas fa-print"></i></button>' + (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '') + '</div></div>';
+                    return '<div class="lista-fila" onclick="verDetalleContrato(\'' + c.clienteId + '\',\'' + c.id + '\')"><div class="lista-avatar avatar-contrato">' + inicial + '</div><div class="lista-contenido"><div class="lista-titulo-linea"><span class="lista-titulo">' + c.clienteNombre + '</span><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span><span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span>' + (liq ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Liquidado</span>' : '') + alertaFin + '</div><div class="lista-datos"><span><i class="fas fa-star"></i> ' + (c.festejado || 'Sin festejado') + '</span><span><i class="fas fa-calendar"></i> ' + formatearFecha(c.fechaEvento) + he + '</span></div><div class="lista-meta"><span><i class="fas fa-box"></i> <strong>' + in_ + '</strong></span><span><i class="fas fa-coins"></i> Pagado: <strong>' + formatearMoneda(tot.totalPagos) + '</strong></span>' + etiquetaSaldo + '</div>' + chipEntregas(c) + '</div><div class="lista-acciones" onclick="event.stopPropagation()"><button class="btn-editar" onclick="editarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-pago" onclick="agregarPagoRapido(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Agregar pago"><i class="fas fa-coins"></i></button><button class="btn-whatsapp" onclick="enviarWhatsAppCliente(\'' + c.clienteId + '\')" title="WhatsApp"' + (!tieneTelefono ? ' disabled' : '') + '><i class="fab fa-whatsapp"></i></button><button class="btn-calendar" onclick="crearEventoGoogleCalendar(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Google Calendar"><i class="fab fa-google"></i></button><button class="btn-imprimir" onclick="generarVistaImpresion(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Imprimir"><i class="fas fa-print"></i></button>' + (esAdmin() ? '<button class="btn-eliminar" onclick="eliminarContrato(\'' + c.clienteId + '\',\'' + c.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>' : '') + '</div></div>';
                 }).join('');
             } else {
                 const cont = document.getElementById('lista-contratos');
@@ -7159,7 +7179,7 @@ input:focus, select:focus, textarea:focus {
                         const in_ = obtenerNombreItemContrato(c);
                         const he = c.horaEvento ? ' ' + c.horaEvento + ' hrs' : '';
                         const hr = c.horaRecepcion ? ' ' + c.horaRecepcion + ' hrs' : '';
-                        return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + c.clienteNombre + '</div></div><div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span><span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span>' + (liq ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Liquidado</span>' : '') + '</div><div class="mosaico-separador"></div><div class="mosaico-detalle"><div><strong>Festejado:</strong> ' + (c.festejado || 'Sin festejado') + '</div><div><small>' + in_ + '</small></div></div><div class="mosaico-detalle"><div><i class="fas fa-calendar"></i> ' + formatearFecha(c.fechaEvento) + he + '</div>' + (c.direccionEvento ? '<div><small>' + c.direccionEvento + '</small></div>' : '') + (c.direccionRecepcion ? '<div><small>' + c.direccionRecepcion + hr + '</small></div>' : '') + '</div><div class="mosaico-separador"></div><div class="mosaico-detalle"><div><strong>Base:</strong> ' + formatearMoneda(c.precioBase) + '</div><div><strong>Final:</strong> ' + formatearMoneda(c.precioFinal) + (c.cargos && c.cargos.length > 0 ? ' <small>+ ' + formatearMoneda(tot.totalCargos) + '</small>' : '') + '</div></div><div class="mosaico-summary"><span><i class="fas fa-coins"></i> ' + formatearMoneda(tot.totalPagos) + '</span><span class="' + (tot.saldoPendiente === 0 ? 'saldo-ok' : 'saldo-pendiente') + ' monto">' + (tot.saldoPendiente === 0 ? 'Liquidado' : formatearMoneda(tot.saldoPendiente)) + '</span></div>';
+                        return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + c.clienteNombre + '</div></div><div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + c.estado + '</span><span class="tarjeta-etiqueta ' + tc + '">' + tl + '</span>' + (liq ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Liquidado</span>' : '') + '</div><div class="mosaico-separador"></div><div class="mosaico-detalle"><div><strong>Festejado:</strong> ' + (c.festejado || 'Sin festejado') + '</div><div><small>' + in_ + '</small></div></div><div class="mosaico-detalle"><div><i class="fas fa-calendar"></i> ' + formatearFecha(c.fechaEvento) + he + '</div>' + (c.direccionEvento ? '<div><small>' + c.direccionEvento + '</small></div>' : '') + (c.direccionRecepcion ? '<div><small>' + c.direccionRecepcion + hr + '</small></div>' : '') + '</div><div class="mosaico-separador"></div><div class="mosaico-detalle"><div><strong>Base:</strong> ' + formatearMoneda(c.precioBase) + '</div><div><strong>Final:</strong> ' + formatearMoneda(c.precioFinal) + (c.cargos && c.cargos.length > 0 ? ' <small>+ ' + formatearMoneda(tot.totalCargos) + '</small>' : '') + '</div></div><div class="mosaico-summary"><span><i class="fas fa-coins"></i> ' + formatearMoneda(tot.totalPagos) + '</span><span class="' + (tot.saldoPendiente === 0 ? 'saldo-ok' : 'saldo-pendiente') + ' monto">' + (tot.saldoPendiente === 0 ? 'Liquidado' : formatearMoneda(tot.saldoPendiente)) + '</span></div>' + chipEntregas(c);
                     },
                     renderAcciones: function(c) {
                         const cl = obtenerCliente(c.clienteId);
@@ -7294,6 +7314,32 @@ input:focus, select:focus, textarea:focus {
             return e;
         }
 
+        /* Resumen de entregas para las TARJETAS del listado (Mosaico y Lista):
+           "Entregados 3/5". En ámbar si falta algo y en verde si la lista está
+           completa. Si el paquete no tiene items capturados se dice, para que nadie
+           dé por hecho que ya se entregó todo. */
+        function resumenEntregas(contrato) {
+            const items = itemsDelContrato(contrato);
+            if (items.length === 0) return { total: 0, hechas: 0, faltan: 0, estado: 'sin-lista' };
+            const entregas = entregasDelContrato(contrato);
+            const hechas = items.filter(function(it) { return !!entregas[it.nombre]; }).length;
+            return { total: items.length, hechas: hechas, faltan: items.length - hechas, estado: hechas === items.length ? 'completa' : 'pendiente' };
+        }
+
+        function chipEntregas(contrato) {
+            const r = resumenEntregas(contrato);
+            if (r.estado === 'sin-lista') {
+                return '<div class="entrega-chip sin-lista" title="El paquete de este contrato no tiene items capturados (Catálogo → Paquetes → Items incluidos)">' +
+                    '<i class="fas fa-list-check"></i> Entregas: sin lista</div>';
+            }
+            if (r.estado === 'completa') {
+                return '<div class="entrega-chip completa" title="Todo lo que incluye el paquete ya se entregó"><i class="fas fa-circle-check"></i> Entregados ' +
+                    r.hechas + '/' + r.total + '</div>';
+            }
+            return '<div class="entrega-chip pendiente" title="' + r.faltan + ' elemento(s) pendiente(s) de entrega"><i class="fas fa-hourglass-half"></i> Entregados ' +
+                r.hechas + '/' + r.total + ' · faltan ' + r.faltan + '</div>';
+        }
+
         /* La caja desplegable que se pinta dentro de "Paquete / Servicio". */
         function bloqueEntregas(contrato) {
             const items = itemsDelContrato(contrato);
@@ -7342,6 +7388,9 @@ input:focus, select:focus, textarea:focus {
                 (entregado ? 'Se marcó como entregado "' : 'Se desmarcó la entrega de "') + nombreItem + '" en el contrato de ' + c.nombre,
                 { id: contratoId, nombre: c.nombre });
             guardarDatos();
+            /* El listado de atrás también se refresca: la tarjeta muestra el resumen
+               de entregas ("Entregados 3/5") y tiene que quedar al día. */
+            renderizarContratos();
             /* El detalle se vuelve a dibujar: se guarda dónde estaba mirando para no
                devolverlo al principio de la lista en cada palomita. */
             const cuerpo = document.getElementById('panel-lateral-body') || document.getElementById('modal-body');

@@ -117,9 +117,7 @@ function guionDatos() {
       { id: 'paq-xv', nombre: 'XV Años Platino', items: [
         { tipo: 'personalizado', nombre: 'Cobertura de la misa y la fiesta', cantidad: 1 },
         { tipo: 'personalizado', nombre: 'Álbum 25x25', cantidad: 1 } ] },
-      { id: 'paq-corp', nombre: 'Corporativo Ejecutivo', items: [
-        { tipo: 'personalizado', nombre: 'Cobertura del evento', cantidad: 1 },
-        { tipo: 'personalizado', nombre: 'Video resumen', cantidad: 1 } ] }
+      { id: 'paq-corp', nombre: 'Corporativo Ejecutivo' }
     ];
     serviciosAdicionales = [
       { id: 'srv-dron', nombre: 'Dron' },
@@ -166,6 +164,10 @@ function guionDatos() {
       cliente({ id: 'cli-2', nombre: 'Fernanda Ruiz', telefono: '8782345678', email: 'fer.ruiz@correo.com', estado: 'Activo',
         contratos: [ contrato({ id: 'con-2', clienteId: 'cli-2', clienteNombre: 'Fernanda Ruiz', festejado: 'Fernanda',
           paqueteId: 'paq-xv', serviciosIds: ['srv-cabina'], precioBase: 38000, precioFinal: 38000, estado: 'Completado',
+          /* Este contrato ya entregó todo: su tarjeta debe salir en VERDE. */
+          entregas: { 'Cobertura de la misa y la fiesta': { fecha: iso(A, 9, 27), por: 'Jorge Rosas' },
+                      'Álbum 25x25': { fecha: iso(A, 9, 30), por: 'Jorge Rosas' },
+                      'Cabina 360': { fecha: iso(A, 9, 27), por: 'Ana (asistente)' } },
           fechaEvento: iso(A, 9, 27), horaEvento: '19:00', direccionEvento: 'Quinta Los Ángeles',
           pagos: [ pago(3, 20000, iso(A, 5, 10), 'Jorge Rosas', 'Anticipo', 'PDA-4410'),
                    pago(4, 18000, iso(A, 9, 26), 'Jorge Rosas', 'Liquidación antes del evento', 'PDA-5290') ] }) ] }),

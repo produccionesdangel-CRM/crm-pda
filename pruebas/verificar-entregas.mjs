@@ -266,6 +266,69 @@ async function main() {
     revisar(otros.hayVacio, 'un paquete sin items muestra un aviso en vez de una lista vacía');
     revisar(/no tiene items capturados/.test(otros.textoVacio), 'el aviso explica dónde se capturan los items');
 
+    console.log('\n6) El resumen de entregas en CADA TARJETA del listado');
+    const chips = JSON.parse(await evaluar(cdp, `(function () {
+      renderizarContratos();
+      /* Se busca el chip de cada contrato por el nombre del cliente en su tarjeta.
+         Se usa textContent (no innerText) porque la sección puede estar oculta. */
+      function chipDe(nombre) {
+        var cards = [].slice.call(document.querySelectorAll('#lista-contratos .mosaico-card, #lista-contratos .lista-fila'));
+        var card = cards.filter(function (c) { return (c.textContent || '').indexOf(nombre) !== -1; })[0];
+        var chip = card ? card.querySelector('.entrega-chip') : null;
+        if (!chip) return null;
+        return { clase: chip.className, texto: (chip.textContent || '').replace(/\\s+/g, ' ').trim(), color: getComputedStyle(chip).color };
+      }
+      return JSON.stringify({
+        mendosa: chipDe('Familia Mendoza'),
+        sofia: chipDe('Sofía Herrera'),
+        sinItems: chipDe('Prueba Sin Items'),
+        total: document.querySelectorAll('#lista-contratos .entrega-chip').length
+      });
+    })()`));
+    console.log('   Familia Mendoza (paquete de 4 items, 2 ya marcados antes) → "' + (chips.mendosa || {}).texto + '"  [' + (chips.mendosa || {}).clase + ']');
+    console.log('   Sofía Herrera (solo servicio, 0 entregados)     → "' + (chips.sofia || {}).texto + '"  [' + (chips.sofia || {}).clase + ']');
+    console.log('   Prueba Sin Items (paquete sin items)            → "' + (chips.sinItems || {}).texto + '"  [' + (chips.sinItems || {}).clase + ']');
+    revisar(chips.total === 3, 'cada contrato del listado trae su chip (3 de 3)');
+    revisar(/pendiente/.test(chips.mendosa.clase) && /Entregados 2\/4 · faltan 2/.test(chips.mendosa.texto),
+      'con pendientes sale en ÁMBAR, con el conteo real y cuántos faltan');
+    revisar(/sin-lista/.test(chips.sinItems.clase) && /sin lista/i.test(chips.sinItems.texto),
+      'sin items capturados lo dice, en vez de callarse');
+    revisar(chips.mendosa.color !== chips.sinItems.color, 'el color cambia según el estado (ámbar vs gris)');
+
+    console.log('\n7) Al marcar todo, el chip de la tarjeta pasa a VERDE solo');
+    const completo = JSON.parse(await evaluar(cdp, `(async function () {
+      verDetalleContrato('cli-1', 'con-1');
+      var nombres = [].slice.call(document.querySelectorAll('[data-entrega]')).map(function (cb) { return cb.getAttribute('data-entrega'); });
+      for (var i = 0; i < nombres.length; i++) {
+        var cb = document.querySelector('[data-entrega="' + nombres[i] + '"]');
+        if (cb && !cb.checked) cb.click();
+        await new Promise(function (r) { setTimeout(r, 150); });
+      }
+      /* No se llama a renderizarContratos(): el chip tiene que actualizarse solo. */
+      var cards = [].slice.call(document.querySelectorAll('#lista-contratos .mosaico-card, #lista-contratos .lista-fila'));
+      var card = cards.filter(function (c) { return (c.textContent || '').indexOf('Familia Mendoza') !== -1; })[0];
+      var chip = card ? card.querySelector('.entrega-chip') : null;
+      var pendiente = (function () {
+        var cards2 = [].slice.call(document.querySelectorAll('#lista-contratos .mosaico-card, #lista-contratos .lista-fila'));
+        var c2 = cards2.filter(function (c) { return (c.textContent || '').indexOf('Sofía Herrera') !== -1; })[0];
+        return c2 ? c2.querySelector('.entrega-chip') : null;
+      })();
+      return JSON.stringify({
+        clase: chip ? chip.className : '',
+        texto: chip ? (chip.textContent || '').replace(/\\s+/g, ' ').trim() : '',
+        color: chip ? getComputedStyle(chip).color : '',
+        colorPendiente: pendiente ? getComputedStyle(pendiente).color : '',
+        marcas: Object.keys(clientes[0].contratos[0].entregas).length,
+        pf: clientes[0].contratos[0].precioFinal
+      });
+    })()`));
+    console.log('   Familia Mendoza ahora → "' + completo.texto + '"  [' + completo.clase + ']');
+    revisar(completo.marcas === 4, 'se marcaron los 4 elementos');
+    revisar(/completa/.test(completo.clase) && /Entregados 4\/4/.test(completo.texto),
+      'la tarjeta pasa a "Entregados 4/4" en VERDE sin recargar');
+    revisar(completo.color !== completo.colorPendiente, 'el verde del chip es distinto del ámbar');
+    revisar(completo.pf === 51000, 'y el precio final sigue intacto (51000)');
+
     const errores = cdp.sucesos.filter(s => s.method === 'Runtime.exceptionThrown')
       .map(s => s.params.exceptionDetails.exception?.description || s.params.exceptionDetails.text);
     if (errores.length) { console.log('\nErrores en la página (' + errores.length + '):'); errores.slice(0, 4).forEach(e => console.log('  · ' + String(e).split('\n')[0])); }
