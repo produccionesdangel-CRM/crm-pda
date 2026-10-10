@@ -2679,7 +2679,14 @@ input:focus, select:focus, textarea:focus {
                             <option value="todas">Todas</option><option value="pendientes">Pendientes</option><option value="completadas">Completadas</option><option value="contratos">Solo contratos</option><option value="campanias">Solo campañas</option>
                         </select>
                     </div>
-                    <div class="filtro-grupo"><label>Buscar</label><input type="text" id="buscar-calendario" placeholder="Cliente o festejado..."></div>
+                    <!-- @HTML-FILTRO-TIPO-TAREA: el tipo de tarea sirve para filtrar
+                         (Jorge: "el tipo de tarea un dato extra que nos ayude a filtrar
+                         y ordenar en la lista"). Las opciones se llenan solas con los
+                         tipos del catálogo (TIPOS_TAREA) más los que ya estén en uso. -->
+                    <div class="filtro-grupo"><label>Tipo de tarea</label>
+                        <select id="filtro-tipo-tarea"><option value="todos">Todos los tipos</option></select>
+                    </div>
+                    <div class="filtro-grupo"><label>Buscar</label><input type="text" id="buscar-calendario" placeholder="Descripción, cliente o festejado..."></div>
                 </div>
                 <div class="calendario-container">
                     <div class="calendario-header">
@@ -2811,6 +2818,7 @@ input:focus, select:focus, textarea:focus {
                     </div>
                     <div class="changelog-section">
                         <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v5.0)</h4>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-filter"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Filtrar las tareas por tipo</div><div class="changelog-desc">La barra de filtros del calendario trae un desplegable <strong>Tipo de tarea</strong> que se llena solo con los tipos del catálogo y con los que ya estén en uso en tus tareas. Filtra <strong>la lista y las etiquetas del calendario</strong> al mismo tiempo; los eventos de contrato y los seguimientos de campaña siguen visibles, porque no son tareas.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-list-check"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Tareas del calendario: título claro, orden a tu gusto y ficha con todo</div><div class="changelog-desc">El título de cada tarea ahora es <strong>la descripción</strong> (antes era el tipo, que no decía de qué se trataba) y el <strong>tipo quedó como etiqueta</strong> para filtrar y ordenar. La lista se puede ordenar por <strong>fecha de vencimiento</strong> (lo próximo primero y lo vencido hasta arriba), por <strong>cliente o prospecto</strong> y por <strong>campañas contra tareas normales</strong>. Al tocar una tarea se abre <strong>su ficha</strong> con los datos y los botones de <strong>WhatsApp y email</strong> (también en la tarjeta), para no tener que salir a buscar al cliente. Al crear la tarea se elige <strong>hora específica o "a cualquier hora del día"</strong>, y se puede mandar a <strong>Google Calendar</strong> o bajar un archivo <strong>.ics</strong> para el calendario del teléfono. El evento de un contrato ya no se llama "Sesión de fotos": lleva <strong>solo el nombre del festejado</strong>; el de una tarea dice <strong>"Tarea: (cliente o prospecto)"</strong>.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-calendar-week"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Calendario: conmutador Mes / Semana</div><div class="changelog-desc">Arriba del calendario hay dos botones, <strong>Mes</strong> y <strong>Semana</strong>. En modo semana se ve <strong>una sola semana de domingo a sábado</strong>, con los mismos filtros, las mismas etiquetas y las mismas acciones; los botones ‹ › avanzan una semana (en modo mes siguen avanzando un mes) y <strong>Hoy</strong> vuelve a la semana o al mes en curso. Es la vista cómoda cuando hay muchas tareas. También hay un botón para <strong>descargar la vista en un archivo .ics</strong>.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-chart-pie"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Informes y Configuración con el mismo estilo del resto</div><div class="changelog-desc">Las dos secciones que se habían quedado con el diseño anterior ya siguen la línea <strong>Claymorphism</strong>: tarjetas con relieve, campos hundidos y los cuatro temas (Oscuro, Claro, Otoño y Ángel). En <strong>Configuración</strong> se quitaron las barritas de color del canto de la papelera y el historial, y los botones y las muestras de tema se ven como el resto de la aplicación.</div></div></div>
@@ -2931,7 +2939,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-09.34';
+        var BUILD_APP = '2026-10-09.35';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -8414,6 +8422,28 @@ input:focus, select:focus, textarea:focus {
         }
         function vistaSemanaActiva() { return vistaCalActual === 'semana'; }
 
+        /** El tipo de tarea elegido en la barra de filtros ('todos' si no hay filtro). */
+        function tipoTareaFiltradoCalendario() {
+            const s = document.getElementById('filtro-tipo-tarea');
+            return s ? String(s.value || 'todos') : 'todos';
+        }
+
+        /** Llena el desplegable de tipos con el catálogo MÁS los tipos que ya se usan
+            en las tareas (así un tipo viejo o escrito distinto no queda sin filtrar). */
+        function actualizarFiltroTipoTarea() {
+            const s = document.getElementById('filtro-tipo-tarea');
+            if (!s) return;
+            const valor = s.value;
+            const tipos = [];
+            (typeof TIPOS_TAREA !== 'undefined' ? TIPOS_TAREA : []).forEach(function(t) { if (t && tipos.indexOf(t) === -1) tipos.push(t); });
+            (tareas || []).forEach(function(t) { if (t && t.tipo && tipos.indexOf(t.tipo) === -1) tipos.push(t.tipo); });
+            tipos.sort(function(a, b) { return String(a).localeCompare(String(b)); });
+            s.innerHTML = '<option value="todos">Todos los tipos</option>' + tipos.map(function(t) {
+                return '<option value="' + escapeHTML(t) + '">' + escapeHTML(t) + '</option>';
+            }).join('');
+            if (valor && tipos.indexOf(valor) !== -1) s.value = valor;
+        }
+
         /** Suma (o resta, con negativos) días a una fecha ISO 'YYYY-MM-DD'. */
         function sumarDiasISO(fechaISO, dias) {
             const p = String(fechaISO || '').split('-');
@@ -8457,6 +8487,7 @@ input:focus, select:focus, textarea:focus {
             const fBuscar = document.getElementById('buscar-calendario');
             const ft = fFiltro ? fFiltro.value : 'todas';
             const b = fBuscar ? String(fBuscar.value || '').toLowerCase().trim() : '';
+            const tipoSel = tipoTareaFiltradoCalendario();
             let ec = obtenerContratos().filter(function(c) { return c && c.fechaEvento === fechaISO; });
             let et = tareas.filter(function(t) { return t && t.fecha === fechaISO; });
             // 'campanias' se revisa ANTES que 'pendientes'/'completadas': si no, una tarea
@@ -8465,6 +8496,7 @@ input:focus, select:focus, textarea:focus {
             else if (ft === 'campanias') { ec = []; et = et.filter(function(t) { return !!(t.campaniaId || t.participacionId); }); }
             else if (ft === 'pendientes') { et = et.filter(function(t) { return !t.completada; }); }
             else if (ft === 'completadas') { et = et.filter(function(t) { return t.completada; }); }
+            if (tipoSel !== 'todos') et = et.filter(function(t) { return String(t.tipo || '') === tipoSel; });
             if (b) {
                 ec = ec.filter(function(c) { return String(c.clienteNombre || '').toLowerCase().indexOf(b) !== -1 || String(c.festejado || '').toLowerCase().indexOf(b) !== -1; });
                 et = et.filter(function(t) {
@@ -8509,6 +8541,9 @@ input:focus, select:focus, textarea:focus {
         function renderizarCalendario() {
             const grid = document.getElementById('calendario-grid');
             const tit = document.getElementById('calendario-mes-ano');
+            // El desplegable de tipos se rearma con lo que hay: si se creó una tarea con un
+            // tipo nuevo, aparece solo; y si un tipo ya no se usa, desaparece.
+            actualizarFiltroTipoTarea();
             const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
             const ds = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
             const hy = new Date();
@@ -8832,6 +8867,8 @@ input:focus, select:focus, textarea:focus {
             else if (filtro === 'campanias') tm = tm.filter(esCampania);
             else if (filtro === 'pendientes') tm = tm.filter(function(t) { return !t.completada; });
             else if (filtro === 'completadas') tm = tm.filter(function(t) { return t.completada; });
+            const tipoSel = tipoTareaFiltradoCalendario();
+            if (tipoSel !== 'todos') tm = tm.filter(function(t) { return String(t.tipo || '') === tipoSel; });
             if (b) tm = tm.filter(function(t) {
                 const nc = obtenerNombreCliente(t.clienteId) || '';
                 return nc.toLowerCase().indexOf(b) !== -1 || String(t.descripcion || '').toLowerCase().indexOf(b) !== -1 ||
@@ -10012,7 +10049,7 @@ input:focus, select:focus, textarea:focus {
             // Los avisos de "filtros activos" (la etiqueta del botón) sí pueden conectarse dos
             // veces sin daño: solo vuelven a calcular y pintar la etiqueta. La plegada/desplegada
             // es la única que NO se podía repetir, y por eso quedó con su bandera arriba.
-            ['filtro-fecha-inicio','filtro-fecha-fin','filtro-estado-cliente','filtro-estado-contrato','filtro-paquete','filtro-servicio','filtro-fase-prospecto','buscar-prospecto','filtro-estado-cliente-lista','buscar-cliente','filtro-estado-contrato-lista','filtro-tipo-contrato','buscar-contrato','filtro-tareas-calendario','buscar-calendario','filtro-estatus-paquete','buscar-paquete','orden-paquetes','orden-servicios','buscar-servicio'].forEach(function(id) {
+            ['filtro-fecha-inicio','filtro-fecha-fin','filtro-estado-cliente','filtro-estado-contrato','filtro-paquete','filtro-servicio','filtro-fase-prospecto','buscar-prospecto','filtro-estado-cliente-lista','buscar-cliente','filtro-estado-contrato-lista','filtro-tipo-contrato','buscar-contrato','filtro-tareas-calendario','filtro-tipo-tarea','buscar-calendario','filtro-estatus-paquete','buscar-paquete','orden-paquetes','orden-servicios','buscar-servicio'].forEach(function(id) {
                 const el = document.getElementById(id);
                 if (el) { el.addEventListener('change', actualizarBadgesFiltros); el.addEventListener('input', actualizarBadgesFiltros); }
             });
@@ -10107,6 +10144,7 @@ input:focus, select:focus, textarea:focus {
                 renderizarInformes();
             });
             btn = document.getElementById('filtro-tareas-calendario'); if (btn) btn.addEventListener('change', renderizarCalendario);
+            btn = document.getElementById('filtro-tipo-tarea'); if (btn) btn.addEventListener('change', renderizarCalendario);
             btn = document.getElementById('buscar-calendario'); if (btn) btn.addEventListener('input', renderizarCalendario);
             // ─────── @JS-NAV-CALENDARIO (9/10/2026) ───────
             // Los botones ‹ › mueven un MES en modo mes y una SEMANA en modo semana;

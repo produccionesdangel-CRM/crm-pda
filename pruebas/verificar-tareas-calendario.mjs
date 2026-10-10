@@ -600,6 +600,116 @@ async function main() {
     revisar(movil.desborde <= 1, 'el calendario no se desborda en el teléfono (nada de scroll horizontal)');
     revisar(movil.culpables.length === 0, 'ningún elemento del calendario se sale de la pantalla del teléfono');
 
+    /* ═══ 12) EDITAR una tarea: la hora no se pierde sola ═══
+       Va AL FINAL a propósito: esta prueba cambia la tarea 't-hoy' (la que usan las
+       pruebas de Google Calendar y del .ics), así que primero se corren todas ellas.
+       Es la invariante que importa: si el formulario no abriera con la hora que la
+       tarea ya tenía, cambiarle una palabra al texto le borraría la hora y el evento
+       del calendario se volvería "de todo el día" sin que nadie lo pidiera. */
+    console.log('\n12) Editar una tarea: la hora se conserva (o se quita, si uno lo pide)');
+    await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+    await cdp.enviar('Page.navigate', { url: 'file:///' + PAGINA.replace(/\\/g, '/') });
+    await dormir(4200);
+    const montarEdicion = await evaluar(cdp, `(function () {
+      try {
+        ${SEMILLA}
+        ${UTIL}
+        ocultarPantallaLogin(); actualizarUIUsuario(); aplicarRestriccionesPorRol(); conectarEventListenersApp();
+        return 'ok';
+      } catch (e) { return 'error: ' + e.message; }
+    })()`);
+    if (montarEdicion !== 'ok') throw new Error('No se pudo montar la prueba de edición: ' + montarEdicion);
+    const editar = JSON.parse(await evaluar(cdp, `(async function () {
+      cerrarModal();
+      editarTarea('t-hoy');   // la tarea de hoy trae hora 16:30
+      var modoAlAbrir = document.getElementById('tarea-hora-modo').value;
+      var horaAlAbrir = document.getElementById('tarea-hora').value;
+      var visibleAlAbrir = document.getElementById('tarea-hora').style.display !== 'none';
+      var descAlAbrir = document.getElementById('tarea-descripcion').value;
+      /* 1) Se cambia SOLO el texto: la hora debe sobrevivir al guardado. */
+      document.getElementById('tarea-descripcion').value = 'Sesión de fotos en el estudio (confirmada)';
+      document.querySelector('#form-tarea button[type="submit"]').click();
+      await new Promise(function (r) { setTimeout(r, 400); });
+      var trasEditar = tareas.filter(function (x) { return x.id === 't-hoy'; })[0];
+      /* 2) Ahora sí se pasa a "a cualquier hora del día": la hora debe quedar vacía. */
+      editarTarea('t-hoy');
+      var modoTrasGuardar = document.getElementById('tarea-hora-modo').value;
+      document.getElementById('tarea-hora-modo').value = 'dia';
+      document.getElementById('tarea-hora-modo').dispatchEvent(new Event('change'));
+      document.querySelector('#form-tarea button[type="submit"]').click();
+      await new Promise(function (r) { setTimeout(r, 400); });
+      var trasQuitarHora = tareas.filter(function (x) { return x.id === 't-hoy'; })[0];
+      return JSON.stringify({
+        modoAlAbrir: modoAlAbrir, horaAlAbrir: horaAlAbrir, visibleAlAbrir: visibleAlAbrir, descAlAbrir: descAlAbrir,
+        modoTrasGuardar: modoTrasGuardar,
+        horaConservada: trasEditar ? trasEditar.hora : null,
+        todoElDiaConservado: trasEditar ? trasEditar.todoElDia : null,
+        descripcionGuardada: trasEditar ? trasEditar.descripcion : null,
+        horaFinal: trasQuitarHora ? trasQuitarHora.hora : 'sin tarea',
+        todoElDiaFinal: trasQuitarHora ? trasQuitarHora.todoElDia : null,
+        totalTareas: tareas.length
+      });
+    })()`));
+    console.log('   al abrir la edición: modo "' + editar.modoAlAbrir + '" · hora "' + editar.horaAlAbrir + '" · descripción "' + editar.descAlAbrir + '"');
+    revisar(editar.modoAlAbrir === 'hora' && editar.horaAlAbrir === '16:30', 'al editar, el formulario abre con la hora que la tarea ya tenía (16:30)');
+    revisar(editar.visibleAlAbrir === true, 'el campo de la hora se ve al abrir una tarea que sí tiene hora');
+    revisar(editar.horaConservada === '16:30' && editar.todoElDiaConservado === false, 'cambiar SOLO el texto NO le borra la hora a la tarea');
+    revisar(editar.descripcionGuardada === 'Sesión de fotos en el estudio (confirmada)', 'el texto editado sí se guarda');
+    revisar(editar.modoTrasGuardar === 'hora', 'al reabrir la tarea con hora, el modo sigue en "hora específica"');
+    revisar(editar.horaFinal === '' && editar.todoElDiaFinal === true, 'pasar a "a cualquier hora" le quita la hora');
+    revisar(editar.totalTareas === 7, 'editar no crea tareas de más (siguen 7)');
+
+    /* ═══ 13) El TIPO de tarea sirve para filtrar (no solo para ordenar) ═══ */
+    console.log('\n13) Filtrar la lista y el calendario por TIPO de tarea');
+    const porTipo = JSON.parse(await evaluar(cdp, `(function () {
+      cerrarModal();
+      window.__abrirCalendario();
+      var s = document.getElementById('filtro-tipo-tarea');
+      var opciones = s ? [].slice.call(s.options).map(function (o) { return o.value; }) : [];
+      var tiposEnUso = [];
+      tareas.forEach(function (t) { if (t.tipo && tiposEnUso.indexOf(t.tipo) === -1) tiposEnUso.push(t.tipo); });
+      /* Se filtra por "Llamar": hay dos tareas de ese tipo (una vencida y una completada). */
+      s.value = 'Llamar';
+      s.dispatchEvent(new Event('change'));
+      var trasFiltrar = window.__verDescripciones();
+      var chipsTipos = [].slice.call(document.querySelectorAll('#lista-tareas .tarea-chip-tipo')).map(function (c) { return c.innerText.trim(); });
+      /* En la cuadrícula: las etiquetas de TAREA deben quedar solo las del tipo elegido,
+         pero los eventos de contrato y los seguimientos de campaña NO son tareas y
+         siguen visibles (el filtro es de tipo de tarea, no de todo el calendario). */
+      var etiquetasTarea = [];
+      document.querySelectorAll('#calendario-grid .evento-tarea, #calendario-grid .evento-completada, #calendario-grid .evento-campania').forEach(function (e) { etiquetasTarea.push(e.innerText.trim()); });
+      var etiquetasContrato = document.querySelectorAll('#calendario-grid .evento-contrato').length;
+      var etiquetasSeguimiento = document.querySelectorAll('#calendario-grid .evento-seguimiento').length;
+      /* Se limpia el filtro y todo vuelve. */
+      s.value = 'todos';
+      s.dispatchEvent(new Event('change'));
+      var sinFiltro = window.__verDescripciones().length;
+      return JSON.stringify({
+        haySelector: !!s,
+        tieneTodos: opciones.indexOf('todos') !== -1,
+        traeTiposDelCatalogo: opciones.indexOf('Llamar') !== -1 && opciones.indexOf('Confirmar') !== -1,
+        traeTiposEnUso: tiposEnUso.every(function (t) { return opciones.indexOf(t) !== -1; }),
+        trasFiltrar: trasFiltrar,
+        chipsTipos: chipsTipos,
+        etiquetasTarea: etiquetasTarea,
+        etiquetasContrato: etiquetasContrato,
+        etiquetasSeguimiento: etiquetasSeguimiento,
+        sinFiltro: sinFiltro
+      });
+    })()`));
+    console.log('   filtrando por "Llamar": ' + JSON.stringify(porTipo.trasFiltrar) + ' · etiquetas de tarea en el mes: ' + JSON.stringify(porTipo.etiquetasTarea));
+    revisar(porTipo.haySelector === true, 'la barra del calendario trae el filtro "Tipo de tarea"');
+    revisar(porTipo.tieneTodos && porTipo.traeTiposDelCatalogo, 'el desplegable trae los tipos del catálogo de tareas');
+    revisar(porTipo.traeTiposEnUso === true, 'también trae los tipos que ya están en uso (aunque no estén en el catálogo)');
+    revisar(porTipo.trasFiltrar.length === 2 && porTipo.trasFiltrar.every(d => d.indexOf('Llamada') !== -1 || d.indexOf('Confirmar dirección') !== -1),
+      'al filtrar por "Llamar" la lista deja solo las 2 tareas de ese tipo');
+    revisar(porTipo.chipsTipos.length === 2 && porTipo.chipsTipos.every(c => c.indexOf('Llamar') !== -1), 'las tarjetas que quedan son todas del tipo elegido');
+    revisar(porTipo.etiquetasTarea.length > 0 && porTipo.etiquetasTarea.every(e => e.indexOf('Llamar') !== -1),
+      'en la cuadrícula del calendario también se filtran las etiquetas de tarea por tipo');
+    revisar(porTipo.etiquetasContrato > 0 && porTipo.etiquetasSeguimiento > 0,
+      'los eventos de contrato y los seguimientos de campaña NO se ocultan (no son tareas)');
+    revisar(porTipo.sinFiltro === 7, 'al volver a "Todos los tipos" reaparecen las 7 tareas');
+
     console.log('\n' + (fallos === 0 ? 'TODO EN VERDE' : (fallos + ' FALLAS')));
     process.exitCode = fallos === 0 ? 0 : 1;
   } catch (e) {
