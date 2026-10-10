@@ -2948,7 +2948,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-10.3';
+        var BUILD_APP = '2026-10-10.4';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -6375,7 +6375,7 @@ input:focus, select:focus, textarea:focus {
                     const numTareas = tareas.filter(function(t) { return t.clienteId === 'pro_' + p.id; }).length;
                     const inicial = escapeHTML((p.nombre || 'P').charAt(0).toUpperCase());
                     const camp = nombreCampaniaDeProspecto(p.id);
-                    return '<div class="lista-fila" onclick="verDetalleProspecto(\'' + escapeAtributoJS(p.id) + '\')"><div class="lista-avatar avatar-prospecto">' + inicial + '</div><div class="lista-contenido"><div class="lista-titulo-linea"><span class="lista-titulo">' + escapeHTML(p.nombre || 'Sin nombre') + '</span><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(fase) + '</span>' + (camp ? '<span class="tarjeta-etiqueta etiqueta-campania" title="Campaña"><i class="fas fa-bullhorn"></i> ' + escapeHTML(camp) + '</span>' : '') + (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + '</div><div class="lista-datos">' + (p.telefono ? '<span><i class="fas fa-phone"></i> ' + escapeHTML(p.telefono) + '</span>' : '') + (p.email ? '<span><i class="fas fa-envelope"></i> ' + escapeHTML(p.email) + '</span>' : '') + '</div><div class="lista-meta">' + (numTareas > 0 ? '<span><i class="fas fa-tasks"></i> <strong>' + numTareas + '</strong> tarea' + (numTareas === 1 ? '' : 's') + '</span>' : '') + '<span><i class="fas fa-calendar"></i> Registrado: ' + escapeHTML(formatearFecha(p.fechaRegistro)) + '</span></div></div><div class="lista-acciones" onclick="event.stopPropagation()"><button class="btn-editar" onclick="editarProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + escapeAtributoJS(p.id) + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' + (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') + '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div>';
+                    return '<div class="lista-fila" onclick="verDetalleProspecto(\'' + escapeAtributoJS(p.id) + '\')"><div class="lista-avatar avatar-prospecto">' + inicial + '</div><div class="lista-contenido"><div class="lista-titulo-linea"><span class="lista-titulo">' + escapeHTML(p.nombre || 'Sin nombre') + '</span><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(fase) + '</span>' + (camp ? '<span class="tarjeta-etiqueta etiqueta-campania" title="Campaña"><i class="fas fa-bullhorn"></i> ' + escapeHTML(camp) + '</span>' : '') + (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + '</div><div class="lista-datos">' + (p.telefono ? '<span><i class="fas fa-phone"></i> ' + escapeHTML(p.telefono) + '</span>' : '') + (p.email ? '<span><i class="fas fa-envelope"></i> ' + escapeHTML(p.email) + '</span>' : '') + (p.fechaEvento ? '<span title="Fecha del evento"><i class="fas fa-calendar"></i> Evento: ' + escapeHTML(formatearFecha(p.fechaEvento)) + '</span>' : '') + '</div><div class="lista-meta">' + (numTareas > 0 ? '<span><i class="fas fa-tasks"></i> <strong>' + numTareas + '</strong> tarea' + (numTareas === 1 ? '' : 's') + '</span>' : '') + '<span><i class="fas fa-calendar"></i> Registrado: ' + escapeHTML(formatearFecha(p.fechaRegistro)) + '</span></div></div><div class="lista-acciones" onclick="event.stopPropagation()"><button class="btn-editar" onclick="editarProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + escapeAtributoJS(p.id) + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' + (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') + '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div>';
                 }).join('');
             } else {
                 const cont = document.getElementById('lista-prospectos');
@@ -6388,7 +6388,7 @@ input:focus, select:focus, textarea:focus {
                         const cf = claseEtiquetaFase(fase);
                         const ec = p.clienteId !== null && p.clienteId !== undefined;
                         const numTareas = tareas.filter(function(t) { return t.clienteId === 'pro_' + p.id; }).length;
-                        return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + escapeHTML(p.nombre || 'Sin nombre') + '</div></div><div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(fase) + '</span>' + (nombreCampaniaDeProspecto(p.id) ? '<span class="tarjeta-etiqueta etiqueta-campania" title="Campaña"><i class="fas fa-bullhorn"></i> ' + escapeHTML(nombreCampaniaDeProspecto(p.id)) + '</span>' : '') + (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') + '</div><div class="mosaico-separador"></div><div class="mosaico-detalle">' + (p.telefono ? '<div><i class="fas fa-phone"></i> ' + escapeHTML(p.telefono) + '</div>' : '') + (p.email ? '<div><i class="fas fa-envelope"></i> ' + escapeHTML(p.email) + '</div>' : '') + '<div><small>Registrado: ' + escapeHTML(formatearFecha(p.fechaRegistro)) + '</small></div></div>';
+                        return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + escapeHTML(p.nombre || 'Sin nombre') + '</div></div><div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(fase) + '</span>' + (nombreCampaniaDeProspecto(p.id) ? '<span class="tarjeta-etiqueta etiqueta-campania" title="Campaña"><i class="fas fa-bullhorn"></i> ' + escapeHTML(nombreCampaniaDeProspecto(p.id)) + '</span>' : '') + (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') + '</div><div class="mosaico-separador"></div><div class="mosaico-detalle">' + (p.telefono ? '<div><i class="fas fa-phone"></i> ' + escapeHTML(p.telefono) + '</div>' : '') + (p.email ? '<div><i class="fas fa-envelope"></i> ' + escapeHTML(p.email) + '</div>' : '') + (p.fechaEvento ? '<div><i class="fas fa-calendar"></i> Evento: ' + escapeHTML(formatearFecha(p.fechaEvento)) + '</div>' : '') + '<div><small>Registrado: ' + escapeHTML(formatearFecha(p.fechaRegistro)) + '</small></div></div>';
                     },
                     renderAcciones: function(p) {
                         const ec = p.clienteId !== null && p.clienteId !== undefined;
@@ -6456,7 +6456,15 @@ input:focus, select:focus, textarea:focus {
                 (campanias.length === 0 ? '<small style="color:var(--color-texto-secundario);">Todavía no hay campañas creadas. Se hacen en la sección Campañas.</small>' : '') +
                 (ee && participacionesDeProspecto(prospecto.id).length > 1 ? '<small style="color:var(--color-texto-secundario);">También participa en ' + (participacionesDeProspecto(prospecto.id).length - 1) + ' campaña(s) más. Aquí se muestra la primera.</small>' : '') +
                 '</div>';
-            const html = '<form id="form-prospecto">' + cajaAvisosDeFormulario() + '<input type="hidden" id="prospecto-id" value="' + (prospecto ? prospecto.id : '') + '"><div class="form-grupo"><label>Nombre *</label><input type="text" id="prospecto-nombre" required value="' + (prospecto && prospecto.nombre ? prospecto.nombre : '') + '"></div><div class="form-grupo"><label>Teléfono (opcional)</label><input type="text" id="prospecto-telefono" value="' + (prospecto && prospecto.telefono ? prospecto.telefono : '') + '"></div><div class="form-grupo"><label>Email (opcional)</label><input type="email" id="prospecto-email" value="' + (prospecto && prospecto.email ? prospecto.email : '') + '"></div><div class="form-grupo"><label>Fase *</label><select id="prospecto-fase" required>' + opf + '</select></div>' + selectCampania + '<div class="form-grupo"><label>Notas (opcional)</label><textarea id="prospecto-notas">' + (prospecto && prospecto.notasGenerales ? prospecto.notasGenerales : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-prospecto-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
+            /* ── Fecha del evento (opcional), 10/10/2026 ──
+               Una sola fecha para lo que Jorge necesite: el cumpleaños del prospecto o el día
+               en que pretenden hacer su fiesta. Se guarda en `fechaEvento`, el MISMO campo que
+               ya usan la importación y los criterios de elegibilidad de las campañas, para no
+               tener dos fechas distintas diciendo cosas diferentes. */
+            const campoFechaEvento = '<div class="form-grupo"><label>Fecha del evento (opcional)</label>' +
+                '<input type="date" id="prospecto-fecha-evento" value="' + (prospecto && prospecto.fechaEvento ? escapeHTML(String(prospecto.fechaEvento).slice(0, 10)) : '') + '">' +
+                '<small style="color:var(--color-texto-secundario);">Su cumpleaños, o el día en que pretenden hacer su fiesta (se puede dejar vacío).</small></div>';
+            const html = '<form id="form-prospecto">' + cajaAvisosDeFormulario() + '<input type="hidden" id="prospecto-id" value="' + (prospecto ? prospecto.id : '') + '"><div class="form-grupo"><label>Nombre *</label><input type="text" id="prospecto-nombre" required value="' + (prospecto && prospecto.nombre ? prospecto.nombre : '') + '"></div><div class="form-grupo"><label>Teléfono (opcional)</label><input type="text" id="prospecto-telefono" value="' + (prospecto && prospecto.telefono ? prospecto.telefono : '') + '"></div><div class="form-grupo"><label>Email (opcional)</label><input type="email" id="prospecto-email" value="' + (prospecto && prospecto.email ? prospecto.email : '') + '"></div><div class="form-grupo"><label>Fase *</label><select id="prospecto-fase" required>' + opf + '</select></div>' + selectCampania + campoFechaEvento + '<div class="form-grupo"><label>Notas (opcional)</label><textarea id="prospecto-notas">' + (prospecto && prospecto.notasGenerales ? prospecto.notasGenerales : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-prospecto-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
             abrirModal(ee ? 'Editar Prospecto' : 'Nuevo Prospecto', html);
             document.getElementById('btn-prospecto-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
             document.getElementById('form-prospecto').addEventListener('submit', function(e) {
@@ -6473,11 +6481,17 @@ input:focus, select:focus, textarea:focus {
                 const email = document.getElementById('prospecto-email').value.trim();
                 const faseActual = document.getElementById('prospecto-fase').value;
                 const notasGenerales = limpiarTextoLibre(document.getElementById('prospecto-notas').value, MAX_LARGO_NOTAS);
+                /* Fecha del evento (opcional). El input es type=date, así que el formato ya
+                   viene como YYYY-MM-DD; se valida igual por si llega otra cosa. */
+                const fechaEventoEl = document.getElementById('prospecto-fecha-evento');
+                const fechaEventoBruta = fechaEventoEl ? String(fechaEventoEl.value || '').trim() : '';
+                const fechaEvento = /^\d{4}-\d{2}-\d{2}$/.test(fechaEventoBruta) ? fechaEventoBruta : '';
                 // Un dato imposible se bloquea en seco: sin nombre, sin fase, correo basura o
                 // un teléfono con letras / de un dígito (T-01..T-07). Antes entraba todo.
                 const erroresProspecto = [];
                 if (!nombre) erroresProspecto.push('El nombre del prospecto es obligatorio.');
                 if (!faseActual) erroresProspecto.push('Falta la fase comercial.');
+                if (fechaEventoBruta && !fechaEvento) erroresProspecto.push('La fecha del evento no es válida.');
                 if (email && !esCorreoValido(email)) erroresProspecto.push('El correo "' + email + '" no tiene un formato válido.');
                 // El candado de teléfono solo se aplica si CAMBIÓ: un prospecto viejo con
                 // teléfono basura debe poder corregirse en lo demás (Y-07, E-19, Z-07).
@@ -6555,13 +6569,13 @@ input:focus, select:focus, textarea:focus {
                         const cf = p.faseActual !== faseActual;
                         if (!Array.isArray(p.historialFases)) p.historialFases = [];
                         if (cf) p.historialFases.push({ fase: faseActual, fecha: obtenerFechaActual(), notas: 'Cambio de fase' });
-                        Object.assign(p, { nombre: nombre, telefono: telefono, email: email, faseActual: faseActual, notasGenerales: notasGenerales });
-                        const cambios = calcularDiff(copiaAnt, p, { camposIgnorados: ['notasGenerales', 'historialFases', 'clienteId'], etiquetas: { nombre: 'Nombre', telefono: 'Teléfono', email: 'Email', faseActual: 'Fase' } });
+                        Object.assign(p, { nombre: nombre, telefono: telefono, email: email, faseActual: faseActual, notasGenerales: notasGenerales, fechaEvento: fechaEvento });
+                        const cambios = calcularDiff(copiaAnt, p, { camposIgnorados: ['notasGenerales', 'historialFases', 'clienteId'], etiquetas: { nombre: 'Nombre', telefono: 'Teléfono', email: 'Email', faseActual: 'Fase', fechaEvento: 'Fecha del evento' } });
                         const cambioTexto = copiaAnt.notasGenerales !== p.notasGenerales;
                         registrarHistorial('prospecto', 'editar', 'Se editó prospecto: "' + nombre + '"', { id: id, nombre: nombre, cambios: cambios, cambiosOmitidos: cambioTexto ? 'El campo Notas también cambió.' : null });
                     }
                 } else {
-                    const nuevo = { id: generarId(), nombre: nombre, telefono: telefono, email: email, faseActual: faseActual, historialFases: [{ fase: faseActual, fecha: obtenerFechaActual(), notas: 'Registro inicial' }], notasGenerales: notasGenerales, clienteId: null, fechaRegistro: obtenerFechaActual() };
+                    const nuevo = { id: generarId(), nombre: nombre, telefono: telefono, email: email, faseActual: faseActual, historialFases: [{ fase: faseActual, fecha: obtenerFechaActual(), notas: 'Registro inicial' }], notasGenerales: notasGenerales, clienteId: null, fechaRegistro: obtenerFechaActual(), fechaEvento: fechaEvento };
                     prospectos.push(nuevo);
                     registrarHistorial('prospecto', 'crear', 'Se creó prospecto: "' + nombre + '"', { id: nuevo.id, nombre: nombre });
                 }
@@ -7005,10 +7019,27 @@ input:focus, select:focus, textarea:focus {
             var filas = (resumen.participaciones || []).map(function (p) {
                 var camp = (typeof App !== 'undefined' && App.almacen && App.almacen.campania) ? App.almacen.campania(p.campaignId) : null;
                 var nombre = camp ? camp.nombre : (p.campaniaNombre || 'Campaña');
-                var etapa = p.etapaNombre || p.etapaId || '';
+                /* El NOMBRE de la etapa, no su identificador: si la participación no lo trae
+                   (pasa con las que se crean desde la ficha del prospecto), se busca en las
+                   etapas de la campaña. Antes salía en pantalla algo como "etp_muyaoev88kiaz"
+                   (bug visto por Jorge el 10/10/2026). */
+                var etapa = p.etapaNombre || '';
+                if (!etapa && camp && Array.isArray(camp.etapas)) {
+                    var et = camp.etapas.filter(function (x) { return x && x.id === p.etapaId; })[0];
+                    if (et) etapa = et.nombre || '';
+                }
+                if (!etapa) etapa = p.etapaId || '';
                 var seg = p.fechaProximoSeguimiento ? ' · Seguimiento: ' + formatearFecha(p.fechaProximoSeguimiento) : '';
+                /* La etiqueta de estado viene como HTML ya armado por el CRM
+                   (App.etiquetaEstadoParticipacion devuelve un <span>). Antes se escapaba y
+                   el código salía visible en pantalla; ahora se deja pasar solo si es
+                   exactamente esa etiqueta, y cualquier otra cosa se escapa igual que antes. */
+                var etiqueta = String(etiquetaEstado(p.estado) || '');
+                if (!/^<span class="etiqueta-part [a-z]+">[^<>]*<\/span>$/.test(etiqueta)) {
+                    etiqueta = escapeHTML(etiqueta);
+                }
                 return '<div class="detalle-campo"><span class="lbl">' + escapeHTML(String(nombre)) + '</span><span class="val">' +
-                    escapeHTML(String(etapa)) + ' · ' + escapeHTML(String(etiquetaEstado(p.estado) || '')) + escapeHTML(seg) + '</span></div>';
+                    escapeHTML(String(etapa)) + ' · ' + etiqueta + escapeHTML(seg) + '</span></div>';
             }).join('');
 
             var resumenHTML = '<div class="item-sub" style="margin-bottom:8px">' +
@@ -7055,7 +7086,7 @@ input:focus, select:focus, textarea:focus {
                 datosHTML = '<div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + ec + '">' + escapeHTML(e.estado || 'Sin estado') + '</span></div><div class="detalle-grid" style="margin-top:12px;">' + campo('Nombre', e.nombre) + campo('Teléfono', e.telefono) + campo('Email', e.email) + campo('Origen', e.faseOrigen) + campo('Fecha registro', formatearFecha(e.fechaRegistro)) + '</div>';
             } else {
                 const cf = claseEtiquetaFase(faseDetalle);
-                datosHTML = '<div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(faseDetalle) + '</span>' + (e.clienteId ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Ya es cliente</span>' : '') + '</div><div class="detalle-grid" style="margin-top:12px;">' + campo('Nombre', e.nombre) + campo('Teléfono', e.telefono) + campo('Email', e.email) + campo('Fecha registro', formatearFecha(e.fechaRegistro)) + '</div>';
+                datosHTML = '<div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(faseDetalle) + '</span>' + (e.clienteId ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Ya es cliente</span>' : '') + '</div><div class="detalle-grid" style="margin-top:12px;">' + campo('Nombre', e.nombre) + campo('Teléfono', e.telefono) + campo('Email', e.email) + campo('Fecha del evento', e.fechaEvento ? formatearFecha(e.fechaEvento) : '') + campo('Fecha registro', formatearFecha(e.fechaRegistro)) + '</div>';
             }
             let notasHTML = '';
             if (e.notasGenerales) notasHTML = '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas generales</div><div class="detalle-notas">' + escapeHTMLconSaltos(e.notasGenerales) + '</div></div>';

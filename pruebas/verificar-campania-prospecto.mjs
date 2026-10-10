@@ -286,6 +286,71 @@ async function main() {
     revisar(borrados.prospectoOk === true && borrados.prospectoFuera === true, 'eliminarProspecto borra de verdad');
     revisar(borrados.campaniaOk === true && borrados.campaniaFuera === true, 'eliminarCampania borra de verdad');
 
+    console.log('\n7) El detalle del prospecto: la campaña con ETIQUETA (no código) y la fecha del evento');
+    const detalle = JSON.parse(await evaluar(cdp, `(function () {
+      /* Una participación como la del pantallazo de Jorge: pendiente de validación y con
+         seguimiento. Y un prospecto con fecha de evento capturada. */
+      participaciones.push({ id: 'par-x', campaignId: 'camp-1', prospectId: 'pro-1', estado: 'pendienteValidacion', etapaId: 'et-1', fechaProximoSeguimiento: '2026-11-11' });
+      var p1 = prospectos.filter(function (p) { return p.id === 'pro-1'; })[0];
+      p1.fechaEvento = '2027-03-15';
+      verDetalleProspecto('pro-1');
+      var cuerpo = document.getElementById('panel-lateral-body') || document.getElementById('modal-body');
+      var texto = cuerpo ? (cuerpo.textContent || '') : '';
+      var etiqueta = cuerpo ? cuerpo.querySelector('.detalle-seccion .etiqueta-part') : null;
+      var bloqueFecha = null;
+      if (cuerpo) {
+        var campos = [].slice.call(cuerpo.querySelectorAll('.detalle-campo'));
+        bloqueFecha = campos.filter(function (c) { return /Fecha del evento/.test(c.textContent || ''); })[0];
+      }
+      return JSON.stringify({
+        hayEtiqueta: !!etiqueta,
+        etiquetaTexto: etiqueta ? (etiqueta.textContent || '').trim() : null,
+        etiquetaClase: etiqueta ? etiqueta.className : null,
+        textoConHTML: /<span|&lt;span/.test(texto),
+        textoConId: /etp_|et-1/.test(texto),
+        muestraEtapa: /Contacto inicial/.test(texto),
+        fecha: bloqueFecha ? (bloqueFecha.textContent || '').replace(/\\s+/g, ' ').trim() : null
+      });
+    })()`));
+    console.log('   etiqueta: "' + detalle.etiquetaTexto + '"  [' + detalle.etiquetaClase + ']');
+    console.log('   fecha del evento en la ficha: "' + detalle.fecha + '"');
+    revisar(detalle.hayEtiqueta === true, 'la etiqueta de estado se dibuja como ETIQUETA (no como código)');
+    revisar(detalle.etiquetaTexto === 'Pendiente de validación', 'y dice "Pendiente de validación"');
+    revisar(detalle.textoConHTML === false, 'ya NO se ve el HTML en pantalla (era el bug del pantallazo)');
+    revisar(detalle.textoConId === false && detalle.muestraEtapa === true, 'muestra el NOMBRE de la etapa, no su identificador');
+    revisar(/15\/03\/2027/.test(detalle.fecha || ''), 'la ficha muestra la fecha del evento capturada');
+
+    console.log('\n7b) La fecha del evento en el formulario (opcional) y en la tarjeta');
+    const fechaForm = JSON.parse(await evaluar(cdp, `(function () {
+      editarProspecto('pro-1');
+      var inp = document.getElementById('prospecto-fecha-evento');
+      var prellenado = inp ? inp.value : null;
+      /* Sin fecha: se puede guardar igual (es opcional). */
+      inp.value = '';
+      document.getElementById('form-prospecto').requestSubmit();
+      var p1 = prospectos.filter(function (p) { return p.id === 'pro-1'; })[0];
+      var sinFecha = p1.fechaEvento;
+      /* Con fecha nueva: se guarda y queda en el historial. */
+      editarProspecto('pro-1');
+      document.getElementById('prospecto-fecha-evento').value = '2027-04-20';
+      document.getElementById('form-prospecto').requestSubmit();
+      var conFecha = prospectos.filter(function (p) { return p.id === 'pro-1'; })[0].fechaEvento;
+      renderizarProspectos();
+      var tarjetas = [].slice.call(document.querySelectorAll('#lista-prospectos .mosaico-card, #lista-prospectos .lista-fila'));
+      var t = tarjetas.filter(function (x) { return (x.textContent || '').indexOf('Allison Garza') !== -1; })[0];
+      var enTarjeta = t ? /Evento: 20\\/04\\/2027/.test(t.textContent || '') : false;
+      var enHistorial = historial.some(function (h) { return h && h.entidad === 'prospecto' && /Fecha del evento/i.test(JSON.stringify(h.cambios || [])); });
+      return JSON.stringify({ campo: !!inp, prellenado: prellenado, sinFecha: sinFecha, conFecha: conFecha, enTarjeta: enTarjeta, enHistorial: enHistorial });
+    })()`));
+    console.log('   campo: ' + fechaForm.campo + ' · prellenado: "' + fechaForm.prellenado + '" · vacío → "' + fechaForm.sinFecha + '" · nueva → "' + fechaForm.conFecha + '"');
+    console.log('   en la tarjeta: ' + fechaForm.enTarjeta + ' · anotada en el historial: ' + fechaForm.enHistorial);
+    revisar(fechaForm.campo === true, 'el formulario trae el campo de fecha del evento');
+    revisar(fechaForm.prellenado === '2027-03-15', 'al editar sale la fecha que ya tenía');
+    revisar(fechaForm.sinFecha === '', 'es OPCIONAL: se puede dejar vacía y guardar');
+    revisar(fechaForm.conFecha === '2027-04-20', 'y se guarda la fecha nueva');
+    revisar(fechaForm.enTarjeta === true, 'la tarjeta del prospecto muestra la fecha del evento');
+    revisar(fechaForm.enHistorial === true, 'el cambio de fecha queda anotado en el historial');
+
     const errores = cdp.sucesos.filter(s => s.method === 'Runtime.exceptionThrown')
       .map(s => s.params.exceptionDetails.exception?.description || s.params.exceptionDetails.text);
     if (errores.length) { console.log('\nErrores en la página (' + errores.length + '):'); errores.slice(0, 4).forEach(e => console.log('  · ' + String(e).split('\n')[0])); }
