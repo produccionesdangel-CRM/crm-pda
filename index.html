@@ -2751,6 +2751,9 @@ input:focus, select:focus, textarea:focus {
                             <button class="config-boton cargar" id="btn-cargar-firebase"><i class="fas fa-cloud-download-alt"></i><div class="info"><div class="titulo">Cargar desde la nube</div><div class="subtitulo">Reemplaza datos locales con los de Firebase</div></div></button>
                             <button class="config-boton exportar" id="btn-exportar-datos"><i class="fas fa-download"></i><div class="info"><div class="titulo">Exportar datos</div><div class="subtitulo">Descarga un respaldo JSON</div></div></button>
                             <button class="config-boton importar" id="btn-importar-datos"><i class="fas fa-upload"></i><div class="info"><div class="titulo">Importar datos</div><div class="subtitulo">Carga un respaldo desde JSON</div></div></button>
+                            <!-- @HTML-HOMOGENEIZAR-FECHAS (10/10/2026): deja todas las fechas en el
+                                 mismo formato (las importadas venían como 8/10/2027 y se veían mal). -->
+                            <button class="config-boton" id="btn-homogeneizar-fechas"><i class="fas fa-calendar-check"></i><div class="info"><div class="titulo">Homogeneizar fechas</div><div class="subtitulo">Deja todas las fechas en formato AAAA-MM-DD</div></div></button>
                             <input type="file" id="input-importar-datos" accept=".json" style="display:none;">
                         </div>
                     </div>
@@ -2948,7 +2951,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-10.5';
+        var BUILD_APP = '2026-10-10.6';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -3188,8 +3191,13 @@ input:focus, select:focus, textarea:focus {
         function normalizarFechaISO(v) {
             if (v === null || v === undefined) return '';
             if (v instanceof Date) return isNaN(v.getTime()) ? '' : formatearFechaLocal(v);
-            const s = String(v).trim();
+            let s = String(v).trim();
             if (!s) return '';
+            /* La hora se aparta cuando viene separada por un espacio ("8/10/2026 12:00"): aquí
+               solo interesa la fecha, y quien la use decide si conserva la hora (el
+               homogeneizador la conserva). Sin esto, una fecha con hora no se reconocía. */
+            const conHora = s.match(/\s+(\d{1,2}:\d{2}(?::\d{2})?)$/);
+            if (conHora) s = s.slice(0, conHora.index).trim();
             let m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ]|$)/);       /* ya viene ISO, con o sin hora */
             if (m) { const iso = m[1] + '-' + m[2] + '-' + m[3]; return fechaISOExiste(iso) ? iso : ''; }
             m = s.match(/^(\d{4})[\/.](\d{1,2})[\/.](\d{1,2})$/);        /* año primero: 2027/10/08 */
@@ -4686,6 +4694,133 @@ input:focus, select:focus, textarea:focus {
         }
         function obtenerRespaldoSeguridadLocal() {
             try { return JSON.parse(localStorage.getItem(CLAVE_RESPALDO_SEGURIDAD)); } catch (e) { return null; }
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           @JS-HOMOGENEIZAR-FECHAS (10/10/2026)
+           Deja TODAS las fechas del CRM en el mismo formato (AAAA-MM-DD y, si traen hora,
+           AAAA-MM-DD HH:MM), leyéndolas como las escribe la gente o como las manda una hoja de
+           cálculo (8/10/2027 · 2027/10/08 · 08-10-2027 · serie de Excel…).
+
+           POR QUÉ EXISTE: la importación guardaba la fecha tal cual venía y el CRM la mostraba
+           mal ("undefined/undefined/8/10/2027"). Jorge ya había hecho respaldos y pidió dejar
+           todo homogéneo.
+
+           REGLAS DE SEGURIDAD (esto toca datos, así que va con cuidado):
+           1. Lo que YA está en formato correcto NO se toca ni se reescribe.
+           2. Solo se cambian campos cuyo NOMBRE es una fecha conocida: montos, notas, teléfonos
+              y todo lo demás quedan intactos (el dinero no se puede tocar por diseño).
+           3. Lo que no se puede leer como fecha se deja tal cual y se reporta.
+           4. El historial NO se toca: es la bitácora del CRM y es de solo-anexar.
+           5. Todo lo cambiado se marca para subir a la nube.
+           6. Primero se corre en SIMULACIÓN: el aviso dice cuántas fechas y en cuántos
+              registros antes de aplicar nada. */
+        var CAMPOS_FECHA_HOMOGENEIZABLES = ['fecha', 'fechaEvento', 'fechaNacimiento', 'fechaRegistro', 'fechaContrato',
+            'fechaInicio', 'fechaFin', 'fechaCompletada', 'fechaCreacion', 'fechaModificacion',
+            'fechaProximoSeguimiento', 'fechaActualizacion', 'fechaCaptura', 'fechaAceptacion', 'vigencia'];
+
+        /* Recorre un registro (y lo que tenga dentro: contratos, pagos, tareas...) y devuelve
+           cuántas fechas cambió. Con `aplicar` en false solo cuenta (simulación). */
+        function homogeneizarFechasDe(obj, reporte, aplicar) {
+            if (!obj || typeof obj !== 'object') return 0;
+            var cambios = 0;
+            Object.keys(obj).forEach(function (k) {
+                var v = obj[k];
+                if (v && typeof v === 'object') { cambios += homogeneizarFechasDe(v, reporte, aplicar); return; }
+                if (typeof v !== 'string') return;
+                if (CAMPOS_FECHA_HOMOGENEIZABLES.indexOf(k) === -1) return;
+                var s = v.trim();
+                if (!s) return;
+                /* 1) Ya está en formato correcto: no se toca (ni un byte). */
+                if (/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$/.test(s)) return;
+                /* La hora, si la trae, se conserva. */
+                var hora = '';
+                var mh = s.match(/(\d{1,2}):(\d{2})/);
+                if (mh) hora = ' ' + ('0' + mh[1]).slice(-2) + ':' + mh[2];
+                var iso = normalizarFechaISO(s);
+                if (!iso) {
+                    /* 3) No es una fecha: se deja tal cual y se reporta (con muestra acotada). */
+                    if (reporte.sinLeer.length < 15) reporte.sinLeer.push(k + ': "' + s + '"');
+                    reporte.sinLeerTotal = (reporte.sinLeerTotal || 0) + 1;
+                    return;
+                }
+                if (aplicar) obj[k] = iso + hora;
+                cambios++;
+            });
+            return cambios;
+        }
+
+        /* Recorre todas las colecciones que se sincronizan. Devuelve el reporte. */
+        function homogeneizarTodasLasFechas(aplicar) {
+            var reporte = { fechas: 0, entidades: 0, porColeccion: {}, sinLeer: [], sinLeerTotal: 0, aplicar: !!aplicar };
+            COLECCIONES_VERSIONADAS.forEach(function (col) {
+                var lista = (typeof window !== 'undefined') ? window[col] : null;
+                if (!Array.isArray(lista)) return;
+                var cambiadas = 0, tocadas = 0;
+                lista.forEach(function (ent) {
+                    if (!ent || typeof ent !== 'object') return;
+                    var c = homogeneizarFechasDe(ent, reporte, aplicar);
+                    if (c > 0) {
+                        cambiadas += c; tocadas++;
+                        if (aplicar && ent.id && typeof marcarSucia === 'function') marcarSucia(col, ent.id);
+                    }
+                });
+                if (cambiadas) reporte.porColeccion[col] = cambiadas;
+                reporte.fechas += cambiadas;
+                reporte.entidades += tocadas;
+            });
+            return reporte;
+        }
+
+        function mostrarResultadoHomogeneizar(r) {
+            var filas = Object.keys(r.porColeccion).map(function (col) {
+                return '<div class="fila-resumen"><span>' + escapeHTML(col) + '</span><span class="valor">' + r.porColeccion[col] + ' fecha(s)</span></div>';
+            }).join('');
+            var sinLeer = r.sinLeer.length
+                ? '<div style="margin-top:12px;font-size:12.5px;color:var(--color-texto-secundario);">No se pudieron leer como fecha (se dejaron tal cual):<ul style="margin:6px 0 0 18px;">' +
+                  r.sinLeer.map(function (x) { return '<li>' + escapeHTML(x) + '</li>'; }).join('') + '</ul>' +
+                  (r.sinLeerTotal > r.sinLeer.length ? '<div>(y ' + (r.sinLeerTotal - r.sinLeer.length) + ' más)</div>' : '') + '</div>'
+                : '';
+            abrirModal('Fechas homogeneizadas', '<div class="advertencia-eliminar" style="background-color:rgba(76,175,80,0.12);border-color:var(--color-verde);"><i class="fas fa-circle-check" style="color:var(--color-verde);"></i><div class="texto"><strong style="color:var(--color-verde);">Listo</strong>' +
+                'Se convirtieron <strong>' + r.fechas + '</strong> fecha(s) en <strong>' + r.entidades + '</strong> registro(s).' +
+                '</div></div>' + filas + sinLeer +
+                '<div style="margin-top:14px;font-size:12.5px;color:var(--color-texto-secundario);">Los registros cambiados ya quedaron marcados para subir a la nube. Puedes ver el avance en el indicador de sincronización.</div>' +
+                '<div class="form-acciones"><button type="button" class="btn-primario" onclick="cerrarModal()">Entendido</button></div>');
+        }
+
+        function accionHomogeneizarFechas() {
+            if (!esAdmin()) { mostrarNotificacion('Solo administradores pueden cambiar los datos de esta forma.', 'warning'); return; }
+            const previo = homogeneizarTodasLasFechas(false);   /* simulación: no cambia nada */
+            if (previo.fechas === 0) {
+                mostrarNotificacion(previo.sinLeerTotal
+                    ? 'Todas las fechas ya están en el mismo formato. Hay ' + previo.sinLeerTotal + ' valor(es) que no son fechas: esos no se tocan.'
+                    : 'Todas las fechas ya están en el mismo formato. No hay nada que cambiar.', 'info');
+                return;
+            }
+            const avisos = [
+                'Se encontraron <strong>' + previo.fechas + '</strong> fecha(s) en <strong>' + previo.entidades + '</strong> registro(s) que se pueden dejar en formato AAAA-MM-DD.',
+                'Solo se tocan campos de <strong>fecha</strong>: montos, pagos, notas y todo lo demás quedan igual.',
+                'Conviene que ya tengas tu respaldo ("Exportar datos"): esto sí cambia tus datos y se subirá a la nube.',
+                previo.sinLeerTotal ? 'Hay ' + previo.sinLeerTotal + ' valor(es) que no se pudieron leer como fecha: esos se dejan tal cual.' : ''
+            ].filter(Boolean);
+            confirmarOperacionFinanciera({
+                titulo: 'Homogeneizar fechas',
+                textoIntro: 'Se van a dejar todas las fechas en el mismo formato:',
+                avisos: avisos,
+                textoConfirmar: 'Sí, homogeneizar',
+                onConfirmar: function () {
+                    try {
+                        crearRespaldoSeguridadLocal('homogeneizar fechas');
+                        const r = homogeneizarTodasLasFechas(true);
+                        registrarHistorial('sesion', 'editar', 'Se homogeneizaron ' + r.fechas + ' fecha(s) en ' + r.entidades + ' registro(s)', { nombre: usuarioActual ? usuarioActual.nombre : null });
+                        guardarDatos();
+                        if (typeof renderizarTodo === 'function') renderizarTodo();
+                        mostrarResultadoHomogeneizar(r);
+                    } catch (e) {
+                        mostrarNotificacion('No se pudieron homogeneizar las fechas: ' + (e && e.message ? e.message : e), 'error');
+                    }
+                }
+            });
         }
         // Detecta una carga que vaciaría el CRM local: casi siempre es un fallo de red o de reglas.
         function cargaRemotaSospechosa(nuevas) {
@@ -10359,7 +10494,7 @@ input:focus, select:focus, textarea:focus {
             // Exportar e importar respaldos es de administradores: la decisión de Jorge es
             // que el rol de Ventas "solo pueda sincronizar y cargar desde la nube".
             // Las funciones ya avisaban y no hacían nada; aquí además se oculta la opción.
-            ['btn-exportar-datos', 'btn-importar-datos'].forEach(function(id) {
+            ['btn-exportar-datos', 'btn-importar-datos', 'btn-homogeneizar-fechas'].forEach(function(id) {
                 const b = document.getElementById(id);
                 if (b) b.style.display = esAdmin() ? '' : 'none';
             });
@@ -10624,6 +10759,7 @@ input:focus, select:focus, textarea:focus {
                     mostrarNotificacion('Respaldo descargado (sin credenciales de acceso).', 'success');
                 } catch (e) { mostrarNotificacion('Error al exportar: ' + e.message, 'error'); }
             });
+            btn = document.getElementById('btn-homogeneizar-fechas'); if (btn) btn.addEventListener('click', accionHomogeneizarFechas);
             btn = document.getElementById('btn-importar-datos'); if (btn) btn.addEventListener('click', function() { document.getElementById('input-importar-datos').click(); });
             btn = document.getElementById('input-importar-datos'); if (btn) btn.addEventListener('change', function(e) {
                 const f = e.target.files[0]; if (!f) return;
