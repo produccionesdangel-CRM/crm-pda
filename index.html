@@ -2206,6 +2206,10 @@ input:focus, select:focus, textarea:focus {
         /* Etiquetas de la ficha de la tarea. */
         .etiqueta-tipo-tarea { background-color: color-mix(in srgb, var(--color-acento) 18%, transparent); color: var(--color-acento); }
         .etiqueta-campania-tarea { background-color: color-mix(in srgb, var(--color-morado) 18%, transparent); color: var(--color-morado); }
+        /* @CSS-CAMPANIA-PROSPECTO (10/10/2026): la etiqueta de campaña en la tarjeta del
+           prospecto usa el mismo color que la de las tareas, para que "campaña" se vea
+           igual en todo el CRM. */
+        .etiqueta-campania { background-color: color-mix(in srgb, var(--color-morado) 18%, transparent); color: var(--color-morado); }
         .ficha-tarea-titulo { font-size: 19px; font-weight: 600; line-height: 1.35; color: var(--color-texto-primario); margin: 2px 0 12px 0; word-break: break-word; }
         .ayuda-campo { font-size: 11.5px; color: var(--color-texto-secundario); margin-top: 6px; display: flex; align-items: flex-start; gap: 6px; line-height: 1.45; }
         .ayuda-campo i { color: var(--color-acento); margin-top: 2px; }
@@ -2502,6 +2506,11 @@ input:focus, select:focus, textarea:focus {
                         <select id="filtro-fase-prospecto">
                             <option value="todas">Todas</option><option value="Interesado">Interesado</option><option value="Cotización">Cotización</option><option value="Negociación">Negociación</option><option value="Contrato">Contrato</option><option value="Frecuente">Frecuente</option><option value="Cancelado">Cancelado</option><option value="Inactivo">Inactivo</option>
                         </select>
+                    </div>
+                    <!-- @HTML-FILTRO-CAMPANIA-PROSPECTO (10/10/2026): las opciones se llenan
+                         solas en JavaScript, porque las campañas cambian. -->
+                    <div class="filtro-grupo"><label>Filtrar por campaña</label>
+                        <select id="filtro-campania-prospecto"><option value="todas">Todas</option></select>
                     </div>
                     <div class="filtro-grupo"><label>Buscar</label><input type="text" id="buscar-prospecto" placeholder="Nombre o teléfono..."></div>
                 </div>
@@ -2939,7 +2948,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-09.35';
+        var BUILD_APP = '2026-10-10.1';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -3336,6 +3345,17 @@ input:focus, select:focus, textarea:focus {
         var recargaRemotaEnCurso = false;
         var authObservadorActivo = false;
         var descuentoTemporal = null;
+        /* ─────── @JS-PRECIO-PACTADO (10/10/2026) ───────
+           Precio pactado del contrato que se está editando. Lo llena mostrarFormularioContrato
+           y lo lee guardarContrato (mismo patrón que descuentoTemporal).
+           POR QUÉ EXISTE: el precio de un contrato ya creado NO se puede recalcular con el
+           catálogo de hoy. Caso real del 10/10/2026 (contrato de Paola Peña, Paquete Princesa):
+           el contrato estaba pactado en $6,900 y pagado, pero la ventana de edición sumaba el
+           precio de lista del paquete ($8,950) y mostraba un pendiente fantasma de $2,050; al
+           darle "Actualizar" le habría CAMBIADO el precio a $8,950 y le habría creado una
+           deuda inexistente. Mientras no se cambie el paquete, el servicio ni los servicios
+           adicionales, manda el precio pactado. */
+        var precioPactadoContrato = null;
         var LOGO_PRECARGADO = new Image();
         LOGO_PRECARGADO.crossOrigin = 'anonymous';
         LOGO_PRECARGADO.src = 'https://cdn.jsdelivr.net/gh/produccionesdangel-CRM/crm-pda@main/pda%20logo.jpg';
@@ -5206,10 +5226,14 @@ input:focus, select:focus, textarea:focus {
             const onConfirmar = opciones.onConfirmar;
             const onCancelar = opciones.onCancelar;
             const resumenHTML = opciones.resumenHTML || '';
+            /* Texto de entrada configurable: este diálogo se usa también para cosas que NO
+               son financieras (por ejemplo quitar a un prospecto de una campaña), y ahí el
+               "resultado financiero requiere tu confirmación" no venía al caso. */
+            const textoIntro = opciones.textoIntro || 'Esta operación es válida, pero el resultado financiero requiere tu confirmación:';
             const listaAvisos = avisos.map(function(a) {
                 return '<li style="margin-bottom:6px;">' + a + '</li>';
             }).join('');
-            const html = '<div class="advertencia-eliminar" style="background-color:rgba(255,152,0,0.12);border-color:var(--color-naranja);"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto"><strong style="color:var(--color-naranja);">Revisa antes de continuar</strong>Esta operación es válida, pero el resultado financiero requiere tu confirmación:' + '<ul style="margin:8px 0 0 18px;padding:0;">' + listaAvisos + '</ul></div></div>' + resumenHTML + '<div class="form-acciones"><button type="button" class="btn-secundario" id="btn-cancelar-financiero"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="btn-primario" id="btn-confirmar-financiero"><i class="fas fa-check"></i> ' + escapeHTML(textoConfirmar) + '</button></div>';
+            const html = '<div class="advertencia-eliminar" style="background-color:rgba(255,152,0,0.12);border-color:var(--color-naranja);"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto"><strong style="color:var(--color-naranja);">Revisa antes de continuar</strong>' + textoIntro + '<ul style="margin:8px 0 0 18px;padding:0;">' + listaAvisos + '</ul></div></div>' + resumenHTML + '<div class="form-acciones"><button type="button" class="btn-secundario" id="btn-cancelar-financiero"><i class="fas fa-times"></i> Cancelar</button><button type="button" class="btn-primario" id="btn-confirmar-financiero"><i class="fas fa-check"></i> ' + escapeHTML(textoConfirmar) + '</button></div>';
             // Si había un formulario abierto (el del contrato), se aparta para devolverlo
             // al confirmar o cancelar. Es la causa raíz de R2: sin esto el cargo
             // confirmado se perdía y el formulario quedaba destruido. También sirve para
@@ -6262,11 +6286,66 @@ input:focus, select:focus, textarea:focus {
             f = f.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
             return 'etiqueta-' + (f || 'sin-fase');
         }
+        /* ─────── @JS-CAMPANIA-PROSPECTO (10/10/2026) ───────
+           Un prospecto se liga a una campaña con una PARTICIPACIÓN, que es el mismo
+           mecanismo que usan la importación y los tableros de Campañas. No es una
+           etiqueta suelta a propósito: así lo que se ve en el prospecto es exactamente
+           lo que cuentan los tableros de la campaña, y no hay dos verdades.
+           Se eligió así con Jorge el 10/10/2026. */
+        function participacionesDeProspecto(prospectoId) {
+            return participaciones.filter(function(x) { return x && x.prospectId === prospectoId && !x._eliminado; });
+        }
+        function campaniaDeProspecto(prospectoId) {
+            const ps = participacionesDeProspecto(prospectoId);
+            return ps.length ? ps[0].campaignId : null;
+        }
+        function nombreCampaniaDeProspecto(prospectoId) {
+            const cid = campaniaDeProspecto(prospectoId);
+            if (!cid) return '';
+            const c = campanias.filter(function(x) { return x && x.id === cid; })[0];
+            return c ? (c.nombre || '') : '';
+        }
+        /* Opciones del desplegable de campaña: primero las activas y al final las
+           cerradas (marcadas, para que se entienda por qué no se pueden elegir). */
+        function opcionesCampaniaProspecto(seleccionada) {
+            const activas = campanias.filter(function(c) { return c && c.estado === 'activa'; });
+            const otras = campanias.filter(function(c) { return c && c.estado !== 'activa'; });
+            let h = '<option value=""' + (!seleccionada ? ' selected' : '') + '>— Sin campaña —</option>';
+            activas.concat(otras).forEach(function(c) {
+                const etq = (c.estado === 'activa') ? (c.nombre || 'Campaña') : ((c.nombre || 'Campaña') + ' (' + (c.estado || 'cerrada') + ')');
+                h += '<option value="' + escapeAtributoJS(c.id) + '"' + (c.id === seleccionada ? ' selected' : '') + '>' + escapeHTML(etq) + '</option>';
+            });
+            return h;
+        }
+        /* El filtro de campaña del listado se llena solo (las campañas cambian). */
+        function llenarFiltroCampaniasProspectos() {
+            const sel = document.getElementById('filtro-campania-prospecto');
+            if (!sel) return;
+            const previo = sel.value || 'todas';
+            const activas = campanias.filter(function(c) { return c && c.estado === 'activa'; });
+            const otras = campanias.filter(function(c) { return c && c.estado !== 'activa'; });
+            let h = '<option value="todas">Todas</option>';
+            activas.concat(otras).forEach(function(c) {
+                h += '<option value="' + escapeAtributoJS(c.id) + '">' + escapeHTML(c.nombre || 'Campaña') + '</option>';
+            });
+            h += '<option value="sin">Sin campaña</option>';
+            sel.innerHTML = h;
+            /* Se conserva lo que estaba elegido; si esa campaña ya no existe, se vuelve a "Todas". */
+            const existe = [].slice.call(sel.options).some(function(o) { return o.value === previo; });
+            sel.value = existe ? previo : 'todas';
+        }
+
         function renderizarProspectos() {
             const filtroFase = document.getElementById('filtro-fase-prospecto').value;
             const busqueda = document.getElementById('buscar-prospecto').value.toLowerCase().trim();
+            llenarFiltroCampaniasProspectos();
+            const selCampania = document.getElementById('filtro-campania-prospecto');
+            const filtroCampania = selCampania ? selCampania.value : 'todas';
             let f = prospectos.slice();
             if (filtroFase !== 'todas') f = f.filter(function(p) { return p && faseSeguraProspecto(p) === filtroFase; });
+            /* Filtrar por campaña: "sin" deja solo los que no participan en ninguna. */
+            if (filtroCampania === 'sin') f = f.filter(function(p) { return p && !campaniaDeProspecto(p.id); });
+            else if (filtroCampania !== 'todas') f = f.filter(function(p) { return p && campaniaDeProspecto(p.id) === filtroCampania; });
             if (busqueda) f = f.filter(function(p) { return p && ((p.nombre || '').toLowerCase().indexOf(busqueda) !== -1 || (p.telefono && String(p.telefono).indexOf(busqueda) !== -1)); });
             actualizarToggleVista('prospectos');
             const vistaLista = esVistaLista('prospectos');
@@ -6281,7 +6360,8 @@ input:focus, select:focus, textarea:focus {
                     const ec = p.clienteId !== null && p.clienteId !== undefined;
                     const numTareas = tareas.filter(function(t) { return t.clienteId === 'pro_' + p.id; }).length;
                     const inicial = escapeHTML((p.nombre || 'P').charAt(0).toUpperCase());
-                    return '<div class="lista-fila" onclick="verDetalleProspecto(\'' + escapeAtributoJS(p.id) + '\')"><div class="lista-avatar avatar-prospecto">' + inicial + '</div><div class="lista-contenido"><div class="lista-titulo-linea"><span class="lista-titulo">' + escapeHTML(p.nombre || 'Sin nombre') + '</span><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(fase) + '</span>' + (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + '</div><div class="lista-datos">' + (p.telefono ? '<span><i class="fas fa-phone"></i> ' + escapeHTML(p.telefono) + '</span>' : '') + (p.email ? '<span><i class="fas fa-envelope"></i> ' + escapeHTML(p.email) + '</span>' : '') + '</div><div class="lista-meta">' + (numTareas > 0 ? '<span><i class="fas fa-tasks"></i> <strong>' + numTareas + '</strong> tarea' + (numTareas === 1 ? '' : 's') + '</span>' : '') + '<span><i class="fas fa-calendar"></i> Registrado: ' + escapeHTML(formatearFecha(p.fechaRegistro)) + '</span></div></div><div class="lista-acciones" onclick="event.stopPropagation()"><button class="btn-editar" onclick="editarProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + escapeAtributoJS(p.id) + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' + (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') + '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div>';
+                    const camp = nombreCampaniaDeProspecto(p.id);
+                    return '<div class="lista-fila" onclick="verDetalleProspecto(\'' + escapeAtributoJS(p.id) + '\')"><div class="lista-avatar avatar-prospecto">' + inicial + '</div><div class="lista-contenido"><div class="lista-titulo-linea"><span class="lista-titulo">' + escapeHTML(p.nombre || 'Sin nombre') + '</span><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(fase) + '</span>' + (camp ? '<span class="tarjeta-etiqueta etiqueta-campania" title="Campaña"><i class="fas fa-bullhorn"></i> ' + escapeHTML(camp) + '</span>' : '') + (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + '</div><div class="lista-datos">' + (p.telefono ? '<span><i class="fas fa-phone"></i> ' + escapeHTML(p.telefono) + '</span>' : '') + (p.email ? '<span><i class="fas fa-envelope"></i> ' + escapeHTML(p.email) + '</span>' : '') + '</div><div class="lista-meta">' + (numTareas > 0 ? '<span><i class="fas fa-tasks"></i> <strong>' + numTareas + '</strong> tarea' + (numTareas === 1 ? '' : 's') + '</span>' : '') + '<span><i class="fas fa-calendar"></i> Registrado: ' + escapeHTML(formatearFecha(p.fechaRegistro)) + '</span></div></div><div class="lista-acciones" onclick="event.stopPropagation()"><button class="btn-editar" onclick="editarProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Editar"><i class="fas fa-edit"></i></button><button class="btn-tarea" onclick="abrirTareaParaCliente(\'' + escapeAtributoJS(p.id) + '\', \'prospecto\')" title="Agregar tarea"><i class="fas fa-tasks"></i></button>' + (!ec ? '<button class="btn-convertir" onclick="convertirProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Convertir a cliente"><i class="fas fa-user-check"></i></button>' : '') + '<button class="btn-eliminar" onclick="eliminarProspecto(\'' + escapeAtributoJS(p.id) + '\')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div>';
                 }).join('');
             } else {
                 const cont = document.getElementById('lista-prospectos');
@@ -6294,7 +6374,7 @@ input:focus, select:focus, textarea:focus {
                         const cf = claseEtiquetaFase(fase);
                         const ec = p.clienteId !== null && p.clienteId !== undefined;
                         const numTareas = tareas.filter(function(t) { return t.clienteId === 'pro_' + p.id; }).length;
-                        return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + escapeHTML(p.nombre || 'Sin nombre') + '</div></div><div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(fase) + '</span>' + (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') + '</div><div class="mosaico-separador"></div><div class="mosaico-detalle">' + (p.telefono ? '<div><i class="fas fa-phone"></i> ' + escapeHTML(p.telefono) + '</div>' : '') + (p.email ? '<div><i class="fas fa-envelope"></i> ' + escapeHTML(p.email) + '</div>' : '') + '<div><small>Registrado: ' + escapeHTML(formatearFecha(p.fechaRegistro)) + '</small></div></div>';
+                        return '<div class="mosaico-card-header"><div class="mosaico-titulo">' + escapeHTML(p.nombre || 'Sin nombre') + '</div></div><div class="mosaico-etiquetas"><span class="tarjeta-etiqueta ' + cf + '">' + escapeHTML(fase) + '</span>' + (nombreCampaniaDeProspecto(p.id) ? '<span class="tarjeta-etiqueta etiqueta-campania" title="Campaña"><i class="fas fa-bullhorn"></i> ' + escapeHTML(nombreCampaniaDeProspecto(p.id)) + '</span>' : '') + (ec ? '<span class="tarjeta-etiqueta" style="background:#4caf50;color:#fff;">Cliente</span>' : '') + (numTareas > 0 ? '<span class="tarjeta-etiqueta" style="background:var(--color-morado);color:#fff;"><i class="fas fa-tasks"></i> ' + numTareas + '</span>' : '') + '</div><div class="mosaico-separador"></div><div class="mosaico-detalle">' + (p.telefono ? '<div><i class="fas fa-phone"></i> ' + escapeHTML(p.telefono) + '</div>' : '') + (p.email ? '<div><i class="fas fa-envelope"></i> ' + escapeHTML(p.email) + '</div>' : '') + '<div><small>Registrado: ' + escapeHTML(formatearFecha(p.fechaRegistro)) + '</small></div></div>';
                     },
                     renderAcciones: function(p) {
                         const ec = p.clienteId !== null && p.clienteId !== undefined;
@@ -6304,11 +6384,65 @@ input:focus, select:focus, textarea:focus {
             }
         }
 
+        /* ── Aplicar el cambio de campaña de un prospecto YA GUARDADO ──
+           Va aparte y DESPUÉS de cerrar el formulario a propósito: si se hace antes,
+           el cerrarModal() del guardado se lleva por delante la ventana de confirmación
+           (bug real que atrapó el arnés verificar-campania-prospecto.mjs el 10/10/2026).
+           - Agregar: crea la participación (el mismo mecanismo que la importación).
+           - Quitar: PIDE CONFIRMACIÓN y avisa que el prospecto no se borra. */
+        function aplicarCampaniaProspecto(idProspecto, elegida, previa, nombreProspecto) {
+            if (!idProspecto || elegida === previa) return;
+            const nombre = nombreProspecto || 'el prospecto';
+            try {
+                const m = (typeof App !== 'undefined' && App.motor) ? App.motor : null;
+                if (!m) throw new Error('El módulo de campañas no está disponible.');
+                if (elegida) {
+                    const r = m.agregarParticipacion({ campaniaId: elegida, prospectoId: idProspecto, origen: 'Ficha del prospecto' });
+                    if (r && r.ok) {
+                        const cn = (campanias.filter(function(x) { return x && x.id === elegida; })[0] || {}).nombre || 'la campaña';
+                        registrarHistorial('prospecto', 'editar', 'Se agregó a "' + nombre + '" a la campaña ' + cn, { id: idProspecto, nombre: nombre });
+                        mostrarNotificacion('Se agregó a la campaña ' + cn, 'success');
+                    } else {
+                        mostrarNotificacion('El prospecto se guardó, pero no se pudo agregar a la campaña: ' + ((r && r.errores && r.errores[0]) || 'revisa la campaña.'), 'warning');
+                    }
+                } else if (previa) {
+                    const partes = participacionesDeProspecto(idProspecto);
+                    if (partes.length === 0) return;
+                    const cn = nombreCampaniaDeProspecto(idProspecto) || 'su campaña';
+                    confirmarOperacionFinanciera({
+                        titulo: 'Quitar de la campaña',
+                        textoIntro: 'El prospecto se conserva; solo deja de participar en la campaña:',
+                        avisos: ['Se va a quitar a <strong>' + escapeHTML(nombre) + '</strong> de la campaña <strong>' + escapeHTML(cn) + '</strong>. El prospecto NO se borra: solo deja de participar. Las tareas de esa campaña se conservan, únicamente se desvinculan.'],
+                        textoConfirmar: 'Quitar de la campaña',
+                        onConfirmar: function() {
+                            try {
+                                const mm = (typeof App !== 'undefined' && App.motor) ? App.motor : null;
+                                if (!mm) throw new Error('sin motor de campañas');
+                                partes.forEach(function(pp) { mm.eliminarParticipacion(pp.id); });
+                                registrarHistorial('prospecto', 'editar', 'Se quitó a "' + nombre + '" de la campaña ' + cn, { id: idProspecto, nombre: nombre });
+                                guardarDatos(); renderizarProspectos();
+                                mostrarNotificacion('Se quitó de la campaña', 'info');
+                            } catch (e2) { mostrarNotificacion('No se pudo quitar de la campaña.', 'error'); }
+                        }
+                    });
+                }
+            } catch (e1) { mostrarNotificacion('El prospecto se guardó, pero la campaña no se pudo actualizar.', 'warning'); }
+            renderizarProspectos();
+        }
+
         function mostrarFormularioProspecto(prospecto) {
             const ee = prospecto !== null && prospecto !== undefined;
             let opf = '';
             fasesDisponiblesParaMiRol().forEach(function(f) { const sel = prospecto && prospecto.faseActual === f ? 'selected' : ''; opf += '<option value="' + f + '" ' + sel + '>' + f + '</option>'; });
-            const html = '<form id="form-prospecto">' + cajaAvisosDeFormulario() + '<input type="hidden" id="prospecto-id" value="' + (prospecto ? prospecto.id : '') + '"><div class="form-grupo"><label>Nombre *</label><input type="text" id="prospecto-nombre" required value="' + (prospecto ? prospecto.nombre : '') + '"></div><div class="form-grupo"><label>Teléfono (opcional)</label><input type="text" id="prospecto-telefono" value="' + (prospecto ? prospecto.telefono : '') + '"></div><div class="form-grupo"><label>Email (opcional)</label><input type="email" id="prospecto-email" value="' + (prospecto ? prospecto.email : '') + '"></div><div class="form-grupo"><label>Fase *</label><select id="prospecto-fase" required>' + opf + '</select></div><div class="form-grupo"><label>Notas (opcional)</label><textarea id="prospecto-notas">' + (prospecto ? prospecto.notasGenerales : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-prospecto-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
+            /* ── @JS-CAMPANIA-PROSPECTO (10/10/2026): campaña del prospecto. Se elige una
+               campaña y se crea su participación (ver las funciones de arriba). Si ya
+               participa, sale elegida; si se deja en "Sin campaña", se le quita. ── */
+            const campaniaActual = ee ? campaniaDeProspecto(prospecto.id) : null;
+            const selectCampania = '<div class="form-grupo"><label>Campaña (opcional)</label><select id="prospecto-campania">' + opcionesCampaniaProspecto(campaniaActual) + '</select>' +
+                (campanias.length === 0 ? '<small style="color:var(--color-texto-secundario);">Todavía no hay campañas creadas. Se hacen en la sección Campañas.</small>' : '') +
+                (ee && participacionesDeProspecto(prospecto.id).length > 1 ? '<small style="color:var(--color-texto-secundario);">También participa en ' + (participacionesDeProspecto(prospecto.id).length - 1) + ' campaña(s) más. Aquí se muestra la primera.</small>' : '') +
+                '</div>';
+            const html = '<form id="form-prospecto">' + cajaAvisosDeFormulario() + '<input type="hidden" id="prospecto-id" value="' + (prospecto ? prospecto.id : '') + '"><div class="form-grupo"><label>Nombre *</label><input type="text" id="prospecto-nombre" required value="' + (prospecto && prospecto.nombre ? prospecto.nombre : '') + '"></div><div class="form-grupo"><label>Teléfono (opcional)</label><input type="text" id="prospecto-telefono" value="' + (prospecto && prospecto.telefono ? prospecto.telefono : '') + '"></div><div class="form-grupo"><label>Email (opcional)</label><input type="email" id="prospecto-email" value="' + (prospecto && prospecto.email ? prospecto.email : '') + '"></div><div class="form-grupo"><label>Fase *</label><select id="prospecto-fase" required>' + opf + '</select></div>' + selectCampania + '<div class="form-grupo"><label>Notas (opcional)</label><textarea id="prospecto-notas">' + (prospecto && prospecto.notasGenerales ? prospecto.notasGenerales : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-prospecto-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
             abrirModal(ee ? 'Editar Prospecto' : 'Nuevo Prospecto', html);
             document.getElementById('btn-prospecto-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
             document.getElementById('form-prospecto').addEventListener('submit', function(e) {
@@ -6419,8 +6553,15 @@ input:focus, select:focus, textarea:focus {
                 }
                 const idGuardado = id || (prospectos[prospectos.length - 1] && prospectos[prospectos.length - 1].id);
                 if (idGuardado) marcarSucia('prospectos', idGuardado);
+                /* ── Campaña: se guarda como PARTICIPACIÓN (ver @JS-CAMPANIA-PROSPECTO) ──
+                   Se lee aquí, pero se aplica DESPUÉS de cerrar el formulario, para que
+                   la ventana de confirmación no la cierre el propio cerrarModal(). */
+                const selCamp = document.getElementById('prospecto-campania');
+                const campaniaElegida = selCamp ? selCamp.value : '';
+                const campaniaPrevia = campaniaActual || null;
                 guardarDatos(); cerrarModal(); renderizarProspectos();
                 mostrarNotificacion('Prospecto guardado', 'success');
+                aplicarCampaniaProspecto(idGuardado, campaniaElegida, campaniaPrevia, nombre);
             });
         }
         function editarProspecto(id) { const p = obtenerProspecto(id); if (p) mostrarFormularioProspecto(p); }
@@ -6938,6 +7079,14 @@ input:focus, select:focus, textarea:focus {
             const ee = contrato !== null;
             const tc = contrato ? contrato.tipo : 'paquete';
             descuentoTemporal = contrato && contrato.descuentoMonto ? { monto: contrato.descuentoMonto, descripcion: contrato.descuentoDescripcion || 'Descuento aplicado' } : null;
+            /* El precio pactado del contrato (ver @JS-PRECIO-PACTADO). Arranca mandando el
+               contrato; se suelta en cuanto se cambia el paquete o los servicios.
+               Solo cuando el contrato SÍ tiene precio base capturado: si está en cero es que
+               nunca se le puso precio, y ahí lo correcto sigue siendo calcularlo con el
+               catálogo en vez de dejar el contrato en $0. */
+            precioPactadoContrato = (ee && (Number(contrato.precioBase) || 0) > 0)
+                ? { base: Math.max(0, Number(contrato.precioBase) || 0), usar: true }
+                : null;
             const opcionesClientes = [];
             clientes.forEach(function(c) { opcionesClientes.push({ id: c.id, nombre: c.nombre, telefono: c.telefono || '', email: c.email || '', estado: c.estado || 'Activo', faseOrigen: c.faseOrigen || 'No especificado' }); });
             const clienteActualId = clienteId || '';
@@ -7002,30 +7151,67 @@ input:focus, select:focus, textarea:focus {
                         const chip = this.closest('.chip-servicio');
                         const id = chip.dataset.id;
                         const cb = document.querySelector('.servicio-check-form[value="' + id + '"]');
-                        if (cb) { cb.checked = false; renderizarChipsServicios(); calcularPrecioBaseContrato(); }
+                        if (cb) { cb.checked = false; soltarPrecioPactado(); renderizarChipsServicios(); calcularPrecioBaseContrato(); }
                     });
                 });
             }
             el('servicios-dropdown-toggle').addEventListener('click', function(e) { e.stopPropagation(); el('servicios-dropdown').classList.toggle('abierto'); });
             document.addEventListener('click', function(e) { const dd = document.getElementById('servicios-dropdown'); if (dd && !dd.contains(e.target)) dd.classList.remove('abierto'); });
-            document.querySelectorAll('.servicio-check-form').forEach(function(cb) { cb.addEventListener('change', function() { renderizarChipsServicios(); calcularPrecioBaseContrato(); }); });
+            document.querySelectorAll('.servicio-check-form').forEach(function(cb) { cb.addEventListener('change', function() { soltarPrecioPactado(); renderizarChipsServicios(); calcularPrecioBaseContrato(); }); });
+            /* Si Jorge cambia el paquete o los servicios, el precio pactado ya no aplica:
+               el contrato se está rehaciendo y toca recalcularlo con el catálogo. */
+            function soltarPrecioPactado() { if (precioPactadoContrato) precioPactadoContrato.usar = false; }
+            /* Lo que costaría HOY con el catálogo. Es solo para mostrarlo y para avisar
+               cuando el precio pactado no coincide; NO se usa para pisar el del contrato. */
+            function precioCatalogoContrato() {
+                const tipo = el('contrato-tipo').value;
+                let c = 0;
+                if (tipo === 'paquete') {
+                    const ps = el('contrato-paquete');
+                    const optSel = ps.options[ps.selectedIndex];
+                    c += optSel ? parseFloat(optSel.dataset.precio) || 0 : 0;
+                    document.querySelectorAll('.servicio-check-form:checked').forEach(function(cb) { c += parseFloat(cb.dataset.precio) || 0; });
+                } else {
+                    const ss = el('contrato-servicio');
+                    const optSel = ss.options[ss.selectedIndex];
+                    c += optSel ? parseFloat(optSel.dataset.precio) || 0 : 0;
+                }
+                return redondearMonetario(c);
+            }
+            /* ── UNA sola fuente del precio base (antes se calculaba en dos lugares y de ahí
+               salían las diferencias entre la ventana y la tarjeta) ── */
+            function precioBaseVigente() {
+                if (precioPactadoContrato && precioPactadoContrato.usar) return redondearMonetario(precioPactadoContrato.base);
+                return precioCatalogoContrato();
+            }
             function calcularPrecioBaseContrato() {
                 const tipo = el('contrato-tipo').value;
-                let pb = 0;
+                const pb = precioBaseVigente();
                 let filas = '';
-                if (tipo === 'paquete') {
+                if (precioPactadoContrato && precioPactadoContrato.usar) {
+                    /* El precio del contrato manda. Se dice de dónde sale y, si el catálogo
+                       hoy dice otra cosa, se avisa: nada de números que no cuadran sin
+                       explicación. */
+                    filas += '<div class="fila-resumen"><span><strong>Precio pactado de este contrato</strong></span><span class="valor">' + formatearMoneda(pb) + '</span></div>';
+                    const cat = precioCatalogoContrato();
+                    if (Math.abs(cat - pb) > 0.004) {
+                        filas += '<div class="fila-resumen" style="display:block;"><span style="color:var(--color-naranja);font-size:11.5px;line-height:1.35;">' +
+                            '<i class="fas fa-circle-info"></i> El catálogo hoy lo tiene en ' + formatearMoneda(cat) + '. Este contrato se pactó en ' + formatearMoneda(pb) +
+                            ' y así se respeta. Si cambias el paquete o los servicios, se recalcula con el catálogo.</span></div>';
+                    }
+                } else if (tipo === 'paquete') {
                     const ps = el('contrato-paquete');
                     const optSel = ps.options[ps.selectedIndex];
                     const pNombre = optSel ? optSel.dataset.nombre : '';
                     const pPrecio = optSel ? parseFloat(optSel.dataset.precio) || 0 : 0;
-                    if (pPrecio > 0) { pb += pPrecio; filas += '<div class="fila-resumen"><span>Paquete: ' + pNombre + '</span><span class="valor">' + formatearMoneda(pPrecio) + '</span></div>'; }
-                    document.querySelectorAll('.servicio-check-form:checked').forEach(function(cb) { const precio = parseFloat(cb.dataset.precio) || 0; pb += precio; filas += '<div class="fila-resumen"><span>' + cb.dataset.nombre + '</span><span class="valor">' + formatearMoneda(precio) + '</span></div>'; });
+                    if (pPrecio > 0) filas += '<div class="fila-resumen"><span>Paquete: ' + pNombre + '</span><span class="valor">' + formatearMoneda(pPrecio) + '</span></div>';
+                    document.querySelectorAll('.servicio-check-form:checked').forEach(function(cb) { const precio = parseFloat(cb.dataset.precio) || 0; filas += '<div class="fila-resumen"><span>' + cb.dataset.nombre + '</span><span class="valor">' + formatearMoneda(precio) + '</span></div>'; });
                 } else {
                     const ss = el('contrato-servicio');
                     const optSel = ss.options[ss.selectedIndex];
                     const sNombre = optSel ? optSel.dataset.nombre : '';
                     const sPrecio = optSel ? parseFloat(optSel.dataset.precio) || 0 : 0;
-                    if (sPrecio > 0) { pb += sPrecio; filas += '<div class="fila-resumen"><span>' + sNombre + '</span><span class="valor">' + formatearMoneda(sPrecio) + '</span></div>'; }
+                    if (sPrecio > 0) filas += '<div class="fila-resumen"><span>' + sNombre + '</span><span class="valor">' + formatearMoneda(sPrecio) + '</span></div>';
                 }
                 el('resumen-precios-filas').innerHTML = filas || '<div class="fila-resumen"><span style="font-style:italic;">Sin ítems seleccionados</span><span></span></div>';
                 el('resumen-precios-total').textContent = formatearMoneda(pb);
@@ -7075,18 +7261,11 @@ input:focus, select:focus, textarea:focus {
                 } else { cont.innerHTML = ''; form.style.display = 'flex'; }
             }
             function actualizarResumenFinanciero() {
-                const tipo = el('contrato-tipo').value;
-                let pb = 0;
-                if (tipo === 'paquete') {
-                    const ps = el('contrato-paquete');
-                    const optSel = ps.options[ps.selectedIndex];
-                    pb += optSel ? parseFloat(optSel.dataset.precio) || 0 : 0;
-                    document.querySelectorAll('.servicio-check-form:checked').forEach(function(cb) { pb += parseFloat(cb.dataset.precio) || 0; });
-                } else {
-                    const ss = el('contrato-servicio');
-                    const optSel = ss.options[ss.selectedIndex];
-                    pb += optSel ? parseFloat(optSel.dataset.precio) || 0 : 0;
-                }
+                /* El precio base sale de la MISMA fuente que el resto del formulario
+                   (`precioBaseVigente`): si el contrato trae un precio pactado, es ese.
+                   Antes aquí se volvía a sumar el catálogo, y de ahí salía el pendiente
+                   fantasma que Jorge vio el 10/10/2026. */
+                const pb = precioBaseVigente();
                 const cv = cargosArr.filter(function(c) { return !c.eliminado; });
                 const pv = pagosArr.filter(function(p) { return !p.eliminado; });
                 const totalCargos = cv.reduce(function(s, c) { return s + (c.monto || 0); }, 0);
@@ -7132,10 +7311,11 @@ input:focus, select:focus, textarea:focus {
                     el('contrato-paquete').value = '';
                     el('contrato-servicio').required = true;
                 }
+                soltarPrecioPactado();
                 calcularPrecioBaseContrato();
             });
-            el('contrato-paquete').addEventListener('change', calcularPrecioBaseContrato);
-            el('contrato-servicio').addEventListener('change', calcularPrecioBaseContrato);
+            el('contrato-paquete').addEventListener('change', function() { soltarPrecioPactado(); calcularPrecioBaseContrato(); });
+            el('contrato-servicio').addEventListener('change', function() { soltarPrecioPactado(); calcularPrecioBaseContrato(); });
             el('btn-aplicar-descuento').addEventListener('click', function() {
                 const desc = el('descuento-descripcion').value.trim();
                 const monto = redondearMonetario(parseFloat(el('descuento-monto').value));
@@ -7386,7 +7566,7 @@ input:focus, select:focus, textarea:focus {
                     else { const festeja = document.getElementById('contrato-festejado'); if (festeja) { const wrapper = document.createElement('div'); wrapper.className = 'form-grupo'; wrapper.id = 'contrato-info-cliente'; wrapper.innerHTML = htmlInfo; festeja.closest('.form-grupo').before(wrapper); } }
                 });
             });
-            el('btn-contrato-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); descuentoTemporal = null; cerrarModal(); });
+            el('btn-contrato-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); descuentoTemporal = null; precioPactadoContrato = null; cerrarModal(); });
             el('form-contrato').addEventListener('submit', function(e) {
                 e.preventDefault(); e.stopPropagation();
                 // Antirrepetición: el doble clic en «Guardar Contrato» creaba DOS contratos
@@ -7432,6 +7612,10 @@ input:focus, select:focus, textarea:focus {
                 if (formEnviado) marcarFormularioEnviado(formEnviado);
                 if (window.__TRAZA_) window.__TRAZA_.push('    MARCAR-DENTRO guardarContrato formEnviado=' + (formEnviado ? formEnviado.id : 'NULL'));
             };
+            /* El precio pactado manda también en el chequeo previo (ver @JS-PRECIO-PACTADO):
+               si aquí se sumara el catálogo, los avisos de coherencia hablarían de otro
+               contrato distinto al que se está guardando. */
+            const usarPrecioPactado = !!(precioPactadoContrato && precioPactadoContrato.usar && ee && contratoOriginal);
             if (window.__TRAZA_) window.__TRAZA_.push('    guardarContrato(ee=' + ee + ')');
             try {
                 const ci = el('contrato-id').value;
@@ -7507,6 +7691,7 @@ input:focus, select:focus, textarea:focus {
                         avisosContrato.push('Vas a dejar este contrato con la fecha del evento en el pasado (' + escapeHTML(formatearFecha(fe)) + '). Los informes por fecha lo contarán como un evento ya ocurrido.');
                     }
                     const precioProyectado = (function() {
+                        if (usarPrecioPactado) return Math.max(0, Number(contratoOriginal.precioBase) || 0);
                         if (tipo === 'paquete') {
                             const pq = obtenerPaquete(pid);
                             let pb = pq ? Math.max(0, (pq.precio || 0) - (pq.descuento || 0)) : 0;
@@ -7544,14 +7729,18 @@ input:focus, select:focus, textarea:focus {
                     }
                 }
 
-                // ── Precio base recalculado desde el catálogo (nunca se confía en el navegador) ──
-                let pb = 0;
-                if (tipo === 'paquete') {
+                // ── Precio base (v4.8): nunca se confía en lo que manda el navegador ──
+                // PERO el precio de un contrato ya pactado NO se recalcula con el catálogo de
+                // hoy: eso le cambiaba el precio al contrato sin que nadie lo pidiera (caso
+                // real del 10/10/2026, ver @JS-PRECIO-PACTADO). Si Jorge cambió el paquete o
+                // los servicios, `precioPactadoContrato.usar` ya quedó en false y se recalcula.
+                let pb = usarPrecioPactado ? Math.max(0, Number(contratoOriginal.precioBase) || 0) : 0;
+                if (!usarPrecioPactado && tipo === 'paquete') {
                     const pq = obtenerPaquete(pid);
                     if (!pq) { noGuardado('No se guardó el contrato', ['El paquete seleccionado ya no existe. Vuelve a elegirlo.']); return; }
                     pb = Math.max(0, (pq.precio || 0) - (pq.descuento || 0));
                     sids.forEach(function(id) { const s = obtenerServicio(id); if (s) pb += Math.max(0, (s.precio || 0) - (s.descuento || 0)); });
-                } else {
+                } else if (!usarPrecioPactado) {
                     const s = obtenerServicio(sid);
                     if (!s) { noGuardado('No se guardó el contrato', ['El servicio seleccionado ya no existe. Vuelve a elegirlo.']); return; }
                     pb = Math.max(0, (s.precio || 0) - (s.descuento || 0));
@@ -7624,6 +7813,7 @@ input:focus, select:focus, textarea:focus {
                 }
                 if (pagosRecientes) pagosRecientes.forEach(function(p) { if (p.eliminado) return; registrarHistorial('pago', 'crear', 'Pago de ' + formatearMoneda(p.monto) + ' para "' + c.nombre + '" - Código: ' + (p.codigo || 'sin código'), { id: p.id, nombre: c.nombre }); });
                 descuentoTemporal = null;
+                precioPactadoContrato = null;
                 marcarSucia('clientes', clid);
                 guardarDatos().then(function() {
                     cerrarModal();
@@ -11226,8 +11416,8 @@ input:focus, select:focus, textarea:focus {
                     errores: ['Esta campaña tiene ' + usos + ' participación(es) con historial. No se puede borrar: usa "Cancelar campaña" para conservar el registro.']
                 };
             }
-            db().campanias = db().campanias.filter(function (c) { return c.id !== id; });
-            db().tareas = db().tareas.filter(function (t) { return t.campaniaId !== id; });
+            almacen.reemplazar('campanias', db().campanias.filter(function (c) { return c.id !== id; }));
+            almacen.reemplazar('tareas', db().tareas.filter(function (t) { return t.campaniaId !== id; }));
             motor.registrar('campania', id, camp.nombre, 'eliminar', 'Campaña sin participaciones eliminada definitivamente.');
             almacen.guardar('campania-eliminada');
             return { ok: true };
@@ -11451,7 +11641,7 @@ input:focus, select:focus, textarea:focus {
                 return { ok: false, errores: ['El prospecto tiene ' + participaciones.length + ' participación(es) en campañas. Primero elimínalas si de verdad quieres borrarlo.'] };
             }
             if (p.clienteId) return { ok: false, errores: ['El prospecto ya es cliente: no se puede borrar.'] };
-            db().prospectos = db().prospectos.filter(function (x) { return x.id !== id; });
+            almacen.reemplazar('prospectos', db().prospectos.filter(function (x) { return x.id !== id; }));
             db().tareas = db().tareas.map(function (t) {
                 if (t.prospectoId === id) { t.prospectoId = null; }
                 return t;
@@ -12057,7 +12247,7 @@ input:focus, select:focus, textarea:focus {
             var part = participacion(id);
             if (!part) return { ok: false, errores: ['La participación no existe.'] };
             var nombre = (prospecto(part.prospectId) || {}).nombre || '';
-            db().participaciones = db().participaciones.filter(function (p) { return p.id !== id; });
+            almacen.reemplazar('participaciones', db().participaciones.filter(function (p) { return p.id !== id; }));
             /* Las tareas no se destruyen: se desvinculan de la participación. */
             var desvinculadas = 0;
             db().tareas.forEach(function (t) {
@@ -12216,7 +12406,7 @@ input:focus, select:focus, textarea:focus {
         motor.eliminarTarea = function (tareaId) {
             var t = tarea(tareaId);
             if (!t) return { ok: false, errores: ['La tarea no existe.'] };
-            db().tareas = db().tareas.filter(function (x) { return x.id !== tareaId; });
+            almacen.reemplazar('tareas', db().tareas.filter(function (x) { return x.id !== tareaId; }));
             var part = t.participacionId ? participacion(t.participacionId) : null;
             if (part && part.tareasRelacionadas) {
                 part.tareasRelacionadas = part.tareasRelacionadas.filter(function (id) { return id !== tareaId; });
@@ -12542,12 +12732,11 @@ input:focus, select:focus, textarea:focus {
 
         /* Limpieza total de la sesión de prueba (no toca ninguna base externa). */
         motor.borrarTodo = function () {
-            db().prospectos = [];
-            db().clientes = [];
-            db().campanias = [];
-            db().participaciones = [];
-            db().tareas = [];
-            db().historial = [];
+            /* Cada reemplazo va sobre el arreglo real (ver @JS-REEMPLAZAR-COLECCION):
+               antes esto NO borraba nada y decía que sí. */
+            ['prospectos', 'clientes', 'campanias', 'participaciones', 'tareas', 'historial'].forEach(function (col) {
+                almacen.reemplazar(col, []);
+            });
             almacen.guardar('todo-borrado');
             return { ok: true };
         };
@@ -12624,6 +12813,23 @@ input:focus, select:focus, textarea:focus {
                 var lista = (typeof window !== 'undefined' ? window[coleccion] : null) || [];
                 for (var i = 0; i < lista.length; i++) { if (lista[i] && lista[i].id === id) return lista[i]; }
                 return null;
+            },
+            /* ─────── @JS-REEMPLAZAR-COLECCION (10/10/2026) ───────
+               `db` es un getter que devuelve un objeto NUEVO cada vez, así que
+               `db().participaciones = db().participaciones.filter(...)` asignaba la lista
+               filtrada a un objeto temporal y NO cambiaba nada: se devolvía { ok: true }
+               sin haber borrado. Se encontró el 10/10/2026 al conectar la campaña del
+               prospecto (quitar de la campaña no hacía nada); estaba en 11 lugares
+               (borrar participación, campaña, prospecto, tarea, paquete, servicio y el
+               vaciado completo).
+               Aquí se reemplaza el CONTENIDO del arreglo original, no el arreglo: así
+               nadie que tenga la referencia se queda con la lista vieja. */
+            reemplazar: function (coleccion, lista) {
+                var actual = (typeof window !== 'undefined' ? window[coleccion] : null);
+                if (!Array.isArray(actual)) return false;
+                actual.length = 0;
+                (lista || []).forEach(function (x) { if (x !== undefined && x !== null) actual.push(x); });
+                return true;
             },
             campania: function (id) { return normalizarCampania(almacenCampanias.porId('campanias', id)); },
             normalizarCampania: normalizarCampania,
@@ -13675,7 +13881,7 @@ input:focus, select:focus, textarea:focus {
                 var id = el.getAttribute('data-eliminar-paquete');
                 var usado = db().campanias.some(function (c) { return (c.ofertas || []).some(function (o) { return o.paqueteId === id; }); });
                 if (usado) { App.notificar('No se puede eliminar: una campaña lo usa en una oferta.', 'error'); return; }
-                db().paquetes = db().paquetes.filter(function (p) { return p.id !== id; });
+                almacen.reemplazar('paquetes', db().paquetes.filter(function (p) { return p.id !== id; }));
                 App.almacen.guardar('paquete-eliminado');
                 App.notificar('Paquete eliminado.', 'ok');
                 App.renderTodo();
@@ -13686,7 +13892,7 @@ input:focus, select:focus, textarea:focus {
                 var id = el.getAttribute('data-eliminar-servicio');
                 var usado = db().campanias.some(function (c) { return (c.ofertas || []).some(function (o) { return o.servicioId === id; }); });
                 if (usado) { App.notificar('No se puede eliminar: una campaña lo usa en una oferta.', 'error'); return; }
-                db().servicios = db().servicios.filter(function (s) { return s.id !== id; });
+                almacen.reemplazar('serviciosAdicionales', db().servicios.filter(function (s) { return s.id !== id; }));
                 App.almacen.guardar('servicio-eliminado');
                 App.notificar('Servicio eliminado.', 'ok');
                 App.renderTodo();
