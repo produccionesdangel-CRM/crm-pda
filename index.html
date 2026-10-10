@@ -2948,7 +2948,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-10.4';
+        var BUILD_APP = '2026-10-10.5';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -3176,12 +3176,51 @@ input:focus, select:focus, textarea:focus {
             return d.getFullYear() === Number(p[0]) && (d.getMonth() + 1) === Number(p[1]) && d.getDate() === Number(p[2]);
         }
         function anioDeFechaISO(s) { const f = fechaISOCapturada(s); return f ? Number(f.substring(0, 4)) : 0; }
+        /* ─────── @JS-FECHA-IMPORTADA (10/10/2026) ───────
+           Convierte a ISO (AAAA-MM-DD) una fecha que llega "como la escribe la gente" o como
+           la manda una hoja de cálculo. Existe porque la importación guarda lo que trae el
+           archivo tal cual, y en el formulario de Google la fecha viene como 8/10/2027
+           (día/mes/año): al mostrarla, el CRM la partía por guiones y en pantalla salía
+           "undefined/undefined/8/10/2027" (bug que vio Jorge el 10/10/2026).
+           Acepta: 2027-10-08 · 2027-10-08T12:00:00 · 2027-10-08 12:00 · 8/10/2027 ·
+           08-10-2027 · 2027/10/08 · y el número de serie de Excel/Hojas de cálculo.
+           Devuelve '' cuando no es una fecha (nunca inventa). */
+        function normalizarFechaISO(v) {
+            if (v === null || v === undefined) return '';
+            if (v instanceof Date) return isNaN(v.getTime()) ? '' : formatearFechaLocal(v);
+            const s = String(v).trim();
+            if (!s) return '';
+            let m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ]|$)/);       /* ya viene ISO, con o sin hora */
+            if (m) { const iso = m[1] + '-' + m[2] + '-' + m[3]; return fechaISOExiste(iso) ? iso : ''; }
+            m = s.match(/^(\d{4})[\/.](\d{1,2})[\/.](\d{1,2})$/);        /* año primero: 2027/10/08 */
+            if (m) { const iso = m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2); return fechaISOExiste(iso) ? iso : ''; }
+            m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/);  /* día primero (como se escribe en México) */
+            if (m) {
+                const dia = Number(m[1]), mes = Number(m[2]);
+                let anio = Number(m[3]);
+                if (anio < 100) anio += 2000;
+                const iso = anio + '-' + ('0' + mes).slice(-2) + '-' + ('0' + dia).slice(-2);
+                return fechaISOExiste(iso) ? iso : '';
+            }
+            if (/^\d{5}$/.test(s)) {                                     /* serie de Excel (días desde 1899-12-30) */
+                const n = Number(s);
+                if (n > 20000 && n < 60000) {
+                    const d = new Date(1899, 11, 30);
+                    d.setDate(d.getDate() + n);
+                    return formatearFechaLocal(d);
+                }
+            }
+            return '';
+        }
         // El importador de archivos vive en otro bloque del archivo y necesita estos
         // mismos candados para no guardar HTML ni teléfonos imposibles (P-11, T-15).
         if (typeof window !== 'undefined') {
             window.limpiarTextoLibre = limpiarTextoLibre;
             window.validarTelefonoCapturado = validarTelefonoCapturado;
             window.esCorreoValido = esCorreoValido;
+            /* La importación la necesita para dejar las fechas del archivo en ISO
+               (@JS-FECHA-IMPORTADA): en la hoja de Google vienen como 8/10/2027. */
+            window.normalizarFechaISO = normalizarFechaISO;
         }
         // true si el id (cliente, o prospecto con el prefijo "pro_") sigue existiendo.
         // Las tareas guardaban ids fantasma que después nunca aparecían en el detalle de nadie.
@@ -3719,7 +3758,9 @@ input:focus, select:focus, textarea:focus {
                `fechaCaptura` = cuándo se capturó en el CRM, si no fue el mismo día. */
             let fechaMov = ahora;
             if (datos.fecha && /^\d{4}-\d{2}-\d{2}$/.test(String(datos.fecha))) {
-                fechaMov = String(datos.fecha) + 'T12:00:00';
+                /* Se guarda con la MISMA forma que el resto del CRM ("AAAA-MM-DD HH:MM", con
+                   espacio): con una "T" en medio la hora no se mostraba y la fecha salía rara. */
+                fechaMov = String(datos.fecha) + ' 12:00';
             }
             const mov = {
                 id: datos.id || generarIdSeguro(datos.tipo === 'pago' ? 'pag' : 'car'),
@@ -3832,7 +3873,12 @@ input:focus, select:focus, textarea:focus {
         }
         function formatearFecha(fecha) {
             if (!fecha) return 'No especificada';
-            const p = fecha.split('-');
+            /* Si no viene en ISO (una fecha importada como "8/10/2027", o con la hora pegada
+               con "T") primero se convierte; y si de plano no es una fecha, se muestra TAL CUAL
+               en vez de armar "undefined/undefined/..." (bug visto por Jorge el 10/10/2026). */
+            const iso = normalizarFechaISO(fecha);
+            if (!iso) return String(fecha);
+            const p = iso.split('-');
             return p[2] + '/' + p[1] + '/' + p[0];
         }
         function fechaLocalToString(ano, mes, dia) {
@@ -6460,10 +6506,18 @@ input:focus, select:focus, textarea:focus {
                Una sola fecha para lo que Jorge necesite: el cumpleaños del prospecto o el día
                en que pretenden hacer su fiesta. Se guarda en `fechaEvento`, el MISMO campo que
                ya usan la importación y los criterios de elegibilidad de las campañas, para no
-               tener dos fechas distintas diciendo cosas diferentes. */
+               tener dos fechas distintas diciendo cosas diferentes.
+               Al abrir se muestra NORMALIZADA (una fecha importada como "8/10/2027" se ve como
+               2027-10-08 en el selector) y, si lo guardado no se puede leer como fecha, se
+               conserva tal cual en vez de borrarlo. */
+            const fechaEventoPrevia = (ee && prospecto.fechaEvento) ? String(prospecto.fechaEvento) : '';
+            const fechaEventoISO = normalizarFechaISO(fechaEventoPrevia);
+            const fechaEventoSinLeer = (fechaEventoPrevia && !fechaEventoISO) ? fechaEventoPrevia : '';
             const campoFechaEvento = '<div class="form-grupo"><label>Fecha del evento (opcional)</label>' +
-                '<input type="date" id="prospecto-fecha-evento" value="' + (prospecto && prospecto.fechaEvento ? escapeHTML(String(prospecto.fechaEvento).slice(0, 10)) : '') + '">' +
-                '<small style="color:var(--color-texto-secundario);">Su cumpleaños, o el día en que pretenden hacer su fiesta (se puede dejar vacío).</small></div>';
+                '<input type="date" id="prospecto-fecha-evento" value="' + escapeHTML(fechaEventoISO) + '">' +
+                '<small style="color:var(--color-texto-secundario);">Su cumpleaños, o el día en que pretenden hacer su fiesta (se puede dejar vacío).' +
+                (fechaEventoSinLeer ? ' Lo que está guardado ("' + escapeHTML(fechaEventoSinLeer) + '") no se pudo leer como fecha: se conserva tal cual.' : '') +
+                '</small></div>';
             const html = '<form id="form-prospecto">' + cajaAvisosDeFormulario() + '<input type="hidden" id="prospecto-id" value="' + (prospecto ? prospecto.id : '') + '"><div class="form-grupo"><label>Nombre *</label><input type="text" id="prospecto-nombre" required value="' + (prospecto && prospecto.nombre ? prospecto.nombre : '') + '"></div><div class="form-grupo"><label>Teléfono (opcional)</label><input type="text" id="prospecto-telefono" value="' + (prospecto && prospecto.telefono ? prospecto.telefono : '') + '"></div><div class="form-grupo"><label>Email (opcional)</label><input type="email" id="prospecto-email" value="' + (prospecto && prospecto.email ? prospecto.email : '') + '"></div><div class="form-grupo"><label>Fase *</label><select id="prospecto-fase" required>' + opf + '</select></div>' + selectCampania + campoFechaEvento + '<div class="form-grupo"><label>Notas (opcional)</label><textarea id="prospecto-notas">' + (prospecto && prospecto.notasGenerales ? prospecto.notasGenerales : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-prospecto-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
             abrirModal(ee ? 'Editar Prospecto' : 'Nuevo Prospecto', html);
             document.getElementById('btn-prospecto-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
@@ -6482,10 +6536,14 @@ input:focus, select:focus, textarea:focus {
                 const faseActual = document.getElementById('prospecto-fase').value;
                 const notasGenerales = limpiarTextoLibre(document.getElementById('prospecto-notas').value, MAX_LARGO_NOTAS);
                 /* Fecha del evento (opcional). El input es type=date, así que el formato ya
-                   viene como YYYY-MM-DD; se valida igual por si llega otra cosa. */
+                   viene como YYYY-MM-DD; se valida igual por si llega otra cosa.
+                   Si el selector viene vacío pero había algo guardado que NO se pudo leer como
+                   fecha, se conserva tal cual: nada se borra por no poder interpretarlo. */
                 const fechaEventoEl = document.getElementById('prospecto-fecha-evento');
                 const fechaEventoBruta = fechaEventoEl ? String(fechaEventoEl.value || '').trim() : '';
-                const fechaEvento = /^\d{4}-\d{2}-\d{2}$/.test(fechaEventoBruta) ? fechaEventoBruta : '';
+                const fechaEvento = /^\d{4}-\d{2}-\d{2}$/.test(fechaEventoBruta)
+                    ? fechaEventoBruta
+                    : (fechaEventoBruta ? '' : (fechaEventoSinLeer || ''));
                 // Un dato imposible se bloquea en seco: sin nombre, sin fase, correo basura o
                 // un teléfono con letras / de un dígito (T-01..T-07). Antes entraba todo.
                 const erroresProspecto = [];
@@ -17380,8 +17438,8 @@ input:focus, select:focus, textarea:focus {
             ciudad: limpiar(cand.ciudad, 120),
             origen: limpiar(cand.origen, 120),
             tipoEvento: limpiar(cand.tipoEvento, 120),
-            fechaEvento: limpiar(cand.fechaEvento, 10),
-            fechaNacimiento: limpiar(cand.fechaNacimiento, 10),
+            fechaEvento: (typeof raiz.normalizarFechaISO === 'function' ? raiz.normalizarFechaISO(cand.fechaEvento) : limpiar(cand.fechaEvento, 10)),
+            fechaNacimiento: (typeof raiz.normalizarFechaISO === 'function' ? raiz.normalizarFechaISO(cand.fechaNacimiento) : limpiar(cand.fechaNacimiento, 10)),
             presupuesto: (function () { var n = Number(cand.presupuesto); return isFinite(n) && n >= 0 ? n : ''; })(),
             fuenteCaptacion: 'Importación de archivo',
             firmaImportacion: cand._firma

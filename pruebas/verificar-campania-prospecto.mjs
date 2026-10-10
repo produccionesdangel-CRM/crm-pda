@@ -351,6 +351,59 @@ async function main() {
     revisar(fechaForm.enTarjeta === true, 'la tarjeta del prospecto muestra la fecha del evento');
     revisar(fechaForm.enHistorial === true, 'el cambio de fecha queda anotado en el historial');
 
+    console.log('\n7c) Fechas importadas como "8/10/2027" (el caso del pantallazo)');
+    const fechas = JSON.parse(await evaluar(cdp, `(function () {
+      return JSON.stringify({
+        importada: formatearFecha('8/10/2027'),
+        iso: formatearFecha('2027-10-08'),
+        conHoraT: formatearFecha('2027-10-08T12:00:00'),
+        conHoraEspacio: formatearFecha('2027-10-08 12:00'),
+        textoRaro: formatearFecha('en marzo'),
+        vacia: formatearFecha(''),
+        norm1: normalizarFechaISO('8/10/2027'),
+        norm2: normalizarFechaISO('2027-10-08'),
+        norm3: normalizarFechaISO('2027/10/08'),
+        norm4: normalizarFechaISO('08-10-2027'),
+        norm5: normalizarFechaISO('en marzo'),
+        norm6: normalizarFechaISO('2027-13-45'),
+        hora: formatearFechaHora('2026-03-15 12:00')
+      });
+    })()`));
+    console.log('   importada "8/10/2027" → "' + fechas.importada + '" · ISO → "' + fechas.iso + '" · con hora → "' + fechas.conHoraT + '"');
+    console.log('   normalizadas: 8/10/2027 → ' + fechas.norm1 + ' · 2027/10/08 → ' + fechas.norm3 + ' · 08-10-2027 → ' + fechas.norm4);
+    revisar(fechas.importada === '08/10/2027', 'una fecha importada "8/10/2027" se muestra "08/10/2027" (ya no "undefined/undefined")');
+    revisar(fechas.iso === '08/10/2027' && fechas.conHoraT === '08/10/2027' && fechas.conHoraEspacio === '08/10/2027',
+      'el formato ISO y el que trae hora se muestran bien');
+    revisar(fechas.textoRaro === 'en marzo', 'si no es una fecha, se muestra TAL CUAL (nunca "undefined/undefined")');
+    revisar(fechas.vacia === 'No especificada', 'vacío sigue diciendo "No especificada"');
+    revisar(fechas.norm1 === '2027-10-08' && fechas.norm3 === '2027-10-08' && fechas.norm4 === '2027-10-08',
+      'el normalizador entiende día/mes/año, año/mes/día y con guiones');
+    revisar(fechas.norm5 === '' && fechas.norm6 === '', 'y rechaza lo que no es fecha (incluido el 45 de mes)');
+    revisar(fechas.hora === '15/03/2026 12:00', 'una fecha de pago con hora se muestra "15/03/2026 12:00"');
+
+    console.log('\n7d) Un prospecto importado con la fecha en formato de la hoja se ve y se corrige solo');
+    const importado = JSON.parse(await evaluar(cdp, `(function () {
+      /* Como llegan hoy los prospectos de la hoja de Google. */
+      prospectos.push({ id: 'pro-imp', nombre: 'Importada de la Hoja', telefono: '8781110000', email: '',
+        faseActual: 'Interesado', historialFases: [], notasGenerales: '', clienteId: null,
+        fechaRegistro: '2026-10-10', fechaEvento: '8/10/2027', fechaNacimiento: '2/2/1998' });
+      verDetalleProspecto('pro-imp');
+      var cuerpo = document.getElementById('panel-lateral-body') || document.getElementById('modal-body');
+      var campos = [].slice.call(cuerpo.querySelectorAll('.detalle-campo'));
+      var f = campos.filter(function (c) { return /Fecha del evento/.test(c.textContent || ''); })[0];
+      var enFicha = f ? (f.textContent || '').replace(/\\s+/g, ' ').trim() : '';
+      editarProspecto('pro-imp');
+      var enFormulario = document.getElementById('prospecto-fecha-evento').value;
+      document.getElementById('form-prospecto').requestSubmit();
+      var guardado = prospectos.filter(function (p) { return p.id === 'pro-imp'; })[0].fechaEvento;
+      return JSON.stringify({ enFicha: enFicha, enFormulario: enFormulario, guardado: guardado });
+    })()`));
+    console.log('   ficha: "' + importado.enFicha + '" · formulario: ' + importado.enFormulario + ' → guardado: ' + importado.guardado);
+    revisar(/08\/10\/2027/.test(importado.enFicha) && importado.enFicha.indexOf('undefined') === -1,
+      'la ficha muestra la fecha importada correctamente');
+    revisar(importado.enFormulario === '2027-10-08', 'el formulario la abre ya normalizada');
+    revisar(importado.guardado === '2027-10-08', 'al guardar queda en ISO (se corrige sola, sin tocar nada más)');
+
     const errores = cdp.sucesos.filter(s => s.method === 'Runtime.exceptionThrown')
       .map(s => s.params.exceptionDetails.exception?.description || s.params.exceptionDetails.text);
     if (errores.length) { console.log('\nErrores en la página (' + errores.length + '):'); errores.slice(0, 4).forEach(e => console.log('  · ' + String(e).split('\n')[0])); }
