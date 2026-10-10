@@ -2021,6 +2021,267 @@ input:focus, select:focus, textarea:focus {
             .entrega-chip { font-size: 11.5px; padding: 6px 10px; }
         }
         /* ─────── FIN @CSS-ENTREGAS-CONTRATO ─────── */
+
+        /* ═══════════ @CSS-CLAY-INFORMES-CONFIG (9/10/2026) ═══════════
+           Jorge: "La seccion de informes y la de configuracion no tienen completo el UI
+           de Claymorphism, mucho de su diseno se quedo como originalmente lo teniamos,
+           dale a esas secciones la misma linea de diseno que estamos manejando ahora".
+
+           Se trabaja SOLO con color, radio y sombra, con las mismas variables --clay-*
+           que el resto del CRM (así los 4 temas siguen funcionando solos: Oscuro, Claro,
+           Otoño y Ángel). Dos reglas que NO se rompen aquí:
+             1. Se usa `background-image`, NUNCA el atajo `background`, porque el atajo
+                pisa el `background-color` que el CRM ya tenía puesto (ya pasó con el
+                botón "Hoy": quedó texto oscuro sobre fondo oscuro).
+             2. No se declaran `position` ni medidas que el bloque móvil del CRM ajuste. */
+
+        /* ── Informes: el panel del desglose y cada bloque de datos ── */
+        .informes-detalle,
+        .informe-bloque {
+            border: 1px solid var(--clay-borde);
+            border-radius: var(--clay-r-lg);
+            background-image: var(--clay-sup);
+            box-shadow: var(--clay-out), inset 0 2px 0 var(--clay-luz), inset 0 -14px 22px -16px var(--clay-hundido);
+        }
+        .informes-detalle { padding-top: 22px; }
+        /* Las tarjetas de números (Prospectos, Clientes, Contratos, Ingresos) se levantan
+           un poco más que las de adentro: son el primer golpe de vista de la sección. */
+        .metricas-container .metrica-card {
+            background-image: var(--clay-sup);
+            box-shadow: var(--clay-out-alto), inset 0 2px 0 var(--clay-luz), inset 0 -14px 22px -16px var(--clay-hundido);
+        }
+        /* Cada renglón del desglose es una pastilla hundida: así se lee como lista. */
+        .informe-fila {
+            align-items: center;
+            padding: 7px 12px;
+            border-bottom: none;
+            margin-bottom: 5px;
+            border-radius: var(--clay-r-sm);
+            background-image: var(--clay-sup-hundida);
+            box-shadow: inset 0 4px 9px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+        }
+        .informe-fila:last-child { margin-bottom: 0; }
+        .informe-fila > span:first-child { color: var(--color-texto-secundario); }
+
+        /* ── Configuración: todas las tarjetas con el mismo relieve ── */
+        .config-card,
+        .papelera-card,
+        .historial-card,
+        .version-card {
+            border: 1px solid var(--clay-borde);
+            border-radius: var(--clay-r-lg);
+            background-image: var(--clay-sup);
+            box-shadow: var(--clay-out), inset 0 2px 0 var(--clay-luz), inset 0 -14px 22px -16px var(--clay-hundido);
+        }
+        .config-boton {
+            border: 1px solid var(--clay-borde);
+            border-radius: var(--clay-r-md);
+            background-image: var(--clay-sup-hundida);
+            box-shadow: inset 0 4px 9px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+        }
+        .config-boton:hover {
+            background-image: var(--clay-sup-hover);
+            box-shadow: inset 0 2px 6px -6px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+        }
+        .config-boton:active { transform: translateY(1px); }
+        /* El círculo del icono se hunde un poco menos: lleva el color de cada acción. */
+        .config-boton i { box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.28), 0 4px 10px -6px var(--clay-hundido); }
+
+        /* Las muestras de tema: pastillas que se levantan, y la elegida queda marcada. */
+        .tema-opcion {
+            border: 1px solid var(--clay-borde);
+            border-radius: var(--clay-r-md);
+            background-image: var(--clay-sup-hundida);
+            box-shadow: inset 0 5px 11px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+        }
+        .tema-opcion:hover { background-image: var(--clay-sup); }
+        .tema-opcion.activo {
+            background-image: var(--clay-sup-hover);
+            box-shadow: var(--clay-out), inset 0 2px 0 var(--clay-luz), 0 0 0 3px color-mix(in srgb, var(--color-acento) 26%, transparent);
+        }
+        .tema-preview { border-radius: var(--clay-r-sm); overflow: hidden; }
+
+        /* ── Papelera e historial: se les quita la barrita de color del canto ──
+           Es la misma regla que Jorge pidió para las tarjetas de adentro del panel: el
+           color ya lo dice la etiqueta, la barra solo ensuciaba la arcilla. */
+        .papelera-item,
+        .historial-item {
+            border: 1px solid var(--clay-borde);
+            border-left: 1px solid var(--clay-borde);
+            border-radius: var(--clay-r-md);
+            background-image: var(--clay-sup-hundida);
+            box-shadow: inset 0 4px 9px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+        }
+        .papelera-item:hover,
+        .historial-item:hover { background-image: var(--clay-sup-hover); }
+        .papelera-stat,
+        .historial-stat {
+            border-left: none;
+            border: 1px solid var(--clay-borde);
+            border-radius: var(--clay-r-sm);
+            background-image: var(--clay-sup-hundida);
+            box-shadow: inset 0 4px 9px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+        }
+        .papelera-aviso {
+            border-radius: var(--clay-r-sm);
+            background-image: var(--clay-sup-hundida);
+            box-shadow: inset 0 4px 9px -8px var(--clay-hundido);
+        }
+        .version-info-item {
+            border-radius: var(--clay-r-sm);
+            background-image: var(--clay-sup-hundida);
+            box-shadow: inset 0 4px 9px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+        }
+        .changelog-item {
+            border-radius: var(--clay-r-md);
+            background-image: var(--clay-sup-hundida);
+            box-shadow: inset 0 4px 9px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+        }
+
+        /* ═══════════ @CSS-TAREAS (9/10/2026) ═══════════
+           La lista de tareas del calendario: controles de orden, la tarjeta con la
+           descripción como título (el tipo va como etiqueta) y la ficha de la tarea. */
+
+        .tareas-lista-controles {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .tareas-lista-contador { font-size: 13px; color: var(--color-texto-secundario); display: inline-flex; align-items: center; gap: 8px; }
+        .tareas-lista-contador i { color: var(--color-acento); }
+        .tareas-lista-orden { display: inline-flex; align-items: center; gap: 10px; }
+        .tareas-lista-orden label { font-size: 12px; color: var(--color-texto-secundario); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .tareas-lista-orden label i { color: var(--color-acento); }
+        .tareas-lista-orden select {
+            font-family: inherit;
+            font-size: 13px;
+            color: var(--color-texto-primario);
+            border: 1px solid var(--clay-borde);
+            border-radius: var(--clay-r-pill);
+            padding: 9px 14px;
+            background-image: var(--clay-sup-hundida);
+            background-color: var(--color-bg-primario);
+            box-shadow: inset 0 4px 9px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+            cursor: pointer;
+            max-width: 100%;
+        }
+        .tareas-lista-orden select:focus { outline: none; box-shadow: inset 0 4px 9px -8px var(--clay-hundido), 0 0 0 3px color-mix(in srgb, var(--color-acento) 22%, transparent); }
+
+        /* Lo que se toca para abrir la ficha de la tarea. */
+        #lista-tareas .tarjeta-info { cursor: pointer; border-radius: var(--clay-r-sm); }
+        #lista-tareas .tarjeta-info:hover .tarjeta-titulo { color: var(--color-acento); }
+        #lista-tareas .tarjeta-info:focus-visible { outline: 2px solid var(--color-acento); outline-offset: 3px; }
+        #lista-tareas .tarjeta-titulo { transition: color var(--transition); }
+        #lista-tareas .tarjeta-completada .tarjeta-titulo { color: var(--color-texto-secundario); text-decoration: line-through; text-decoration-thickness: 1px; }
+
+        .tarea-meta-fila { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+        .tarea-meta-fila > span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+            padding: 5px 11px;
+            border-radius: var(--clay-r-pill);
+            border: 1px solid var(--clay-borde);
+            background-image: var(--clay-sup-hundida);
+            box-shadow: inset 0 3px 7px -6px var(--clay-hundido);
+            color: var(--color-texto-secundario);
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .tarea-meta-fila > span i { font-size: 10.5px; }
+        .tarea-meta-fila .tarea-chip-tipo { color: var(--color-acento); border-color: color-mix(in srgb, var(--color-acento) 32%, transparent); }
+        .tarea-meta-fila .tarea-chip-campania { color: var(--color-morado); border-color: color-mix(in srgb, var(--color-morado) 34%, transparent); }
+        .tarea-meta-fila .tarea-chip-fecha { color: var(--color-texto-primario); }
+        .tarea-meta-fila .tarea-chip-fecha.vencida { color: var(--color-naranja); border-color: color-mix(in srgb, var(--color-naranja) 40%, transparent); font-weight: 600; }
+        .tarea-meta-fila .tarea-chip-cliente { color: var(--color-azul); border-color: color-mix(in srgb, var(--color-azul) 32%, transparent); cursor: pointer; }
+        .tarea-meta-fila .tarea-chip-cliente:hover { background-image: var(--clay-sup-hover); }
+        .tarea-meta-fila .tarea-chip-cliente.sin-vincular { color: var(--color-texto-secundario); border-color: var(--clay-borde); cursor: default; opacity: 0.75; }
+
+        /* Etiquetas de la ficha de la tarea. */
+        .etiqueta-tipo-tarea { background-color: color-mix(in srgb, var(--color-acento) 18%, transparent); color: var(--color-acento); }
+        .etiqueta-campania-tarea { background-color: color-mix(in srgb, var(--color-morado) 18%, transparent); color: var(--color-morado); }
+        .ficha-tarea-titulo { font-size: 19px; font-weight: 600; line-height: 1.35; color: var(--color-texto-primario); margin: 2px 0 12px 0; word-break: break-word; }
+        .ayuda-campo { font-size: 11.5px; color: var(--color-texto-secundario); margin-top: 6px; display: flex; align-items: flex-start; gap: 6px; line-height: 1.45; }
+        .ayuda-campo i { color: var(--color-acento); margin-top: 2px; }
+        .tarea-hora-fila { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .tarea-hora-fila .tarea-modo-hora { flex: 1 1 220px; }
+        .tarea-hora-fila input[type="time"] { flex: 0 1 160px; }
+
+        /* ═══════════ @CSS-CALENDARIO-SEMANA (9/10/2026) ═══════════
+           El conmutador Mes/Semana y la fila única de la semana. La cuadrícula del mes
+           NO se toca (sus filas miden 82 px en el teléfono y 116 px en la PC, y eso está
+           protegido por el arnés `medir-calendario-movil`). */
+
+        .calendario-vista-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px;
+            border-radius: var(--clay-r-pill);
+            border: 1px solid var(--clay-borde);
+            background-image: var(--clay-sup-hundida);
+            box-shadow: inset 0 4px 10px -8px var(--clay-hundido), inset 0 -1px 0 var(--clay-luz);
+            margin-right: 4px;
+        }
+        .btn-vista-cal {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--color-texto-secundario);
+            padding: 7px 14px;
+            border-radius: var(--clay-r-pill);
+            background: transparent;
+            transition: color var(--transition), background-image var(--transition);
+        }
+        .btn-vista-cal:hover { color: var(--color-texto-primario); }
+        .btn-vista-cal.activo {
+            color: var(--color-texto-primario);
+            background-image: var(--clay-chiclet);
+            box-shadow: var(--clay-out), inset 0 2px 0 var(--clay-luz);
+        }
+        .btn-vista-cal.activo i { color: var(--color-acento); }
+        .btn-cal-ics { position: relative; }
+
+        .dia-nombre-semana { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .dia-nombre-semana .dia-nombre-fecha { font-size: 10.5px; font-weight: 400; opacity: 0.75; }
+
+        /* La semana es UNA fila: la casilla crece para que se vea el día completo y no
+           quede una franja de 82 px con todo apretado. Se declara la medida DESPUÉS del
+           bloque móvil del CRM, así que esta sí gana (es la vista nueva). */
+        .calendario-grid .dia-semana { min-height: 150px; }
+        .calendario-grid .dia-semana .numero { font-size: 15px; }
+        @media (max-width: 768px) {
+            .calendario-grid .dia-semana { min-height: 116px; }
+            .calendario-grid .dia-semana .numero { font-size: 13px; }
+            .tareas-lista-orden { width: 100%; }
+            .tareas-lista-orden select { width: 100%; }
+            .tareas-lista-controles { gap: 8px; }
+            .ficha-tarea-titulo { font-size: 17px; }
+            /* La barra de navegación del calendario ahora trae UN control más (Mes /
+               Semana) y en el teléfono no cabe en una sola línea: medido, pedía 447 px
+               dentro de un contenedor de 354 px y eso hacía que TODA la sección se
+               desbordara de lado (scroll horizontal, el defecto que el arnés
+               `medir-calendario-movil` vigila). Se deja que el grupo de botones baje a
+               su propio renglón y se centra, igual que el conmutador de tema. */
+            .calendario-nav { flex-wrap: wrap; justify-content: center; }
+            .calendario-vista-switch { margin-right: 0; }
+        }
+        @media (max-width: 480px) {
+            .btn-vista-cal { padding: 6px 10px; font-size: 12px; }
+            .calendario-grid .dia-semana { min-height: 96px; }
+        }
+        /* ─────── FIN @CSS-CLAY-INFORMES-CONFIG / @CSS-TAREAS / @CSS-CALENDARIO-SEMANA ─────── */
     </style>
 </head>
 <body>
@@ -2424,9 +2685,15 @@ input:focus, select:focus, textarea:focus {
                     <div class="calendario-header">
                         <h2><i class="fas fa-calendar"></i> <span id="calendario-mes-ano">Enero 2025</span></h2>
                         <div class="calendario-nav">
-                            <button id="btn-mes-anterior"><i class="fas fa-chevron-left"></i></button>
+                            <!-- @HTML-CALENDARIO-MES-SEMANA: conmutador Mes / Semana -->
+                            <div class="calendario-vista-switch" role="group" aria-label="Vista del calendario">
+                                <button type="button" class="btn-vista-cal activo" data-vista="mes" aria-pressed="true"><i class="fas fa-calendar-days"></i> Mes</button>
+                                <button type="button" class="btn-vista-cal" data-vista="semana" aria-pressed="false"><i class="fas fa-calendar-week"></i> Semana</button>
+                            </div>
+                            <button id="btn-mes-anterior" title="Anterior"><i class="fas fa-chevron-left"></i></button>
                             <button id="btn-mes-actual" class="btn-hoy">Hoy</button>
-                            <button id="btn-mes-siguiente"><i class="fas fa-chevron-right"></i></button>
+                            <button id="btn-mes-siguiente" title="Siguiente"><i class="fas fa-chevron-right"></i></button>
+                            <button id="btn-descargar-calendario" class="btn-cal-ics" title="Descargar esta vista como archivo .ics (para el calendario del teléfono)"><i class="fas fa-file-arrow-down"></i></button>
                         </div>
                     </div>
                     <div id="calendario-grid" class="calendario-grid"></div>
@@ -2544,6 +2811,9 @@ input:focus, select:focus, textarea:focus {
                     </div>
                     <div class="changelog-section">
                         <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v5.0)</h4>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-list-check"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Tareas del calendario: título claro, orden a tu gusto y ficha con todo</div><div class="changelog-desc">El título de cada tarea ahora es <strong>la descripción</strong> (antes era el tipo, que no decía de qué se trataba) y el <strong>tipo quedó como etiqueta</strong> para filtrar y ordenar. La lista se puede ordenar por <strong>fecha de vencimiento</strong> (lo próximo primero y lo vencido hasta arriba), por <strong>cliente o prospecto</strong> y por <strong>campañas contra tareas normales</strong>. Al tocar una tarea se abre <strong>su ficha</strong> con los datos y los botones de <strong>WhatsApp y email</strong> (también en la tarjeta), para no tener que salir a buscar al cliente. Al crear la tarea se elige <strong>hora específica o "a cualquier hora del día"</strong>, y se puede mandar a <strong>Google Calendar</strong> o bajar un archivo <strong>.ics</strong> para el calendario del teléfono. El evento de un contrato ya no se llama "Sesión de fotos": lleva <strong>solo el nombre del festejado</strong>; el de una tarea dice <strong>"Tarea: (cliente o prospecto)"</strong>.</div></div></div>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-calendar-week"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Calendario: conmutador Mes / Semana</div><div class="changelog-desc">Arriba del calendario hay dos botones, <strong>Mes</strong> y <strong>Semana</strong>. En modo semana se ve <strong>una sola semana de domingo a sábado</strong>, con los mismos filtros, las mismas etiquetas y las mismas acciones; los botones ‹ › avanzan una semana (en modo mes siguen avanzando un mes) y <strong>Hoy</strong> vuelve a la semana o al mes en curso. Es la vista cómoda cuando hay muchas tareas. También hay un botón para <strong>descargar la vista en un archivo .ics</strong>.</div></div></div>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-chart-pie"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Informes y Configuración con el mismo estilo del resto</div><div class="changelog-desc">Las dos secciones que se habían quedado con el diseño anterior ya siguen la línea <strong>Claymorphism</strong>: tarjetas con relieve, campos hundidos y los cuatro temas (Oscuro, Claro, Otoño y Ángel). En <strong>Configuración</strong> se quitaron las barritas de color del canto de la papelera y el historial, y los botones y las muestras de tema se ven como el resto de la aplicación.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-bullhorn"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Campañas: Panel y módulo completo</div><div class="changelog-desc">Se agregaron las pestañas <strong>Panel</strong> (después de Informes) y <strong>Campañas</strong>: campañas por etapas, participantes, ofertas, metas y embudo. Solo una campaña activa recibe gente a la vez, y sus tareas se agendan en el calendario. La ficha del prospecto ahora muestra <strong>sus campañas y sus tareas agrupadas por vencimiento</strong>.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-user-tag"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Nuevo rol: Ventas</div><div class="changelog-desc">Para captación y cobro en mostrador: trabaja prospectos, campañas, tareas, clientes y contratos, puede <strong>agregar pagos</strong> e <strong>imprimir comprobantes</strong>. No ve Informes, no entra a la papelera ni a la gestión de usuarios, no puede sacar respaldos, ve el catálogo de paquetes y servicios <strong>en solo lectura</strong> y su avance de fase comercial llega hasta Negociación.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-database"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Las campañas entran al respaldo y a la nube</div><div class="changelog-desc">Las campañas y sus participaciones usan <strong>el mismo mecanismo que el resto</strong>: cola de cambios pendientes, control de versión, historial, respaldo exportado e importación. Nada funciona por fuera, así que no se pierden ni se duplican al sincronizar.</div></div></div>
@@ -2661,7 +2931,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-09.33';
+        var BUILD_APP = '2026-10-09.34';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -3034,6 +3304,12 @@ input:focus, select:focus, textarea:focus {
         var cambiosPendientes = false;
         var mesActualCal = new Date().getMonth();
         var anoActualCal = new Date().getFullYear();
+        // ─────── @JS-CALENDARIO-MES-SEMANA (9/10/2026) ───────
+        // Vista del calendario: 'mes' (como siempre) o 'semana' (una sola fila de 7
+        // días, para cuando hay muchas tareas). `inicioSemanaCal` es el domingo de la
+        // semana que se está viendo, en formato 'AAAA-MM-DD'.
+        var vistaCalActual = 'mes';
+        var inicioSemanaCal = null;
         var PREF_TEMA = 'pda_tema';
         var PREF_SIDEBAR = 'pda_sidebar_colapsado';
         var PREF_SESION = 'pda_sesion';
@@ -3344,8 +3620,11 @@ input:focus, select:focus, textarea:focus {
             var tabla = CAPACIDADES[rol] || CAPACIDADES['Operador'];
             return tabla[capacidad] === true;
         }
-        function bloquearSiNoEsAdmin(accion) {
-            if (!esAdmin()) { mostrarNotificacion('Acción restringida. Solo administradores pueden ' + (accion || 'realizar esta acción') + '.', 'warning'); return true; }
+        function bloquearSiNoEsAdmin(accion, silencioso) {
+            if (!esAdmin()) {
+                if (!silencioso) mostrarNotificacion('Acción restringida. Solo administradores pueden ' + (accion || 'realizar esta acción') + '.', 'warning');
+                return true;
+            }
             return false;
         }
         function nombreUsuarioActual() { return usuarioActual ? usuarioActual.nombre : 'Sistema'; }
@@ -6366,12 +6645,32 @@ input:focus, select:focus, textarea:focus {
             const textoActual = opcionActual ? opcionActual.nombre + (opcionActual.tipo === 'cliente' ? ' (Cliente)' : ' (Prospecto)') : '';
             const ft = tarea ? tarea.fecha : (fechaPreconfigurada || obtenerFechaActual());
             const ec = tarea && tarea.completada ? 'checked' : '';
-            const descVal = tarea ? tarea.descripcion : '';
-            const notasVal = tarea ? tarea.notas : '';
+            const descVal = tarea ? escapeHTML(tarea.descripcion || '') : '';
+            const notasVal = tarea ? escapeHTML(tarea.notas || '') : '';
             const tipoVal = tarea ? tarea.tipo : (TIPOS_TAREA[0] || '');
-            const html = '<form id="form-tarea">' + cajaAvisosDeFormulario() + '<input type="hidden" id="tarea-id" value="' + (tarea ? tarea.id : '') + '"><div class="form-grupo"><label>Tipo *</label><select id="tarea-tipo" required>' + ot + '</select></div><div class="form-grupo"><label>Cliente / Prospecto</label><div class="buscador-cliente" id="buscador-cliente-container"><input type="text" class="buscador-input" id="tarea-cliente-input" placeholder="Escribe para buscar..." autocomplete="off" value="' + textoActual + '"><i class="fas fa-search buscador-icono"></i><div class="buscador-resultados" id="tarea-cliente-resultados"></div></div><input type="hidden" id="tarea-cliente" value="' + clienteActualId + '"></div><div class="form-grupo"><label>Fecha programada *</label><input type="date" id="tarea-fecha" required value="' + ft + '"></div><div class="form-grupo"><label>Descripción *</label><textarea id="tarea-descripcion" required>' + descVal + '</textarea></div><div class="form-grupo"><label>Notas (opcional)</label><textarea id="tarea-notas">' + notasVal + '</textarea></div><div class="form-grupo"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="tarea-completada" ' + ec + '><span>Completada</span></label></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-tarea-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
+            // ─────── @JS-HORA-TAREA (9/10/2026) ───────
+            // Jorge: "agrega a la creacion de la tarea la posibilidad de poner hora
+            // especifica o a cualquier hora del dia". Dos opciones en un desplegable en
+            // vez de una casilla: así se entiende de una lectura qué va a quedar en el
+            // calendario. Los datos se guardan en los campos que ya usa la app
+            // (`hora` con 'HH:MM' y `todoElDia`), y una tarea de todo el día NO lleva hora.
+            const horaVal = tarea && tarea.hora ? String(tarea.hora).substring(0, 5) : '';
+            const todoElDia = !horaVal;
+            const html = '<form id="form-tarea">' + cajaAvisosDeFormulario() + '<input type="hidden" id="tarea-id" value="' + (tarea ? tarea.id : '') + '"><div class="form-grupo"><label>Descripción de la tarea *</label><textarea id="tarea-descripcion" required placeholder="Por ejemplo: Confirmar hora y dirección de la sesión de fotos">' + descVal + '</textarea><div class="ayuda-campo"><i class="fas fa-lightbulb"></i> Esto es lo que se va a ver como título de la tarea en la lista y en el calendario.</div></div><div class="form-grupo"><label>Tipo de tarea *</label><select id="tarea-tipo" required>' + ot + '</select><div class="ayuda-campo"><i class="fas fa-tag"></i> El tipo es un dato extra: sirve para filtrar y ordenar la lista.</div></div><div class="form-grupo"><label>Cliente / Prospecto</label><div class="buscador-cliente" id="buscador-cliente-container"><input type="text" class="buscador-input" id="tarea-cliente-input" placeholder="Escribe para buscar..." autocomplete="off" value="' + textoActual + '"><i class="fas fa-search buscador-icono"></i><div class="buscador-resultados" id="tarea-cliente-resultados"></div></div><input type="hidden" id="tarea-cliente" value="' + clienteActualId + '"></div><div class="form-grupo"><label>Fecha programada *</label><input type="date" id="tarea-fecha" required value="' + ft + '"></div><div class="form-grupo"><label>Hora de la tarea</label><div class="tarea-hora-fila"><select id="tarea-hora-modo" class="tarea-modo-hora"><option value="dia"' + (todoElDia ? ' selected' : '') + '>A cualquier hora del día</option><option value="hora"' + (todoElDia ? '' : ' selected') + '>A una hora específica</option></select><input type="time" id="tarea-hora" value="' + horaVal + '"' + (todoElDia ? ' style="display:none"' : '') + '></div><div class="ayuda-campo"><i class="fas fa-clock"></i> "A cualquier hora" se manda al calendario como evento de todo el día.</div></div><div class="form-grupo"><label>Notas (opcional)</label><textarea id="tarea-notas">' + notasVal + '</textarea></div><div class="form-grupo"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="tarea-completada" ' + ec + '><span>Completada</span></label></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-tarea-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar') + '</button></div></form>';
             abrirModal(ee ? 'Editar Tarea' : 'Nueva Tarea', html);
             if (tipoVal) { const sel = document.getElementById('tarea-tipo'); if (sel) sel.value = tipoVal; }
+            const selModoHora = document.getElementById('tarea-hora-modo');
+            const campoHora = document.getElementById('tarea-hora');
+            if (selModoHora && campoHora) {
+                const ajustarHoraVisible = function() {
+                    const conHora = selModoHora.value === 'hora';
+                    campoHora.style.display = conHora ? '' : 'none';
+                    if (conHora && !campoHora.value) campoHora.value = '12:00';
+                    if (!conHora) campoHora.value = '';
+                };
+                selModoHora.addEventListener('change', ajustarHoraVisible);
+                ajustarHoraVisible();
+            }
             inicializarBuscadorCliente(opcionesVinculacion, clienteActualId);
             document.getElementById('btn-tarea-cancelar').addEventListener('click', function(ev) { ev.preventDefault(); cerrarModal(); });
             document.getElementById('form-tarea').addEventListener('submit', function(e) {
@@ -6389,6 +6688,15 @@ input:focus, select:focus, textarea:focus {
                 const desc = limpiarTextoLibre(document.getElementById('tarea-descripcion').value, MAX_LARGO_DESCRIPCION);
                 const not = limpiarTextoLibre(document.getElementById('tarea-notas').value, MAX_LARGO_NOTAS);
                 const comp = document.getElementById('tarea-completada').checked;
+                // ── Hora de la tarea (@JS-HORA-TAREA) ──
+                // `hora` guarda 'HH:MM' y `todoElDia` dice si es "a cualquier hora".
+                // Si el modo es todo el día, la hora se BORRA: una tarea de todo el día
+                // con hora dejaría un dato contradictorio en el calendario.
+                const selModoHora2 = document.getElementById('tarea-hora-modo');
+                const campoHora2 = document.getElementById('tarea-hora');
+                const conHora = selModoHora2 ? selModoHora2.value === 'hora' : false;
+                const hora = conHora && campoHora2 && campoHora2.value ? campoHora2.value : '';
+                const esTodoElDia = !hora;
                 // Un dato imposible se bloquea en seco: sin tipo, sin fecha o sin descripción
                 // (ya lo hacía), con una fecha fuera de rango (F-01, F-02) o apuntando a un
                 // cliente/prospecto que no existe (R-05, I-02: esas tareas nunca aparecían).
@@ -6438,19 +6746,19 @@ input:focus, select:focus, textarea:focus {
                     if (idx !== -1) {
                         const prev = tareas[idx];
                         const copiaAnt = JSON.parse(JSON.stringify(prev));
-                        const ta = Object.assign({}, prev, { tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, fechaModificacion: obtenerFechaHoraActual() });
+                        const ta = Object.assign({}, prev, { tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, hora: hora, todoElDia: esTodoElDia, fechaModificacion: obtenerFechaHoraActual() });
                         if (comp && !prev.fechaCompletada) ta.fechaCompletada = obtenerFechaHoraActual();
                         else if (!comp) ta.fechaCompletada = null;
                         tareas[idx] = ta;
-                        const cambios = calcularDiff(copiaAnt, ta, { camposIgnorados: ['descripcion', 'notas', 'fechaModificacion', 'fechaCompletada'], etiquetas: { tipo: 'Tipo', clienteId: 'Cliente vinculado', fecha: 'Fecha programada', completada: 'Completada' }, formatters: { clienteId: function(v) { return v ? obtenerNombreCliente(v) : '(sin vincular)'; }, fecha: function(v) { return v ? formatearFecha(v) : ''; }, completada: function(v) { return v ? 'Sí' : 'No'; } } });
+                        const cambios = calcularDiff(copiaAnt, ta, { camposIgnorados: ['descripcion', 'notas', 'fechaModificacion', 'fechaCompletada'], etiquetas: { tipo: 'Tipo', clienteId: 'Cliente vinculado', fecha: 'Fecha programada', hora: 'Hora', todoElDia: 'Todo el día', completada: 'Completada' }, formatters: { clienteId: function(v) { return v ? obtenerNombreCliente(v) : '(sin vincular)'; }, fecha: function(v) { return v ? formatearFecha(v) : ''; }, hora: function(v) { return v ? v : 'A cualquier hora del día'; }, todoElDia: function(v) { return v ? 'Sí' : 'No'; }, completada: function(v) { return v ? 'Sí' : 'No'; } } });
                         const cambioTexto = copiaAnt.descripcion !== ta.descripcion || copiaAnt.notas !== ta.notas;
-                        registrarHistorial('tarea', 'editar', 'Se editó tarea: "' + tipo + '"', { id: id, nombre: tipo, cambios: cambios, cambiosOmitidos: cambioTexto ? 'Descripción o Notas también cambiaron.' : null });
+                        registrarHistorial('tarea', 'editar', 'Se editó tarea: "' + (ta.descripcion || tipo) + '"', { id: id, nombre: ta.descripcion || tipo, cambios: cambios, cambiosOmitidos: cambioTexto ? 'Descripción o Notas también cambiaron.' : null });
                     }
                 } else {
-                    const nt = { id: generarId(), tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, fechaCreacion: obtenerFechaHoraActual(), fechaModificacion: obtenerFechaHoraActual(), creadaPor: nombreUsuarioActual() };
+                    const nt = { id: generarId(), tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, hora: hora, todoElDia: esTodoElDia, fechaCreacion: obtenerFechaHoraActual(), fechaModificacion: obtenerFechaHoraActual(), creadaPor: nombreUsuarioActual() };
                     if (comp) nt.fechaCompletada = obtenerFechaHoraActual();
                     tareas.push(nt);
-                    registrarHistorial('tarea', 'crear', 'Se creó tarea: "' + tipo + '"' + (clid ? ' vinculada' : ''), { id: nt.id, nombre: tipo });
+                    registrarHistorial('tarea', 'crear', 'Se creó tarea: "' + (desc || tipo) + '"' + (clid ? ' vinculada' : ''), { id: nt.id, nombre: desc || tipo });
                 }
                 const idGuardado = id || (tareas[tareas.length - 1] && tareas[tareas.length - 1].id);
                 if (idGuardado) marcarSucia('tareas', idGuardado);
@@ -6463,14 +6771,15 @@ input:focus, select:focus, textarea:focus {
         function eliminarTarea(id) {
             if (bloquearSiNoEsAdmin('eliminar tareas')) return;
             const t = tareas.find(function(x) { return x.id === id; }); if (!t) return;
+            const nombreTarea = t.descripcion || t.tipo;
             confirmarEliminacion({
-                titulo: 'Eliminar tarea', entidad: 'tarea', nombre: t.tipo,
+                titulo: 'Eliminar tarea', entidad: 'tarea', nombre: nombreTarea,
                 detalle: 'La tarea se moverá a la papelera y podrá restaurarse en 30 días.',
                 onConfirmar: function() {
                     agregarAPapelera('tarea', t, 'Eliminada por ' + nombreUsuarioActual());
                     tareas = tareas.filter(function(x) { return x.id !== id; });
                     marcarEliminada('tareas', id);
-                    registrarHistorial('tarea', 'eliminar', 'Se movió tarea a papelera: "' + t.tipo + '"', { id: id, nombre: t.tipo });
+                    registrarHistorial('tarea', 'eliminar', 'Se movió tarea a papelera: "' + nombreTarea + '"', { id: id, nombre: nombreTarea });
                     guardarDatos(); renderizarCalendario(); renderizarInformes(); renderizarClientes(); renderizarProspectos(); renderizarPapelera();
                     mostrarNotificacion('Tarea movida a papelera', 'success');
                 }
@@ -7879,89 +8188,369 @@ input:focus, select:focus, textarea:focus {
         function compartirComprobanteEmail(clienteId, contratoId, pagoId) { enviarComprobanteEmail(clienteId, contratoId, pagoId); }
 
         /* ─── CALENDARIO ─── */
+        /* ─────── @JS-GOOGLE-CALENDAR (9/10/2026) ───────
+           Cómo se manda una cosa al calendario de Google desde una página estática:
+           el CRM NO tiene servidor ni guarda permisos de Google, así que lo que hace
+           es abrir Google Calendar con los datos YA ESCRITOS (el usuario solo da
+           "Guardar"), igual que se hacía con los contratos. Además se puede bajar un
+           archivo .ics, que sirve para el calendario del teléfono (iPhone/Android) o
+           para Outlook, sin depender de la sesión de Google del navegador.
+
+           El TÍTULO es lo que Jorge pidió textualmente:
+             · contrato → solo el nombre del festejado (antes decía "Sesión de fotos: X")
+             · tarea    → "Tarea: (nombre del prospecto o cliente)"
+           El detalle lleva la descripción de la tarea, que es lo que de verdad ayuda
+           a saber de qué se trata al abrir el evento en el teléfono. */
+
+        /** Fecha de hoy en formato YYYYMMDD (marca de tiempo del .ics). */
+        function marcaTiempoICS(fecha) {
+            const d = fecha ? new Date(fecha) : new Date();
+            return String(d.getUTCFullYear()) + String(d.getUTCMonth() + 1).padStart(2, '0') + String(d.getUTCDate()).padStart(2, '0') +
+                'T' + String(d.getUTCHours()).padStart(2, '0') + String(d.getUTCMinutes()).padStart(2, '0') + String(d.getUTCSeconds()).padStart(2, '0') + 'Z';
+        }
+
+        /** Bloque VEVENT de un .ics. `dia` = 'YYYY-MM-DD'. Si no hay hora, es de todo el día. */
+        function bloqueICS(opciones) {
+            const escapar = function(v) {
+                return String(v == null ? '' : v).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+            };
+            const lineas = ['BEGIN:VEVENT', 'UID:' + escapar(opciones.uid), 'DTSTAMP:' + marcaTiempoICS()];
+            if (opciones.todoElDia || !opciones.hora) {
+                // De todo el día: DTEND es el día SIGUIENTE y sin hora (regla del formato .ics).
+                const p = String(opciones.dia || '').split('-');
+                const siguiente = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]) + 1);
+                const a8 = function(n) { return String(n).padStart(2, '0'); };
+                lineas.push('DTSTART;VALUE=DATE:' + String(opciones.dia).replace(/-/g, ''));
+                lineas.push('DTEND;VALUE=DATE:' + siguiente.getFullYear() + a8(siguiente.getMonth() + 1) + a8(siguiente.getDate()));
+            } else {
+                const ini = String(opciones.dia).replace(/-/g, '') + 'T' + String(opciones.hora).replace(':', '') + '00';
+                const h = parseInt(String(opciones.hora).substring(0, 2), 10);
+                const m = parseInt(String(opciones.hora).substring(3, 5), 10);
+                let hf = h + (opciones.duracionHoras || 2), mf = m;
+                if (hf >= 24) { hf = 23; mf = 59; }
+                const fin = String(opciones.dia).replace(/-/g, '') + 'T' + String(hf).padStart(2, '0') + String(mf).padStart(2, '0') + '00';
+                lineas.push('DTSTART:' + ini);
+                lineas.push('DTEND:' + fin);
+            }
+            lineas.push('SUMMARY:' + escapar(opciones.titulo));
+            if (opciones.detalle) lineas.push('DESCRIPTION:' + escapar(opciones.detalle));
+            if (opciones.lugar) lineas.push('LOCATION:' + escapar(opciones.lugar));
+            lineas.push('BEGIN:VALARM', 'TRIGGER:-PT60M', 'ACTION:DISPLAY', 'DESCRIPTION:' + escapar(opciones.titulo), 'END:VALARM');
+            lineas.push('END:VEVENT');
+            return lineas.join('\r\n');
+        }
+
+        /** Baja un archivo .ics con uno o varios eventos (para el calendario del teléfono). */
+        function descargarICS(nombreArchivo, bloques) {
+            const contenido = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Registro PDA//CRM//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH']
+                .concat(bloques).concat(['END:VCALENDAR']).join('\r\n') + '\r\n';
+            try {
+                const blob = new Blob([contenido], { type: 'text/calendar;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = nombreArchivo;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                setTimeout(function() { URL.revokeObjectURL(url); }, 4000);
+                mostrarNotificacion('Archivo del calendario descargado', 'success');
+            } catch (e) {
+                console.warn('No se pudo descargar el .ics:', e);
+                mostrarNotificacion('No se pudo descargar el archivo del calendario', 'error');
+            }
+        }
+
+        function abrirGoogleCalendar(titulo, dia, hora, detalle, lugar, duracionHoras) {
+            let p;
+            if (!hora) {
+                // Google Calendar entiende el día siguiente SIN hora como "todo el día".
+                const partes = String(dia).split('-');
+                const siguiente = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]) + 1);
+                const a8 = function(n) { return String(n).padStart(2, '0'); };
+                const finTodoElDia = siguiente.getFullYear() + '-' + a8(siguiente.getMonth() + 1) + '-' + a8(siguiente.getDate());
+                p = new URLSearchParams({ action: 'TEMPLATE', text: titulo, dates: dia.replace(/-/g, '') + '/' + finTodoElDia.replace(/-/g, '') });
+            } else {
+                const h = parseInt(String(hora).substring(0, 2), 10);
+                const m = parseInt(String(hora).substring(3, 5), 10);
+                let hf = h + (duracionHoras || 2), mf = m;
+                if (hf >= 24) { hf = 23; mf = 59; }
+                const base = String(dia).replace(/-/g, '');
+                p = new URLSearchParams({
+                    action: 'TEMPLATE', text: titulo,
+                    dates: base + 'T' + String(hora).replace(':', '') + '00/' + base + 'T' + String(hf).padStart(2, '0') + String(mf).padStart(2, '0') + '00'
+                });
+            }
+            if (detalle) p.set('details', detalle);
+            if (lugar) p.set('location', lugar);
+            window.open('https://calendar.google.com/calendar/render?' + p.toString(), '_blank');
+        }
+
         function crearEventoGoogleCalendar(clienteId, contratoId) {
             const c = obtenerCliente(clienteId); if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
             const co = c.contratos.find(function(x) { return x.id === contratoId; }); if (!co) { mostrarNotificacion('Contrato no encontrado', 'error'); return; }
             if (!co.fechaEvento) { mostrarNotificacion('Sin fecha de evento', 'warning'); return; }
-            const tit = 'Sesión de fotos: ' + (co.festejado || 'Evento');
-            let fev = co.fechaEvento.replace(/-/g, '');
-            let hev = co.horaEvento ? co.horaEvento.replace(':', '') : '120000';
-            const fi = fev + 'T' + hev;
-            const hi = parseInt(hev.substring(0, 2)), mi = parseInt(hev.substring(2, 4));
-            let hf = hi + 2, mf = mi; if (hf >= 24) { hf = 23; mf = 59; }
-            const hfs = String(hf).padStart(2, '0') + String(mf).padStart(2, '0') + '00';
-            const ff = fev + 'T' + hfs;
+            // Solo el nombre del festejado: Jorge pidió quitar el "Sesión de fotos:" del título.
+            const tit = (co.festejado || 'Evento');
             const tot = calcularTotalesContrato(co);
             let d = 'Cliente: ' + c.nombre + '\nTeléfono: ' + (c.telefono || 'N/A') + '\n';
             if (c.email) d += 'Email: ' + c.email + '\n';
             d += '\nFestejado: ' + (co.festejado || 'N/A') + '\nPaquete: ' + obtenerNombreItemContrato(co) + '\n';
             d += '\nEvento: ' + (co.direccionEvento || 'N/A') + '\nRecepción: ' + (co.direccionRecepcion || 'N/A') + '\n';
             d += '\nTotal: ' + formatearMoneda(tot.totalAPagar) + '\nSaldo: ' + formatearMoneda(tot.saldoPendiente) + '\n';
-            const p = new URLSearchParams({ action: 'TEMPLATE', text: tit, dates: fi + '/' + ff, details: d, location: co.direccionEvento || co.direccionRecepcion || '' });
-            window.open('https://calendar.google.com/calendar/render?' + p.toString(), '_blank');
+            // El título va solo con el festejado y el detalle con lo demás (antes se
+            // repetía "Festejado:" dentro del detalle además del título).
+            abrirGoogleCalendar(tit, co.fechaEvento, co.horaEvento || '', d, co.direccionEvento || co.direccionRecepcion || '', 2);
             registrarHistorial('contrato', 'editar', 'Evento enviado a Google Calendar para "' + c.nombre + '"', { id: contratoId, nombre: c.nombre });
             mostrarNotificacion('Abriendo Google Calendar', 'info');
         }
+
+        /** El mismo evento, pero como archivo .ics (para el calendario del teléfono). */
+        function descargarEventoICS(clienteId, contratoId) {
+            const c = obtenerCliente(clienteId); if (!c) { mostrarNotificacion('Cliente no encontrado', 'error'); return; }
+            const co = c.contratos.find(function(x) { return x.id === contratoId; }); if (!co) { mostrarNotificacion('Contrato no encontrado', 'error'); return; }
+            if (!co.fechaEvento) { mostrarNotificacion('Sin fecha de evento', 'warning'); return; }
+            const tot = calcularTotalesContrato(co);
+            let d = 'Cliente: ' + c.nombre + '\nTeléfono: ' + (c.telefono || 'N/A') + '\n';
+            if (c.email) d += 'Email: ' + c.email + '\n';
+            d += '\nFestejado: ' + (co.festejado || 'N/A') + '\nPaquete: ' + obtenerNombreItemContrato(co) + '\n';
+            d += '\nEvento: ' + (co.direccionEvento || 'N/A') + '\nRecepción: ' + (co.direccionRecepcion || 'N/A') + '\n';
+            d += '\nTotal: ' + formatearMoneda(tot.totalAPagar) + '\nSaldo: ' + formatearMoneda(tot.saldoPendiente) + '\n';
+            const bloque = bloqueICS({
+                uid: 'contrato-' + co.id + '@registro-pda',
+                dia: co.fechaEvento,
+                hora: co.horaEvento || '',
+                titulo: (co.festejado || 'Evento'),
+                detalle: d,
+                lugar: co.direccionEvento || co.direccionRecepcion || '',
+                duracionHoras: 2
+            });
+            descargarICS('evento-' + String(co.festejado || 'contrato').replace(/[^\w\-]+/g, '-').toLowerCase() + '.ics', [bloque]);
+            registrarHistorial('contrato', 'editar', 'Evento descargado para calendario (.ics) de "' + c.nombre + '"', { id: contratoId, nombre: c.nombre });
+        }
+
+        /* ─── TAREA A GOOGLE CALENDAR ───
+           Jorge: "también quiero que se pueda conectar a google calendar igual que los
+           eventos en calendario para poder tener sincronizados ambos calendarios" y
+           "para las tareas en el titulo pon tarea: (Nombre de prospecto o Cliente)".
+           El título es el que pidió; la descripción de la tarea va en el detalle, para
+           que al abrirlo en el teléfono se sepa qué hay que hacer. */
+        function tituloTareaCalendario(t) {
+            // `obtenerNombreCliente` agrega "(Prospecto)" al nombre; para el título del
+            // calendario se quiere el nombre limpio ("Tarea: Karla Ruiz").
+            const nombre = nombreCortoVinculado(t);
+            return 'Tarea: ' + (nombre || 'sin vincular');
+        }
+        function detalleTareaCalendario(t) {
+            let d = '';
+            if (t.descripcion) d += t.descripcion + '\n';
+            d += '\nTipo de tarea: ' + (t.tipo || 'Sin tipo') + '\n';
+            if (t.clienteId) d += 'Cliente / Prospecto: ' + obtenerNombreCliente(t.clienteId) + '\n';
+            if (t.notas) d += '\nNotas: ' + t.notas + '\n';
+            if (t.campaniaId && typeof App !== 'undefined' && App.nombreCampania) {
+                const nc = App.nombreCampania(t.campaniaId);
+                if (nc) d += 'Campaña: ' + nc + '\n';
+            }
+            d += '\nRegistro PDA · v' + VERSION;
+            return d;
+        }
+        function tareaAGoogleCalendar(id) {
+            const t = tareas.find(function(x) { return x.id === id; });
+            if (!t) { mostrarNotificacion('Tarea no encontrada', 'error'); return; }
+            if (!t.fecha) { mostrarNotificacion('La tarea no tiene fecha programada', 'warning'); return; }
+            // Toda la tarea dura una hora en el calendario (es un recordatorio, no una cita larga).
+            abrirGoogleCalendar(tituloTareaCalendario(t), t.fecha, t.hora || '', detalleTareaCalendario(t), '', 1);
+            registrarHistorial('tarea', 'editar', 'Tarea enviada a Google Calendar: "' + (t.descripcion || t.tipo) + '"', { id: t.id, nombre: t.descripcion || t.tipo });
+            mostrarNotificacion('Abriendo Google Calendar', 'info');
+        }
+        function tareaAICS(id) {
+            const t = tareas.find(function(x) { return x.id === id; });
+            if (!t) { mostrarNotificacion('Tarea no encontrada', 'error'); return; }
+            if (!t.fecha) { mostrarNotificacion('La tarea no tiene fecha programada', 'warning'); return; }
+            const bloque = bloqueICS({
+                uid: 'tarea-' + t.id + '@registro-pda',
+                dia: t.fecha,
+                hora: t.hora || '',
+                titulo: tituloTareaCalendario(t),
+                detalle: detalleTareaCalendario(t),
+                lugar: '',
+                duracionHoras: 1
+            });
+            descargarICS('tarea-' + String(t.fecha) + '.ics', [bloque]);
+            registrarHistorial('tarea', 'editar', 'Tarea descargada para calendario (.ics): "' + (t.descripcion || t.tipo) + '"', { id: t.id, nombre: t.descripcion || t.tipo });
+        }
+
+        /** Todo el mes que se está viendo (o la semana), en un solo .ics. */
+        function descargarCalendarioICS() {
+            const bloques = [];
+            const enRango = function(dia) {
+                if (!dia) return false;
+                if (vistaCalActual === 'semana') {
+                    const fin = sumarDiasISO(inicioSemanaCal, 6);
+                    return dia >= inicioSemanaCal && dia <= fin;
+                }
+                return dia.substring(0, 7) === String(anoActualCal) + '-' + String(mesActualCal + 1).padStart(2, '0');
+            };
+            const filtro = document.getElementById('filtro-tareas-calendario').value;
+            obtenerContratos().forEach(function(c) {
+                if (!enRango(c.fechaEvento)) return;
+                if (filtro === 'campanias' || filtro === 'pendientes' || filtro === 'completadas') return;
+                bloques.push(bloqueICS({
+                    uid: 'contrato-' + c.id + '@registro-pda', dia: c.fechaEvento, hora: c.horaEvento || '',
+                    titulo: (c.festejado || 'Evento'), detalle: 'Cliente: ' + c.clienteNombre, lugar: '', duracionHoras: 2
+                }));
+            });
+            tareas.forEach(function(t) {
+                if (!enRango(t.fecha)) return;
+                if (filtro === 'pendientes' && t.completada) return;
+                if (filtro === 'completadas' && !t.completada) return;
+                if (filtro === 'contratos') return;
+                if (filtro === 'campanias' && !(t.campaniaId || t.participacionId)) return;
+                bloques.push(bloqueICS({
+                    uid: 'tarea-' + t.id + '@registro-pda', dia: t.fecha, hora: t.hora || '',
+                    titulo: tituloTareaCalendario(t), detalle: detalleTareaCalendario(t), lugar: '', duracionHoras: 1
+                }));
+            });
+            if (bloques.length === 0) { mostrarNotificacion('No hay nada que descargar en esta vista', 'warning'); return; }
+            descargarICS('calendario-pda-' + String(inicioSemanaCal).substring(0, 7) + '.ics', bloques);
+            mostrarNotificacion(bloques.length + ' elemento(s) en el archivo del calendario', 'success');
+        }
+        function vistaSemanaActiva() { return vistaCalActual === 'semana'; }
+
+        /** Suma (o resta, con negativos) días a una fecha ISO 'YYYY-MM-DD'. */
+        function sumarDiasISO(fechaISO, dias) {
+            const p = String(fechaISO || '').split('-');
+            const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+            if (isNaN(d.getTime())) return fechaISO;
+            d.setDate(d.getDate() + (dias || 0));
+            const a8 = function(n) { return String(n).padStart(2, '0'); };
+            return d.getFullYear() + '-' + a8(d.getMonth() + 1) + '-' + a8(d.getDate());
+        }
+
+        /** El domingo de la semana a la que pertenece un día (la semana empieza en domingo,
+            igual que las columnas del mes). */
+        function inicioDeSemanaDe(fechaISO) {
+            const p = String(fechaISO || '').split('-');
+            const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+            if (isNaN(d.getTime())) return fechaISO;
+            d.setDate(d.getDate() - d.getDay());
+            const a8 = function(n) { return String(n).padStart(2, '0'); };
+            return d.getFullYear() + '-' + a8(d.getMonth() + 1) + '-' + a8(d.getDate());
+        }
+
+        /** Etiqueta corta de una semana: "Semana del 5 al 11 de octubre de 2026". */
+        function etiquetaSemanaCalendario(inicioISO) {
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+            const p1 = String(inicioISO).split('-');
+            const finISO = sumarDiasISO(inicioISO, 6);
+            const p2 = String(finISO).split('-');
+            const mes1 = meses[Number(p1[1]) - 1] || '';
+            const mes2 = meses[Number(p2[1]) - 1] || '';
+            if (p1[1] === p2[1]) return 'Semana del ' + Number(p1[2]) + ' al ' + Number(p2[2]) + ' de ' + mes1 + ' de ' + p1[0];
+            return 'Semana del ' + Number(p1[2]) + ' de ' + mes1 + ' al ' + Number(p2[2]) + ' de ' + mes2 + ' de ' + p2[0];
+        }
+
+        /** Lo que va dentro de una casilla de día. Lo usan el mes y la semana (misma
+            lógica, mismos filtros y mismo tope de etiquetas: así lo que se ve en la
+            semana es exactamente lo que se ve en el mes). Se aplican los filtros de la
+            barra ANTES de contar, para que el "+N más" no mienta. */
+        function eventosDelDiaHTML(fechaISO) {
+            const tope = (typeof window !== 'undefined' && window.innerWidth <= 768) ? 2 : 3;
+            const fFiltro = document.getElementById('filtro-tareas-calendario');
+            const fBuscar = document.getElementById('buscar-calendario');
+            const ft = fFiltro ? fFiltro.value : 'todas';
+            const b = fBuscar ? String(fBuscar.value || '').toLowerCase().trim() : '';
+            let ec = obtenerContratos().filter(function(c) { return c && c.fechaEvento === fechaISO; });
+            let et = tareas.filter(function(t) { return t && t.fecha === fechaISO; });
+            // 'campanias' se revisa ANTES que 'pendientes'/'completadas': si no, una tarea
+            // de campaña completada se colaba en la vista de campañas.
+            if (ft === 'contratos') { et = []; }
+            else if (ft === 'campanias') { ec = []; et = et.filter(function(t) { return !!(t.campaniaId || t.participacionId); }); }
+            else if (ft === 'pendientes') { et = et.filter(function(t) { return !t.completada; }); }
+            else if (ft === 'completadas') { et = et.filter(function(t) { return t.completada; }); }
+            if (b) {
+                ec = ec.filter(function(c) { return String(c.clienteNombre || '').toLowerCase().indexOf(b) !== -1 || String(c.festejado || '').toLowerCase().indexOf(b) !== -1; });
+                et = et.filter(function(t) {
+                    const nc = String(obtenerNombreCliente(t.clienteId) || '').toLowerCase();
+                    return nc.indexOf(b) !== -1 || String(t.descripcion || '').toLowerCase().indexOf(b) !== -1 || String(t.tipo || '').toLowerCase().indexOf(b) !== -1;
+                });
+            }
+            let es = [];
+            try {
+                es = (participaciones || []).filter(function(p) {
+                    if (!p || p.fechaProximoSeguimiento !== fechaISO) return false;
+                    return ['convertida', 'cancelada', 'noSeleccionada', 'rechazada', 'sinInteres'].indexOf(p.estado) === -1;
+                });
+            } catch (e) { console.warn('No se pudieron leer los seguimientos del día:', e); }
+            let html = '', usados = 0;
+            ec.forEach(function(c) {
+                if (usados >= tope) return;
+                const nc = c.festejado ? c.festejado + ' (' + c.clienteNombre + ')' : c.clienteNombre;
+                html += '<div class="evento evento-contrato" title="' + escapeHTML(String(nc || '')) + '" onclick="event.stopPropagation(); abrirContratoDesdeCalendario(\'' + c.clienteId + '\',\'' + c.id + '\')">' + escapeHTML(String(nc || '')) + '</div>';
+                usados++;
+            });
+            et.forEach(function(t) {
+                if (usados >= tope) return;
+                const cc = t.completada ? 'evento-completada' : ((t.campaniaId || t.participacionId) ? 'evento-campania' : 'evento-tarea');
+                // En la casilla se ve el TIPO (es corto y cabe). La descripción, que es el
+                // título real de la tarea, se ve en la lista y al abrir la ficha.
+                const etiqueta = String(t.tipo || 'Tarea') + (t.hora ? ' ' + String(t.hora) : '');
+                html += '<div class="evento ' + cc + '" title="' + escapeHTML(String(t.descripcion || t.tipo || '')) + '" onclick="event.stopPropagation(); verDetalleTarea(\'' + t.id + '\')">' + escapeHTML(etiqueta) + '</div>';
+                usados++;
+            });
+            es.forEach(function(p) {
+                if (usados >= tope) return;
+                const pr = (prospectos || []).filter(function(x) { return x && x.id === p.prospectoId; })[0];
+                html += '<div class="evento evento-seguimiento" title="Seguimiento de campaña">' + escapeHTML((pr && pr.nombre) || 'Prospecto') + '</div>';
+                usados++;
+            });
+            const total = ec.length + et.length + es.length;
+            if (total > tope) html += '<div class="evento-mas">+' + (total - tope) + ' más</div>';
+            return html;
+        }
+
         function renderizarCalendario() {
             const grid = document.getElementById('calendario-grid');
             const tit = document.getElementById('calendario-mes-ano');
             const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-            tit.textContent = meses[mesActualCal] + ' ' + anoActualCal;
-            const pd = new Date(anoActualCal, mesActualCal, 1).getDay();
-            const dm = new Date(anoActualCal, mesActualCal + 1, 0).getDate();
-            const dma = new Date(anoActualCal, mesActualCal, 0).getDate();
-            const ct = obtenerContratos();
-            const ft = document.getElementById('filtro-tareas-calendario').value;
-            const b = document.getElementById('buscar-calendario').value.toLowerCase().trim();
             const ds = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-            let h = ds.map(function(d) { return '<div class="dia-nombre">' + d + '</div>'; }).join('');
-            for (let i = 0; i < pd; i++) h += '<div class="dia otro-mes"><div class="numero">' + (dma - pd + i + 1) + '</div></div>';
-            const hy = new Date(), hn = hy.getDate(), hm = hy.getMonth(), ha = hy.getFullYear();
-            // ─────── @JS-CALENDARIO-TOPE (8/10/2026) ───────
-            // Cuántas etiquetas caben por día ANTES de resumir el resto en "+N más".
-            // En el teléfono son dos: con tres, la fila entera del calendario crecía de
-            // alto y el calendario se deformaba hacia abajo (la fila del 17 con tres
-            // eventos quedaba más alta que las demás). Todo lo que sobra se ve completo
-            // en la lista del día, al tocar la casilla. Las filas miden lo mismo siempre
-            // (ver @CSS-CALENDARIO-UNIFORME), así que la altura no depende de lo que haya.
-            const mm = (typeof window !== 'undefined' && window.innerWidth <= 768) ? 2 : 3;
-            for (let d = 1; d <= dm; d++) {
-                const fs = fechaLocalToString(anoActualCal, mesActualCal, d);
-                const eh = (d === hn && mesActualCal === hm && anoActualCal === ha);
-                let ec = ct.filter(function(c) { return c.fechaEvento === fs; });
-                let et = tareas.filter(function(t) { return t.fecha === fs; });
-                if (ft === 'pendientes') et = et.filter(function(t) { return !t.completada; });
-                else if (ft === 'completadas') et = et.filter(function(t) { return t.completada; });
-                else if (ft === 'contratos') et = [];
-                else if (ft === 'campanias') { ec = []; et = et.filter(function(t) { return !!(t.campaniaId || t.participacionId); }); }
-                if (b) {
-                    ec = ec.filter(function(c) { return c.clienteNombre.toLowerCase().indexOf(b) !== -1 || (c.festejado && c.festejado.toLowerCase().indexOf(b) !== -1); });
-                    et = et.filter(function(t) { const nc = obtenerNombreCliente(t.clienteId); return nc.toLowerCase().indexOf(b) !== -1 || t.descripcion.toLowerCase().indexOf(b) !== -1; });
+            const hy = new Date();
+            const hoyISO = fechaLocalToString(hy.getFullYear(), hy.getMonth(), hy.getDate());
+            let h = '';
+            if (vistaSemanaActiva()) {
+                // ─────── @JS-CALENDARIO-SEMANA (9/10/2026) ───────
+                // Jorge: "quiero que el calendario pueda hacer switch entre el modo MES y
+                // modo semana... creo que cuando haya muchas tareas el modo semana sera
+                // mas util". Son las mismas 7 columnas, una sola fila, con la fecha en el
+                // encabezado; los filtros, el tope de etiquetas y las acciones son los
+                // mismos que en el mes (todo sale de eventosDelDiaHTML).
+                if (!inicioSemanaCal) inicioSemanaCal = inicioDeSemanaDe(hoyISO);
+                tit.textContent = etiquetaSemanaCalendario(inicioSemanaCal);
+                for (let i = 0; i < 7; i++) {
+                    const fs = sumarDiasISO(inicioSemanaCal, i);
+                    const p = fs.split('-');
+                    h += '<div class="dia-nombre dia-nombre-semana">' + ds[i] + '<span class="dia-nombre-fecha">' + Number(p[2]) + '/' + Number(p[1]) + '</span></div>';
                 }
-                let eh_ = '', em = 0;
-                ec.forEach(function(c) { if (em < mm) { const nc = c.festejado ? c.festejado + ' (' + c.clienteNombre + ')' : c.clienteNombre; eh_ += '<div class="evento evento-contrato" onclick="event.stopPropagation(); abrirContratoDesdeCalendario(\'' + c.clienteId + '\',\'' + c.id + '\')">' + nc + '</div>'; em++; } });
-                et.forEach(function(t) { if (em < mm) { const cc = t.completada ? 'evento-completada' : ((t.campaniaId || t.participacionId) ? 'evento-campania' : 'evento-tarea'); eh_ += '<div class="evento ' + cc + '" onclick="event.stopPropagation(); editarTareaDesdeCalendario(\'' + t.id + '\')">' + t.tipo + '</div>'; em++; } });
-                // Seguimientos de campaña: la fecha que se le prometió al prospecto.
-                let es = [];
-                try {
-                    es = (participaciones || []).filter(function(p) {
-                        if (!p || p.fechaProximoSeguimiento !== fs) return false;
-                        return ['convertida', 'cancelada', 'noSeleccionada', 'rechazada', 'sinInteres'].indexOf(p.estado) === -1;
-                    });
-                    es.forEach(function(p) {
-                        if (em >= mm) return;
-                        const pr = (prospectos || []).filter(function(x) { return x && x.id === p.prospectoId; })[0];
-                        eh_ += '<div class="evento evento-seguimiento" title="Seguimiento de campaña">' + escapeHTML((pr && pr.nombre) || 'Prospecto') + '</div>';
-                        em++;
-                    });
-                } catch (e) { console.warn('No se pudieron dibujar los seguimientos:', e); }
-                const te = ec.length + et.length + es.length;
-                if (te > mm) eh_ += '<div class="evento-mas">+' + (te - mm) + ' más</div>';
-                h += '<div class="dia ' + (eh ? 'hoy' : '') + '" data-fecha="' + fs + '"><div class="numero">' + d + '</div>' + eh_ + '</div>';
+                for (let i = 0; i < 7; i++) {
+                    const fs = sumarDiasISO(inicioSemanaCal, i);
+                    const p = fs.split('-');
+                    h += '<div class="dia dia-semana' + (fs === hoyISO ? ' hoy' : '') + '" data-fecha="' + fs + '">' +
+                        '<div class="numero">' + Number(p[2]) + '</div>' + eventosDelDiaHTML(fs) + '</div>';
+                }
+            } else {
+                tit.textContent = meses[mesActualCal] + ' ' + anoActualCal;
+                const pd = new Date(anoActualCal, mesActualCal, 1).getDay();
+                const dm = new Date(anoActualCal, mesActualCal + 1, 0).getDate();
+                const dma = new Date(anoActualCal, mesActualCal, 0).getDate();
+                h = ds.map(function(d) { return '<div class="dia-nombre">' + d + '</div>'; }).join('');
+                for (let i = 0; i < pd; i++) h += '<div class="dia otro-mes"><div class="numero">' + (dma - pd + i + 1) + '</div></div>';
+                for (let d = 1; d <= dm; d++) {
+                    const fs = fechaLocalToString(anoActualCal, mesActualCal, d);
+                    h += '<div class="dia ' + (fs === hoyISO ? 'hoy' : '') + '" data-fecha="' + fs + '"><div class="numero">' + d + '</div>' + eventosDelDiaHTML(fs) + '</div>';
+                }
+                const td = pd + dm, dr = (7 - (td % 7)) % 7;
+                for (let i = 1; i <= dr; i++) h += '<div class="dia otro-mes"><div class="numero">' + i + '</div></div>';
             }
-            const td = pd + dm, dr = (7 - (td % 7)) % 7;
-            for (let i = 1; i <= dr; i++) h += '<div class="dia otro-mes"><div class="numero">' + i + '</div></div>';
             grid.innerHTML = h;
+            // El botón de "Hoy" vuelve al mes actual: en la semana no tiene que flotar en
+            // una semana lejana, así que también reengancha la semana de hoy.
             document.querySelectorAll('.dia:not(.otro-mes)').forEach(function(el) {
                 el.addEventListener('click', function() {
                     // Todo el día es tocable (el número, el hueco y el "+N más").
@@ -7969,6 +8558,12 @@ input:focus, select:focus, textarea:focus {
                     const f = this.dataset.fecha;
                     if (f) mostrarOpcionesDia(f);
                 });
+            });
+            // Estado de los botones Mes/Semana (y el sello de la vista activa).
+            document.querySelectorAll('.btn-vista-cal').forEach(function(b) {
+                const activo = b.dataset.vista === vistaCalActual;
+                b.classList.toggle('activo', activo);
+                b.setAttribute('aria-pressed', activo ? 'true' : 'false');
             });
             renderizarListaTareas();
         }
@@ -8078,24 +8673,260 @@ input:focus, select:focus, textarea:focus {
         }
         function editarTareaDesdeCalendario(id) { const t = tareas.find(function(x) { return x.id === id; }); if (t) mostrarFormularioTarea(t); }
         function abrirContratoDesdeCalendario(clienteId, contratoId) { verDetalleContrato(clienteId, contratoId); }
+
+        /* ═══════════ @JS-TAREAS-LISTA (9/10/2026) ═══════════
+           Pedidos de Jorge en esta ronda:
+             · "las tareas se muestran en lista, quiero que se puedan ordenar en fecha de
+               vencimientos, por cliente o prospecto y tambien por campaña o tareas
+               normales de clientes"
+             · "cambia el titulo de las tareas, de momento el titulo es el tipo de tarea,
+               pero no me da una idea real rapida de que se trata la tarea, prefiero que
+               el titulo sea la descripcion y el tipo de tarea un dato extra"
+             · "quiero poder dar click para ver su ficha con la informacion"
+             · "en la tarjeta de tareas incluye tambien los botones que ya tenemos de
+               whatsapp y email por si la tarea necesita de contacto con el cliente"
+           Regla del pedido: el orden por vencimiento pone PRIMERO lo que vence antes
+           (lo vencido va hasta arriba por ser lo urgente); lo completado siempre al
+           final, sin importar el criterio elegido. */
+
+        /** El cliente o el prospecto al que está vinculada una tarea (o null). */
+        function entidadDeTarea(t) {
+            if (!t || !t.clienteId) return null;
+            if (String(t.clienteId).indexOf('pro_') === 0) {
+                const p = obtenerProspecto(String(t.clienteId).substring(4));
+                return p ? { tipo: 'prospecto', entidad: p } : null;
+            }
+            const c = obtenerCliente(t.clienteId);
+            if (c) return { tipo: 'cliente', entidad: c };
+            const p2 = obtenerProspecto(t.clienteId);
+            return p2 ? { tipo: 'prospecto', entidad: p2 } : null;
+        }
+        /** Nombre corto del vinculado, para la tarjeta y para el título del calendario. */
+        function nombreCortoVinculado(t) {
+            const v = entidadDeTarea(t);
+            if (!v) return '';
+            return v.entidad.nombre || '';
+        }
+        /** ¿La tarea está vinculada a un prospecto? (por el prefijo 'pro_' del id) */
+        function tareaEsDeProspecto(t) {
+            return !!(t && t.clienteId && String(t.clienteId).indexOf('pro_') === 0);
+        }
+        /** Ficha del cliente/prospecto de la tarea (abre su panel). */
+        function abrirFichaVinculadaDeTarea(t) {
+            const v = entidadDeTarea(t);
+            if (!v) { mostrarNotificacion('Esta tarea no está vinculada a un cliente o prospecto', 'warning'); return; }
+            cerrarModal();
+            setTimeout(function() {
+                if (v.tipo === 'cliente') verDetalleCliente(v.entidad.id);
+                else verDetalleProspecto(v.entidad.id);
+            }, 120);
+        }
+        /** WhatsApp desde la TARJETA de la tarea, sin tener que ir a buscar la ficha. */
+        function whatsAppTarea(id) {
+            const t = tareas.find(function(x) { return x.id === id; });
+            if (!t) { mostrarNotificacion('Tarea no encontrada', 'error'); return; }
+            const v = entidadDeTarea(t);
+            if (!v) { mostrarNotificacion('La tarea no está vinculada a un cliente o prospecto', 'warning'); return; }
+            const telefono = v.entidad.telefono;
+            if (!telefono) { mostrarNotificacion('Ese ' + (v.tipo === 'cliente' ? 'cliente' : 'prospecto') + ' no tiene teléfono capturado', 'warning'); return; }
+            const revision = validarTelefonoCapturado(telefono);
+            if (!revision.ok) { mostrarNotificacion(revision.motivo, 'warning'); return; }
+            const numero = normalizarTelefonoWhatsApp(telefono);
+            if (!numero) { mostrarNotificacion('Teléfono inválido', 'warning'); return; }
+            let url = 'https://wa.me/' + numero;
+            if (MENSAJE_WHATSAPP_DEFAULT) url += '?text=' + encodeURIComponent(MENSAJE_WHATSAPP_DEFAULT);
+            window.open(url, '_blank');
+            mostrarNotificacion('Abriendo WhatsApp', 'success');
+            registrarHistorial('tarea', 'editar', 'Se abrió WhatsApp desde la tarea "' + (t.descripcion || t.tipo) + '"', { id: t.id, nombre: t.descripcion || t.tipo });
+        }
+        /** Email desde la tarjeta o la ficha de la tarea. */
+        function emailTarea(id) {
+            const t = tareas.find(function(x) { return x.id === id; });
+            if (!t) { mostrarNotificacion('Tarea no encontrada', 'error'); return; }
+            const v = entidadDeTarea(t);
+            if (!v) { mostrarNotificacion('La tarea no está vinculada a un cliente o prospecto', 'warning'); return; }
+            const correo = v.entidad.email;
+            if (!correo || !esCorreoValido(correo)) { mostrarNotificacion('Ese ' + (v.tipo === 'cliente' ? 'cliente' : 'prospecto') + ' no tiene un correo válido capturado', 'warning'); return; }
+            const asunto = 'Sobre tu ' + String(t.tipo || 'tarea').toLowerCase() + ' - ' + EMISOR_COMPROBANTE;
+            let cuerpo = 'Hola ' + (v.entidad.nombre || '') + ',\n\n';
+            if (t.descripcion) cuerpo += t.descripcion + '\n\n';
+            if (t.fecha) cuerpo += 'Fecha: ' + formatearFecha(t.fecha) + (t.hora ? ' a las ' + t.hora : ' (a cualquier hora del día)') + '\n\n';
+            cuerpo += 'Quedo pendiente de tu respuesta.\n\n' + EMISOR_COMPROBANTE;
+            window.open('mailto:' + correo + '?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(cuerpo), '_blank');
+            mostrarNotificacion('Abriendo el correo', 'info');
+            registrarHistorial('tarea', 'editar', 'Se abrió el correo desde la tarea "' + (t.descripcion || t.tipo) + '"', { id: t.id, nombre: t.descripcion || t.tipo });
+        }
+        /** Botón de "eliminar" según quién esté usando el CRM (el mismo candado de siempre). */
+        function botonEliminarTareaHTML(t) {
+            try { if (typeof bloquearSiNoEsAdmin === 'function' && bloquearSiNoEsAdmin('eliminar tareas', true)) return ''; } catch (e) { }
+            return '<button class="btn-eliminar" title="Eliminar tarea" onclick="eliminarTarea(\'' + t.id + '\')"><i class="fas fa-trash"></i></button>';
+        }
+        /** Atajo: abrir la ficha del vinculado a partir del id de la tarea. */
+        function abrirFichaVinculadaDeTareaPorId(id) {
+            const t = tareas.find(function(x) { return x.id === id; });
+            if (t) abrirFichaVinculadaDeTarea(t);
+        }
+
+        /** Ficha de la tarea: la descripción como título, el tipo como dato extra y
+            todos los accesos (editar, completar, WhatsApp, correo, calendario, ficha). */
+        function htmlFichaTarea(t) {
+            const v = entidadDeTarea(t);
+            const nombreVinc = v ? (v.entidad.nombre || '') : '';
+            const estadoTxt = t.completada ? 'Completada' : 'Pendiente';
+            const claseEstado = t.completada ? 'etiqueta-completado' : 'etiqueta-pendiente';
+            let campania = '';
+            if (t.campaniaId && typeof App !== 'undefined' && App.nombreCampania) {
+                try { campania = String(App.nombreCampania(t.campaniaId) || ''); } catch (e) { campania = ''; }
+            }
+            const cuando = (t.fecha ? formatearFecha(t.fecha) : 'Sin fecha') + ' · ' + (t.hora ? 'A las ' + escapeHTML(String(t.hora)) : 'A cualquier hora del día');
+            const campo = function(l, val) { return '<div class="detalle-campo"><span class="lbl">' + escapeHTML(l) + '</span><span class="val">' + (val ? escapeHTML(String(val)) : 'No especificado') + '</span></div>'; };
+
+            let acciones = '<button class="btn-primario" onclick="cerrarModal(); setTimeout(function(){ editarTarea(\'' + t.id + '\'); }, 120)"><i class="fas fa-edit"></i> Editar tarea</button>';
+            acciones += '<button class="btn-verde" onclick="alternarCompletarTarea(\'' + t.id + '\'); setTimeout(function(){ verDetalleTarea(\'' + t.id + '\'); }, 200)"><i class="fas ' + (t.completada ? 'fa-undo' : 'fa-check') + '"></i> ' + (t.completada ? 'Reabrir' : 'Marcar completada') + '</button>';
+            if (v) {
+                if (v.entidad.telefono) acciones += '<button class="btn-whatsapp" onclick="whatsAppTarea(\'' + t.id + '\')"><i class="fab fa-whatsapp"></i> WhatsApp</button>';
+                if (v.entidad.email) acciones += '<button class="btn-azul" onclick="emailTarea(\'' + t.id + '\')"><i class="fas fa-envelope"></i> Email</button>';
+                acciones += '<button class="btn-morado" onclick="abrirFichaVinculadaDeTareaPorId(\'' + t.id + '\')"><i class="fas fa-address-card"></i> Ficha de ' + escapeHTML(nombreVinc || 'el vinculado') + '</button>';
+            }
+            acciones += '<button class="btn-naranja" onclick="tareaAGoogleCalendar(\'' + t.id + '\')"><i class="fab fa-google"></i> Google Calendar</button>';
+            acciones += '<button class="btn-secundario" onclick="tareaAICS(\'' + t.id + '\')"><i class="fas fa-file-import"></i> Descargar .ics</button>';
+
+            return '<div class="detalle-acciones">' + acciones + '</div>' +
+                '<div class="ficha-tarea-titulo">' + escapeHTML(t.descripcion || '(tarea sin descripción)') + '</div>' +
+                '<div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + claseEstado + '">' + estadoTxt + '</span>' +
+                '<span class="tarjeta-etiqueta etiqueta-tipo-tarea"><i class="fas fa-tag"></i> ' + escapeHTML(t.tipo || 'Sin tipo') + '</span>' +
+                (campania ? '<span class="tarjeta-etiqueta etiqueta-campania-tarea"><i class="fas fa-bullhorn"></i> ' + escapeHTML(campania) + '</span>' : '') + '</div>' +
+                '<div class="detalle-grid" style="margin-top:12px;">' +
+                campo('Cuándo', cuando) +
+                campo('Cliente / Prospecto', v ? (nombreVinc + (v.tipo === 'prospecto' ? ' (Prospecto)' : ' (Cliente)')) : '') +
+                campo('Teléfono', v ? v.entidad.telefono : '') +
+                campo('Email', v ? v.entidad.email : '') +
+                campo('Creada por', t.creadaPor) +
+                campo('Creada', t.fechaCreacion ? formatearFechaHora(t.fechaCreacion) : '') +
+                campo('Última modificación', t.fechaModificacion ? formatearFechaHora(t.fechaModificacion) : '') +
+                campo('Completada', t.fechaCompletada ? formatearFechaHora(t.fechaCompletada) + (t.completadaPor ? ' · ' + t.completadaPor : '') : '') +
+                '</div>' +
+                (t.notas ? '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas</div><div class="detalle-notas">' + escapeHTMLconSaltos(t.notas) + '</div></div>' : '');
+        }
+        function verDetalleTarea(id) {
+            const t = tareas.find(function(x) { return x.id === id; });
+            if (!t) { mostrarNotificacion('Tarea no encontrada', 'error'); return; }
+            abrirModal('Detalle de la tarea', htmlFichaTarea(t));
+        }
+
         function renderizarListaTareas() {
             const c = document.getElementById('lista-tareas'); if (!c) return;
             const filtro = document.getElementById('filtro-tareas-calendario').value;
             const b = document.getElementById('buscar-calendario').value.toLowerCase().trim();
-            let tm = tareas.slice().sort(function(a, b) { return b.fecha.localeCompare(a.fecha); });
-            if (filtro === 'pendientes') tm = tm.filter(function(t) { return !t.completada; });
+            const orden = (document.getElementById('orden-tareas') && document.getElementById('orden-tareas').value) || 'vencimiento';
+            const campoVinculado = function(t) { const n = nombreCortoVinculado(t); return (n || '\uffff sin vincular').toLowerCase(); };
+            const campoGrupo = function(t) { return (t.campaniaId || t.participacionId) ? 0 : 1; };
+            const esCampania = function(t) { return !!(t.campaniaId || t.participacionId); };
+
+            let tm = tareas.slice();
+            if (vistaCalActual === 'semana') {
+                const fin = sumarDiasISO(inicioSemanaCal, 6);
+                tm = tm.filter(function(t) { return t && t.fecha && t.fecha >= inicioSemanaCal && t.fecha <= fin; });
+            }
+            if (filtro === 'contratos') tm = [];
+            else if (filtro === 'campanias') tm = tm.filter(esCampania);
+            else if (filtro === 'pendientes') tm = tm.filter(function(t) { return !t.completada; });
             else if (filtro === 'completadas') tm = tm.filter(function(t) { return t.completada; });
-            else if (filtro === 'contratos') tm = [];
-            else if (filtro === 'campanias') tm = tm.filter(function(t) { return !!(t.campaniaId || t.participacionId); });
-            if (b) tm = tm.filter(function(t) { const nc = obtenerNombreCliente(t.clienteId); return nc.toLowerCase().indexOf(b) !== -1 || t.descripcion.toLowerCase().indexOf(b) !== -1; });
-            if (tm.length === 0) { c.innerHTML = '<p class="mensaje-vacio">No hay tareas</p>'; return; }
-            c.innerHTML = tm.map(function(t) {
-                const cc = t.completada ? 'etiqueta-completado' : 'etiqueta-pendiente';
-                const el_ = t.completada ? 'Completada' : 'Pendiente';
-                const ic = t.completada ? 'fa-undo' : 'fa-check';
-                const nc = obtenerNombreCliente(t.clienteId);
-                return '<div class="tarjeta-registro"><div class="tarjeta-info"><div class="tarjeta-titulo">' + t.tipo + ' <span class="tarjeta-etiqueta ' + cc + '">' + el_ + '</span></div><div class="tarjeta-detalle">' + t.descripcion + '</div><div class="tarjeta-detalle">' + formatearFecha(t.fecha) + (t.clienteId ? ' | ' + nc : '') + (t.creadaPor ? ' | Creada por: ' + t.creadaPor : '') + (t.campaniaId && typeof App !== 'undefined' && App.nombreCampania ? ' | Campaña: ' + escapeHTML(String(App.nombreCampania(t.campaniaId) || '')) : '') + '</div></div><div class="tarjeta-acciones"><button class="btn-completar" onclick="alternarCompletarTarea(\'' + t.id + '\')"><i class="fas ' + ic + '"></i></button><button class="btn-editar" onclick="editarTarea(\'' + t.id + '\')"><i class="fas fa-edit"></i></button><button class="btn-eliminar" onclick="eliminarTarea(\'' + t.id + '\')"><i class="fas fa-trash"></i></button></div></div>';
-            }).join('');
+            if (b) tm = tm.filter(function(t) {
+                const nc = obtenerNombreCliente(t.clienteId) || '';
+                return nc.toLowerCase().indexOf(b) !== -1 || String(t.descripcion || '').toLowerCase().indexOf(b) !== -1 ||
+                    String(t.tipo || '').toLowerCase().indexOf(b) !== -1 || String(t.notas || '').toLowerCase().indexOf(b) !== -1;
+            });
+
+            tm.sort(function(a, b2) {
+                // Lo completado siempre al final: primero lo que falta por hacer.
+                if (!!a.completada !== !!b2.completada) return a.completada ? 1 : -1;
+                if (orden === 'cliente') {
+                    const na = campoVinculado(a), nb = campoVinculado(b2);
+                    if (na !== nb) return na < nb ? -1 : 1;
+                    return String(a.fecha || '9999').localeCompare(String(b2.fecha || '9999'));
+                }
+                if (orden === 'campania') {
+                    const ga = campoGrupo(a), gb = campoGrupo(b2);
+                    if (ga !== gb) return ga - gb; // primero las tareas de campaña
+                    return String(a.fecha || '9999').localeCompare(String(b2.fecha || '9999'));
+                }
+                if (orden === 'creacion') {
+                    return String(b2.fechaCreacion || '').localeCompare(String(a.fechaCreacion || ''));
+                }
+                if (orden === 'tipo') {
+                    const ta = String(a.tipo || '').toLowerCase(), tb = String(b2.tipo || '').toLowerCase();
+                    if (ta !== tb) return ta < tb ? -1 : 1;
+                    return String(a.fecha || '9999').localeCompare(String(b2.fecha || '9999'));
+                }
+                // Por vencimiento: lo que vence antes va primero y lo vencido hasta arriba.
+                const fa = String(a.fecha || '9999-12-31'), fb = String(b2.fecha || '9999-12-31');
+                if (fa !== fb) return fa < fb ? -1 : 1;
+                const ha = String(a.hora || '99:99'), hb = String(b2.hora || '99:99');
+                if (ha !== hb) return ha < hb ? -1 : 1;
+                return String(a.descripcion || '').localeCompare(String(b2.descripcion || ''));
+            });
+
+            const total = tareas.length;
+            const pend = tareas.filter(function(t) { return !t.completada; }).length;
+            const barra =
+                '<div class="tareas-lista-controles">' +
+                '<div class="tareas-lista-contador"><i class="fas fa-list-check"></i> ' + tm.length + ' en la lista · ' + pend + ' pendiente' + (pend === 1 ? '' : 's') + ' de ' + total + '</div>' +
+                '<div class="tareas-lista-orden"><label for="orden-tareas"><i class="fas fa-arrow-down-wide-short"></i> Ordenar por</label>' +
+                '<select id="orden-tareas">' +
+                '<option value="vencimiento"' + (orden === 'vencimiento' ? ' selected' : '') + '>Fecha de vencimiento (lo próximo primero)</option>' +
+                '<option value="cliente"' + (orden === 'cliente' ? ' selected' : '') + '>Cliente / Prospecto</option>' +
+                '<option value="campania"' + (orden === 'campania' ? ' selected' : '') + '>Campañas y tareas normales</option>' +
+                '<option value="tipo"' + (orden === 'tipo' ? ' selected' : '') + '>Tipo de tarea</option>' +
+                '<option value="creacion"' + (orden === 'creacion' ? ' selected' : '') + '>Última capturada</option>' +
+                '</select></div></div>';
+
+            if (tm.length === 0) {
+                c.innerHTML = barra + '<p class="mensaje-vacio">No hay tareas' + (vistaCalActual === 'semana' ? ' en esta semana' : '') + ' con estos filtros</p>';
+            } else {
+                const hoyISO = obtenerFechaActual();
+                c.innerHTML = barra + tm.map(function(t) {
+                    const completada = !!t.completada;
+                    const claseEstado = completada ? 'etiqueta-completado' : 'etiqueta-pendiente';
+                    const estadoTxt = completada ? 'Completada' : 'Pendiente';
+                    const ic = completada ? 'fa-undo' : 'fa-check';
+                    const nc = nombreCortoVinculado(t);
+                    const esProspecto = t.clienteId && String(t.clienteId).indexOf('pro_') === 0;
+                    const vencida = !completada && t.fecha && t.fecha < hoyISO;
+                    const fechaTxt = t.fecha ? formatearFecha(t.fecha) : 'Sin fecha';
+                    const horaTxt = t.hora ? ' · ' + escapeHTML(String(t.hora)) : ' · todo el día';
+                    let campania = '';
+                    if (t.campaniaId && typeof App !== 'undefined' && App.nombreCampania) {
+                        try { campania = String(App.nombreCampania(t.campaniaId) || ''); } catch (e) { campania = ''; }
+                    }
+                    let accionesWA = '';
+                    const v = entidadDeTarea(t);
+                    if (v && v.entidad.telefono) accionesWA += '<button class="btn-whatsapp" title="Escribir por WhatsApp" onclick="whatsAppTarea(\'' + t.id + '\')"><i class="fab fa-whatsapp"></i></button>';
+                    if (v && v.entidad.email) accionesWA += '<button class="btn-azul" title="Escribir correo" onclick="emailTarea(\'' + t.id + '\')"><i class="fas fa-envelope"></i></button>';
+                    return '<div class="tarjeta-registro' + (completada ? ' tarjeta-completada' : '') + '">' +
+                        '<div class="tarjeta-info" onclick="verDetalleTarea(\'' + t.id + '\')" title="Ver la ficha de la tarea">' +
+                        '<div class="tarjeta-titulo">' + escapeHTML(t.descripcion || '(tarea sin descripción)') +
+                        ' <span class="tarjeta-etiqueta ' + claseEstado + '">' + estadoTxt + '</span></div>' +
+                        '<div class="tarjeta-detalle tarea-meta-fila">' +
+                        '<span class="tarea-chip-tipo"><i class="fas fa-tag"></i> ' + escapeHTML(t.tipo || 'Sin tipo') + '</span>' +
+                        (campania ? '<span class="tarea-chip-campania"><i class="fas fa-bullhorn"></i> ' + escapeHTML(campania) + '</span>' : '') +
+                        '<span class="tarea-chip-fecha' + (vencida ? ' vencida' : '') + '"><i class="fas fa-calendar-day"></i> ' + fechaTxt + horaTxt + (vencida ? ' · vencida' : '') + '</span>' +
+                        (nc ? '<span class="tarea-chip-cliente" onclick="event.stopPropagation(); abrirFichaVinculadaDeTareaPorId(\'' + t.id + '\')" title="Abrir la ficha"><i class="fas ' + (esProspecto ? 'fa-user-clock' : 'fa-user-check') + '"></i> ' + escapeHTML(nc) + (esProspecto ? ' (Prospecto)' : '') + '</span>' : '<span class="tarea-chip-cliente sin-vincular"><i class="fas fa-link-slash"></i> Sin vincular</span>') +
+                        '</div></div>' +
+                        '<div class="tarjeta-acciones">' +
+                        '<button class="btn-completar" title="' + (completada ? 'Reabrir la tarea' : 'Marcar como completada') + '" onclick="alternarCompletarTarea(\'' + t.id + '\')"><i class="fas ' + ic + '"></i></button>' +
+                        accionesWA +
+                        '<button class="btn-ver-detalle" title="Ver ficha de la tarea" onclick="verDetalleTarea(\'' + t.id + '\')"><i class="fas fa-circle-info"></i></button>' +
+                        '<button class="btn-editar" title="Editar" onclick="editarTarea(\'' + t.id + '\')"><i class="fas fa-edit"></i></button>' +
+                        botonEliminarTareaHTML(t) +
+                        '</div></div>';
+                }).join('');
+            }
+            // Los controles se vuelven a cablear en cada dibujado con `onchange` (que
+            // REEMPLAZA al anterior): con addEventListener se acumularían y una sola
+            // selección dispararía varios redibujados.
+            const sel = document.getElementById('orden-tareas');
+            if (sel) sel.onchange = function() { renderizarListaTareas(); };
         }
 
         /* ─── INFORMES ─── */
@@ -9277,9 +10108,50 @@ input:focus, select:focus, textarea:focus {
             });
             btn = document.getElementById('filtro-tareas-calendario'); if (btn) btn.addEventListener('change', renderizarCalendario);
             btn = document.getElementById('buscar-calendario'); if (btn) btn.addEventListener('input', renderizarCalendario);
-            btn = document.getElementById('btn-mes-anterior'); if (btn) btn.addEventListener('click', function() { mesActualCal--; if (mesActualCal < 0) { mesActualCal = 11; anoActualCal--; } renderizarCalendario(); });
-            btn = document.getElementById('btn-mes-siguiente'); if (btn) btn.addEventListener('click', function() { mesActualCal++; if (mesActualCal > 11) { mesActualCal = 0; anoActualCal++; } renderizarCalendario(); });
-            btn = document.getElementById('btn-mes-actual'); if (btn) btn.addEventListener('click', function() { const h = new Date(); mesActualCal = h.getMonth(); anoActualCal = h.getFullYear(); renderizarCalendario(); });
+            // ─────── @JS-NAV-CALENDARIO (9/10/2026) ───────
+            // Los botones ‹ › mueven un MES en modo mes y una SEMANA en modo semana;
+            // "Hoy" vuelve al mes de hoy y reengancha la semana de hoy. Se usa `.onclick =`
+            // a propósito: esta función de cableado puede correr más de una vez y con
+            // `addEventListener` las escuchas se acumulan (el bug del salto de mes).
+            btn = document.getElementById('btn-mes-anterior');
+            if (btn) btn.onclick = function() {
+                if (vistaSemanaActiva()) {
+                    if (!inicioSemanaCal) inicioSemanaCal = inicioDeSemanaDe(fechaLocalToString(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()));
+                    inicioSemanaCal = sumarDiasISO(inicioSemanaCal, -7);
+                } else { mesActualCal--; if (mesActualCal < 0) { mesActualCal = 11; anoActualCal--; } }
+                renderizarCalendario();
+            };
+            btn = document.getElementById('btn-mes-siguiente');
+            if (btn) btn.onclick = function() {
+                if (vistaSemanaActiva()) {
+                    if (!inicioSemanaCal) inicioSemanaCal = inicioDeSemanaDe(fechaLocalToString(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()));
+                    inicioSemanaCal = sumarDiasISO(inicioSemanaCal, 7);
+                } else { mesActualCal++; if (mesActualCal > 11) { mesActualCal = 0; anoActualCal++; } }
+                renderizarCalendario();
+            };
+            btn = document.getElementById('btn-mes-actual');
+            if (btn) btn.onclick = function() {
+                const h = new Date();
+                mesActualCal = h.getMonth();
+                anoActualCal = h.getFullYear();
+                inicioSemanaCal = inicioDeSemanaDe(fechaLocalToString(h.getFullYear(), h.getMonth(), h.getDate()));
+                renderizarCalendario();
+            };
+            // Conmutador Mes / Semana.
+            document.querySelectorAll('.btn-vista-cal').forEach(function(b) {
+                b.onclick = function() {
+                    const v = b.dataset.vista === 'semana' ? 'semana' : 'mes';
+                    if (v === vistaCalActual) return;
+                    vistaCalActual = v;
+                    if (v === 'semana' && !inicioSemanaCal) {
+                        const h = new Date();
+                        inicioSemanaCal = inicioDeSemanaDe(fechaLocalToString(h.getFullYear(), h.getMonth(), h.getDate()));
+                    }
+                    renderizarCalendario();
+                    mostrarNotificacion(v === 'semana' ? 'Vista por semana' : 'Vista por mes', 'info');
+                };
+            });
+            btn = document.getElementById('btn-descargar-calendario'); if (btn) btn.addEventListener('click', descargarCalendarioICS);
             btn = document.getElementById('btn-sync-firebase'); if (btn) btn.addEventListener('click', async function() {
                 if (!database) { mostrarNotificacion('Firebase no disponible', 'error'); return; }
                 if (!auth || !auth.currentUser) { mostrarNotificacion('Tu sesión de Google expiró. Vuelve a iniciar sesión.', 'error'); return; }

@@ -84,11 +84,16 @@ async function evaluar(cdp, expresion) {
   return r.result.value;
 }
 
-/* Deja la página lista: contador de escuchas (por id) + la app entrando N veces. */
+/* Deja la página lista: contador de escuchas (por id) + la app entrando N veces.
+   Se cuentan DOS formas de cablear un clic, porque el CRM usa las dos:
+     · addEventListener('click', …)  → se acumula si la función de cableado corre dos veces
+     · elemento.onclick = …          → REEMPLAZA al anterior (no se puede acumular)
+   Un botón bien cableado tiene UNO de los dos, nunca los dos ni dos del mismo tipo. */
 async function preparar(cdp, entradas) {
   return await evaluar(cdp, `(function () {
     try {
       window.__escuchas = {};
+      window.__onclicks = {};
       if (!window.__addEventListenerOriginal) {
         window.__addEventListenerOriginal = EventTarget.prototype.addEventListener;
         EventTarget.prototype.addEventListener = function (tipo, fn, opts) {
@@ -97,6 +102,17 @@ async function preparar(cdp, entradas) {
           }
           return window.__addEventListenerOriginal.call(this, tipo, fn, opts);
         };
+      }
+      if (!window.__onclickDescriptor) {
+        window.__onclickDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'onclick');
+        Object.defineProperty(HTMLElement.prototype, 'onclick', {
+          configurable: true,
+          get: function () { return window.__onclickDescriptor.get.call(this); },
+          set: function (fn) {
+            if (this && this.id) window.__onclicks[this.id] = (window.__onclicks[this.id] || 0) + 1;
+            return window.__onclickDescriptor.set.call(this, fn);
+          }
+        });
       }
       usuarioActual = { nombre: 'Prueba', rol: 'Administrador', admin: true, email: 'prueba@local' };
       for (var i = 0; i < ${entradas}; i++) iniciarAplicacion();
@@ -199,14 +215,20 @@ async function escenario(cdp, URL, entradas, etiqueta, fallos, conCableado) {
 
   const esc = await evaluar(cdp, 'JSON.stringify(window.__escuchas)');
   const escuchas = JSON.parse(esc || '{}');
-  const conDoble = CABLEADOS.filter(id => (escuchas[id] || 0) > 1);
+  const onc = await evaluar(cdp, 'JSON.stringify(window.__onclicks)');
+  const onclicks = JSON.parse(onc || '{}');
+  /* El total de cableados de clic de un botón = escuchas + onclicks. Sirve igual para
+     detectar el bug del salto: lo que no puede pasar es que queden DOS. */
+  const totalClics = (id) => (escuchas[id] || 0) + (onclicks[id] || 0);
+  const conDoble = CABLEADOS.filter(id => totalClics(id) > 1);
 
   console.log('── ' + etiqueta + ' (' + entradas + ' entrada(s) al arranque)');
-  console.log('   escuchas ‹ = ' + (escuchas['btn-mes-anterior'] || 0) + ' · › = ' + (escuchas['btn-mes-siguiente'] || 0) +
-    ' · menú = ' + (escuchas['btn-mobile-menu'] || 0) + ' · ver todos = ' + (escuchas['historial-toggle-ver-todos'] || 0));
-  revisar((escuchas['btn-mes-anterior'] || 0) === 1 && (escuchas['btn-mes-siguiente'] || 0) === 1,
-    'cada botón del mes tiene UN solo escucha (‹ = ' + (escuchas['btn-mes-anterior'] || 0) + ', › = ' + (escuchas['btn-mes-siguiente'] || 0) + ')');
-  revisar(conDoble.length === 0, 'ningún botón cableado quedó con escuchas repetidos' + (conDoble.length ? ' (' + conDoble.join(', ') + ')' : ''));
+  console.log('   cableados ‹ = ' + totalClics('btn-mes-anterior') + ' · › = ' + totalClics('btn-mes-siguiente') +
+    ' · menú = ' + totalClics('btn-mobile-menu') + ' · ver todos = ' + totalClics('historial-toggle-ver-todos') +
+    '   (escuchas ‹ = ' + (escuchas['btn-mes-anterior'] || 0) + ' · › = ' + (escuchas['btn-mes-siguiente'] || 0) + ')');
+  revisar(totalClics('btn-mes-anterior') === 1 && totalClics('btn-mes-siguiente') === 1,
+    'cada botón del mes tiene UN solo cableado de clic (‹ = ' + totalClics('btn-mes-anterior') + ', › = ' + totalClics('btn-mes-siguiente') + ')');
+  revisar(conDoble.length === 0, 'ningún botón cableado quedó con clics repetidos' + (conDoble.length ? ' (' + conDoble.join(', ') + ')' : ''));
 
   const antes = await mesVisible(cdp);
   await clic(cdp, 'btn-mes-siguiente');

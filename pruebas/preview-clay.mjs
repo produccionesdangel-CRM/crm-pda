@@ -772,6 +772,62 @@ async function main() {
       await captura(cdp, 'calendario-' + tema + '.png');
     }
 
+    /* La VISTA POR SEMANA y la lista de tareas ordenable (9/10/2026): Jorge pidió
+       poder ver solo una semana y ordenar la lista. Se capturan para revisarlas. */
+    console.log('\nCapturas de la vista por SEMANA y de la lista de tareas:');
+    for (const tema of TEMAS) {
+      await evaluar(cdp, `(function () {
+        document.documentElement.setAttribute('data-theme', '${tema}');
+        var b = document.querySelector('.btn-vista-cal[data-vista="semana"]');
+        if (b) b.click();
+        window.scrollTo(0, 0);
+        return 1;
+      })()`);
+      await dormir(650);
+      await captura(cdp, 'calendario-semana-' + tema + '.png');
+    }
+    const tareasInfo = JSON.parse(await evaluar(cdp, `(function () {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      var b = document.querySelector('.btn-vista-cal[data-vista="mes"]');
+      if (b) b.click();
+      var s = document.getElementById('orden-tareas');
+      var opciones = s ? [].slice.call(s.options).map(function (o) { return o.value; }) : [];
+      var tarjetas = document.querySelectorAll('#lista-tareas .tarjeta-registro');
+      var conWa = document.querySelectorAll('#lista-tareas .btn-whatsapp').length;
+      var primera = tarjetas[0] ? tarjetas[0].querySelector('.tarjeta-titulo').innerText.replace(/\\s+/g, ' ').trim() : '';
+      /* La lista queda abajo del calendario: se baja para que salga en la captura. */
+      var listaTareas = document.getElementById('lista-tareas');
+      if (listaTareas && listaTareas.scrollIntoView) listaTareas.scrollIntoView({ block: 'start' });
+      return JSON.stringify({ opciones: opciones, tarjetas: tarjetas.length, conWa: conWa, primera: primera });
+    })()`));
+    await dormir(700);
+    await captura(cdp, 'calendario-tareas-lista-dark.png');
+    console.log('   ordenamientos: ' + tareasInfo.opciones.join(' · '));
+    console.log('   tarjetas: ' + tareasInfo.tarjetas + ' · con botón de WhatsApp: ' + tareasInfo.conWa + ' · primera: "' + tareasInfo.primera + '"');
+    if (tareasInfo.opciones.length !== 5) throw new Error('La lista de tareas no trae los 5 ordenamientos.');
+    if (tareasInfo.tarjetas === 0) throw new Error('La lista de tareas quedó vacía en la vista previa.');
+    await evaluar(cdp, `(function () { window.scrollTo(0, 0); return 1; })()`);
+
+    // La ficha de una tarea (Jorge: "quiero poder dar click para ver su ficha").
+    const fichaTarea = JSON.parse(await evaluar(cdp, `(function () {
+      var tarjetas = document.querySelectorAll('#lista-tareas .tarjeta-registro');
+      var id = null;
+      if (tarjetas[0]) {
+        var info = tarjetas[0].querySelector('.tarjeta-info');
+        if (info) { info.click(); }
+      }
+      var cuerpo = document.getElementById('modal-body');
+      return JSON.stringify({
+        abierto: !!(cuerpo && cuerpo.innerText.trim().length > 0),
+        botones: [].slice.call(document.querySelectorAll('#modal-body .detalle-acciones button')).map(function (b) { return b.innerText.replace(/\\s+/g, ' ').trim(); })
+      });
+    })()`));
+    await dormir(600);
+    await captura(cdp, 'calendario-ficha-tarea-dark.png');
+    console.log('   ficha de la tarea: ' + (fichaTarea.abierto ? 'abierta' : 'NO SE ABRIÓ') + ' · botones: ' + fichaTarea.botones.join(' · '));
+    if (!fichaTarea.abierto) throw new Error('La ficha de la tarea no se abrió.');
+    await evaluar(cdp, `(function () { cerrarModal(); return 1; })()`);
+
     // La vista del día: al tocar un día cargado se abre la lista de ese día.
     await evaluar(cdp, `(function () {
       document.documentElement.setAttribute('data-theme', 'dark');
@@ -798,6 +854,52 @@ async function main() {
     await dormir(600);
     await captura(cdp, 'calendario-dia-movil.png');
     await evaluar(cdp, `(function () { cerrarModal(); return 1; })()`);
+
+    /* ══════════════════ INFORMES Y CONFIGURACIÓN ══════════════════
+       Las dos secciones que Jorge pidió alinear a la arcilla (9/10/2026): su diseño
+       se había quedado como el original (tarjetas planas y barritas de color al canto
+       en la papelera y el historial). Se capturan los 4 temas para poder revisarlas. */
+    /* OJO: esta comprobación se hace DENTRO de la página (con `evaluar`). En Node no
+       existe `App`, así que preguntarlo aquí daría siempre falso. */
+    const hayPanelSecciones = await evaluar(cdp, `(function () { return (typeof App !== 'undefined' && !!App.seleccionarSeccion) ? 'si' : 'no'; })()`);
+    if (hayPanelSecciones === 'si') {
+      await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 1512, height: 950, deviceScaleFactor: 2, mobile: false });
+      await cdp.enviar('Page.navigate', { url: URL });
+      await dormir(4500);
+      await evaluar(cdp, inyectarArcilla);
+      await evaluar(cdp, expresionMontarCalendario());
+      console.log('\nCapturas de INFORMES y CONFIGURACIÓN (1512 x 950):');
+      for (const seccion of ['informes', 'configuracion']) {
+        for (const tema of TEMAS) {
+          await evaluar(cdp, `(function () {
+            document.documentElement.setAttribute('data-theme', '${tema}');
+            App.seleccionarSeccion('${seccion}');
+            try { renderizarInformes(); } catch (e) { }
+            try { renderizarHistorial(); } catch (e) { }
+            try { renderizarPapelera(); } catch (e) { }
+            window.scrollTo(0, 0);
+            return 1;
+          })()`);
+          // El CRM tiene transiciones de color de 0.25 s: sin esperar, la captura sale con el tema anterior.
+          await dormir(700);
+          await captura(cdp, seccion + '-' + tema + '.png');
+        }
+      }
+      // El teléfono: la sección se elige DESPUÉS de cargar la página con ancho de teléfono.
+      await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 3, mobile: true });
+      await cdp.enviar('Page.navigate', { url: URL });
+      await dormir(4500);
+      await evaluar(cdp, inyectarArcilla);
+      await evaluar(cdp, expresionMontarCalendario());
+      await evaluar(cdp, `(function () { document.documentElement.setAttribute('data-theme', 'dark'); App.seleccionarSeccion('informes'); try { renderizarInformes(); } catch (e) { } window.scrollTo(0, 0); return 1; })()`);
+      await dormir(800);
+      await captura(cdp, 'informes-movil.png');
+      await evaluar(cdp, `(function () { document.documentElement.setAttribute('data-theme', 'dark'); App.seleccionarSeccion('configuracion'); try { renderizarHistorial(); renderizarPapelera(); } catch (e) { } window.scrollTo(0, 0); return 1; })()`);
+      await dormir(800);
+      await captura(cdp, 'configuracion-movil.png');
+    } else {
+      console.log('\n(No se pudieron capturar Informes y Configuración: falta App.seleccionarSeccion).');
+    }
 
     // ── La copia estática para que Jorge la abra y cambie de tema ──
     //    Se recarga en ancho de PC y se vuelve a montar, para que el DOM que se

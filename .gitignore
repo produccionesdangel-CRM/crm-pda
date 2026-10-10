@@ -16,3 +16,7 @@ pruebas/*.zip
 # Lo que SÍ se versiona es el generador y el medidor (pruebas\preview-clay.mjs, preview\medir-clay.py).
 preview/*.png
 preview/*.html
+
+# Scripts momentáneos de depuración dentro de pruebas\ (los que empiezan con guion bajo).
+# No son pruebas del proyecto: se borran cuando termina el diagnóstico.
+pruebas/_*

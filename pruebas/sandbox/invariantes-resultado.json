@@ -1,7 +1,7 @@
 {
-  "cuando": "2026-10-09T05:07:44.750Z",
-  "sello": "2026-10-08.25",
-  "sha256Caja": "d3bd53facf1daa9ec4ee35bd6edda78219cad555c30a2fdeabae284b7624252e",
+  "cuando": "2026-10-10T03:15:08.346Z",
+  "sello": "2026-10-09.33",
+  "sha256Caja": "153a1193f67b96072276016a7795645a933ca49e4ad68b8b43384ff70befa589",
   "base": {
     "huella": "f263f2dc3f5be872",
     "sumaAPagar": 30000,
