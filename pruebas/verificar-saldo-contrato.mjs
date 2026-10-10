@@ -106,7 +106,13 @@ const SEMILLA = `
     contratos: [ { id: 'con-1', clienteId: 'cli-1', clienteNombre: 'Paola Peña', festejado: 'Alissa Mota XV',
       tipo: 'paquete', paqueteId: 'paq-1', serviciosIds: [], precioBase: 8950, precioFinal: 6900, descuentoMonto: 0,
       cargos: [], pagos: [ { id: 'pag-1', monto: 6900, fecha: '2026-08-25T18:50:00', codigo: 'PDA-9001', nota: 'Pago registrado por $6,900' } ],
-      estado: 'Completado', fechaEvento: '2026-05-23', horaEvento: '17:00', fechaContrato: '2026-01-15', notas: '' } ] },
+      estado: 'Completado', fechaEvento: '2026-05-23', horaEvento: '17:00', fechaContrato: '2026-01-15', notas: '' },
+      /* El MISMO caso, aparte, para probar el flujo de corrección sin que lo toquen las
+         otras pruebas (botón del catálogo + registrar el anticipo con su fecha). */
+      { id: 'con-3', clienteId: 'cli-1', clienteNombre: 'Paola Peña', festejado: 'Otra Fiesta XV',
+      tipo: 'paquete', paqueteId: 'paq-1', serviciosIds: [], precioBase: 8950, precioFinal: 6900, descuentoMonto: 0,
+      cargos: [], pagos: [ { id: 'pag-3', monto: 6900, fecha: '2026-08-25T18:50:00', codigo: 'PDA-9003', nota: 'Pago registrado por $6,900' } ],
+      estado: 'Completado', fechaEvento: '2026-06-20', horaEvento: '17:00', fechaContrato: '2026-02-01', notas: '' } ] },
     /* Un contrato viejo SIN precio capturado. */
     { id: 'cli-2', nombre: 'Sin Precio', telefono: '8780000000', email: 'sp@correo.com', estado: 'Activo', fechaRegistro: '2026-01-01',
     contratos: [ { id: 'con-2', clienteId: 'cli-2', clienteNombre: 'Sin Precio', festejado: 'Prueba',
@@ -222,7 +228,96 @@ async function main() {
     revisar(pesos(cambio.total) === 8500, 'y el ajuste viejo desaparece: queda 5,000 + el cargo de 3,500');
     revisar(/Ajuste registrado/.test(cambio.textoPrecios) === false, 'ya no muestra el ajuste');
 
-    console.log('\n5) Un contrato NUEVO toma el precio del catálogo');
+    console.log('\n5) EL FLUJO DE CORRECCIÓN: botón del catálogo + registrar el anticipo con su fecha');
+    const boton = JSON.parse(await evaluar(cdp, `(function () {
+      cerrarModal();
+      editarContrato('cli-1', 'con-3');
+      var b = document.getElementById('btn-usar-precio-catalogo');
+      return JSON.stringify({ hay: !!b, texto: b ? b.textContent.replace(/\\s+/g, ' ').trim() : '' });
+    })()`));
+    console.log('   botón: "' + boton.texto + '"');
+    revisar(boton.hay === true, 'el botón para adoptar el precio del catálogo existe');
+    revisar(/8,950/.test(boton.texto), 'dice a qué precio va a quedar');
+
+    const aplicado = JSON.parse(await evaluar(cdp, `(function () {
+      document.getElementById('btn-usar-precio-catalogo').click();
+      var dialogo = document.getElementById('btn-confirmar-financiero');
+      var texto = dialogo ? (document.querySelector('#modal-body .advertencia-eliminar') || {}).textContent : '';
+      var pidio = !!dialogo;
+      if (dialogo) dialogo.click();
+      var base = JSON.parse(${LEER_modal});
+      base.pidioConfirmacion = pidio;
+      base.aviso = (texto || '').replace(/\\s+/g, ' ').trim().substring(0, 460);
+      return JSON.stringify(base);
+    })()`));
+    console.log('   aviso: "' + aplicado.aviso + '"');
+    console.log('   ahora: base ' + aplicado.base + ' · total ' + aplicado.total + ' · saldo ' + aplicado.saldo);
+    revisar(aplicado.pidioConfirmacion === true, 'pide confirmación antes de cambiar el precio');
+    revisar(/pagó el cliente|reg[íi]stralo como pago/.test(aplicado.aviso), 'el aviso explica qué hacer con el anticipo');
+    revisar(pesos(aplicado.base) === 8950 && pesos(aplicado.total) === 8950 && pesos(aplicado.saldo) === 2050,
+      'el precio queda en 8,950 y el saldo pendiente pasa a 2,050 (falta registrar el anticipo)');
+    revisar(/Ajuste registrado/.test(aplicado.textoPrecios) === false, 'el ajuste viejo ya no se aplica');
+
+    console.log('\n5b) Guardar el precio corregido');
+    await evaluar(cdp, `(function () { document.getElementById('form-contrato').requestSubmit(); return 1; })()`);
+    await dormir(800);
+    /* La fecha del evento es pasada, así que el CRM pide confirmación: se confirma. */
+    const guardado1 = JSON.parse(await evaluar(cdp, `(function () {
+      var b = document.getElementById('btn-confirmar-financiero');
+      var pidio = !!b;
+      if (b) b.click();
+      var c = clientes[0].contratos.filter(function (x) { return x.id === 'con-3'; })[0];
+      var tot = calcularTotalesContrato(c);
+      return JSON.stringify({ pidio: pidio, precioBase: c.precioBase, precioFinal: c.precioFinal, saldo: tot.saldoPendiente, pagos: c.pagos.length });
+    })()`));
+    await dormir(400);
+    console.log('   guardado: base ' + guardado1.precioBase + ' · final ' + guardado1.precioFinal + ' · saldo ' + guardado1.saldo + ' (pagos ' + guardado1.pagos + ')');
+    revisar(guardado1.precioFinal === 8950, 'el contrato quedó guardado en 8,950 (el ajuste viejo ya no está)');
+    revisar(guardado1.saldo === 2050, 'y el saldo pendiente queda en 2,050: falta registrar el anticipo');
+
+    console.log('\n5c) Registrar el anticipo de 2,050 con su fecha real');
+    const pago = JSON.parse(await evaluar(cdp, `(function () {
+      editarContrato('cli-1', 'con-3');
+      document.getElementById('contrato-nuevo-pago').value = '2050';
+      document.getElementById('contrato-nuevo-pago-fecha').value = '2026-03-15';
+      document.getElementById('btn-agregar-pago').click();
+      /* Si el CRM avisa algo del pago, se confirma como lo haría Jorge. */
+      var b = document.getElementById('btn-confirmar-financiero');
+      var aviso = b ? (document.querySelector('#modal-body .advertencia-eliminar') || {}).textContent : '';
+      if (b) b.click();
+      var co = clientes[0].contratos.filter(function (x) { return x.id === 'con-3'; })[0];
+      var ultimo = co.pagos[co.pagos.length - 1];
+      var base = JSON.parse(${LEER_modal});
+      base.pagoso = co.pagos.length;
+      base.fecha = ultimo ? String(ultimo.fecha).substring(0, 10) : null;
+      base.fechaCaptura = ultimo ? !!ultimo.fechaCaptura : false;
+      base.monto = ultimo ? ultimo.monto : 0;
+      base.pidioConfirmacion = !!b;
+      base.aviso = (aviso || '').replace(/\\s+/g, ' ').trim().substring(0, 120);
+      return JSON.stringify(base);
+    })()`));
+    console.log('   pagos: ' + pago.pagoso + ' · último: ' + pago.monto + ' del ' + pago.fecha + ' (capturado aparte: ' + pago.fechaCaptura + ')');
+    console.log('   total ' + pago.total + ' · pagado ' + pago.pagado + ' · saldo ' + pago.saldo);
+    revisar(pago.pagoso === 2 && pago.monto === 2050, 'el anticipo quedó registrado como pago de 2,050');
+    revisar(pago.fecha === '2026-03-15', 'guardó la FECHA REAL del anticipo (no la de hoy)');
+    revisar(pago.fechaCaptura === true, 'y anota aparte cuándo se capturó');
+    revisar(pesos(pago.pagado) === 8950 && pesos(pago.saldo) === 0, 'el contrato queda LIQUIDADO: pagado 8,950, saldo $0');
+
+    console.log('\n5d) Estado final del contrato corregido');
+    await evaluar(cdp, `(function () { cerrarModal(); return 1; })()`);
+    await dormir(300);
+    const corregido = JSON.parse(await evaluar(cdp, `(function () {
+      var c = clientes[0].contratos.filter(function (x) { return x.id === 'con-3'; })[0];
+      var tot = calcularTotalesContrato(c);
+      return JSON.stringify({ precioBase: c.precioBase, precioFinal: c.precioFinal, pagos: c.pagos.length,
+        totalPagos: tot.totalPagos, saldo: tot.saldoPendiente, liquidado: c.estado === 'Completado' && tot.saldoPendiente === 0 });
+    })()`));
+    console.log('   base ' + corregido.precioBase + ' · final ' + corregido.precioFinal + ' · pagos ' + corregido.pagos + ' ($' + corregido.totalPagos + ') · saldo ' + corregido.saldo);
+    revisar(corregido.precioBase === 8950 && corregido.precioFinal === 8950, 'el contrato quedó en 8,950 (como lo liquidó el cliente)');
+    revisar(corregido.pagos === 2 && corregido.totalPagos === 8950, 'con sus DOS pagos (2,050 + 6,900 = 8,950)');
+    revisar(corregido.saldo === 0 && corregido.liquidado === true, 'y sigue liquidado');
+
+    console.log('\n6) Un contrato NUEVO toma el precio del catálogo');
     const nuevo = JSON.parse(await evaluar(cdp, `(function () {
       cerrarModal();
       mostrarFormularioContrato('cli-1', 'Nuevo Contrato', null);
@@ -234,7 +329,7 @@ async function main() {
     console.log('   base de un contrato nuevo: ' + nuevo.base);
     revisar(pesos(nuevo.base) === 8950, 'un contrato nuevo usa el precio del catálogo (8,950)');
 
-    console.log('\n6) Un contrato sin precio capturado no se queda en $0');
+    console.log('\n7) Un contrato sin precio capturado no se queda en $0');
     await evaluar(cdp, `(function () { cerrarModal(); editarContrato('cli-2', 'con-2'); return 1; })()`);
     await dormir(300);
     await evaluar(cdp, `(function () { document.getElementById('form-contrato').requestSubmit(); return 1; })()`);

@@ -2948,7 +2948,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-10.2';
+        var BUILD_APP = '2026-10-10.3';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -3711,13 +3711,24 @@ input:focus, select:focus, textarea:focus {
         function crearMovimientoFinanciero(datos) {
             const monto = redondearMonetario(datos.monto);
             const ahora = obtenerFechaHoraActual();
+            /* ─────── @JS-FECHA-MOVIMIENTO (10/10/2026) ───────
+               Un movimiento se puede registrar con una fecha PASADA (Jorge necesitaba
+               registrar el anticipo de un contrato viejo con su fecha real; hasta ahora
+               todo pago quedaba con la fecha del día en que se capturaba).
+               `fecha` = cuándo pasó el movimiento (lo que usan los informes por fecha);
+               `fechaCaptura` = cuándo se capturó en el CRM, si no fue el mismo día. */
+            let fechaMov = ahora;
+            if (datos.fecha && /^\d{4}-\d{2}-\d{2}$/.test(String(datos.fecha))) {
+                fechaMov = String(datos.fecha) + 'T12:00:00';
+            }
             const mov = {
                 id: datos.id || generarIdSeguro(datos.tipo === 'pago' ? 'pag' : 'car'),
                 _opId: datos.opId || generarIdSeguro('op'),
                 tipo: datos.tipo,
                 monto: monto,
                 montoOriginal: monto,
-                fecha: ahora,
+                fecha: fechaMov,
+                fechaCaptura: (fechaMov === ahora) ? null : ahora,
                 fechaCreacion: ahora,
                 creadoPor: nombreUsuarioActual(),
                 creadoPorUsername: usuarioActual ? usuarioActual.username : 'system',
@@ -7145,7 +7156,7 @@ input:focus, select:focus, textarea:focus {
                 os += '<option value="' + s.id + '" data-precio="' + pf + '" data-nombre="' + s.nombre + '" ' + sel + '>' + s.nombre + ' - ' + formatearMoneda(pf) + '</option>';
             });
             if (serviciosIndividualesDisponibles === 0) os += '<option value="" disabled>— No hay servicios con precio —</option>';
-            const html = '<form id="form-contrato">' + cajaAvisosDeFormulario() + '<input type="hidden" id="contrato-id" value="' + (contrato ? contrato.id : '') + '"><input type="hidden" id="contrato-cliente-id" value="' + clienteActualId + '"><div class="form-grupo"><label>Cliente *</label><div class="cliente-wrapper"><div class="buscador-cliente" id="buscador-contrato-cliente-container"><input type="text" class="buscador-input" id="contrato-cliente-input" placeholder="Escribe para buscar cliente..." autocomplete="off" value="' + nombreClienteActual + '"><i class="fas fa-search buscador-icono"></i><div class="buscador-resultados" id="contrato-cliente-resultados"></div></div><button type="button" class="btn-nuevo-cliente-inline" id="btn-nuevo-cliente-contrato"><i class="fas fa-user-plus"></i> Nuevo</button></div></div>' + infoClienteHTML + '<div class="form-grupo"><label>Nombre del festejado *</label><input type="text" id="contrato-festejado" required value="' + (contrato ? contrato.festejado : '') + '"></div><div class="form-grupo"><label>Tipo *</label><select id="contrato-tipo" required><option value="paquete" ' + (tc === 'paquete' ? 'selected' : '') + '>Paquete</option><option value="solo-servicio" ' + (tc === 'solo-servicio' ? 'selected' : '') + '>Solo servicio</option></select></div><div id="seccion-paquete" style="' + (tc === 'paquete' ? '' : 'display:none;') + '"><div class="form-grupo"><label>Paquete *</label><select id="contrato-paquete" ' + (tc === 'paquete' ? 'required' : '') + '>' + op + '</select></div><div class="form-grupo"><label>Servicios adicionales</label><div class="servicios-dropdown" id="servicios-dropdown"><button type="button" class="servicios-dropdown-toggle" id="servicios-dropdown-toggle"><span id="servicios-dropdown-label"><i class="fas fa-plus-circle"></i> Seleccionar servicios</span><i class="fas fa-chevron-down icono"></i></button><div class="servicios-dropdown-panel">' + (serviciosCheckboxes || '<div style="padding:12px;text-align:center;color:var(--color-texto-secundario);font-size:13px;">No hay servicios registrados</div>') + '</div></div><div class="servicios-chips" id="servicios-chips"></div></div></div><div id="seccion-solo-servicio" style="' + (tc === 'solo-servicio' ? '' : 'display:none;') + '"><div class="form-grupo"><label>Servicio *</label><select id="contrato-servicio" ' + (tc === 'solo-servicio' ? 'required' : '') + '>' + os + '</select></div></div><div class="row-2col"><div class="form-grupo"><label>Fecha del evento *</label><input type="date" id="contrato-fecha-evento" required value="' + (contrato ? contrato.fechaEvento : '') + '"></div><div class="form-grupo"><label>Hora del evento</label><select id="contrato-hora-evento"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div><div class="form-grupo"><label>Dirección del evento religioso</label><input type="text" id="contrato-direccion-evento" value="' + (contrato ? contrato.direccionEvento : '') + '"></div><div class="row-2col"><div class="form-grupo"><label>Dirección de la recepción</label><input type="text" id="contrato-direccion-recepcion" value="' + (contrato ? contrato.direccionRecepcion : '') + '"></div><div class="form-grupo"><label>Hora de la recepción</label><select id="contrato-hora-recepcion"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div><div class="resumen-precios-caja" id="contrato-resumen-precios"><div class="titulo-resumen"><i class="fas fa-calculator"></i> Precio base del contrato</div><div id="resumen-precios-filas"></div><div class="fila-resumen total"><span>Total base</span><span class="valor" id="resumen-precios-total">$0</span></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-descuento"><i class="fas fa-tag"></i> Descuento</div><div id="descuento-contenedor"></div><div class="inline-add-movimiento" id="descuento-form"><input type="text" id="descuento-descripcion" placeholder="Descripción del descuento" style="flex:2;"><input type="number" id="descuento-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;"><button type="button" class="btn-agregar btn-agregar-descuento" id="btn-aplicar-descuento"><i class="fas fa-tag"></i> Aplicar</button></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-cargos"><i class="fas fa-plus-circle"></i> Cargos extras</div><div class="inline-add-movimiento"><input type="text" id="cargo-descripcion" placeholder="Descripción del cargo" style="flex:2;"><input type="number" id="cargo-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;"><button type="button" class="btn-agregar btn-agregar-cargo" id="btn-agregar-cargo"><i class="fas fa-plus"></i> Agregar</button></div><div id="cargos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-pagos"><i class="fas fa-coins"></i> Pagos</div><div class="inline-add-movimiento"><input type="number" id="contrato-nuevo-pago" placeholder="Monto del pago" min="0" step="100" style="flex:1;"><button type="button" class="btn-agregar btn-agregar-pago" id="btn-agregar-pago"><i class="fas fa-plus"></i> Registrar pago</button></div><div id="pagos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div></div><div id="coherencia-financiera" style="display:none;"></div><div class="resumen-financiero-caja" id="contrato-resumen-financiero"><div class="titulo"><i class="fas fa-chart-line"></i> Resumen financiero</div><div class="fila"><span class="lbl">Precio base</span><span class="vlr" id="resumen-precio-base">$0</span></div><div class="fila"><span class="lbl">Cargos extras</span><span class="vlr" id="resumen-cargos-total">+$0</span></div><div class="fila desc"><span class="lbl">Descuento</span><span class="vlr" id="resumen-descuento">-$0</span></div><div class="fila total"><span class="lbl">Total a pagar</span><span class="vlr" id="resumen-total">$0</span></div><div class="fila pagado"><span class="lbl">Total pagado</span><span class="vlr" id="resumen-pagado">$0</span></div><div class="fila saldo"><span class="lbl">Saldo pendiente</span><span class="vlr" id="resumen-saldo">$0</span></div></div><div class="form-grupo" style="margin-top:16px;"><label>Estado *</label><select id="contrato-estado" required>' + ESTADOS_CONTRATO.map(function(e) { return '<option value="' + e + '" ' + (contrato && contrato.estado === e ? 'selected' : '') + '>' + e + '</option>'; }).join('') + '</select></div><div class="form-grupo"><label>Notas</label><textarea id="contrato-notas">' + (contrato ? contrato.notas : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-contrato-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar Contrato') + '</button></div></form>';
+            const html = '<form id="form-contrato">' + cajaAvisosDeFormulario() + '<input type="hidden" id="contrato-id" value="' + (contrato ? contrato.id : '') + '"><input type="hidden" id="contrato-cliente-id" value="' + clienteActualId + '"><div class="form-grupo"><label>Cliente *</label><div class="cliente-wrapper"><div class="buscador-cliente" id="buscador-contrato-cliente-container"><input type="text" class="buscador-input" id="contrato-cliente-input" placeholder="Escribe para buscar cliente..." autocomplete="off" value="' + nombreClienteActual + '"><i class="fas fa-search buscador-icono"></i><div class="buscador-resultados" id="contrato-cliente-resultados"></div></div><button type="button" class="btn-nuevo-cliente-inline" id="btn-nuevo-cliente-contrato"><i class="fas fa-user-plus"></i> Nuevo</button></div></div>' + infoClienteHTML + '<div class="form-grupo"><label>Nombre del festejado *</label><input type="text" id="contrato-festejado" required value="' + (contrato ? contrato.festejado : '') + '"></div><div class="form-grupo"><label>Tipo *</label><select id="contrato-tipo" required><option value="paquete" ' + (tc === 'paquete' ? 'selected' : '') + '>Paquete</option><option value="solo-servicio" ' + (tc === 'solo-servicio' ? 'selected' : '') + '>Solo servicio</option></select></div><div id="seccion-paquete" style="' + (tc === 'paquete' ? '' : 'display:none;') + '"><div class="form-grupo"><label>Paquete *</label><select id="contrato-paquete" ' + (tc === 'paquete' ? 'required' : '') + '>' + op + '</select></div><div class="form-grupo"><label>Servicios adicionales</label><div class="servicios-dropdown" id="servicios-dropdown"><button type="button" class="servicios-dropdown-toggle" id="servicios-dropdown-toggle"><span id="servicios-dropdown-label"><i class="fas fa-plus-circle"></i> Seleccionar servicios</span><i class="fas fa-chevron-down icono"></i></button><div class="servicios-dropdown-panel">' + (serviciosCheckboxes || '<div style="padding:12px;text-align:center;color:var(--color-texto-secundario);font-size:13px;">No hay servicios registrados</div>') + '</div></div><div class="servicios-chips" id="servicios-chips"></div></div></div><div id="seccion-solo-servicio" style="' + (tc === 'solo-servicio' ? '' : 'display:none;') + '"><div class="form-grupo"><label>Servicio *</label><select id="contrato-servicio" ' + (tc === 'solo-servicio' ? 'required' : '') + '>' + os + '</select></div></div><div class="row-2col"><div class="form-grupo"><label>Fecha del evento *</label><input type="date" id="contrato-fecha-evento" required value="' + (contrato ? contrato.fechaEvento : '') + '"></div><div class="form-grupo"><label>Hora del evento</label><select id="contrato-hora-evento"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div><div class="form-grupo"><label>Dirección del evento religioso</label><input type="text" id="contrato-direccion-evento" value="' + (contrato ? contrato.direccionEvento : '') + '"></div><div class="row-2col"><div class="form-grupo"><label>Dirección de la recepción</label><input type="text" id="contrato-direccion-recepcion" value="' + (contrato ? contrato.direccionRecepcion : '') + '"></div><div class="form-grupo"><label>Hora de la recepción</label><select id="contrato-hora-recepcion"><option value="">Sin especificar</option>' + OPCIONES_HORA + '</select></div></div><div class="resumen-precios-caja" id="contrato-resumen-precios"><div class="titulo-resumen"><i class="fas fa-calculator"></i> Precio base del contrato</div><div id="resumen-precios-filas"></div><div class="fila-resumen total"><span>Total base</span><span class="valor" id="resumen-precios-total">$0</span></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-descuento"><i class="fas fa-tag"></i> Descuento</div><div id="descuento-contenedor"></div><div class="inline-add-movimiento" id="descuento-form"><input type="text" id="descuento-descripcion" placeholder="Descripción del descuento" style="flex:2;"><input type="number" id="descuento-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;"><button type="button" class="btn-agregar btn-agregar-descuento" id="btn-aplicar-descuento"><i class="fas fa-tag"></i> Aplicar</button></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-cargos"><i class="fas fa-plus-circle"></i> Cargos extras</div><div class="inline-add-movimiento"><input type="text" id="cargo-descripcion" placeholder="Descripción del cargo" style="flex:2;"><input type="number" id="cargo-monto" placeholder="Monto $" min="0" step="100" style="flex:1;max-width:140px;"><button type="button" class="btn-agregar btn-agregar-cargo" id="btn-agregar-cargo"><i class="fas fa-plus"></i> Agregar</button></div><div id="cargos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div></div><div class="seccion-bloque-contrato"><div class="seccion-bloque-titulo titulo-pagos"><i class="fas fa-coins"></i> Pagos</div><div class="inline-add-movimiento"><input type="number" id="contrato-nuevo-pago" placeholder="Monto del pago" min="0" step="100" style="flex:1;"><input type="date" id="contrato-nuevo-pago-fecha" title="Fecha del pago: déjala en hoy si el pago es de hoy, o pon la fecha real si registras un pago anterior" style="flex:0 0 auto;max-width:170px;"><button type="button" class="btn-agregar btn-agregar-pago" id="btn-agregar-pago"><i class="fas fa-plus"></i> Registrar pago</button></div><div id="pagos-lista" class="form-grupo pagos-container" style="max-height:240px;overflow-y:auto;"></div></div><div id="coherencia-financiera" style="display:none;"></div><div class="resumen-financiero-caja" id="contrato-resumen-financiero"><div class="titulo"><i class="fas fa-chart-line"></i> Resumen financiero</div><div class="fila"><span class="lbl">Precio base</span><span class="vlr" id="resumen-precio-base">$0</span></div><div class="fila"><span class="lbl">Cargos extras</span><span class="vlr" id="resumen-cargos-total">+$0</span></div><div class="fila desc"><span class="lbl">Descuento</span><span class="vlr" id="resumen-descuento">-$0</span></div><div class="fila total"><span class="lbl">Total a pagar</span><span class="vlr" id="resumen-total">$0</span></div><div class="fila pagado"><span class="lbl">Total pagado</span><span class="vlr" id="resumen-pagado">$0</span></div><div class="fila saldo"><span class="lbl">Saldo pendiente</span><span class="vlr" id="resumen-saldo">$0</span></div></div><div class="form-grupo" style="margin-top:16px;"><label>Estado *</label><select id="contrato-estado" required>' + ESTADOS_CONTRATO.map(function(e) { return '<option value="' + e + '" ' + (contrato && contrato.estado === e ? 'selected' : '') + '>' + e + '</option>'; }).join('') + '</select></div><div class="form-grupo"><label>Notas</label><textarea id="contrato-notas">' + (contrato ? contrato.notas : '') + '</textarea></div><div class="form-acciones"><button type="button" class="btn-secundario" id="btn-contrato-cancelar">Cancelar</button><button type="submit" class="btn-primario">' + (ee ? 'Actualizar' : 'Guardar Contrato') + '</button></div></form>';
             abrirModal(titulo, html, true);
             let pagosArr = contrato && contrato.pagos ? contrato.pagos.slice() : [];
             let cargosArr = contrato && contrato.cargos ? contrato.cargos.slice() : [];
@@ -7231,6 +7242,14 @@ input:focus, select:focus, textarea:focus {
                         filas += '<div class="fila-resumen" style="display:block;"><span style="color:var(--color-naranja);font-size:11.5px;line-height:1.35;">' +
                             '<i class="fas fa-circle-info"></i> El catálogo hoy lo tiene en ' + formatearMoneda(cat) + '. Este contrato se pactó en ' + formatearMoneda(pb) +
                             ' y así se respeta. Si cambias el paquete o los servicios, se recalcula con el catálogo.</span></div>';
+                    }
+                    /* Botón para ADOPTAR el precio del catálogo a propósito (y soltar el ajuste
+                       viejo del anticipo). Existe porque el CRM nunca debe cambiar el precio de
+                       un contrato solo, pero Jorge sí necesita una forma explícita de corregir
+                       un contrato viejo cuando descubre que quedó mal. */
+                    if (Math.abs(aj) > 0.004 || Math.abs(cat - pb) > 0.004) {
+                        filas += '<div class="fila-resumen" style="display:block;"><button type="button" class="btn-secundario" id="btn-usar-precio-catalogo" style="margin-top:8px;font-size:12px;">' +
+                            '<i class="fas fa-rotate"></i> Usar el precio del catálogo (' + formatearMoneda(cat) + ')...</button></div>';
                     }
                 } else if (tipo === 'paquete') {
                     const ps = el('contrato-paquete');
@@ -7433,10 +7452,48 @@ input:focus, select:focus, textarea:focus {
                 }
                 registrar(false);
             });
+            /* ── Botón "Usar el precio del catálogo" (delegado, porque el bloque de precios se
+               redibuja en cada cambio) ── Ver @JS-PRECIO-PACTADO. */
+            const cajaPrecios = el('resumen-precios-filas');
+            if (cajaPrecios) {
+                cajaPrecios.addEventListener('click', function(ev) {
+                    const b = (ev.target && ev.target.closest) ? ev.target.closest('#btn-usar-precio-catalogo') : null;
+                    if (!b) return;
+                    ev.preventDefault(); ev.stopPropagation();
+                    const cat = precioCatalogoContrato();
+                    const aj = ajustePrecioVigente();
+                    const avisos = [];
+                    avisos.push('El precio de este contrato pasará a <strong>' + formatearMoneda(cat) + '</strong>, el del catálogo de hoy.');
+                    if (Math.abs(aj) > 0.004) {
+                        avisos.push('El ajuste de <strong>' + formatearMoneda(aj) + '</strong> (el anticipo que se descontó del total) dejará de aplicarse.');
+                    }
+                    avisos.push('Si ese anticipo lo <strong>pagó el cliente</strong>, regístralo como pago con su fecha (el campo de fecha está junto al monto): así el contrato vuelve a quedar liquidado y tus informes cuadran. Este cambio queda registrado en el historial.');
+                    confirmarOperacionFinanciera({
+                        titulo: 'Usar el precio del catálogo',
+                        textoIntro: 'Se va a corregir el precio de este contrato:',
+                        avisos: avisos,
+                        textoConfirmar: 'Usar el precio del catálogo',
+                        onConfirmar: function() {
+                            soltarPrecioPactado();
+                            calcularPrecioBaseContrato();
+                            mostrarNotificacion('Precio del catálogo aplicado. Revisa el resumen y guarda el contrato.', 'info');
+                        }
+                    });
+                });
+            }
             el('btn-agregar-pago').addEventListener('click', function() {
                 const mi = el('contrato-nuevo-pago');
                 const m = redondearMonetario(parseFloat(mi.value));
                 if (!isFinite(m) || m <= 0) { mostrarNotificacion('El monto del pago debe ser mayor que cero.', 'warning'); return; }
+                /* Fecha del pago (@JS-FECHA-MOVIMIENTO): vacía = hoy. Sirve para registrar
+                   un anticipo o un pago que se recibió antes de capturarlo. No se admite
+                   fecha futura: un pago que todavía no ocurre descuadraría los informes. */
+                const fEl = el('contrato-nuevo-pago-fecha');
+                const fechaElegida = (fEl && fEl.value) ? String(fEl.value) : '';
+                if (fechaElegida && fechaElegida > obtenerFechaActual()) {
+                    mostrarNotificacion('La fecha del pago no puede ser futura.', 'warning');
+                    return;
+                }
                 const codigoNuevo = generarHuellaPago();
                 const contratoEnEdicion = (contrato && contrato.id) ? contrato : { id: el('contrato-id').value || 'nuevo', pagos: pagosArr, cargos: cargosArr, precioBase: 0, precioFinal: 0 };
                 const firma = firmaMovimiento(contratoEnEdicion.id, m, '', codigoNuevo);
@@ -7447,7 +7504,7 @@ input:focus, select:focus, textarea:focus {
                 );
                 if (revision.accion === 'bloquear') { mostrarErroresSinPerderElFormulario('Pago no permitido', revision.errores, document.getElementById('form-contrato')); return; }
                 const registrar = function(confirmadoConAviso) {
-                    const nuevoPago = crearMovimientoFinanciero({ tipo: 'pago', monto: m, nota: 'Pago registrado', codigo: codigoNuevo, opId: token });
+                    const nuevoPago = crearMovimientoFinanciero({ tipo: 'pago', monto: m, nota: fechaElegida ? ('Pago registrado (capturado el ' + formatearFecha(obtenerFechaActual()) + ')') : 'Pago registrado', codigo: codigoNuevo, opId: token, fecha: fechaElegida || undefined });
                     nuevoPago.firma = firmaMovimiento(contratoEnEdicion.id, m, nuevoPago.fecha, codigoNuevo);
                     if (confirmadoConAviso && revision.avisos.length) {
                         nuevoPago.aceptadoConAviso = true;
