@@ -2948,7 +2948,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-10.1';
+        var BUILD_APP = '2026-10-10.2';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -3350,11 +3350,14 @@ input:focus, select:focus, textarea:focus {
            y lo lee guardarContrato (mismo patrón que descuentoTemporal).
            POR QUÉ EXISTE: el precio de un contrato ya creado NO se puede recalcular con el
            catálogo de hoy. Caso real del 10/10/2026 (contrato de Paola Peña, Paquete Princesa):
-           el contrato estaba pactado en $6,900 y pagado, pero la ventana de edición sumaba el
-           precio de lista del paquete ($8,950) y mostraba un pendiente fantasma de $2,050; al
-           darle "Actualizar" le habría CAMBIADO el precio a $8,950 y le habría creado una
-           deuda inexistente. Mientras no se cambie el paquete, el servicio ni los servicios
-           adicionales, manda el precio pactado. */
+           la base del contrato es $8,950 y su precio FINAL es $6,900 — la diferencia de $2,050
+           viene del campo "Anticipo (pago inicial)" que tenía el CRM original, cuya etiqueta
+           decía "Monto del anticipo que se descuenta del total", o sea que RESTABA el anticipo
+           del precio. Ese campo ya no existe, y por eso el anticipo no aparece en ningún lado.
+           Por eso NO basta con respetar `precioBase`: hay que conservar también la DIFERENCIA
+           entre la base y el final (`ajuste`), o al guardar el total saltaría de $6,900 a
+           $8,950 y le crearía una deuda de $2,050 al revés. Mientras no se cambie el paquete,
+           el servicio ni los servicios adicionales, mandan el precio y el ajuste del contrato. */
         var precioPactadoContrato = null;
         var LOGO_PRECARGADO = new Image();
         LOGO_PRECARGADO.crossOrigin = 'anonymous';
@@ -7081,12 +7084,27 @@ input:focus, select:focus, textarea:focus {
             descuentoTemporal = contrato && contrato.descuentoMonto ? { monto: contrato.descuentoMonto, descripcion: contrato.descuentoDescripcion || 'Descuento aplicado' } : null;
             /* El precio pactado del contrato (ver @JS-PRECIO-PACTADO). Arranca mandando el
                contrato; se suelta en cuanto se cambia el paquete o los servicios.
+               Se guarda también el AJUSTE histórico (final − (base + cargos − descuento)),
+               que es lo que hacía el viejo campo "Anticipo (pago inicial)": sin él, guardar
+               devolvería el total a la base y crearía una deuda inexistente.
                Solo cuando el contrato SÍ tiene precio base capturado: si está en cero es que
                nunca se le puso precio, y ahí lo correcto sigue siendo calcularlo con el
                catálogo en vez de dejar el contrato en $0. */
-            precioPactadoContrato = (ee && (Number(contrato.precioBase) || 0) > 0)
-                ? { base: Math.max(0, Number(contrato.precioBase) || 0), usar: true }
-                : null;
+            if (ee && (Number(contrato.precioBase) || 0) > 0) {
+                const cargosOrig = (contrato.cargos || []).filter(function(x) { return x && !x.eliminado && !x.esNotaEliminacion; })
+                    .reduce(function(s, x) { return s + (Number(x.monto) || 0); }, 0);
+                const descOrig = Number(contrato.descuentoMonto) || 0;
+                const baseOrig = Math.max(0, Number(contrato.precioBase) || 0);
+                const finalOrig = Math.max(0, Number(contrato.precioFinal) || 0);
+                precioPactadoContrato = {
+                    base: baseOrig, final: finalOrig,
+                    cargos: redondearMonetario(cargosOrig), descuento: redondearMonetario(descOrig),
+                    ajuste: redondearMonetario(finalOrig - (baseOrig + cargosOrig - descOrig)),
+                    usar: true
+                };
+            } else {
+                precioPactadoContrato = null;
+            }
             const opcionesClientes = [];
             clientes.forEach(function(c) { opcionesClientes.push({ id: c.id, nombre: c.nombre, telefono: c.telefono || '', email: c.email || '', estado: c.estado || 'Activo', faseOrigen: c.faseOrigen || 'No especificado' }); });
             const clienteActualId = clienteId || '';
@@ -7184,6 +7202,12 @@ input:focus, select:focus, textarea:focus {
                 if (precioPactadoContrato && precioPactadoContrato.usar) return redondearMonetario(precioPactadoContrato.base);
                 return precioCatalogoContrato();
             }
+            /* El ajuste histórico del contrato (el viejo "anticipo" que se descontaba del
+               total). Es 0 en los contratos que cuadran solos. */
+            function ajustePrecioVigente() {
+                if (precioPactadoContrato && precioPactadoContrato.usar) return redondearMonetario(precioPactadoContrato.ajuste || 0);
+                return 0;
+            }
             function calcularPrecioBaseContrato() {
                 const tipo = el('contrato-tipo').value;
                 const pb = precioBaseVigente();
@@ -7193,6 +7217,15 @@ input:focus, select:focus, textarea:focus {
                        hoy dice otra cosa, se avisa: nada de números que no cuadran sin
                        explicación. */
                     filas += '<div class="fila-resumen"><span><strong>Precio pactado de este contrato</strong></span><span class="valor">' + formatearMoneda(pb) + '</span></div>';
+                    /* El ajuste histórico (el viejo "Anticipo (pago inicial)", que se
+                       descontaba del total). Se muestra para que el número no quede sin
+                       explicación: es justo lo que Jorge decía que "no aparece por ningún lado". */
+                    const aj = ajustePrecioVigente();
+                    if (Math.abs(aj) > 0.004) {
+                        filas += '<div class="fila-resumen"><span>Ajuste registrado en este contrato' +
+                            (aj < 0 ? ' <small style="color:var(--color-texto-secundario);">(anticipo que se descontó del total)</small>' : '') +
+                            '</span><span class="valor" style="color:' + (aj < 0 ? 'var(--color-verde)' : 'var(--color-naranja)') + ';">' + formatearMoneda(aj) + '</span></div>';
+                    }
                     const cat = precioCatalogoContrato();
                     if (Math.abs(cat - pb) > 0.004) {
                         filas += '<div class="fila-resumen" style="display:block;"><span style="color:var(--color-naranja);font-size:11.5px;line-height:1.35;">' +
@@ -7271,7 +7304,11 @@ input:focus, select:focus, textarea:focus {
                 const totalCargos = cv.reduce(function(s, c) { return s + (c.monto || 0); }, 0);
                 const totalPagos = pv.reduce(function(s, p) { return s + (p.monto || 0); }, 0);
                 const descMonto = descuentoTemporal ? descuentoTemporal.monto : 0;
-                const totalAPagar = pb + totalCargos - descMonto;
+                /* El ajuste histórico del contrato (el viejo anticipo que se descontaba del
+                   total) entra en el total: es lo que hace que la ventana diga el MISMO
+                   total que la tarjeta en contratos viejos como el de Paola Peña. */
+                const ajuste = ajustePrecioVigente();
+                const totalAPagar = pb + totalCargos - descMonto + ajuste;
                 const saldo = totalAPagar - totalPagos;
                 el('resumen-precio-base').textContent = formatearMoneda(pb);
                 el('resumen-cargos-total').textContent = '+' + formatearMoneda(totalCargos);
@@ -7287,7 +7324,7 @@ input:focus, select:focus, textarea:focus {
                 // Si el estado financiero del formulario no cuadra, se avisa ANTES de guardar.
                 const contenedorAviso = el('coherencia-financiera');
                 if (contenedorAviso) {
-                    const totVivo = calcularTotalesContrato({ pagos: pagosArr, cargos: cargosArr, descuentoMonto: descMonto, precioBase: pb, precioFinal: pb });
+                    const totVivo = calcularTotalesContrato({ pagos: pagosArr, cargos: cargosArr, descuentoMonto: descMonto, precioBase: pb, precioFinal: Math.max(0, pb + ajuste) });
                     if (totVivo.alertas.length > 0) {
                         contenedorAviso.innerHTML = '<div class="advertencia-eliminar" style="background-color:rgba(255,152,0,0.10);border-color:var(--color-naranja);margin-bottom:14px;"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto"><strong style="color:var(--color-naranja);">Revisa las cifras de este contrato</strong><ul style="margin:6px 0 0 18px;padding:0;font-size:12.5px;">' + totVivo.alertas.map(function(a) { return '<li>' + a.mensaje + '</li>'; }).join('') + '</ul><div style="margin-top:6px;font-size:11.5px;color:var(--color-texto-secundario);">Puedes guardar de todos modos: quedará registrado en el historial con esta advertencia.</div></div></div>';
                         contenedorAviso.style.display = 'block';
@@ -7711,7 +7748,8 @@ input:focus, select:focus, textarea:focus {
                         marcar();
                         const baseRevision = Object.assign({}, (ee && contratoOriginal) ? contratoOriginal : {}, {
                             id: ci || 'nuevo', pagos: pagosArr, cargos: cargosArr,
-                            descuentoMonto: descVigente, precioBase: precioProyectado, precioFinal: precioProyectado
+                            descuentoMonto: descVigente, precioBase: precioProyectado,
+                            precioFinal: Math.max(0, precioProyectado + (usarPrecioPactado ? (precioPactadoContrato.ajuste || 0) : 0))
                         });
                         confirmarOperacionFinanciera({
                             titulo: hayGemelo ? 'Posible contrato repetido' : 'Revisa este contrato',
@@ -7767,7 +7805,11 @@ input:focus, select:focus, textarea:focus {
                 }
 
                 // ── Integridad financiera: precioFinal refleja descuento y cargos ──
-                const precioFinal = Math.max(0, pb + totalCargosValidos - descMonto);
+                // El AJUSTE histórico del contrato (el viejo "Anticipo (pago inicial)", que se
+                // descontaba del total) también entra: sin él, guardar un contrato viejo
+                // devolvería su total a la base y le crearía una deuda que no existe.
+                const ajusteFinal = usarPrecioPactado ? (precioPactadoContrato.ajuste || 0) : 0;
+                const precioFinal = Math.max(0, pb + totalCargosValidos - descMonto + ajusteFinal);
 
                 const base = (ee && contratoOriginal) ? JSON.parse(JSON.stringify(contratoOriginal)) : {};
                 const nc = Object.assign({}, base, {

@@ -98,10 +98,13 @@ const SEMILLA = `
       items: [ { tipo: 'personalizado', nombre: 'Cobertura', cantidad: 1 } ] },
     { id: 'paq-2', nombre: 'Paquete Económico', descripcion: 'Básico', precio: 5000, descuento: 0, vigencia: '2026-12-31', fechaRegistro: '2026-01-01', items: [] } ];
   serviciosAdicionales = [ { id: 'srv-1', nombre: 'Cabina 360', precio: 6000, descuento: 0, vigencia: '2026-12-31' } ];
-  /* El contrato se pactó en 6,900 (precioBase y precioFinal) y está PAGADO con 6,900. */
+  /* EL CASO REAL de Jorge (Paola Peña / Paquete Princesa): el contrato tiene base 8,950 y
+     precio final 6,900, SIN descuento capturado. Esa diferencia de 2,050 viene del campo
+     "Anticipo (pago inicial)" que tenía el CRM original, que RESTABA el anticipo del total.
+     Está pagado con 6,900 y por eso la tarjeta lo da por liquidado. */
   clientes = [ { id: 'cli-1', nombre: 'Paola Peña', telefono: '8781112233', email: 'paola@correo.com', estado: 'Activo', fechaRegistro: '2026-01-01',
     contratos: [ { id: 'con-1', clienteId: 'cli-1', clienteNombre: 'Paola Peña', festejado: 'Alissa Mota XV',
-      tipo: 'paquete', paqueteId: 'paq-1', serviciosIds: [], precioBase: 6900, precioFinal: 6900, descuentoMonto: 0,
+      tipo: 'paquete', paqueteId: 'paq-1', serviciosIds: [], precioBase: 8950, precioFinal: 6900, descuentoMonto: 0,
       cargos: [], pagos: [ { id: 'pag-1', monto: 6900, fecha: '2026-08-25T18:50:00', codigo: 'PDA-9001', nota: 'Pago registrado por $6,900' } ],
       estado: 'Completado', fechaEvento: '2026-05-23', horaEvento: '17:00', fechaContrato: '2026-01-15', notas: '' } ] },
     /* Un contrato viejo SIN precio capturado. */
@@ -151,10 +154,11 @@ async function main() {
     const tarjeta = JSON.parse(await evaluar(cdp, `(function () {
       var c = clientes[0].contratos[0];
       var tot = calcularTotalesContrato(c);
-      return JSON.stringify({ precioBase: tot.precioBase, totalAPagar: tot.totalAPagar, totalPagos: tot.totalPagos,
+      return JSON.stringify({ precioBase: tot.precioBase, precioFinal: tot.precioEfectivo, totalAPagar: tot.totalAPagar, totalPagos: tot.totalPagos,
         saldoPendiente: tot.saldoPendiente, liquidado: tot.saldoPendiente === 0 && c.estado === 'Completado' });
     })()`));
-    console.log('   pactado: ' + tarjeta.precioBase + ' · a pagar: ' + tarjeta.totalAPagar + ' · pagado: ' + tarjeta.totalPagos + ' · saldo: ' + tarjeta.saldoPendiente);
+    console.log('   base: ' + tarjeta.precioBase + ' · final: ' + tarjeta.precioFinal + ' · pagado: ' + tarjeta.totalPagos + ' · saldo: ' + tarjeta.saldoPendiente);
+    revisar(tarjeta.precioBase === 8950 && tarjeta.precioFinal === 6900, 'el contrato guarda base 8,950 y final 6,900 (tu caso)');
     revisar(tarjeta.totalAPagar === 6900 && tarjeta.saldoPendiente === 0 && tarjeta.liquidado,
       'la tarjeta está LIQUIDADA (a pagar 6,900, pagado 6,900, saldo 0)');
 
@@ -164,29 +168,44 @@ async function main() {
       return ${LEER_modal};
     })()`));
     console.log('   base: ' + modal.base + ' · total: ' + modal.total + ' · pagado: ' + modal.pagado + ' · saldo: ' + modal.saldo);
-    console.log('   nota: "' + modal.textoPrecios.substring(0, 110) + '"');
-    revisar(pesos(modal.base) === 6900, 'la ventana muestra el precio PACTADO (6,900), no el de lista (8,950)');
-    revisar(pesos(modal.total) === 6900, 'el total a pagar es 6,900');
+    console.log('   nota: "' + modal.textoPrecios.substring(0, 150) + '"');
+    revisar(pesos(modal.base) === 8950, 'muestra la base del contrato (8,950), no la reinven­ta');
+    revisar(/Ajuste registrado en este contrato/.test(modal.textoPrecios) && /2,050/.test(modal.textoPrecios),
+      'muestra el AJUSTE de 2,050 con su explicación (el anticipo que antes no aparecía)');
+    revisar(pesos(modal.total) === 6900, 'el total a pagar es 6,900 (no 8,950)');
     revisar(pesos(modal.saldo) === 0, 'el saldo pendiente es $0 (ya no aparece el pendiente fantasma de 2,050)');
     revisar(pesos(modal.total) - pesos(modal.pagado) === pesos(modal.saldo), 'la resta cuadra: total − pagado = saldo');
-    revisar(pesos(modal.base) === tarjeta.totalAPagar && pesos(modal.saldo) === tarjeta.saldoPendiente,
+    revisar(pesos(modal.total) === tarjeta.totalAPagar && pesos(modal.saldo) === tarjeta.saldoPendiente,
       'la ventana y la tarjeta dicen LO MISMO (una sola verdad)');
-    revisar(modal.notaCatalogo === true, 'avisa que el catálogo hoy lo tiene en otro precio, con explicación');
+    revisar(modal.notaCatalogo === false, 'no avisa del catálogo porque la base sí es la del catálogo');
 
-    console.log('\n3) Guardar SIN tocar nada no le cambia el precio al contrato');
+    console.log('\n3) Guardar SIN tocar nada no le cambia NADA al contrato');
     await evaluar(cdp, `(function () { document.getElementById('form-contrato').requestSubmit(); return 1; })()`);
     await dormir(900);
     const tras = JSON.parse(await evaluar(cdp, `(function () {
       var c = clientes[0].contratos[0];
       var tot = calcularTotalesContrato(c);
-      return JSON.stringify({ precioBase: c.precioBase, precioFinal: c.precioFinal, pagos: c.pagos.length,
-        saldo: tot.saldoPendiente, entregas: c.entregas ? Object.keys(c.entregas).length : 0 });
+      return JSON.stringify({ precioBase: c.precioBase, precioFinal: c.precioFinal, pagos: c.pagos.length, saldo: tot.saldoPendiente });
     })()`));
     console.log('   después de guardar: base ' + tras.precioBase + ' · final ' + tras.precioFinal + ' · saldo ' + tras.saldo);
-    revisar(tras.precioBase === 6900 && tras.precioFinal === 6900,
-      'el precio pactado se conservó (antes se pisaba con 8,950 y creaba una deuda de 2,050)');
+    revisar(tras.precioBase === 8950 && tras.precioFinal === 6900,
+      'el precio y el ajuste se conservaron (antes el total habría saltado a 8,950 y creado una deuda de 2,050)');
     revisar(tras.saldo === 0, 'el contrato sigue liquidado después de guardar');
     revisar(tras.pagos === 1, 'los pagos no se tocaron (sigue el pago de 6,900)');
+
+    console.log('\n3b) Agregar un cargo extra sube el total sin perder el ajuste');
+    const conCargo = JSON.parse(await evaluar(cdp, `(function () {
+      editarContrato('cli-1', 'con-1');
+      /* Se agrega el cargo por la INTERFAZ, como lo haría Jorge. */
+      document.getElementById('cargo-monto').value = '3500';
+      document.getElementById('cargo-descripcion').value = 'Extra de prueba';
+      document.getElementById('btn-agregar-cargo').click();
+      return ${LEER_modal};
+    })()`));
+    console.log('   total con cargo de 3,500: ' + conCargo.total + ' · saldo: ' + conCargo.saldo);
+    revisar(pesos(conCargo.total) === 10400, 'el total pasa a 10,400 (6,900 + 3,500): el ajuste se conserva');
+    await evaluar(cdp, `(function () { cerrarModal(); return 1; })()`);
+    await dormir(200);
 
     console.log('\n4) Si de verdad se cambia el paquete, el precio SÍ se recalcula');
     const cambio = JSON.parse(await evaluar(cdp, `(function () {
@@ -198,7 +217,10 @@ async function main() {
     })()`));
     console.log('   base tras cambiar el paquete: ' + cambio.base + ' · total: ' + cambio.total);
     revisar(pesos(cambio.base) === 5000, 'al cambiar el paquete toma el precio del catálogo (5,000)');
-    revisar(cambio.notaCatalogo === false, 'ya no muestra la nota de precio pactado');
+    /* El cargo de 3,500 del paso 3b sigue en el contrato (los movimientos se guardan al
+       instante), así que el total es 5,000 + 3,500 = 8,500: el AJUSTE viejo ya no está. */
+    revisar(pesos(cambio.total) === 8500, 'y el ajuste viejo desaparece: queda 5,000 + el cargo de 3,500');
+    revisar(/Ajuste registrado/.test(cambio.textoPrecios) === false, 'ya no muestra el ajuste');
 
     console.log('\n5) Un contrato NUEVO toma el precio del catálogo');
     const nuevo = JSON.parse(await evaluar(cdp, `(function () {
