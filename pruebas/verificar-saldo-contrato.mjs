@@ -329,6 +329,91 @@ async function main() {
     console.log('   base de un contrato nuevo: ' + nuevo.base);
     revisar(pesos(nuevo.base) === 8950, 'un contrato nuevo usa el precio del catálogo (8,950)');
 
+    console.log('\n8) Contrato NUEVO con anticipo: la revisión usa el precio del paquete (bug 12/10/2026)');
+    const nuevoAnticipo = JSON.parse(await evaluar(cdp, `(function () {
+      cerrarModal();
+      mostrarFormularioContrato('cli-1', 'Nuevo Contrato', null);
+      document.getElementById('contrato-festejado').value = 'Festejada Nueva';
+      document.getElementById('contrato-fecha-evento').value = '2027-06-15';
+      var ps = document.getElementById('contrato-paquete');
+      ps.value = 'paq-1';
+      ps.dispatchEvent(new Event('change', { bubbles: true }));
+      var totalVentana = document.getElementById('resumen-total').textContent;
+      document.getElementById('contrato-nuevo-pago').value = '1500';
+      document.getElementById('btn-agregar-pago').click();
+      var dialogo = document.getElementById('btn-confirmar-financiero');
+      var aviso = dialogo ? (document.querySelector('#modal-body .advertencia-eliminar') || {}).textContent : '';
+      if (dialogo) dialogo.click();
+      var r = {
+        totalVentana: totalVentana,
+        pidioAdvertencia: !!dialogo,
+        aviso: (aviso || '').replace(/\\s+/g, ' ').trim().substring(0, 130),
+        pagado: document.getElementById('resumen-pagado').textContent,
+        saldo: document.getElementById('resumen-saldo').textContent
+      };
+      document.getElementById('form-contrato').requestSubmit();
+      var b = document.getElementById('btn-confirmar-financiero'); if (b) b.click();
+      return JSON.stringify(r);
+    })()`));
+    console.log('   ventana: total ' + nuevoAnticipo.totalVentana + ' · pagado ' + nuevoAnticipo.pagado + ' · saldo ' + nuevoAnticipo.saldo);
+    console.log('   ¿avisó en falso? ' + nuevoAnticipo.pidioAdvertencia + ' ' + nuevoAnticipo.aviso);
+    revisar(nuevoAnticipo.pidioAdvertencia === false, 'un anticipo de 1,500 sobre un paquete de 6,900 NO avisa en falso');
+    revisar(pesos(nuevoAnticipo.saldo) === 7450, 'el saldo que muestra es el real: 8,950 - 1,500 = 7,450 (antes se revisaba contra $0)');
+
+    console.log('\n8b) Al guardarlo, el anticipo queda bien');
+    await dormir(900);
+    const guardadoNuevo = JSON.parse(await evaluar(cdp, `(function () {
+      var c = clientes[0].contratos.filter(function (x) { return x.festejado === 'Festejada Nueva'; })[0];
+      if (!c) return JSON.stringify({ error: 'no se guardó' });
+      var tot = calcularTotalesContrato(c);
+      return JSON.stringify({ precioBase: c.precioBase, precioFinal: c.precioFinal, pagos: c.pagos.length,
+        totalPagos: tot.totalPagos, totalAPagar: tot.totalAPagar, saldo: tot.saldoPendiente });
+    })()`));
+    console.log('   guardado: base ' + guardadoNuevo.precioBase + ' · final ' + guardadoNuevo.precioFinal + ' · pagos ' + guardadoNuevo.pagos + ' ($' + guardadoNuevo.totalPagos + ') · saldo ' + guardadoNuevo.saldo);
+    revisar(guardadoNuevo.error === undefined, 'el contrato nuevo se guardó');
+    revisar(guardadoNuevo.totalAPagar === 8950 && guardadoNuevo.totalPagos === 1500 && guardadoNuevo.saldo === 7450,
+      'el contrato queda en 8,950 (el precio del paquete) con 1,500 pagados y saldo 7,450');
+
+    console.log('\n9) Cargo y descuento se aplican UNA sola vez al guardar (bug 12/10/2026)');
+    const unCargo = JSON.parse(await evaluar(cdp, `(function () {
+      cerrarModal();
+      editarContrato('cli-1', 'con-3');
+      document.getElementById('cargo-monto').value = '2000';
+      document.getElementById('cargo-descripcion').value = 'Cargo de prueba';
+      document.getElementById('btn-agregar-cargo').click();
+      var b1 = document.getElementById('btn-confirmar-financiero'); if (b1) b1.click();
+      var enVentana = document.getElementById('resumen-total').textContent;
+      document.getElementById('form-contrato').requestSubmit();
+      var b2 = document.getElementById('btn-confirmar-financiero'); if (b2) b2.click();
+      var c = clientes[0].contratos.filter(function (x) { return x.id === 'con-3'; })[0];
+      var tot = calcularTotalesContrato(c);
+      return JSON.stringify({ enVentana: enVentana, precioBase: c.precioBase, precioFinal: c.precioFinal,
+        cargos: tot.totalCargos, totalAPagar: tot.totalAPagar });
+    })()`));
+    console.log('   ventana: ' + unCargo.enVentana + ' → guardado: final ' + unCargo.precioFinal + ' + cargos ' + unCargo.cargos + ' = total ' + unCargo.totalAPagar);
+    revisar(pesos(unCargo.enVentana) === unCargo.totalAPagar, 'el total guardado es EL MISMO que mostró la ventana');
+    revisar(unCargo.totalAPagar === 10950, 'el cargo se cuenta UNA vez (8,950 + 2,000 = 10,950; con el bug daba 12,950)');
+    revisar(unCargo.precioFinal === 8950, 'el precio final NO lleva los cargos dentro');
+
+    const unDescuento = JSON.parse(await evaluar(cdp, `(function () {
+      cerrarModal();
+      editarContrato('cli-1', 'con-3');
+      document.getElementById('descuento-descripcion').value = 'Descuento de prueba';
+      document.getElementById('descuento-monto').value = '900';
+      document.getElementById('btn-aplicar-descuento').click();
+      var b1 = document.getElementById('btn-confirmar-financiero'); if (b1) b1.click();
+      var enVentana = document.getElementById('resumen-total').textContent;
+      document.getElementById('form-contrato').requestSubmit();
+      var b2 = document.getElementById('btn-confirmar-financiero'); if (b2) b2.click();
+      var c = clientes[0].contratos.filter(function (x) { return x.id === 'con-3'; })[0];
+      var tot = calcularTotalesContrato(c);
+      return JSON.stringify({ enVentana: enVentana, precioFinal: c.precioFinal, descuento: c.descuentoMonto,
+        cargos: tot.totalCargos, totalAPagar: tot.totalAPagar });
+    })()`));
+    console.log('   ventana: ' + unDescuento.enVentana + ' → guardado: final ' + unDescuento.precioFinal + ' − descuento ' + unDescuento.descuento + ' + cargos ' + unDescuento.cargos + ' = total ' + unDescuento.totalAPagar);
+    revisar(pesos(unDescuento.enVentana) === unDescuento.totalAPagar, 'con descuento, el total guardado también es el de la ventana');
+    revisar(unDescuento.totalAPagar === 10050, 'el descuento se aplica UNA vez (8,950 − 900 + 2,000 = 10,050)');
+
     console.log('\n7) Un contrato sin precio capturado no se queda en $0');
     await evaluar(cdp, `(function () { cerrarModal(); editarContrato('cli-2', 'con-2'); return 1; })()`);
     await dormir(300);

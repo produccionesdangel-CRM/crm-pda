@@ -2951,7 +2951,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-10.6';
+        var BUILD_APP = '2026-10-12.1';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -7331,10 +7331,18 @@ input:focus, select:focus, textarea:focus {
                 const descOrig = Number(contrato.descuentoMonto) || 0;
                 const baseOrig = Math.max(0, Number(contrato.precioBase) || 0);
                 const finalOrig = Math.max(0, Number(contrato.precioFinal) || 0);
+                /* El ajuste se guarda EXPLÍCITO en el contrato (`ajusteAnticipo`) desde el
+                   12/10/2026. En los contratos viejos que no lo traen se deduce con la fórmula
+                   histórica (que sí daba por hecho que los cargos venían dentro del precio
+                   final, como se guardaban antes); al volver a guardarlos quedan migrados.
+                   Sin esto, un cargo se confundía con un "anticipo" descontado. */
+                const ajuste = (typeof contrato.ajusteAnticipo === 'number')
+                    ? redondearMonetario(contrato.ajusteAnticipo)
+                    : redondearMonetario(finalOrig - (baseOrig + cargosOrig - descOrig));
                 precioPactadoContrato = {
                     base: baseOrig, final: finalOrig,
                     cargos: redondearMonetario(cargosOrig), descuento: redondearMonetario(descOrig),
-                    ajuste: redondearMonetario(finalOrig - (baseOrig + cargosOrig - descOrig)),
+                    ajuste: ajuste,
                     usar: true
                 };
             } else {
@@ -7442,6 +7450,29 @@ input:focus, select:focus, textarea:focus {
             function ajustePrecioVigente() {
                 if (precioPactadoContrato && precioPactadoContrato.usar) return redondearMonetario(precioPactadoContrato.ajuste || 0);
                 return 0;
+            }
+            /* ─────── @JS-ESTADO-FORMULARIO (12/10/2026) ───────
+               Estado financiero VIVO del formulario: es el que se usa para validar un PAGO o un
+               CARGO mientras el contrato todavía no se guarda.
+               POR QUÉ: antes se validaba contra el contrato GUARDADO, que en un contrato nuevo
+               vale $0. Así, un anticipo de $1,500 sobre un paquete de $6,900 se revisaba contra
+               un total de $0 y el CRM avisaba "este contrato ya está liquidado… saldo a favor del
+               cliente" con "Precio del contrato $0 / Total del contrato $0". Lo reportó Jorge el
+               12/10/2026: "en la creación del contrato los pagos iniciales no están contemplando
+               el costo del paquete". El cálculo final ya estaba bien; lo que estaba mal era la
+               revisión previa. */
+            function estadoFinancieroDelFormulario() {
+                const pb = precioBaseVigente();
+                const ajuste = ajustePrecioVigente();
+                return {
+                    pagos: pagosArr,
+                    cargos: cargosArr,
+                    descuentoMonto: descuentoTemporal ? (Number(descuentoTemporal.monto) || 0) : (contrato ? (Number(contrato.descuentoMonto) || 0) : 0),
+                    precioBase: pb,
+                    /* Igual que el resumen que se ve en pantalla y que lo que se guarda:
+                       los cargos y el descuento los aplica calcularTotalesContrato. */
+                    precioFinal: Math.max(0, pb + ajuste)
+                };
             }
             function calcularPrecioBaseContrato() {
                 const tipo = el('contrato-tipo').value;
@@ -7637,7 +7668,7 @@ input:focus, select:focus, textarea:focus {
                 if (!isFinite(m) || m <= 0) { mostrarNotificacion('El monto del cargo debe ser mayor que cero.', 'warning'); return; }
                 const token = obtenerTokenOperacionPago('form-contrato-cargo');
                 const revision = validarMovimientoFinanciero(
-                    { pagos: pagosArr, cargos: cargosArr, descuentoMonto: descuentoTemporal ? descuentoTemporal.monto : (contrato ? contrato.descuentoMonto : 0), precioBase: contrato ? contrato.precioBase : 0, precioFinal: contrato ? contrato.precioFinal : 0 },
+                    estadoFinancieroDelFormulario(),
                     { tipo: 'cargo', monto: m, opId: token }
                 );
                 if (revision.accion === 'bloquear') { mostrarErroresSinPerderElFormulario('Cargo no permitido', revision.errores, document.getElementById('form-contrato')); return; }
@@ -7723,7 +7754,7 @@ input:focus, select:focus, textarea:focus {
                 const firma = firmaMovimiento(contratoEnEdicion.id, m, '', codigoNuevo);
                 const token = obtenerTokenOperacionPago('form-contrato');
                 const revision = validarMovimientoFinanciero(
-                    { pagos: pagosArr, cargos: cargosArr, descuentoMonto: descuentoTemporal ? descuentoTemporal.monto : (contrato ? contrato.descuentoMonto : 0), precioBase: contrato ? contrato.precioBase : 0, precioFinal: contrato ? contrato.precioFinal : 0 },
+                    estadoFinancieroDelFormulario(),
                     { tipo: 'pago', monto: m, opId: token }
                 );
                 if (revision.accion === 'bloquear') { mostrarErroresSinPerderElFormulario('Pago no permitido', revision.errores, document.getElementById('form-contrato')); return; }
@@ -7796,8 +7827,10 @@ input:focus, select:focus, textarea:focus {
                 const item = arreglo[indiceReal];
                 if (!item || item.eliminado) { mostrarNotificacion('Ese movimiento ya estaba anulado.', 'info'); return; }
 
-                const contratoActual = (contrato && contrato.id) ? contrato : { id: el('contrato-id').value || 'nuevo', pagos: pagosArr, cargos: cargosArr, precioBase: 0, precioFinal: 0 };
-                const datosFinancieros = { descuentoMonto: descuentoTemporal ? descuentoTemporal.monto : (contrato ? contrato.descuentoMonto : 0), precioBase: contrato ? contrato.precioBase : 0, precioFinal: contrato ? contrato.precioFinal : 0 };
+                /* Los saldos de este aviso salen del MISMO estado que la ventana
+                   (@JS-ESTADO-FORMULARIO): en un contrato que todavía no se guarda, usar los
+                   datos guardados daba saldos en $0. */
+                const datosFinancieros = estadoFinancieroDelFormulario();
                 const totAntes = calcularTotalesContrato(Object.assign({ pagos: pagosArr, cargos: cargosArr }, datosFinancieros));
                 const montoItem = Number(item.montoOriginal !== undefined ? item.montoOriginal : item.monto) || 0;
                 // Se recalcula el escenario "después de anular" con los mismos datos, sin fórmulas a mano.
@@ -8085,12 +8118,17 @@ input:focus, select:focus, textarea:focus {
                     return;
                 }
 
-                // ── Integridad financiera: precioFinal refleja descuento y cargos ──
-                // El AJUSTE histórico del contrato (el viejo "Anticipo (pago inicial)", que se
-                // descontaba del total) también entra: sin él, guardar un contrato viejo
-                // devolvería su total a la base y le crearía una deuda que no existe.
+                // ── Integridad financiera del precio final ──
+                // `precioFinal` es el precio pactado (con el ajuste histórico del viejo
+                // "Anticipo (pago inicial)" si lo tiene): NO lleva los cargos ni el descuento,
+                // porque calcularTotalesContrato() los aplica por su lado
+                // (total = precioFinal + cargos − descuento).
+                // ANTES sí se les sumaba aquí, y como el cálculo los volvía a aplicar, un cargo
+                // de $3,500 se contaba DOS VECES: la ventana decía $10,400 y el contrato quedaba
+                // en $13,900 (bug de dinero que reportó Jorge el 12/10/2026). Lo mismo pasaba con
+                // el descuento y también inflaba el informe de "paquetes vendidos".
                 const ajusteFinal = usarPrecioPactado ? (precioPactadoContrato.ajuste || 0) : 0;
-                const precioFinal = Math.max(0, pb + totalCargosValidos - descMonto + ajusteFinal);
+                const precioFinal = Math.max(0, pb + ajusteFinal);
 
                 const base = (ee && contratoOriginal) ? JSON.parse(JSON.stringify(contratoOriginal)) : {};
                 const nc = Object.assign({}, base, {
@@ -8099,6 +8137,9 @@ input:focus, select:focus, textarea:focus {
                     fechaEvento: fe, horaEvento: he || null, direccionEvento: de,
                     horaRecepcion: hr || null, direccionRecepcion: dr,
                     precioBase: pb, precioFinal: precioFinal,
+                    /* El ajuste queda guardado EXPLÍCITO para que al volver a abrir el contrato
+                       no haya que deducirlo (y no se confunda con un cargo). */
+                    ajusteAnticipo: redondearMonetario(ajusteFinal),
                     descuentoMonto: descMonto, descuentoDescripcion: descDesc,
                     pagos: pagosFinales, cargos: cargosFinales,
                     notas: not, fechaContrato: (base.fechaContrato || obtenerFechaActual()), estado: est,
