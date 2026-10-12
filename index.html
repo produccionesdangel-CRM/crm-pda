@@ -2951,7 +2951,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-12.2';
+        var BUILD_APP = '2026-10-12.3';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -3365,6 +3365,9 @@ input:focus, select:focus, textarea:focus {
         var firebaseIntervalId = null;
         var estadoSync = { conectado: false, modo: 'local' };
         var ultimaActualizacionRemota = null;
+        /* Se pone en true cuando la nube cambió mientras la pestaña estaba dormida: la recarga se
+           aplica al volver (ver @JS-DESPERTAR), no mientras está en segundo plano. */
+        var recargaRemotaPendiente = false;
         var cambiosPendientes = false;
         var mesActualCal = new Date().getMonth();
         var anoActualCal = new Date().getFullYear();
@@ -4623,6 +4626,7 @@ input:focus, select:focus, textarea:focus {
                         limpiarEntidadesSucias();
                         cambiosPendientes = false;
                         ultimaActualizacionRemota = new Date().toISOString();
+                        guardarVersionRemota(ultimaActualizacionRemota);
                         actualizarEstadoSync('online', 'Guardado');
                         sincronizandoFirebase = false;
                         return true;
@@ -4651,6 +4655,7 @@ input:focus, select:focus, textarea:focus {
 
                 // BLOQUE 6: Limpiar
                 ultimaActualizacionRemota = ahora;
+                guardarVersionRemota(ahora);
                 cambiosPendientes = false;
                 limpiarEntidadesSucias();
                 if (descartados > 0) {
@@ -4684,6 +4689,17 @@ input:focus, select:focus, textarea:focus {
         /* ═══════════════════════════════════════════════════════════ */
         // ─────── @JS-RESPALDO-PREVIO (v4.8) ───────
         // Copia de seguridad local automática antes de cualquier carga destructiva desde la nube.
+        /* ─────── @JS-ARRANQUE-RAPIDO (12/10/2026) ───────
+           Guarda en esta PC la versión de la nube que ya se sincronizó. Con eso, al abrir o al
+           volver a la pestaña se puede preguntar SOLO la versión y, si no cambió, no leer nada
+           (antes se leían las 9 colecciones en cada arranque). */
+        var CLAVE_VERSION_REMOTA = '__pda_version_remota__';
+        function guardarVersionRemota(v) {
+            try { if (v) localStorage.setItem(CLAVE_VERSION_REMOTA, String(v)); } catch (e) { }
+        }
+        function leerVersionRemota() {
+            try { return localStorage.getItem(CLAVE_VERSION_REMOTA) || null; } catch (e) { return null; }
+        }
         function crearRespaldoSeguridadLocal(motivo) {
             try {
                 const respaldo = {
@@ -4846,6 +4862,30 @@ input:focus, select:focus, textarea:focus {
             try {
                 actualizarEstadoSync('syncing', 'Leyendo datos de la nube...');
 
+                /* ─────── @JS-ARRANQUE-RAPIDO (12/10/2026) ───────
+                   Antes de leer las 9 colecciones se pregunta SOLO la versión. Si es la misma que
+                   ya se sincronizó en esta PC y no hay cambios locales pendientes, los datos
+                   locales YA son los de la nube y no se lee nada más.
+                   Es lo que hace rápido el "volver a la pestaña", que es justo cuando Jorge
+                   sentía que el CRM se quedaba congelado hasta un minuto. */
+                if (!forzar) {
+                    try {
+                        const vSnap = await database.ref('version').once('value');
+                        const vData = vSnap.val() || {};
+                        const versionRemota = vData.ultimaActualizacion || null;
+                        const versionLocal = leerVersionRemota();
+                        if (versionRemota && versionLocal && versionRemota === versionLocal && !hayEntidadesSucias()) {
+                            ultimaActualizacionRemota = versionRemota;
+                            console.log('[arranque] La nube no cambió desde la última sincronización: se usan los datos locales (0 lecturas de colecciones).');
+                            actualizarEstadoSync('online', 'Al día');
+                            return true;
+                        }
+                        console.log('[arranque] La nube cambió (o es la primera vez): se leen las colecciones.');
+                    } catch (e) {
+                        console.warn('[arranque] No se pudo consultar la versión; se carga normal.', e);
+                    }
+                }
+
                 // Salvaguarda 1: nunca descartar cambios locales que aún no se han subido.
                 if (hayEntidadesSucias() && !forzar) {
                     const pendientes = contarEntidadesSucias();
@@ -4934,9 +4974,10 @@ input:focus, select:focus, textarea:focus {
                     paquetes = paquetesR; serviciosAdicionales = serviciosR; prospectos = prospectosR; clientes = clientesR; tareas = tareasR;
                     normalizarRegistros();
                     ultimaActualizacionRemota = datosAntiguos.ultimaActualizacion || null;
+                    guardarVersionRemota(ultimaActualizacionRemota);
                     cambiosPendientes = false;
                     await guardarDatosLocal();
-                    renderizarTodo();
+                    renderizarTrasCargarNube();
                     actualizarEstadoSync('online', 'Migrado');
                     paquetes.forEach(function(p) { if (p) marcarSucia('paquetes', p.id); });
                     serviciosAdicionales.forEach(function(s) { if (s) marcarSucia('serviciosAdicionales', s.id); });
@@ -4984,10 +5025,13 @@ input:focus, select:focus, textarea:focus {
                 if (Array.isArray(historialRemoto) && historialRemoto.length > 0) historial = historialRemoto;
                 if (Array.isArray(papeleraRemota)) papelera = papeleraRemota;
                 ultimaActualizacionRemota = versionData && versionData.ultimaActualizacion ? versionData.ultimaActualizacion : null;
+                /* Se recuerda en esta PC qué versión se sincronizó: es lo que permite que el
+                   próximo arranque no tenga que leer las colecciones (@JS-ARRANQUE-RAPIDO). */
+                guardarVersionRemota(ultimaActualizacionRemota);
                 cambiosPendientes = false;
                 limpiarEntidadesSucias();
                 await guardarDatosLocal();
-                renderizarTodo();
+                renderizarTrasCargarNube();
                 actualizarEstadoSync('online', 'Cargado');
                 return true;
             } catch (error) {
@@ -5011,6 +5055,15 @@ input:focus, select:focus, textarea:focus {
                 if (!ultimaActualizacionRemota) { ultimaActualizacionRemota = remoto; return; }
                 if (remoto <= ultimaActualizacionRemota) return;
                 if (recargaRemotaEnCurso) return;
+                /* ─────── @JS-DESPERTAR (12/10/2026) ───────
+                   Si la pestaña está dormida (segundo plano) NO se recarga ahora: hacerlo en ese
+                   momento, con el navegador frenando la pestaña, es justo lo que Jorge sentía como
+                   "se quedó congelado hasta un minuto". Se deja anotado y se hace al volver. */
+                if (typeof document !== 'undefined' && document.hidden) {
+                    recargaRemotaPendiente = true;
+                    console.log('[despertar] Hay cambios en la nube; se aplicarán al volver a la pestaña.');
+                    return;
+                }
                 if (hayEntidadesSucias()) {
                     mostrarNotificacion('Otro usuario guardó cambios. Conservas ' + contarEntidadesSucias() + ' cambio(s) local(es) sin subir.', 'warning');
                     return;
@@ -10509,6 +10562,90 @@ input:focus, select:focus, textarea:focus {
                 await procesarSesionGoogle(user);
             });
         }
+        /* ═══════════════════════════════════════════════════════════
+           @JS-DESPERTAR (12/10/2026)
+           Jorge deja el CRM abierto todo el día y al volver la pantalla se quedaba "congelada"
+           hasta un minuto. Aquí se detecta el despertar de la pestaña y se hace, EN ORDEN y SIN
+           BLOQUEAR nada:
+             1. Se avisa en pantalla ("Despertando…") para que se vea que está vivo.
+             2. Se deja pintar ese aviso (setTimeout 0) ANTES de cualquier trabajo pesado.
+             3. Solo entonces se reconecta y se revisa la nube (con @JS-ARRANQUE-RAPIDO, que es
+                una sola lectura cuando no ha cambiado nada).
+             4. Cada paso se mide y se deja en la consola con el prefijo [despertar], para poder
+                diagnosticar si algún día vuelve a tardar.
+           No hace nada si el navegador no lo soporta o si la pestaña no estuvo dormida de verdad. */
+        var despertarRegistrado = false;
+        var despertarOcultoDesde = 0;
+        var despertarUltimo = 0;
+        function alDespertar() {
+            var ahora = Date.now();
+            var dormida = despertarOcultoDesde ? (ahora - despertarOcultoDesde) : 0;
+            despertarOcultoDesde = 0;
+            /* El foco y el visibilitychange llegan casi juntos: se atiende una sola vez. */
+            if (ahora - despertarUltimo < 1500) return;
+            despertarUltimo = ahora;
+            var t0 = performance.now();
+            try {
+                actualizarEstadoSync(estadoSync.conectado ? 'syncing' : 'offline', 'Despertando…');
+            } catch (e) { }
+            setTimeout(function () {
+                console.log('[despertar] aviso pintado en ' + Math.round(performance.now() - t0) + ' ms (la pestaña estuvo ' + Math.round(dormida / 1000) + ' s en segundo plano)');
+                var paso = Promise.resolve();
+                /* Paso 1: reconectar si Firebase no está inicializado (pestaña que despertó). */
+                paso = paso.then(function () {
+                    if (typeof firebaseInicializado !== 'undefined' && !firebaseInicializado && typeof inicializarFirebase === 'function') {
+                        var a = performance.now();
+                        return inicializarFirebase().then(function () { console.log('[despertar] reconexión: ' + Math.round(performance.now() - a) + ' ms'); });
+                    }
+                });
+                /* Paso 2: revisar la nube. Si había cambios anotados mientras dormía, se aplican. */
+                paso = paso.then(function () {
+                    if (typeof database === 'undefined' || !database || estadoSync.modo !== 'firebase') return;
+                    var b = performance.now();
+                    var habia = recargaRemotaPendiente;
+                    recargaRemotaPendiente = false;
+                    return cargarDesdeFirebase(habia).then(function () {
+                        console.log('[despertar] revisión de la nube: ' + Math.round(performance.now() - b) + ' ms' + (habia ? ' (con cambios pendientes)' : ''));
+                    });
+                });
+                paso.then(function () {
+                    var total = Math.round(performance.now() - t0);
+                    console.log('[despertar] total: ' + total + ' ms');
+                    try { actualizarEstadoSync(estadoSync.conectado ? 'online' : 'offline', estadoSync.conectado ? 'Conectado' : 'Modo local'); } catch (e) { }
+                    if (total > 8000) mostrarNotificacion('El CRM tardó ' + Math.round(total / 1000) + ' s en ponerse al día. Ya está listo.', 'warning');
+                }).catch(function (e) {
+                    console.warn('[despertar] algo falló:', e);
+                    try { actualizarEstadoSync(estadoSync.conectado ? 'online' : 'offline', estadoSync.conectado ? 'Conectado' : 'Modo local'); } catch (e2) { }
+                });
+            }, 0);
+        }
+        function registrarDespertar() {
+            if (despertarRegistrado || typeof document === 'undefined' || !document.addEventListener) return;
+            despertarRegistrado = true;
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) { despertarOcultoDesde = Date.now(); return; }
+                alDespertar();
+            });
+            window.addEventListener('focus', function () {
+                if (typeof document !== 'undefined' && document.hidden) return;
+                alDespertar();
+            });
+        }
+
+        /* ─────── @JS-DIBUJO-MINIMO (12/10/2026) ───────
+           Después de cargar de la nube se dibuja SOLO la sección que Jorge está viendo (el menú
+           ya dibuja cada sección al entrar: cambiarSeccion + renderizarSeccion). Antes se
+           redibujaba TODO el CRM, que es trabajo que nadie alcanza a ver y alarga la espera. */
+        function renderizarTrasCargarNube() {
+            try {
+                if (typeof actualizarFiltrosInformes === 'function') actualizarFiltrosInformes();
+                var activa = document.querySelector('.seccion.active');
+                var id = activa ? String(activa.id || '').replace('seccion-', '') : '';
+                if (id && typeof renderizarSeccion === 'function') { renderizarSeccion(id); return; }
+            } catch (e) { console.warn('No se pudo dibujar la sección activa; se dibuja todo.', e); }
+            if (typeof renderizarTodo === 'function') renderizarTodo();
+        }
+
         function esperarUsuarioAutenticado() {
             return new Promise(function(resolve) {
                 if (!auth) { resolve(null); return; }
@@ -10539,6 +10676,7 @@ input:focus, select:focus, textarea:focus {
             conectarEventListenersApp();
             actualizarSelloBuild();
             renderizarTodo();
+            registrarDespertar();
             setTimeout(function() { inicializarFirebase(); }, 400);
         }
         function aplicarRestriccionesPorRol() {
@@ -17423,6 +17561,91 @@ input:focus, select:focus, textarea:focus {
         return [{ nombre: 'Datos', filas: filas }];
     }
 
+    /* ─────── @JS-LECTOR-EN-HILO (12/10/2026) ───────
+       Leer un Excel (.xlsx/.ods) es lo MÁS CARO del CRM: el descompresor DEFLATE está hecho a
+       mano en JavaScript y va bit por bit, así que con un archivo grande bloquea la pantalla
+       entera. Jorge reportó que al volver a la pestaña el CRM se quedaba "como congelado" hasta
+       un minuto (y NO tenía archivo enlazado, así que aquí queda cubierto el otro camino: subir
+       o arrastrar un archivo).
+
+       Aquí la lectura se manda a un HILO APARTE (Web Worker) creado AL VUELO con el MISMO código
+       del CRM: se serializan las funciones del lector (una sola fuente de verdad, no se duplica
+       nada). Así la pantalla nunca se congela, aunque el archivo sea enorme.
+       Si el navegador no puede crear el hilo, se lee en el hilo principal como antes. */
+    var trabajadorLector = null;
+    var fuenteLectorCache = null;
+    function fuenteDelLector() {
+        if (fuenteLectorCache) return fuenteLectorCache;
+        /* `decodificar` NO va en la lista: es una función interna de leerZip, y leerZip ya se
+           manda completa. `columnaANumero` sí es de módulo y la usa leerXlsxBuffer. */
+        var piezas = [inflar, leerZip, desescaparXml, estilosDeFecha, columnaANumero,
+            leerXlsxBuffer, leerOdsBuffer, decodificarTexto, textoAFilas, leerBuffer];
+        var codigo = 'var MAX_FILAS = ' + Number(MAX_FILAS) + ';\n' +
+            piezas.map(function (f) { return String(f); }).join('\n\n') +
+            '\nself.onmessage = function (ev) {\n' +
+            '  var t0 = Date.now();\n' +
+            '  try {\n' +
+            '    var hojas = leerBuffer(ev.data.nombre, ev.data.buffer);\n' +
+            '    self.postMessage({ ok: true, hojas: hojas, ms: Date.now() - t0 });\n' +
+            '  } catch (e) {\n' +
+            '    self.postMessage({ ok: false, error: (e && e.message) ? e.message : String(e) });\n' +
+            '  }\n' +
+            '};\n';
+        fuenteLectorCache = codigo;
+        return codigo;
+    }
+    function crearTrabajadorLector() {
+        if (trabajadorLector !== null) return trabajadorLector;
+        try {
+            if (typeof Worker === 'undefined' || typeof Blob === 'undefined' || typeof URL === 'undefined' || !URL.createObjectURL) {
+                trabajadorLector = false; return false;
+            }
+            var blob = new Blob([fuenteDelLector()], { type: 'application/javascript' });
+            var url = URL.createObjectURL(blob);
+            trabajadorLector = new Worker(url);
+            URL.revokeObjectURL(url);
+            return trabajadorLector;
+        } catch (e) {
+            console.warn('No se pudo crear el hilo para leer archivos; se leerá en el hilo principal.', e);
+            trabajadorLector = false;
+            return false;
+        }
+    }
+    /* Lee el archivo en un hilo aparte. Devuelve una promesa con las hojas. */
+    function leerBufferEnHilo(nombreArchivo, buffer) {
+        var w = crearTrabajadorLector();
+        if (!w) {
+            try { return Promise.resolve(leerBuffer(nombreArchivo, buffer)); }
+            catch (e) { return Promise.reject(e); }
+        }
+        return new Promise(function (resolver, rechazar) {
+            var transferido = false;
+            var alMensaje = function (ev) {
+                w.removeEventListener('message', alMensaje);
+                w.removeEventListener('error', alError);
+                var d = ev.data || {};
+                if (d.ok) resolver(d.hojas);
+                else rechazar(new Error(d.error || 'No se pudo leer el archivo.'));
+            };
+            var alError = function (ev) {
+                w.removeEventListener('message', alMensaje);
+                w.removeEventListener('error', alError);
+                /* Si el hilo se cayó, se intenta en el hilo principal; si el buffer ya se
+                   transfirió no se puede recuperar, así que se avisa en claro. */
+                if (transferido) { rechazar(new Error('No se pudo leer el archivo en el hilo aparte. Vuelve a intentarlo.')); return; }
+                try { resolver(leerBuffer(nombreArchivo, buffer)); }
+                catch (e) { rechazar(e); }
+            };
+            w.addEventListener('message', alMensaje);
+            w.addEventListener('error', alError);
+            try { w.postMessage({ nombre: nombreArchivo, buffer: buffer }, [buffer]); transferido = true; }
+            catch (e) {
+                try { w.postMessage({ nombre: nombreArchivo, buffer: buffer }); }
+                catch (e2) { w.removeEventListener('message', alMensaje); w.removeEventListener('error', alError); rechazar(e2); }
+            }
+        });
+    }
+
     /* ─── ODF de LibreOffice (.ods) ───
        También es un ZIP con XML: la tabla vive en content.xml. */
     function textoDeOds(fragmento) {
@@ -18078,11 +18301,12 @@ input:focus, select:focus, textarea:focus {
                 rechazar(new Error('No se pudo leer el archivo' + (nombre ? ' (' + nombre + ')' : '') + '.' + pista));
             };
             lector.onload = function () {
-                try {
-                    var hojas = leerBuffer(archivo.name, lector.result);
+                /* La lectura va a un hilo aparte (@JS-LECTOR-EN-HILO): así la pantalla no se
+                   congela aunque el archivo sea grande. */
+                leerBufferEnHilo(archivo.name, lector.result).then(function (hojas) {
                     if (!hojas.length || !hojas[0].filas.length) { rechazar(new Error('El archivo no tiene datos que se puedan leer.')); return; }
                     resolver(hojas);
-                } catch (e) { rechazar(e); }
+                }).catch(function (e) { rechazar(e); });
             };
             lector.readAsArrayBuffer(archivo);
         });
@@ -18635,6 +18859,9 @@ input:focus, select:focus, textarea:focus {
         abrirPanel: abrirPanel,
         procesarArchivo: procesarArchivo,
         leerBuffer: leerBuffer,
+        /* Para el banco de pruebas: la lectura en hilo aparte (@JS-LECTOR-EN-HILO). */
+        leerBufferEnHilo: leerBufferEnHilo,
+        usandoHilo: function () { return !!crearTrabajadorLector(); },
         leerXlsxBuffer: leerXlsxBuffer,
         leerOdsBuffer: leerOdsBuffer,
         inflar: inflar,
