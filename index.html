@@ -2951,7 +2951,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-12.1';
+        var BUILD_APP = '2026-10-12.2';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -4376,6 +4376,16 @@ input:focus, select:focus, textarea:focus {
                     if (!Array.isArray(co.pagos)) co.pagos = [];
                     if (!Array.isArray(co.cargos)) co.cargos = [];
                     if (!Array.isArray(co.descuentos)) co.descuentos = [];
+                    /* ─────── @JS-ID-MOVIMIENTOS (12/10/2026) ───────
+                       Los pagos y cargos capturados en versiones muy tempranas del CRM se
+                       guardaron SIN identificador, y sin él no se pueden anular: el botón de
+                       eliminar ni siquiera aparecía en su renglón (Jorge se topó el 12/10/2026
+                       con un pago ficticio de $50 que no podía quitar). Se les asigna uno aquí,
+                       una sola vez, al cargar los datos; a partir de ahí se anulan normalmente. */
+                    co.pagos.concat(co.cargos).forEach(function (m) {
+                        if (!m || typeof m !== 'object') return;
+                        if (!m.id) m.id = generarIdSeguro(m.tipo === 'cargo' ? 'car' : 'pag');
+                    });
                 });
             });
             (paquetes || []).forEach(function (p) { if (p && !Array.isArray(p.items)) p.items = []; });
@@ -7392,6 +7402,13 @@ input:focus, select:focus, textarea:focus {
             abrirModal(titulo, html, true);
             let pagosArr = contrato && contrato.pagos ? contrato.pagos.slice() : [];
             let cargosArr = contrato && contrato.cargos ? contrato.cargos.slice() : [];
+            /* @JS-ID-MOVIMIENTOS: red de seguridad al abrir la ventana. Los movimientos de
+               versiones muy tempranas no traían identificador y sin él no se pueden anular
+               (el botón de eliminar no aparecía). Si al cargar los datos no se les asignó,
+               se les asigna aquí. */
+            pagosArr.concat(cargosArr).forEach(function (m) {
+                if (m && typeof m === 'object' && !m.id) m.id = generarIdSeguro(m.tipo === 'cargo' ? 'car' : 'pag');
+            });
             let pagosRecientes = [];
             const el = function(id) { return document.getElementById(id); };
             inicializarBuscadorClienteContrato(opcionesClientes, clienteActualId);

@@ -414,6 +414,65 @@ async function main() {
     revisar(pesos(unDescuento.enVentana) === unDescuento.totalAPagar, 'con descuento, el total guardado también es el de la ventana');
     revisar(unDescuento.totalAPagar === 10050, 'el descuento se aplica UNA vez (8,950 − 900 + 2,000 = 10,050)');
 
+    console.log('\n10) Un pago VIEJO sin identificador se puede anular (caso del pago ficticio de $50)');
+    const viejo = JSON.parse(await evaluar(cdp, `(function () {
+      /* Un contrato como los de versiones muy tempranas: pagos y cargos SIN id. */
+      clientes[0].contratos.push({ id: 'con-viejo', clienteId: 'cli-1', clienteNombre: 'Paola Peña', festejado: 'Contrato Viejo',
+        tipo: 'paquete', paqueteId: 'paq-1', serviciosIds: [], precioBase: 8950, precioFinal: 8950, descuentoMonto: 0,
+        cargos: [ { monto: 1190, fecha: '2026-09-04 21:35', nota: 'Cargo viejo sin id' } ],
+        pagos: [ { monto: 3000, fecha: '2026-09-04 21:34', nota: 'Anticipo registrado por $3,000' },
+                 { monto: 50, fecha: '2026-09-04 21:35', nota: 'Pago registrado por $50' } ],
+        estado: 'Pendiente', fechaEvento: '2026-11-28', fechaContrato: '2026-09-04', notas: '' });
+      normalizarRegistros();      /* así se cargan los datos de verdad */
+      var co = clientes[0].contratos.filter(function (x) { return x.id === 'con-viejo'; })[0];
+      var idsTrasNormalizar = { pagos: co.pagos.map(function (p) { return !!p.id; }), cargos: co.cargos.map(function (c) { return !!c.id; }) };
+      editarContrato('cli-1', 'con-viejo');
+      var filas = [].slice.call(document.querySelectorAll('#pagos-lista .pago-item, #cargos-lista .cargo-item'));
+      var conBoton = filas.filter(function (f) { return !!f.querySelector('.btn-eliminar-item'); }).length;
+      var p50 = clientes[0].contratos.filter(function (x) { return x.id === 'con-viejo'; })[0].pagos.filter(function (p) { return p.monto === 50; })[0];
+      return JSON.stringify({
+        filas: filas.length,
+        conBoton: conBoton,
+        idAsignado: !!p50.id,
+        idsAlCargar: idsTrasNormalizar
+      });
+    })()`));
+    console.log('   movimientos: ' + viejo.filas + ' · con botón de anular: ' + viejo.conBoton + ' · ids al cargar: ' + JSON.stringify(viejo.idsAlCargar));
+    revisar(viejo.idAsignado === true, 'el pago viejo de $50 recibe identificador al cargar los datos');
+    revisar(viejo.idsAlCargar.cargos.every(Boolean) === true, 'y el cargo viejo también');
+    revisar(viejo.conBoton === viejo.filas, 'TODOS los movimientos muestran el botón de anular (antes los viejos no lo tenían)');
+
+    console.log('\n10b) Se anula y el saldo se recompone');
+    const anulado = JSON.parse(await evaluar(cdp, `(function () {
+      var co = clientes[0].contratos.filter(function (x) { return x.id === 'con-viejo'; })[0];
+      var p50 = co.pagos.filter(function (p) { return p.monto === 50; })[0];
+      var saldoAntes = document.getElementById('resumen-saldo').textContent;
+      PDA.eliminarMovimientoContrato('pago', p50.id);
+      var btn = document.getElementById('btn-confirmar-anulacion');
+      var pidio = !!btn;
+      if (btn) {
+        document.getElementById('motivo-anulacion').value = 'Monto ficticio de ajuste de una version vieja del CRM';
+        btn.click();
+      }
+      var co2 = clientes[0].contratos.filter(function (x) { return x.id === 'con-viejo'; })[0];
+      var anuladoPago = co2.pagos.filter(function (p) { return p.monto === 50 && p.eliminado; })[0];
+      var tot2 = calcularTotalesContrato(co2);
+      return JSON.stringify({
+        pidioMotivo: pidio, saldoAntes: saldoAntes,
+        quedoAnulado: !!anuladoPago,
+        motivo: anuladoPago ? String(anuladoPago.motivoAnulacion || anuladoPago.motivo || '') : '',
+        montoOriginal: anuladoPago ? anuladoPago.montoOriginal : null,
+        pagosEnLista: co2.pagos.length, pagosValidos: tot2.pagosValidos.length,
+        totalPagos: tot2.totalPagos, saldo: tot2.saldoPendiente
+      });
+    })()`));
+    console.log('   saldo antes: ' + anulado.saldoAntes + ' · pagos en el contrato: ' + anulado.pagosEnLista + ' (válidos: ' + anulado.pagosValidos + ') · pagado ' + anulado.totalPagos + ' · saldo ' + anulado.saldo);
+    revisar(anulado.pidioMotivo === true, 'pide el motivo de la anulación (queda registrado)');
+    revisar(anulado.quedoAnulado === true, 'el pago ficticio quedó ANULADO (no se borra: conserva su monto original)');
+    revisar(anulado.montoOriginal === 50 && /ficticio/i.test(anulado.motivo), 'conserva el monto original y el motivo escrito');
+    revisar(anulado.pagosValidos === 1 && anulado.totalPagos === 3000, 'el saldo ya no cuenta los $50 (quedan los 3,000 reales)');
+    revisar(anulado.saldo === 8950 - 3000 + 1190, 'el saldo se recompone con el cargo (8,950 + 1,190 − 3,000 = 7,140)');
+
     console.log('\n7) Un contrato sin precio capturado no se queda en $0');
     await evaluar(cdp, `(function () { cerrarModal(); editarContrato('cli-2', 'con-2'); return 1; })()`);
     await dormir(300);
