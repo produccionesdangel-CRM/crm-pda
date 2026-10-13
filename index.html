@@ -2951,7 +2951,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-12.3';
+        var BUILD_APP = '2026-10-13.1';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -7077,7 +7077,7 @@ input:focus, select:focus, textarea:focus {
             const opcionActual = opcionesVinculacion.find(function(o) { return o.id === clienteActualId; });
             const textoActual = opcionActual ? opcionActual.nombre + (opcionActual.tipo === 'cliente' ? ' (Cliente)' : ' (Prospecto)') : '';
             const ft = tarea ? tarea.fecha : (fechaPreconfigurada || obtenerFechaActual());
-            const ec = tarea && tarea.completada ? 'checked' : '';
+            const ec = tarea && tareaCompletada(tarea) ? 'checked' : '';
             const descVal = tarea ? escapeHTML(tarea.descripcion || '') : '';
             const notasVal = tarea ? escapeHTML(tarea.notas || '') : '';
             const tipoVal = tarea ? tarea.tipo : (TIPOS_TAREA[0] || '');
@@ -7182,6 +7182,8 @@ input:focus, select:focus, textarea:focus {
                         const ta = Object.assign({}, prev, { tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, hora: hora, todoElDia: esTodoElDia, fechaModificacion: obtenerFechaHoraActual() });
                         if (comp && !prev.fechaCompletada) ta.fechaCompletada = obtenerFechaHoraActual();
                         else if (!comp) ta.fechaCompletada = null;
+                        /* @JS-ESTADO-TAREA: se deja también el formato del motor de campañas. */
+                        marcarEstadoTarea(ta, comp, nombreUsuarioActual());
                         tareas[idx] = ta;
                         const cambios = calcularDiff(copiaAnt, ta, { camposIgnorados: ['descripcion', 'notas', 'fechaModificacion', 'fechaCompletada'], etiquetas: { tipo: 'Tipo', clienteId: 'Cliente vinculado', fecha: 'Fecha programada', hora: 'Hora', todoElDia: 'Todo el día', completada: 'Completada' }, formatters: { clienteId: function(v) { return v ? obtenerNombreCliente(v) : '(sin vincular)'; }, fecha: function(v) { return v ? formatearFecha(v) : ''; }, hora: function(v) { return v ? v : 'A cualquier hora del día'; }, todoElDia: function(v) { return v ? 'Sí' : 'No'; }, completada: function(v) { return v ? 'Sí' : 'No'; } } });
                         const cambioTexto = copiaAnt.descripcion !== ta.descripcion || copiaAnt.notas !== ta.notas;
@@ -7190,6 +7192,8 @@ input:focus, select:focus, textarea:focus {
                 } else {
                     const nt = { id: generarId(), tipo: tipo, clienteId: clid, fecha: fecha, descripcion: desc, notas: not, completada: comp, hora: hora, todoElDia: esTodoElDia, fechaCreacion: obtenerFechaHoraActual(), fechaModificacion: obtenerFechaHoraActual(), creadaPor: nombreUsuarioActual() };
                     if (comp) nt.fechaCompletada = obtenerFechaHoraActual();
+                    /* @JS-ESTADO-TAREA: se deja también el formato del motor de campañas. */
+                    marcarEstadoTarea(nt, comp, nombreUsuarioActual());
                     tareas.push(nt);
                     registrarHistorial('tarea', 'crear', 'Se creó tarea: "' + (desc || tipo) + '"' + (clid ? ' vinculada' : ''), { id: nt.id, nombre: desc || tipo });
                 }
@@ -7219,13 +7223,52 @@ input:focus, select:focus, textarea:focus {
             });
         }
 
+        /* ─────── @JS-COMPLETAR-DESDE-CALENDARIO (12/10/2026) ───────
+           Jorge: "quiero que independientemente de donde se realice la tarea, ya sea en la ficha
+           de la campaña o en la sección de calendario, aparezcan como completadas o pendientes
+           según sea el caso".
+           Cuando la tarea es de una CAMPAÑA, completarla desde el calendario entra por el MISMO
+           camino que la ficha de la campaña (`App.modalCompletarTarea`): así el programa de
+           seguimiento también avanza y queda anotado el resultado del contacto. Si ese diálogo no
+           está disponible, se completa directo con el motor. En los dos casos el estado queda
+           escrito en los DOS formatos (@JS-ESTADO-TAREA) y se ve igual en todas las pantallas. */
+        function completarTareaDeCampania(id) {
+            try {
+                if (typeof App !== 'undefined' && App && typeof App.modalCompletarTarea === 'function') {
+                    App.modalCompletarTarea(id);
+                    return true;
+                }
+                const m = (typeof App !== 'undefined' && App && App.motor) ? App.motor : null;
+                if (m && typeof m.completarTarea === 'function') {
+                    const r = m.completarTarea(id, {});
+                    if (r && r.ok) mostrarNotificacion('Tarea completada', 'success');
+                    else if (r && r.errores && r.errores[0]) mostrarNotificacion(r.errores[0], 'warning');
+                    return true;
+                }
+            } catch (e) { console.warn('No se pudo completar por el camino de la campaña:', e); }
+            return false;
+        }
         function alternarCompletarTarea(id) {
             const t = tareas.find(function(x) { return x.id === id; }); if (!t) return;
-            t.completada = !t.completada;
-            if (t.completada) { t.fechaCompletada = obtenerFechaHoraActual(); mostrarNotificacion('Tarea completada', 'success'); }
-            else { t.fechaCompletada = null; mostrarNotificacion('Tarea reabierta', 'info'); }
+            const vaACompletar = !tareaCompletada(t);
+            /* Tareas de campaña: mismo camino que la ficha de la campaña. */
+            if (tareaEsDeCampania(t)) {
+                if (vaACompletar) {
+                    if (completarTareaDeCampania(id)) { renderizarCalendario(); renderizarInformes(); renderizarProspectos(); renderizarClientes(); return; }
+                } else {
+                    try {
+                        const m = (typeof App !== 'undefined' && App && App.motor) ? App.motor : null;
+                        if (m && typeof m.reabrirTarea === 'function') {
+                            m.reabrirTarea(id); mostrarNotificacion('Tarea reabierta', 'info');
+                            renderizarCalendario(); renderizarInformes(); renderizarProspectos(); renderizarClientes(); return;
+                        }
+                    } catch (e) { console.warn('No se pudo reabrir por el camino de la campaña:', e); }
+                }
+            }
+            marcarEstadoTarea(t, vaACompletar, nombreUsuarioActual());
+            if (vaACompletar) mostrarNotificacion('Tarea completada', 'success');
+            else mostrarNotificacion('Tarea reabierta', 'info');
             t.fechaModificacion = obtenerFechaHoraActual();
-            t.completadaPor = nombreUsuarioActual();
             marcarSucia('tareas', id);
             guardarDatos(); renderizarCalendario(); renderizarInformes(); renderizarClientes(); renderizarProspectos();
         }
@@ -7233,15 +7276,19 @@ input:focus, select:focus, textarea:focus {
         function toggleTareaDesdeDetalle(id, completada) {
             const t = tareas.find(function(x) { return x.id === id; });
             if (!t) return;
-            t.completada = completada;
-            if (completada) { t.fechaCompletada = obtenerFechaHoraActual(); mostrarNotificacion('Tarea completada', 'success'); }
-            else { t.fechaCompletada = null; mostrarNotificacion('Tarea reabierta', 'info'); }
+            if (tareaEsDeCampania(t) && completada) {
+                if (completarTareaDeCampania(id)) { renderizarCalendario(); renderizarInformes(); renderizarProspectos(); renderizarClientes(); return; }
+            }
+            marcarEstadoTarea(t, completada, nombreUsuarioActual());
+            if (completada) mostrarNotificacion('Tarea completada', 'success');
+            else mostrarNotificacion('Tarea reabierta', 'info');
             t.fechaModificacion = obtenerFechaHoraActual();
             marcarSucia('tareas', id);
             guardarDatos(); renderizarCalendario(); renderizarInformes(); renderizarClientes(); renderizarProspectos();
-            const clid = t.clienteId || '';
-            if (clid.indexOf('pro_') === 0) verDetalleProspecto(clid.substring(4));
-            else if (clid) verDetalleCliente(clid);
+            /* El vínculo puede venir de un prospecto (tareas de campaña) o de un cliente. */
+            const v = entidadDeTarea(t);
+            if (v && v.tipo === 'prospecto') verDetalleProspecto(v.entidad.id);
+            else if (v && v.tipo === 'cliente') verDetalleCliente(v.entidad.id);
         }
 
         function verDetalleCliente(clienteId) {
@@ -7352,19 +7399,20 @@ input:focus, select:focus, textarea:focus {
 
         function construirListaTareasVinculadas(tareasVinc) {
             const total = tareasVinc.length;
-            const completadas = tareasVinc.filter(function(t) { return t.completada; }).length;
+            const completadas = tareasVinc.filter(function(t) { return tareaCompletada(t); }).length;
             const pendientes = total - completadas;
             let html = '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-tasks"></i> Tareas (' + total + ')' + (total > 0 ? ' <span style="font-weight:400;color:var(--color-texto-secundario);font-size:11px;">· ' + pendientes + ' pendientes · ' + completadas + ' completadas</span>' : '') + '</div>';
             if (total === 0) html += '<div class="detalle-lista-vacia">No hay tareas vinculadas todavía.</div>';
             else {
-                const ordenadas = tareasVinc.slice().sort(function(a, b) { if (a.completada !== b.completada) return a.completada ? 1 : -1; return (b.fecha || '').localeCompare(a.fecha || ''); });
+                const ordenadas = tareasVinc.slice().sort(function(a, b) { const ca = tareaCompletada(a), cb = tareaCompletada(b); if (ca !== cb) return ca ? 1 : -1; return (b.fecha || '').localeCompare(a.fecha || ''); });
                 html += '<div class="detalle-lista">';
                 ordenadas.forEach(function(t) {
-                    const cl = t.completada ? 'tarea-completada' : 'tarea-pendiente';
+                    const hecha = tareaCompletada(t);
+                    const cl = hecha ? 'tarea-completada' : 'tarea-pendiente';
                     const fechaProg = formatearFecha(t.fecha);
                     const fechaCreacion = t.fechaCreacion ? formatearFechaHora(t.fechaCreacion) : '—';
                     const fechaCompletada = t.fechaCompletada ? formatearFechaHora(t.fechaCompletada) : null;
-                    html += '<div class="tarea-vinculada ' + cl + '"><div class="tarea-check"><input type="checkbox" ' + (t.completada ? 'checked' : '') + ' onchange="toggleTareaDesdeDetalle(\'' + t.id + '\', this.checked)"></div><div class="tarea-info"><div class="tarea-tipo">' + (t.tipo || 'Tarea') + '</div><div class="tarea-desc">' + (t.descripcion || 'Sin descripción') + '</div>' + (t.notas ? '<div class="tarea-notas"><i class="fas fa-sticky-note"></i> ' + t.notas + '</div>' : '') + '<div class="tarea-fechas"><span><i class="fas fa-calendar-plus"></i> Creada: ' + fechaCreacion + '</span><span><i class="fas fa-calendar-check"></i> Programada: ' + fechaProg + '</span>' + (fechaCompletada ? '<span style="color:var(--color-verde);"><i class="fas fa-check-circle"></i> Completada: ' + fechaCompletada + '</span>' : '') + '</div></div><div class="tarea-acciones"><button onclick="cerrarModal(); editarTarea(\'' + t.id + '\')" title="Editar"><i class="fas fa-edit"></i></button><button onclick="cerrarModal(); eliminarTarea(\'' + t.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div>';
+                    html += '<div class="tarea-vinculada ' + cl + '"><div class="tarea-check"><input type="checkbox" ' + (hecha ? 'checked' : '') + ' onchange="toggleTareaDesdeDetalle(\'' + t.id + '\', this.checked)"></div><div class="tarea-info"><div class="tarea-tipo">' + (t.tipo || 'Tarea') + '</div><div class="tarea-desc">' + (t.descripcion || 'Sin descripción') + '</div>' + (t.notas ? '<div class="tarea-notas"><i class="fas fa-sticky-note"></i> ' + t.notas + '</div>' : '') + '<div class="tarea-fechas"><span><i class="fas fa-calendar-plus"></i> Creada: ' + fechaCreacion + '</span><span><i class="fas fa-calendar-check"></i> Programada: ' + fechaProg + '</span>' + (hecha ? '<span style="color:var(--color-verde);"><i class="fas fa-check-circle"></i> Completada: ' + (fechaCompletada || t.completadaEn || '—') + '</span>' : '') + '</div></div><div class="tarea-acciones"><button onclick="cerrarModal(); editarTarea(\'' + t.id + '\')" title="Editar"><i class="fas fa-edit"></i></button><button onclick="cerrarModal(); eliminarTarea(\'' + t.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div>';
                 });
                 html += '</div>';
             }
@@ -8583,15 +8631,16 @@ input:focus, select:focus, textarea:focus {
             const tareasCliente = tareas.filter(function(t) { return t.clienteId === clienteId; });
             let tareasHTML = '';
             if (tareasCliente.length > 0) {
-                const completadas = tareasCliente.filter(function(t) { return t.completada; }).length;
+                const completadas = tareasCliente.filter(function(t) { return tareaCompletada(t); }).length;
                 const pendientes = tareasCliente.length - completadas;
-                const tareasOrdenadas = tareasCliente.slice().sort(function(a, b) { if (a.completada !== b.completada) return a.completada ? 1 : -1; return (b.fecha || '').localeCompare(a.fecha || ''); });
+                const tareasOrdenadas = tareasCliente.slice().sort(function(a, b) { const ca = tareaCompletada(a), cb = tareaCompletada(b); if (ca !== cb) return ca ? 1 : -1; return (b.fecha || '').localeCompare(a.fecha || ''); });
                 const filasTareas = tareasOrdenadas.map(function(t) {
-                    const cl = t.completada ? 'tarea-completada' : 'tarea-pendiente';
+                    const hecha = tareaCompletada(t);
+                    const cl = hecha ? 'tarea-completada' : 'tarea-pendiente';
                     const fechaProg = formatearFecha(t.fecha);
                     const fechaCreacion = t.fechaCreacion ? formatearFechaHora(t.fechaCreacion) : '—';
-                    const fechaCompletada = t.fechaCompletada ? formatearFechaHora(t.fechaCompletada) : null;
-                    return '<div class="tarea-vinculada ' + cl + '"><div class="tarea-check"><input type="checkbox" ' + (t.completada ? 'checked' : '') + ' onchange="toggleTareaDesdeDetalle(\'' + t.id + '\', this.checked)"></div><div class="tarea-info"><div class="tarea-tipo">' + (t.tipo || 'Tarea') + '</div><div class="tarea-desc">' + (t.descripcion || 'Sin descripción') + '</div>' + (t.notas ? '<div class="tarea-notas"><i class="fas fa-sticky-note"></i> ' + t.notas + '</div>' : '') + '<div class="tarea-fechas"><span><i class="fas fa-calendar-plus"></i> Creada: ' + fechaCreacion + '</span><span><i class="fas fa-calendar-check"></i> Programada: ' + fechaProg + '</span>' + (fechaCompletada ? '<span style="color:var(--color-verde);"><i class="fas fa-check-circle"></i> Completada: ' + fechaCompletada + '</span>' : '') + '</div></div><div class="tarea-acciones"><button onclick="cerrarModal(); cerrarPanelLateral(); editarTarea(\'' + t.id + '\')" title="Editar"><i class="fas fa-edit"></i></button><button onclick="cerrarModal(); cerrarPanelLateral(); eliminarTarea(\'' + t.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div>';
+                    const fechaCompletada = t.fechaCompletada ? formatearFechaHora(t.fechaCompletada) : (t.completadaEn ? formatearFechaHora(t.completadaEn) : null);
+                    return '<div class="tarea-vinculada ' + cl + '"><div class="tarea-check"><input type="checkbox" ' + (hecha ? 'checked' : '') + ' onchange="toggleTareaDesdeDetalle(\'' + t.id + '\', this.checked)"></div><div class="tarea-info"><div class="tarea-tipo">' + (t.tipo || 'Tarea') + '</div><div class="tarea-desc">' + (t.descripcion || 'Sin descripción') + '</div>' + (t.notas ? '<div class="tarea-notas"><i class="fas fa-sticky-note"></i> ' + t.notas + '</div>' : '') + '<div class="tarea-fechas"><span><i class="fas fa-calendar-plus"></i> Creada: ' + fechaCreacion + '</span><span><i class="fas fa-calendar-check"></i> Programada: ' + fechaProg + '</span>' + (hecha ? '<span style="color:var(--color-verde);"><i class="fas fa-check-circle"></i> Completada: ' + (fechaCompletada || '—') + '</span>' : '') + '</div></div><div class="tarea-acciones"><button onclick="cerrarModal(); cerrarPanelLateral(); editarTarea(\'' + t.id + '\')" title="Editar"><i class="fas fa-edit"></i></button><button onclick="cerrarModal(); cerrarPanelLateral(); eliminarTarea(\'' + t.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div>';
                 }).join('');
                 tareasHTML = '<div class="detalle-seccion detalle-seccion-tareas"><div class="detalle-seccion-titulo"><i class="fas fa-tasks"></i> Tareas del cliente (' + tareasCliente.length + ')' + ' <span class="contador-tareas">· ' + pendientes + ' pendiente' + (pendientes === 1 ? '' : 's') + ' · ' + completadas + ' completada' + (completadas === 1 ? '' : 's') + '</span></div><div class="tareas-lista">' + filasTareas + '</div></div>';
             }
@@ -9031,8 +9080,8 @@ input:focus, select:focus, textarea:focus {
             });
             tareas.forEach(function(t) {
                 if (!enRango(t.fecha)) return;
-                if (filtro === 'pendientes' && t.completada) return;
-                if (filtro === 'completadas' && !t.completada) return;
+                if (filtro === 'pendientes' && tareaCompletada(t)) return;
+                if (filtro === 'completadas' && !tareaCompletada(t)) return;
                 if (filtro === 'contratos') return;
                 if (filtro === 'campanias' && !(t.campaniaId || t.participacionId)) return;
                 bloques.push(bloqueICS({
@@ -9118,14 +9167,16 @@ input:focus, select:focus, textarea:focus {
             // de campaña completada se colaba en la vista de campañas.
             if (ft === 'contratos') { et = []; }
             else if (ft === 'campanias') { ec = []; et = et.filter(function(t) { return !!(t.campaniaId || t.participacionId); }); }
-            else if (ft === 'pendientes') { et = et.filter(function(t) { return !t.completada; }); }
-            else if (ft === 'completadas') { et = et.filter(function(t) { return t.completada; }); }
+            else if (ft === 'pendientes') { et = et.filter(function(t) { return !tareaCompletada(t); }); }
+            else if (ft === 'completadas') { et = et.filter(function(t) { return tareaCompletada(t); }); }
             if (tipoSel !== 'todos') et = et.filter(function(t) { return String(t.tipo || '') === tipoSel; });
             if (b) {
                 ec = ec.filter(function(c) { return String(c.clienteNombre || '').toLowerCase().indexOf(b) !== -1 || String(c.festejado || '').toLowerCase().indexOf(b) !== -1; });
                 et = et.filter(function(t) {
-                    const nc = String(obtenerNombreCliente(t.clienteId) || '').toLowerCase();
-                    return nc.indexOf(b) !== -1 || String(t.descripcion || '').toLowerCase().indexOf(b) !== -1 || String(t.tipo || '').toLowerCase().indexOf(b) !== -1;
+                    /* El buscador toma el nombre del vinculado, venga de clienteId o de
+                       prospectoId (las tareas de campaña), y el título real de la tarea. */
+                    const nc = String(nombreCortoVinculado(t) || obtenerNombreCliente(t.clienteId) || '').toLowerCase();
+                    return nc.indexOf(b) !== -1 || tituloDeTarea(t).toLowerCase().indexOf(b) !== -1 || String(t.tipo || '').toLowerCase().indexOf(b) !== -1;
                 });
             }
             let es = [];
@@ -9144,11 +9195,13 @@ input:focus, select:focus, textarea:focus {
             });
             et.forEach(function(t) {
                 if (usados >= tope) return;
-                const cc = t.completada ? 'evento-completada' : ((t.campaniaId || t.participacionId) ? 'evento-campania' : 'evento-tarea');
-                // En la casilla se ve el TIPO (es corto y cabe). La descripción, que es el
-                // título real de la tarea, se ve en la lista y al abrir la ficha.
-                const etiqueta = String(t.tipo || 'Tarea') + (t.hora ? ' ' + String(t.hora) : '');
-                html += '<div class="evento ' + cc + '" title="' + escapeHTML(String(t.descripcion || t.tipo || '')) + '" onclick="event.stopPropagation(); verDetalleTarea(\'' + t.id + '\')">' + escapeHTML(etiqueta) + '</div>';
+                const cc = tareaCompletada(t) ? 'evento-completada' : ((t.campaniaId || t.participacionId) ? 'evento-campania' : 'evento-tarea');
+                // En la casilla se ve el TIPO (es corto y cabe), con el nombre del prospecto
+                // cuando la tarea viene de una campaña. La descripción, que es el título real
+                // de la tarea, se ve en la lista y al abrir la ficha.
+                const vin = nombreCortoVinculado(t);
+                const etiqueta = String(t.tipo || 'Tarea') + (t.hora ? ' ' + String(t.hora) : '') + (vin ? ' · ' + vin : '');
+                html += '<div class="evento ' + cc + '" title="' + escapeHTML(tituloDeTarea(t) + (vin ? ' — ' + vin : '')) + '" onclick="event.stopPropagation(); verDetalleTarea(\'' + t.id + '\')">' + escapeHTML(etiqueta) + '</div>';
                 usados++;
             });
             es.forEach(function(p) {
@@ -9267,11 +9320,21 @@ input:focus, select:focus, textarea:focus {
                     '<i class="fas fa-chevron-right"></i></div>';
             });
             tareasDia.forEach(function(t) {
-                const clase = 'tarea' + (t.completada ? ' completada' : ((t.campaniaId || t.participacionId) ? ' campania' : ''));
+                const hecha = tareaCompletada(t);
+                const clase = 'tarea' + (hecha ? ' completada' : ((t.campaniaId || t.participacionId) ? ' campania' : ''));
+                /* El título es la descripción (igual que en la lista y en la ficha) y abajo va
+                   A QUIÉN PERTENECE: antes solo se veían el tipo y la descripción, así que las
+                   tareas de campaña parecían no estar vinculadas a nadie. */
+                const vin = entidadDeTarea(t);
+                const camp = t.campaniaId ? nombreCampaniaDia(t.campaniaId) : '';
+                const meta = [
+                    vin ? (vin.entidad.nombre || '') + (vin.tipo === 'prospecto' ? ' (Prospecto)' : '') : 'Sin vincular',
+                    camp ? 'Campaña: ' + camp : ''
+                ].filter(Boolean).join(' · ');
                 items += '<div class="dia-item ' + clase + '" data-dia-item="tarea" data-a="' + t.id + '">' +
-                    '<i class="fas ' + (t.completada ? 'fa-check-circle' : 'fa-tasks') + '"></i><div class="dia-item-texto">' +
-                    '<div class="dia-item-titulo">' + escapeHTML(t.tipo || 'Tarea') + (t.completada ? ' (completada)' : '') + '</div>' +
-                    '<div class="dia-item-meta">' + escapeHTML(t.descripcion || '') + '</div></div>' +
+                    '<i class="fas ' + (hecha ? 'fa-check-circle' : 'fa-tasks') + '"></i><div class="dia-item-texto">' +
+                    '<div class="dia-item-titulo">' + escapeHTML(tituloDeTarea(t)) + (hecha ? ' (completada)' : '') + '</div>' +
+                    '<div class="dia-item-meta">' + escapeHTML(t.tipo || 'Tarea') + ' · ' + escapeHTML(meta) + '</div></div>' +
                     '<i class="fas fa-chevron-right"></i></div>';
             });
             seguimientos.forEach(function(p) {
@@ -9349,16 +9412,69 @@ input:focus, select:focus, textarea:focus {
            final, sin importar el criterio elegido. */
 
         /** El cliente o el prospecto al que está vinculada una tarea (o null). */
-        function entidadDeTarea(t) {
-            if (!t || !t.clienteId) return null;
-            if (String(t.clienteId).indexOf('pro_') === 0) {
-                const p = obtenerProspecto(String(t.clienteId).substring(4));
-                return p ? { tipo: 'prospecto', entidad: p } : null;
+        /* ─────── @JS-VINCULO-TAREA + @JS-ESTADO-TAREA (12/10/2026) ───────
+           Jorge, con pantallazos: "cuando se agrega una tarea a un prospecto automáticamente en
+           una campaña, la tarea también aparece en la sección del calendario pero no aparece
+           vinculada a nadie… si la tarea se cumple dentro de la ficha de la campaña, en el
+           calendario siguen apareciendo como pendientes… quiero que independientemente de dónde
+           se realice la tarea aparezcan como completadas o pendientes según sea el caso".
+
+           Eran DOS causas, y las dos viven aquí:
+           1) VÍNCULO: las tareas que genera el motor de campañas se vinculan por `prospectoId`
+              (y traen `campaniaId`/`participacionId`), pero todo el calendario buscaba el vínculo
+              en `clienteId` (con el prefijo 'pro_'): por eso salían como "Sin vincular".
+           2) ESTADO: en el CRM conviven DOS formas de marcar una tarea como completada. Las
+              capturadas a mano usan `completada` (true/false) + `fechaCompletada` + `completadaPor`;
+              las que genera el motor de campañas usan `estado` ('pendiente'/'completada') +
+              `completadaEn`. Cada pantalla miraba la suya: completar en la campaña dejaba la tarea
+              "pendiente" en el calendario (y al revés, completar en el calendario no se veía en la
+              campaña).
+
+           Aquí se leen LAS DOS formas y se escriben LAS DOS: el estado queda igual en la ficha de
+           la campaña, en el calendario y en la lista. No se reescriben datos viejos: se interpretan
+           los dos campos y a partir de ahora se mantienen sincronizados. */
+        function tareaCompletada(t) {
+            if (!t) return false;
+            if (t.completada === true) return true;
+            return String(t.estado || '') === 'completada';
+        }
+        function tareaEsDeCampania(t) {
+            return !!(t && (t.campaniaId || t.participacionId));
+        }
+        /* Marca o reabre una tarea dejando los DOS formatos de acuerdo. */
+        function marcarEstadoTarea(t, completada, quien) {
+            if (!t) return t;
+            const ahora = obtenerFechaHoraActual();
+            t.completada = !!completada;                         /* tareas capturadas a mano */
+            t.estado = completada ? 'completada' : 'pendiente';  /* tareas del motor de campañas */
+            if (completada) {
+                t.fechaCompletada = t.fechaCompletada || ahora;
+                t.completadaEn = t.completadaEn || t.fechaCompletada;
+                t.completadaPor = quien || t.completadaPor || nombreUsuarioActual();
+            } else {
+                t.fechaCompletada = '';
+                t.completadaEn = '';
             }
-            const c = obtenerCliente(t.clienteId);
-            if (c) return { tipo: 'cliente', entidad: c };
-            const p2 = obtenerProspecto(t.clienteId);
-            return p2 ? { tipo: 'prospecto', entidad: p2 } : null;
+            return t;
+        }
+        function entidadDeTarea(t) {
+            if (!t) return null;
+            if (t.clienteId) {
+                if (String(t.clienteId).indexOf('pro_') === 0) {
+                    const p = obtenerProspecto(String(t.clienteId).substring(4));
+                    return p ? { tipo: 'prospecto', entidad: p } : null;
+                }
+                const c = obtenerCliente(t.clienteId);
+                if (c) return { tipo: 'cliente', entidad: c };
+                const p2 = obtenerProspecto(t.clienteId);
+                if (p2) return { tipo: 'prospecto', entidad: p2 };
+            }
+            /* Tareas generadas por una campaña: el vínculo va en `prospectoId`. */
+            if (t.prospectoId) {
+                const p3 = obtenerProspecto(t.prospectoId);
+                if (p3) return { tipo: 'prospecto', entidad: p3 };
+            }
+            return null;
         }
         /** Nombre corto del vinculado, para la tarjeta y para el título del calendario. */
         function nombreCortoVinculado(t) {
@@ -9366,9 +9482,20 @@ input:focus, select:focus, textarea:focus {
             if (!v) return '';
             return v.entidad.nombre || '';
         }
-        /** ¿La tarea está vinculada a un prospecto? (por el prefijo 'pro_' del id) */
+        /* ─────── @JS-TITULO-TAREA (12/10/2026) ───────
+           Las tareas capturadas a mano guardan el texto en `descripcion`; las que genera el motor
+           de campañas lo guardan en `titulo`. El calendario solo miraba `descripcion`, así que las
+           tareas del programa de seguimiento aparecían como "(tarea sin descripción)".
+           Aquí se toma el que exista. */
+        function tituloDeTarea(t) {
+            if (!t) return 'Tarea';
+            return String(t.descripcion || t.titulo || t.tipo || 'Tarea');
+        }
+        /** ¿La tarea está vinculada a un prospecto? (por el prefijo 'pro_' o por `prospectoId`). */
         function tareaEsDeProspecto(t) {
-            return !!(t && t.clienteId && String(t.clienteId).indexOf('pro_') === 0);
+            if (!t) return false;
+            if (t.clienteId) return String(t.clienteId).indexOf('pro_') === 0;
+            return !!t.prospectoId;
         }
         /** Ficha del cliente/prospecto de la tarea (abre su panel). */
         function abrirFichaVinculadaDeTarea(t) {
@@ -9431,8 +9558,9 @@ input:focus, select:focus, textarea:focus {
         function htmlFichaTarea(t) {
             const v = entidadDeTarea(t);
             const nombreVinc = v ? (v.entidad.nombre || '') : '';
-            const estadoTxt = t.completada ? 'Completada' : 'Pendiente';
-            const claseEstado = t.completada ? 'etiqueta-completado' : 'etiqueta-pendiente';
+            const hechaT = tareaCompletada(t);
+            const estadoTxt = hechaT ? 'Completada' : 'Pendiente';
+            const claseEstado = hechaT ? 'etiqueta-completado' : 'etiqueta-pendiente';
             let campania = '';
             if (t.campaniaId && typeof App !== 'undefined' && App.nombreCampania) {
                 try { campania = String(App.nombreCampania(t.campaniaId) || ''); } catch (e) { campania = ''; }
@@ -9441,7 +9569,7 @@ input:focus, select:focus, textarea:focus {
             const campo = function(l, val) { return '<div class="detalle-campo"><span class="lbl">' + escapeHTML(l) + '</span><span class="val">' + (val ? escapeHTML(String(val)) : 'No especificado') + '</span></div>'; };
 
             let acciones = '<button class="btn-primario" onclick="cerrarModal(); setTimeout(function(){ editarTarea(\'' + t.id + '\'); }, 120)"><i class="fas fa-edit"></i> Editar tarea</button>';
-            acciones += '<button class="btn-verde" onclick="alternarCompletarTarea(\'' + t.id + '\'); setTimeout(function(){ verDetalleTarea(\'' + t.id + '\'); }, 200)"><i class="fas ' + (t.completada ? 'fa-undo' : 'fa-check') + '"></i> ' + (t.completada ? 'Reabrir' : 'Marcar completada') + '</button>';
+            acciones += '<button class="btn-verde" onclick="alternarCompletarTarea(\'' + t.id + '\'); setTimeout(function(){ verDetalleTarea(\'' + t.id + '\'); }, 200)"><i class="fas ' + (hechaT ? 'fa-undo' : 'fa-check') + '"></i> ' + (hechaT ? 'Reabrir' : 'Marcar completada') + '</button>';
             if (v) {
                 if (v.entidad.telefono) acciones += '<button class="btn-whatsapp" onclick="whatsAppTarea(\'' + t.id + '\')"><i class="fab fa-whatsapp"></i> WhatsApp</button>';
                 if (v.entidad.email) acciones += '<button class="btn-azul" onclick="emailTarea(\'' + t.id + '\')"><i class="fas fa-envelope"></i> Email</button>';
@@ -9451,7 +9579,7 @@ input:focus, select:focus, textarea:focus {
             acciones += '<button class="btn-secundario" onclick="tareaAICS(\'' + t.id + '\')"><i class="fas fa-file-import"></i> Descargar .ics</button>';
 
             return '<div class="detalle-acciones">' + acciones + '</div>' +
-                '<div class="ficha-tarea-titulo">' + escapeHTML(t.descripcion || '(tarea sin descripción)') + '</div>' +
+                '<div class="ficha-tarea-titulo">' + escapeHTML(tituloDeTarea(t)) + '</div>' +
                 '<div class="detalle-etiquetas"><span class="tarjeta-etiqueta ' + claseEstado + '">' + estadoTxt + '</span>' +
                 '<span class="tarjeta-etiqueta etiqueta-tipo-tarea"><i class="fas fa-tag"></i> ' + escapeHTML(t.tipo || 'Sin tipo') + '</span>' +
                 (campania ? '<span class="tarjeta-etiqueta etiqueta-campania-tarea"><i class="fas fa-bullhorn"></i> ' + escapeHTML(campania) + '</span>' : '') + '</div>' +
@@ -9463,7 +9591,7 @@ input:focus, select:focus, textarea:focus {
                 campo('Creada por', t.creadaPor) +
                 campo('Creada', t.fechaCreacion ? formatearFechaHora(t.fechaCreacion) : '') +
                 campo('Última modificación', t.fechaModificacion ? formatearFechaHora(t.fechaModificacion) : '') +
-                campo('Completada', t.fechaCompletada ? formatearFechaHora(t.fechaCompletada) + (t.completadaPor ? ' · ' + t.completadaPor : '') : '') +
+                campo('Completada', (t.fechaCompletada || t.completadaEn) ? formatearFechaHora(t.fechaCompletada || t.completadaEn) + (t.completadaPor ? ' · ' + t.completadaPor : '') : '') +
                 '</div>' +
                 (t.notas ? '<div class="detalle-seccion"><div class="detalle-seccion-titulo"><i class="fas fa-sticky-note"></i> Notas</div><div class="detalle-notas">' + escapeHTMLconSaltos(t.notas) + '</div></div>' : '');
         }
@@ -9489,19 +9617,20 @@ input:focus, select:focus, textarea:focus {
             }
             if (filtro === 'contratos') tm = [];
             else if (filtro === 'campanias') tm = tm.filter(esCampania);
-            else if (filtro === 'pendientes') tm = tm.filter(function(t) { return !t.completada; });
-            else if (filtro === 'completadas') tm = tm.filter(function(t) { return t.completada; });
+            else if (filtro === 'pendientes') tm = tm.filter(function(t) { return !tareaCompletada(t); });
+            else if (filtro === 'completadas') tm = tm.filter(function(t) { return tareaCompletada(t); });
             const tipoSel = tipoTareaFiltradoCalendario();
             if (tipoSel !== 'todos') tm = tm.filter(function(t) { return String(t.tipo || '') === tipoSel; });
             if (b) tm = tm.filter(function(t) {
-                const nc = obtenerNombreCliente(t.clienteId) || '';
-                return nc.toLowerCase().indexOf(b) !== -1 || String(t.descripcion || '').toLowerCase().indexOf(b) !== -1 ||
+                const nc = nombreCortoVinculado(t) || obtenerNombreCliente(t.clienteId) || '';
+                return nc.toLowerCase().indexOf(b) !== -1 || tituloDeTarea(t).toLowerCase().indexOf(b) !== -1 ||
                     String(t.tipo || '').toLowerCase().indexOf(b) !== -1 || String(t.notas || '').toLowerCase().indexOf(b) !== -1;
             });
 
             tm.sort(function(a, b2) {
                 // Lo completado siempre al final: primero lo que falta por hacer.
-                if (!!a.completada !== !!b2.completada) return a.completada ? 1 : -1;
+                const ca = tareaCompletada(a), cb = tareaCompletada(b2);
+                if (ca !== cb) return ca ? 1 : -1;
                 if (orden === 'cliente') {
                     const na = campoVinculado(a), nb = campoVinculado(b2);
                     if (na !== nb) return na < nb ? -1 : 1;
@@ -9529,7 +9658,7 @@ input:focus, select:focus, textarea:focus {
             });
 
             const total = tareas.length;
-            const pend = tareas.filter(function(t) { return !t.completada; }).length;
+            const pend = tareas.filter(function(t) { return !tareaCompletada(t); }).length;
             const barra =
                 '<div class="tareas-lista-controles">' +
                 '<div class="tareas-lista-contador"><i class="fas fa-list-check"></i> ' + tm.length + ' en la lista · ' + pend + ' pendiente' + (pend === 1 ? '' : 's') + ' de ' + total + '</div>' +
@@ -9547,12 +9676,12 @@ input:focus, select:focus, textarea:focus {
             } else {
                 const hoyISO = obtenerFechaActual();
                 c.innerHTML = barra + tm.map(function(t) {
-                    const completada = !!t.completada;
+                    const completada = tareaCompletada(t);
                     const claseEstado = completada ? 'etiqueta-completado' : 'etiqueta-pendiente';
                     const estadoTxt = completada ? 'Completada' : 'Pendiente';
                     const ic = completada ? 'fa-undo' : 'fa-check';
                     const nc = nombreCortoVinculado(t);
-                    const esProspecto = t.clienteId && String(t.clienteId).indexOf('pro_') === 0;
+                    const esProspecto = tareaEsDeProspecto(t);
                     const vencida = !completada && t.fecha && t.fecha < hoyISO;
                     const fechaTxt = t.fecha ? formatearFecha(t.fecha) : 'Sin fecha';
                     const horaTxt = t.hora ? ' · ' + escapeHTML(String(t.hora)) : ' · todo el día';
@@ -9566,7 +9695,7 @@ input:focus, select:focus, textarea:focus {
                     if (v && v.entidad.email) accionesWA += '<button class="btn-azul" title="Escribir correo" onclick="emailTarea(\'' + t.id + '\')"><i class="fas fa-envelope"></i></button>';
                     return '<div class="tarjeta-registro' + (completada ? ' tarjeta-completada' : '') + '">' +
                         '<div class="tarjeta-info" onclick="verDetalleTarea(\'' + t.id + '\')" title="Ver la ficha de la tarea">' +
-                        '<div class="tarjeta-titulo">' + escapeHTML(t.descripcion || '(tarea sin descripción)') +
+                        '<div class="tarjeta-titulo">' + escapeHTML(tituloDeTarea(t)) +
                         ' <span class="tarjeta-etiqueta ' + claseEstado + '">' + estadoTxt + '</span></div>' +
                         '<div class="tarjeta-detalle tarea-meta-fila">' +
                         '<span class="tarea-chip-tipo"><i class="fas fa-tag"></i> ' + escapeHTML(t.tipo || 'Sin tipo') + '</span>' +
@@ -9652,8 +9781,8 @@ input:focus, select:focus, textarea:focus {
             tc.forEach(function(c) { ec[c.estado] = (ec[c.estado] || 0) + 1; });
             const cp = tc.filter(function(c) { return c.tipo === 'paquete'; }).length;
             const css = tc.filter(function(c) { return c.tipo === 'solo-servicio'; }).length;
-            const tp = tareas.filter(function(t) { return !t.completada; }).length;
-            const tcm = tareas.filter(function(t) { return t.completada; }).length;
+            const tp = tareas.filter(function(t) { return !tareaCompletada(t); }).length;
+            const tcm = tareas.filter(function(t) { return tareaCompletada(t); }).length;
             let h = '<div class="informe-grid-2"><div class="informe-bloque"><h4>Paquetes vendidos</h4>' + renderizarDesglose(pv) + '</div><div class="informe-bloque"><h4>Servicios individuales</h4>' + renderizarDesglose(si) + '</div></div><div class="informe-grid-3"><div class="informe-bloque"><h4>Servicios contratados</h4>' + renderizarDesglose(ts) + '</div><div class="informe-bloque"><h4>Distribución</h4><div class="informe-fila"><span>Paquetes</span><span>' + cp + '</span></div><div class="informe-fila"><span>Solo Servicio</span><span>' + css + '</span></div><div class="informe-fila"><span>Total</span><span>' + tc.length + '</span></div><div class="informe-fila"><span>Clientes</span><span>' + cf.length + '</span></div></div><div class="informe-bloque"><h4>Resumen financiero</h4><div class="informe-fila"><span>Ingreso total</span><span style="color:var(--color-acento);font-weight:bold;">' + formatearMoneda(it) + '</span></div><div class="informe-fila"><span>Pagado</span><span style="color:var(--color-verde);font-weight:bold;">' + formatearMoneda(tpg) + '</span></div><div class="informe-fila"><span>Pendiente</span><span style="color:var(--color-naranja);font-weight:bold;">' + formatearMoneda(it - tpg) + '</span></div></div></div><div class="informe-grid-3"><div class="informe-bloque"><h4>Prospectos por fase</h4>' + (Object.entries(fp_).length === 0 ? '<p>Sin prospectos</p>' : Object.entries(fp_).map(function(p) { return '<div class="informe-fila"><span>' + p[0] + '</span><span>' + p[1] + '</span></div>'; }).join('')) + '</div><div class="informe-bloque"><h4>Estados de contratos</h4>' + (Object.entries(ec).length === 0 ? '<p>Sin contratos</p>' : Object.entries(ec).map(function(p) { return '<div class="informe-fila"><span>' + p[0] + '</span><span>' + p[1] + '</span></div>'; }).join('')) + '</div><div class="informe-bloque"><h4>Tareas</h4><div class="informe-fila"><span>Total</span><span>' + tareas.length + '</span></div><div class="informe-fila"><span>Pendientes</span><span>' + tp + '</span></div><div class="informe-fila"><span>Completadas</span><span>' + tcm + '</span></div></div></div>';
             cont.innerHTML = h;
         }
@@ -12876,6 +13005,13 @@ input:focus, select:focus, textarea:focus {
 
             t.estado = 'completada';
             t.completadaEn = Util.ahora();
+            /* @JS-ESTADO-TAREA: se escribe TAMBIÉN el formato de las tareas capturadas a mano,
+               que es el que leía el Calendario. Sin esto, una tarea completada en la ficha de la
+               campaña seguía apareciendo PENDIENTE en el calendario (lo reportó Jorge el
+               12/10/2026). */
+            t.completada = true;
+            t.fechaCompletada = t.fechaCompletada || t.completadaEn;
+            t.completadaPor = t.completadaPor || usuarioDeSesion();
             if (d.resultado !== undefined) t.resultadoContacto = d.resultado;
             if (d.nota !== undefined) t.notaResultado = d.nota;
             if (d.fechaProximoSeguimiento !== undefined) t.fechaProximoSeguimiento = d.fechaProximoSeguimiento;
@@ -12906,6 +13042,9 @@ input:focus, select:focus, textarea:focus {
             if (!t) return { ok: false, errores: ['La tarea no existe.'] };
             t.estado = 'pendiente';
             t.completadaEn = '';
+            /* @JS-ESTADO-TAREA: los dos formatos quedan de acuerdo. */
+            t.completada = false;
+            t.fechaCompletada = '';
             motor.registrar('tarea', t.id, t.titulo, 'editar', 'Tarea reabierta.');
             almacen.guardar('tarea-reabierta');
             return { ok: true, tarea: t };
