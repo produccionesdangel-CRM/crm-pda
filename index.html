@@ -3007,7 +3007,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-13.4';
+        var BUILD_APP = '2026-10-13.5';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -4591,16 +4591,24 @@ input:focus, select:focus, textarea:focus {
                                 _version: versionLocalEsperada + 1,
                                 _nombreOriginal: entidadLocal ? (entidadLocal.nombre || entidadLocal.festejado || id) : id
                             };
+                            let versionRemotaVista = null;
                             const resultado = await transaccionSegura(refEntidad, function(actual) {
                                 if (actual === null) return tombstone;
                                 if (actual._eliminado === true) return actual;
                                 const vRemota = actual._version || 0;
-                                if (vRemota !== versionLocalEsperada && versionLocalEsperada !== 0 && vRemota !== 0) return undefined;
+                                versionRemotaVista = vRemota;
+                                /* @JS-SOBRESCRIBIR-REAL: si Jorge eligió "Sobrescribir con MIS
+                                   cambios", el borrado también se fuerza. */
+                                if (!esForzado && vRemota !== versionLocalEsperada && versionLocalEsperada !== 0 && vRemota !== 0) return undefined;
+                                if (esForzado) {
+                                    recordarCopiaSobrescrita(col, id, actual);
+                                    tombstone._version = Math.max(vRemota, versionLocalEsperada) + 1;
+                                }
                                 return tombstone;
                             }, col, id);
                             if (resultado && resultado.descartado) { continue; }
                             if (!resultado.committed) {
-                                conflictos.push({ tipo: col, id: id, nombre: entidadLocal ? (entidadLocal.nombre || entidadLocal.festejado || id) : id, versionLocal: versionLocalEsperada, versionRemota: null, motivo: 'el registro fue modificado remotamente antes de eliminarlo' });
+                                conflictos.push({ tipo: col, id: id, nombre: entidadLocal ? (entidadLocal.nombre || entidadLocal.festejado || id) : id, versionLocal: versionLocalEsperada, versionRemota: versionRemotaVista, motivo: 'el registro fue modificado remotamente antes de eliminarlo' });
                             }
                         } else if (entidadLocal) {
                             const nuevaVersion = versionLocalEsperada + 1;
@@ -4613,6 +4621,7 @@ input:focus, select:focus, textarea:focus {
                             // (red cortada, pestaña cerrada), el reintento NO debe contar como conflicto
                             // ni volver a escribir: se reconoce por el mismo _opId.
                             let yaAplicada = false;
+                            let versionRemotaVista = null;
                             const resultado = await transaccionSegura(refEntidad, function(actual) {
                                 if (actual === null) return entidadParaSubir;
                                 if (actual._eliminado === true) return undefined;
@@ -4621,7 +4630,23 @@ input:focus, select:focus, textarea:focus {
                                     return actual; // idempotente: la nube ya tenía esta misma operación
                                 }
                                 const vRemota = actual._version || 0;
-                                if (vRemota !== versionLocalEsperada && versionLocalEsperada !== 0 && vRemota !== 0) return undefined;
+                                versionRemotaVista = vRemota;
+                                /* ─────── @JS-SOBRESCRIBIR-REAL (13/10/2026) ───────
+                                   Jorge se quedó atorado: al elegir "Sobrescribir con MIS cambios" el
+                                   aviso volvía a salir, porque `esForzado` solo servía para guardar
+                                   cuando no había nada sucio: la comprobación de versión seguía
+                                   rechazando la escritura. Ahora el forzado SÍ salta esa comprobación,
+                                   la versión avanza desde la MÁS ALTA de las dos (así ningún lado queda
+                                   con una versión vieja y el conflicto no reaparece) y, antes de
+                                   reemplazarla, se guarda una copia de la versión de la NUBE. */
+                                if (!esForzado && vRemota !== versionLocalEsperada && versionLocalEsperada !== 0 && vRemota !== 0) return undefined;
+                                if (esForzado && vRemota !== versionLocalEsperada) {
+                                    recordarCopiaSobrescrita(col, id, actual);
+                                    entidadParaSubir._version = Math.max(vRemota, versionLocalEsperada) + 1;
+                                    entidadParaSubir._sobrescritoPor = usuarioActual.nombre;
+                                    entidadParaSubir._fechaSobrescritura = obtenerFechaHoraActual();
+                                    entidadParaSubir._versionQueSeReemplazo = vRemota;
+                                }
                                 return entidadParaSubir;
                             }, col, id);
                             if (resultado && resultado.descartado) { continue; }
@@ -4633,7 +4658,7 @@ input:focus, select:focus, textarea:focus {
                                 entidadLocal._editadoPor = usuarioActual.nombre;
                                 entidadLocal._fechaEdicion = obtenerFechaHoraActual();
                             } else {
-                                conflictos.push({ tipo: col, id: id, nombre: entidadLocal.nombre || entidadLocal.festejado || id, versionLocal: versionLocalEsperada, versionRemota: null, motivo: 'modificado simultáneamente por otro usuario' });
+                                conflictos.push({ tipo: col, id: id, nombre: entidadLocal.nombre || entidadLocal.festejado || id, versionLocal: versionLocalEsperada, versionRemota: versionRemotaVista, motivo: 'modificado simultáneamente por otro usuario' });
                             }
                         }
                     }
@@ -4686,10 +4711,19 @@ input:focus, select:focus, textarea:focus {
                         cambiosPendientes = false;
                         ultimaActualizacionRemota = new Date().toISOString();
                         guardarVersionRemota(ultimaActualizacionRemota);
+                        /* @JS-SOBRESCRIBIR-REAL: si se sobrescribió algo, se avisa y queda la copia
+                           de lo que había en la nube. */
+                        const sobrescritos = guardarCopiasSobrescritas();
+                        if (sobrescritos > 0) {
+                            mostrarNotificacion('Se subió tu versión en ' + sobrescritos + ' registro(s). Se guardó una copia de la versión que estaba en la nube.', 'success');
+                        }
                         actualizarEstadoSync('online', 'Guardado');
                         sincronizandoFirebase = false;
                         return true;
                     }
+                    /* Aunque haya conflictos, lo que SÍ se pudo subir por el camino forzado se
+                       respalda y se avisa (no se pierde nada en silencio). */
+                    guardarCopiasSobrescritas();
                     guardarCopiaConflictoLocal(conflictosReales);
                     const idsEnConflicto = {};
                     conflictosReales.forEach(function(c) { idsEnConflicto[c.tipo + '/' + c.id] = true; });
@@ -4717,6 +4751,13 @@ input:focus, select:focus, textarea:focus {
                 guardarVersionRemota(ahora);
                 cambiosPendientes = false;
                 limpiarEntidadesSucias();
+                /* @JS-SOBRESCRIBIR-REAL: aquí es donde termina el guardado que salió bien (incluso
+                   cuando se forzó una sobrescritura, que es el caso sin conflictos). Se guarda la
+                   copia de lo que había en la nube y se avisa. */
+                const sobrescritosOk = guardarCopiasSobrescritas();
+                if (sobrescritosOk > 0) {
+                    mostrarNotificacion('Se subió tu versión en ' + sobrescritosOk + ' registro(s). Se guardó una copia de la versión que estaba en la nube.', 'success');
+                }
                 if (descartados > 0) {
                     console.warn('🗑️ Se descartaron ' + descartados + ' cambio(s) que ya no se podían subir (registros eliminados en la nube).');
                     if (typeof mostrarNotificacion === 'function') {
@@ -4748,6 +4789,43 @@ input:focus, select:focus, textarea:focus {
         /* ═══════════════════════════════════════════════════════════ */
         // ─────── @JS-RESPALDO-PREVIO (v4.8) ───────
         // Copia de seguridad local automática antes de cualquier carga destructiva desde la nube.
+        /* ─────── @JS-SOBRESCRIBIR-REAL (13/10/2026) ───────
+           Antes de que un "Sobrescribir con MIS cambios" reemplace la versión de la nube, se
+           guarda ESA versión: queda en el respaldo local (clave `pda_sobrescritos`) y en el
+           historial, así que lo que había del otro lado NO se pierde en silencio (regla de Jorge:
+           nunca un paso destructivo sin respaldo previo y aviso antes). */
+        var copiasSobrescritas = [];
+        function recordarCopiaSobrescrita(col, id, entidadRemota) {
+            try {
+                if (!entidadRemota) return;
+                copiasSobrescritas.push({
+                    coleccion: col, id: id,
+                    fecha: obtenerFechaHoraActual(),
+                    usuario: usuarioActual ? usuarioActual.nombre : 'desconocido',
+                    versionRemota: entidadRemota._version || 0,
+                    entidad: JSON.parse(JSON.stringify(entidadRemota))
+                });
+                /* Se anota en el historial AQUÍ, dentro del mismo guardado: así el aviso viaja en
+                   la misma sincronización y no deja el CRM marcado como "con cambios pendientes"
+                   justo después de haber guardado. */
+                registrarHistorial(col, 'editar',
+                    'Se subió la versión local sobre un registro que en la nube estaba en la versión ' + (entidadRemota._version || 0) + '. La copia de la versión de la nube quedó guardada.',
+                    { id: id, nombre: entidadRemota.nombre || entidadRemota.festejado || id });
+            } catch (e) { console.warn('No se pudo recordar la copia sobrescrita:', e); }
+        }
+        function guardarCopiasSobrescritas() {
+            if (!copiasSobrescritas.length) return 0;
+            const pendientes = copiasSobrescritas;
+            copiasSobrescritas = [];
+            try {
+                const previo = JSON.parse(localStorage.getItem('pda_sobrescritos') || '[]');
+                const todo = Array.isArray(previo) ? previo.concat(pendientes) : pendientes;
+                /* Se conservan las últimas 50 para no llenar el almacenamiento. */
+                localStorage.setItem('pda_sobrescritos', JSON.stringify(todo.slice(-50)));
+                return pendientes.length;
+            } catch (e) { console.warn('No se pudieron guardar las copias sobrescritas:', e); return 0; }
+        }
+
         /* ─────── @JS-ARRANQUE-RAPIDO (12/10/2026) ───────
            Guarda en esta PC la versión de la nube que ya se sincronizó. Con eso, al abrir o al
            volver a la pestaña se puede preguntar SOLO la versión y, si no cambió, no leer nada
@@ -5597,12 +5675,15 @@ input:focus, select:focus, textarea:focus {
         function mostrarModalConflicto(conflictos) {
             let listaHTML = '<ul style="margin:8px 0 0 0;padding-left:20px;font-size:13px;">';
             conflictos.forEach(function(c) {
-                listaHTML += '<li style="margin-bottom:4px;"><strong>' + etiquetaTipoPapelera(c.tipo) + '</strong>: ' + c.nombre + ' <span style="color:var(--color-texto-secundario);font-size:11px;">(v' + c.versionLocal + ' local vs v' + c.versionRemota + ' nube)</span></li>';
+                const vR = (c.versionRemota === null || c.versionRemota === undefined) ? '?' : c.versionRemota;
+                listaHTML += '<li style="margin-bottom:4px;"><strong>' + etiquetaTipoPapelera(c.tipo) + '</strong>: ' + c.nombre + ' <span style="color:var(--color-texto-secundario);font-size:11px;">(tu versión ' + c.versionLocal + ' · en la nube la ' + vR + ')</span></li>';
             });
             listaHTML += '</ul>';
-            const html = '<div class="advertencia-eliminar" style="background-color:rgba(255, 152, 0, 0.1);border-color:var(--color-naranja);border-left-color:var(--color-naranja);"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto"><strong style="color:var(--color-naranja);">Otro usuario editó estos registros</strong>Tus cambios locales no se han subido para evitar sobrescribir los de la nube. Elige cómo quieres proceder:' + listaHTML + '</div></div><div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;"><button class="btn-peligro" id="btn-conflicto-sobrescribir" style="justify-content:center;padding:12px;"><i class="fas fa-cloud-upload-alt"></i> Sobrescribir con MIS cambios</button><button class="btn-secundario" id="btn-conflicto-descartar" style="justify-content:center;padding:12px;"><i class="fas fa-cloud-download-alt"></i> Descartar mis cambios y recargar</button><button class="btn-secundario" id="btn-conflicto-copia" style="justify-content:center;padding:12px;"><i class="fas fa-download"></i> Guardar copia local (JSON)</button><button class="btn-secundario" id="btn-conflicto-esperar" style="justify-content:center;padding:12px;"><i class="fas fa-clock"></i> Decidir después (mantener cambios locales)</button></div>';
+            /* @JS-SOBRESCRIBIR-REAL: se explica QUÉ hace cada botón y que, al sobrescribir, la
+               versión de la nube se guarda antes de reemplazarla. */
+            const html = '<div class="advertencia-eliminar" style="background-color:rgba(255, 152, 0, 0.1);border-color:var(--color-naranja);border-left-color:var(--color-naranja);"><i class="fas fa-exclamation-triangle" style="color:var(--color-naranja);"></i><div class="texto"><strong style="color:var(--color-naranja);">Otro dispositivo tocó estos registros</strong>Tu versión local y la de la nube no coinciden, así que el CRM se detuvo para no pisar cambios a ciegas. Elige cómo seguir:' + listaHTML + '<ul style="margin:8px 0 0 18px;padding:0;font-size:12.5px;color:var(--color-texto-secundario);"><li><strong>Sobrescribir con MIS cambios</strong>: sube lo que tienes aquí. Antes de reemplazarla <strong>se guarda una copia de la versión que estaba en la nube</strong>, así nada se pierde en silencio.</li><li><strong>Descartar mis cambios y recargar</strong>: tira lo que hiciste aquí y trae lo de la nube.</li><li><strong>Guardar copia local (JSON)</strong>: descarga TODO tu CRM tal como está ahora (recomendado antes de decidir).</li></ul></div></div><div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;"><button class="btn-peligro" id="btn-conflicto-sobrescribir" style="justify-content:center;padding:12px;"><i class="fas fa-cloud-upload-alt"></i> Sobrescribir con MIS cambios</button><button class="btn-secundario" id="btn-conflicto-descartar" style="justify-content:center;padding:12px;"><i class="fas fa-cloud-download-alt"></i> Descartar mis cambios y recargar</button><button class="btn-secundario" id="btn-conflicto-copia" style="justify-content:center;padding:12px;"><i class="fas fa-download"></i> Guardar copia local (JSON)</button><button class="btn-secundario" id="btn-conflicto-esperar" style="justify-content:center;padding:12px;"><i class="fas fa-clock"></i> Decidir después (mantener cambios locales)</button></div>';
             abrirModal('⚠️ Conflicto de sincronización', html);
-            document.getElementById('btn-conflicto-sobrescribir').addEventListener('click', function() { cerrarModal(); if (!confirm('Esto sobreescribirá los cambios del otro usuario en la nube. ¿Continuar?')) return; guardarEnFirebase(true); });
+            document.getElementById('btn-conflicto-sobrescribir').addEventListener('click', function() { cerrarModal(); if (!confirm('Se subirá TU versión y la de la nube se reemplazará. Antes de reemplazarla se guarda una copia de la versión de la nube. ¿Continuar?')) return; guardarEnFirebase(true); });
             document.getElementById('btn-conflicto-descartar').addEventListener('click', function() { cerrarModal(); if (!confirm('¿Descartar tus cambios locales y recargar desde la nube?')) return; limpiarEntidadesSucias(); cargarDesdeFirebase().then(function() { mostrarNotificacion('Datos recargados desde la nube', 'success'); }); });
             document.getElementById('btn-conflicto-copia').addEventListener('click', function() { exportarCopiaConflicto(); cerrarModal(); });
             document.getElementById('btn-conflicto-esperar').addEventListener('click', function() { cerrarModal(); mostrarNotificacion('Tus cambios se mantienen en local. Resuelve el conflicto pronto.', 'warning'); });
