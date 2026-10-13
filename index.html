@@ -2308,6 +2308,9 @@ input:focus, select:focus, textarea:focus {
             white-space: nowrap;
         }
         .calendario-grid .dia-semana .evento-rico.evento-completada .evento-linea1 { text-decoration: line-through; }
+        /* @JS-VISTA-CUATRO-DIAS: en el teléfono el bloque es de 4 días, así que cada columna es
+           más ancha y el título puede usar TRES renglones en vez de dos. */
+        .calendario-grid.vista-cuatro .evento-rico .evento-linea1 { -webkit-line-clamp: 3; }
         @media (max-width: 768px) {
             .calendario-grid .dia-semana { min-height: 116px; }
             .calendario-grid .dia-semana .numero { font-size: 13px; }
@@ -2316,6 +2319,11 @@ input:focus, select:focus, textarea:focus {
             .calendario-grid .dia-semana .evento-rico .evento-linea1 { font-size: 10.5px; }
             .calendario-grid .dia-semana .evento-rico .evento-hora { min-width: 32px; }
             .calendario-grid .dia-semana .evento-rico .evento-linea2 { font-size: 9.5px; }
+            /* @JS-VISTA-CUATRO-DIAS: con 4 columnas hay más ancho por día, así que el título usa
+               tres renglones. Se aprieta un poco el renglón para que quepan más tareas. */
+            .calendario-grid.vista-cuatro .evento-rico { padding: 2px 5px; margin-bottom: 2px; line-height: 1.2; }
+            .calendario-grid.vista-cuatro .evento-rico .evento-linea1 { font-size: 10px; }
+            .calendario-grid.vista-cuatro .evento-rico .evento-linea2 { font-size: 9px; }
             .tareas-lista-orden { width: 100%; }
             .tareas-lista-orden select { width: 100%; }
             .tareas-lista-controles { gap: 8px; }
@@ -2999,7 +3007,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-13.3';
+        var BUILD_APP = '2026-10-13.4';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -9115,7 +9123,9 @@ input:focus, select:focus, textarea:focus {
             const enRango = function(dia) {
                 if (!dia) return false;
                 if (vistaCalActual === 'semana') {
-                    const fin = sumarDiasISO(inicioSemanaCal, 6);
+                    /* @JS-VISTA-CUATRO-DIAS: el .ics cubre exactamente lo que se ve
+                       (7 días en la computadora, 4 en el teléfono). */
+                    const fin = sumarDiasISO(inicioSemanaCal, diasVistaCalendario() - 1);
                     return dia >= inicioSemanaCal && dia <= fin;
                 }
                 return dia.substring(0, 7) === String(anoActualCal) + '-' + String(mesActualCal + 1).padStart(2, '0');
@@ -9145,6 +9155,50 @@ input:focus, select:focus, textarea:focus {
             mostrarNotificacion(bloques.length + ' elemento(s) en el archivo del calendario', 'success');
         }
         function vistaSemanaActiva() { return vistaCalActual === 'semana'; }
+        /* ─────── @JS-VISTA-CUATRO-DIAS (13/10/2026) ───────
+           Jorge: "en el móvil esa vista semanal se ve muy apretada y no se aprovecha; ¿puede
+           hacer que en celular la opción no sea semanal sino dar una vista de 4 días solamente? y
+           que avance de 4 en 4 si le damos siguiente para ver más días, pero que se mantenga
+           semanal y mensual en la versión desktop".
+           Así queda: la MISMA opción (el botón que antes decía "Semana") muestra 7 días en la
+           computadora y 4 días en el teléfono, y las flechas avanzan esos mismos días. No hay una
+           preferencia nueva que guardar: se decide por el ancho de la pantalla, así que al pasar de
+           una a otra el CRM se acomoda solo. */
+        function esMovilCalendario() {
+            return typeof window !== 'undefined' && window.innerWidth <= 768;
+        }
+        function diasVistaCalendario() {
+            return esMovilCalendario() ? 4 : 7;
+        }
+        /** Punto de partida del bloque que se está viendo (para mover con las flechas). */
+        function anclaBloqueCalendario(hoyISO) {
+            const inicio = (typeof inicioSemanaCal === 'string' && inicioSemanaCal.length === 10) ? inicioSemanaCal : null;
+            if (inicio) return inicio;
+            return esMovilCalendario() ? hoyISO : inicioDeSemanaDe(hoyISO);
+        }
+        /** El botón de la vista de bloque se llama "Semana" en PC y "4 días" en el teléfono. */
+        function etiquetarConmutadorCalendario() {
+            const b = document.querySelector('.btn-vista-cal[data-vista="semana"]');
+            if (!b) return;
+            const movil = esMovilCalendario();
+            const texto = movil ? '4 días' : 'Semana';
+            if (String(b.textContent || '').trim() !== texto) {
+                b.innerHTML = '<i class="fas fa-calendar-week"></i> ' + texto;
+            }
+            b.title = movil ? 'Ver 4 días seguidos (en el teléfono la semana se ve muy apretada)' : 'Ver la semana completa';
+        }
+        /** Etiqueta del rango que se está viendo: "Semana del 11 al 17..." o "Del 11 al 14...". */
+        function etiquetaRangoCalendario(inicioISO, dias) {
+            const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+            const p1 = String(inicioISO).split('-');
+            const finISO = sumarDiasISO(inicioISO, dias - 1);
+            const p2 = String(finISO).split('-');
+            const mes1 = meses[Number(p1[1]) - 1] || '';
+            const mes2 = meses[Number(p2[1]) - 1] || '';
+            const prefijo = dias >= 7 ? 'Semana del ' : 'Del ';
+            if (p1[1] === p2[1]) return prefijo + Number(p1[2]) + ' al ' + Number(p2[2]) + ' de ' + mes1 + ' de ' + p1[0];
+            return prefijo + Number(p1[2]) + ' de ' + mes1 + ' al ' + Number(p2[2]) + ' de ' + mes2 + ' de ' + p2[0];
+        }
 
         /** El tipo de tarea elegido en la barra de filtros ('todos' si no hay filtro). */
         function tipoTareaFiltradoCalendario() {
@@ -9276,7 +9330,9 @@ input:focus, select:focus, textarea:focus {
                     const camp = t.campaniaId ? nombreCampaniaDia(t.campaniaId) : '';
                     const quien = vin ? (vin + (vEnt && vEnt.tipo === 'prospecto' ? ' (Prospecto)' : '')) : '';
                     const nota = (!quien && t.notas) ? String(t.notas).replace(/\s+/g, ' ').trim() : '';
-                    const meta = [String(t.tipo || 'Tarea'), quien || nota || 'Sin vincular', camp].filter(Boolean).join(' · ');
+                    /* Si no hay a quién pertenece ni nota, la segunda línea se queda solo con el
+                       TIPO: "Sin vincular" ocupaba el renglón y no aporta nada en el calendario. */
+                    const meta = [String(t.tipo || 'Tarea'), quien || nota, camp].filter(Boolean).join(' · ');
                     const titulo = tituloDeTarea(t);
                     html += '<div class="evento ' + cc + ' evento-rico" title="' + escapeHTML(titulo + ' — ' + meta) + '" onclick="event.stopPropagation(); verDetalleTarea(\'' + t.id + '\')">' +
                         '<span class="evento-linea1"><span class="evento-hora">' + escapeHTML(horaDe(t)) + '</span>' + (hecha ? '<i class="fas fa-circle-check"></i> ' : '') + escapeHTML(titulo) + '</span>' +
@@ -9365,20 +9421,25 @@ input:focus, select:focus, textarea:focus {
                 // mas util". Son las mismas 7 columnas, una sola fila, con la fecha en el
                 // encabezado; los filtros, las acciones y el alto salen del mes.
                 if (!inicioSemanaCal) inicioSemanaCal = inicioDeSemanaDe(hoyISO);
-                tit.textContent = etiquetaSemanaCalendario(inicioSemanaCal);
-                /* Etiquetas que caben en el alto del mes. En la semana cada renglón lleva el
-                   título en hasta DOS líneas más la línea de datos (@JS-SEMANA-DETALLADA): medido
-                   en el arnés, ~65 px en PC y ~57 en el teléfono. Se apunta por debajo del
-                   espacio real para que NUNCA quede un renglón cortado a medias: lo que no cabe
-                   se anuncia con el "+N más" de siempre. */
+                const diasBloque = diasVistaCalendario();              /* 7 en PC, 4 en el teléfono */
+                /* En la computadora el bloque se alinea a la semana (domingo); en el teléfono son
+                   4 días seguidos desde donde esté, y las flechas avanzan de 4 en 4. */
+                if (diasBloque === 7) inicioSemanaCal = inicioDeSemanaDe(inicioSemanaCal);
+                tit.textContent = etiquetaRangoCalendario(inicioSemanaCal, diasBloque);
+                /* Etiquetas que caben en el alto del mes. Cada renglón lleva el título en hasta
+                   DOS líneas (TRES en el teléfono, que con 4 columnas tiene más ancho) más la
+                   línea de datos: medido en el arnés, ~65 px en PC y ~85 en el teléfono. Se apunta
+                   por debajo del espacio real para que NUNCA quede un renglón cortado a medias: lo
+                   que no cabe se anuncia con el "+N más" de siempre. */
                 const utilSemana = Math.max(0, altoMesCal - 34 - 12);
-                topeEtiquetasSemanaCal = Math.max(3, Math.min(40, Math.floor(utilSemana / (movilCal ? 57 : 65))));
-                for (let i = 0; i < 7; i++) {
+                topeEtiquetasSemanaCal = Math.max(2, Math.min(40, Math.floor(utilSemana / (movilCal ? 62 : 65))));
+                for (let i = 0; i < diasBloque; i++) {
                     const fs = sumarDiasISO(inicioSemanaCal, i);
                     const p = fs.split('-');
-                    h += '<div class="dia-nombre dia-nombre-semana">' + ds[i] + '<span class="dia-nombre-fecha">' + Number(p[2]) + '/' + Number(p[1]) + '</span></div>';
+                    const diaSem = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])).getDay();
+                    h += '<div class="dia-nombre dia-nombre-semana">' + ds[diaSem] + '<span class="dia-nombre-fecha">' + Number(p[2]) + '/' + Number(p[1]) + '</span></div>';
                 }
-                for (let i = 0; i < 7; i++) {
+                for (let i = 0; i < diasBloque; i++) {
                     const fs = sumarDiasISO(inicioSemanaCal, i);
                     const p = fs.split('-');
                     h += '<div class="dia dia-semana' + (fs === hoyISO ? ' hoy' : '') + '" data-fecha="' + fs + '">' +
@@ -9405,9 +9466,15 @@ input:focus, select:focus, textarea:focus {
             if (vistaSemanaActiva() && altoMesCal > 0) {
                 grid.style.height = altoMesCal + 'px';
                 grid.style.gridTemplateRows = 'auto 1fr';
+                /* @JS-VISTA-CUATRO-DIAS: 7 columnas en la computadora, 4 en el teléfono. */
+                const diasCols = diasVistaCalendario();
+                grid.style.gridTemplateColumns = 'repeat(' + diasCols + ', minmax(0, 1fr))';
+                grid.classList.toggle('vista-cuatro', diasCols === 4);
             } else {
                 grid.style.height = '';
                 grid.style.gridTemplateRows = '';
+                grid.style.gridTemplateColumns = '';
+                grid.classList.remove('vista-cuatro');
             }
             // El botón de "Hoy" vuelve al mes actual: en la semana no tiene que flotar en
             // una semana lejana, así que también reengancha la semana de hoy.
@@ -9419,7 +9486,8 @@ input:focus, select:focus, textarea:focus {
                     if (f) mostrarOpcionesDia(f);
                 });
             });
-            // Estado de los botones Mes/Semana (y el sello de la vista activa).
+            // Estado de los botones Mes/Semana (en el teléfono, Mes/4 días).
+            etiquetarConmutadorCalendario();
             document.querySelectorAll('.btn-vista-cal').forEach(function(b) {
                 const activo = b.dataset.vista === vistaCalActual;
                 b.classList.toggle('activo', activo);
@@ -11140,16 +11208,22 @@ input:focus, select:focus, textarea:focus {
             btn = document.getElementById('btn-mes-anterior');
             if (btn) btn.onclick = function() {
                 if (vistaSemanaActiva()) {
-                    if (!inicioSemanaCal) inicioSemanaCal = inicioDeSemanaDe(fechaLocalToString(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()));
-                    inicioSemanaCal = sumarDiasISO(inicioSemanaCal, -7);
+                    /* @JS-VISTA-CUATRO-DIAS: las flechas avanzan lo mismo que dura el bloque:
+                       7 días en la computadora, 4 en el teléfono. */
+                    const hoyS = fechaLocalToString(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+                    const dias = diasVistaCalendario();
+                    inicioSemanaCal = anclaBloqueCalendario(hoyS);
+                    inicioSemanaCal = sumarDiasISO(inicioSemanaCal, -dias);
                 } else { mesActualCal--; if (mesActualCal < 0) { mesActualCal = 11; anoActualCal--; } }
                 renderizarCalendario();
             };
             btn = document.getElementById('btn-mes-siguiente');
             if (btn) btn.onclick = function() {
                 if (vistaSemanaActiva()) {
-                    if (!inicioSemanaCal) inicioSemanaCal = inicioDeSemanaDe(fechaLocalToString(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()));
-                    inicioSemanaCal = sumarDiasISO(inicioSemanaCal, 7);
+                    const hoyS = fechaLocalToString(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+                    const dias = diasVistaCalendario();
+                    inicioSemanaCal = anclaBloqueCalendario(hoyS);
+                    inicioSemanaCal = sumarDiasISO(inicioSemanaCal, dias);
                 } else { mesActualCal++; if (mesActualCal > 11) { mesActualCal = 0; anoActualCal++; } }
                 renderizarCalendario();
             };
@@ -11158,21 +11232,25 @@ input:focus, select:focus, textarea:focus {
                 const h = new Date();
                 mesActualCal = h.getMonth();
                 anoActualCal = h.getFullYear();
-                inicioSemanaCal = inicioDeSemanaDe(fechaLocalToString(h.getFullYear(), h.getMonth(), h.getDate()));
+                const hoyS = fechaLocalToString(h.getFullYear(), h.getMonth(), h.getDate());
+                /* En la computadora se reengancha la semana (domingo); en el teléfono el bloque
+                   de 4 días empieza hoy. */
+                inicioSemanaCal = esMovilCalendario() ? hoyS : inicioDeSemanaDe(hoyS);
                 renderizarCalendario();
             };
-            // Conmutador Mes / Semana.
+            // Conmutador Mes / Semana (en el teléfono el botón dice "4 días").
             document.querySelectorAll('.btn-vista-cal').forEach(function(b) {
                 b.onclick = function() {
                     const v = b.dataset.vista === 'semana' ? 'semana' : 'mes';
                     if (v === vistaCalActual) return;
                     vistaCalActual = v;
-                    if (v === 'semana' && !inicioSemanaCal) {
+                    if (v === 'semana') {
                         const h = new Date();
-                        inicioSemanaCal = inicioDeSemanaDe(fechaLocalToString(h.getFullYear(), h.getMonth(), h.getDate()));
+                        const hoyS = fechaLocalToString(h.getFullYear(), h.getMonth(), h.getDate());
+                        inicioSemanaCal = esMovilCalendario() ? hoyS : inicioDeSemanaDe(hoyS);
                     }
                     renderizarCalendario();
-                    mostrarNotificacion(v === 'semana' ? 'Vista por semana' : 'Vista por mes', 'info');
+                    mostrarNotificacion(v === 'semana' ? (esMovilCalendario() ? 'Vista de 4 días' : 'Vista por semana') : 'Vista por mes', 'info');
                 };
             });
             btn = document.getElementById('btn-descargar-calendario'); if (btn) btn.addEventListener('click', descargarCalendarioICS);

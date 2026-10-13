@@ -176,7 +176,8 @@ async function main() {
       const sem = JSON.parse(await evaluar(cdp, MEDIR + "('semana', " + caso.ancho + ", " + caso.alto + ")"));
       console.log('   mes:    alto total ' + mes.altoTotal + ' px · celdas ' + mes.celdas + ' · casilla ' + mes.altoCelda + ' px · etiquetas visibles ' + mes.eventos + ' ' + mes.mas);
       console.log('   semana: alto total ' + sem.altoTotal + ' px · celdas ' + sem.celdas + ' · casilla ' + sem.altoCelda + ' px · etiquetas visibles ' + sem.eventos + ' ' + sem.mas);
-      revisar(sem.celdas === 7, 'la semana dibuja 7 días');
+      revisar(sem.celdas === (caso.nombre === 'PC' ? 7 : 4),
+        'el bloque dibuja ' + (caso.nombre === 'PC' ? 'los 7 días de la semana' : 'solo 4 días en el teléfono') + ' (' + sem.celdas + ')');
       revisar(Math.abs(sem.altoTotal - mes.altoTotal) <= 4, 'el calendario mide LO MISMO en las dos vistas (' + mes.altoTotal + ' px contra ' + sem.altoTotal + ' px)');
       revisar(sem.altoCelda >= mes.altoCelda * 3, 'la casilla del día en la semana es al menos 3 veces más alta (' + sem.altoCelda + ' px contra ' + mes.altoCelda + ' px)');
       revisar(sem.eventos > mes.eventos, 'se ven MÁS tareas en la semana (' + sem.eventos + ' contra ' + mes.eventos + ')');
@@ -192,6 +193,39 @@ async function main() {
       revisar(sem.traeContrato === true, 'y el contrato con su festejado y su cliente');
       revisar(sem.desborda === 0, 'ningún renglón se sale de la casilla de su día');
       revisar(mes.ricos === 0, 'en el MES se conserva la etiqueta compacta de siempre (' + mes.ricos + ' renglones ricos)');
+
+      /* @JS-VISTA-CUATRO-DIAS: el botón se llama "Semana" en PC y "4 días" en el teléfono, y las
+         flechas avanzan lo mismo que dura el bloque (7 o 4 días). */
+      const cuatro = JSON.parse(await evaluar(cdp, `(function () {
+        var b = document.querySelector('.btn-vista-cal[data-vista="semana"]');
+        var textoBoton = b ? String(b.textContent || '').replace(/\\s+/g, ' ').trim() : '(no hay)';
+        vistaCalActual = 'semana';
+        document.getElementById('btn-mes-actual').click();     /* ancla en hoy */
+        var primeroAntes = document.querySelector('.calendario-grid .dia:not(.otro-mes)').dataset.fecha;
+        var celdas = document.querySelectorAll('.calendario-grid .dia:not(.otro-mes)').length;
+        document.getElementById('btn-mes-siguiente').click();
+        var primeroDespues = document.querySelector('.calendario-grid .dia:not(.otro-mes)').dataset.fecha;
+        document.getElementById('btn-mes-anterior').click();
+        document.getElementById('btn-mes-anterior').click();
+        var primeroAtras = document.querySelector('.calendario-grid .dia:not(.otro-mes)').dataset.fecha;
+        var d1 = new Date(primeroAntes + 'T12:00:00'), d2 = new Date(primeroDespues + 'T12:00:00'), d3 = new Date(primeroAtras + 'T12:00:00');
+        var paso = Math.round((d2 - d1) / 86400000), pasoAtras = Math.round((d1 - d3) / 86400000);
+        var hoy = new Date(); var hoyISO = hoy.getFullYear() + '-' + ('0' + (hoy.getMonth() + 1)).slice(-2) + '-' + ('0' + hoy.getDate()).slice(-2);
+        var columnas = getComputedStyle(document.getElementById('calendario-grid')).gridTemplateColumns.split(' ').length;
+        /* ¿El bloque que se ve contiene el día de hoy? (en PC la semana empieza en domingo) */
+        var fin = sumarDiasISO(primeroAntes, celdas - 1);
+        var contieneHoy = hoyISO >= primeroAntes && hoyISO <= fin;
+        return JSON.stringify({ textoBoton: textoBoton, celdas: celdas, paso: paso, pasoAtras: pasoAtras, columnas: columnas,
+          contieneHoy: contieneHoy, hoyISO: hoyISO, primero: primeroAntes, fin: fin });
+      })()`));
+      console.log('   botón: "' + cuatro.textoBoton + '" · celdas ' + cuatro.celdas + ' · columnas ' + cuatro.columnas +
+        ' · "siguiente" avanza ' + cuatro.paso + ' días · "anterior" retrocede ' + cuatro.pasoAtras + ' · el bloque ' + cuatro.primero + ' a ' + cuatro.fin + ' contiene hoy: ' + cuatro.contieneHoy);
+      revisar(cuatro.textoBoton.indexOf(caso.nombre === 'PC' ? 'Semana' : '4 días') !== -1,
+        'el botón dice ' + (caso.nombre === 'PC' ? '"Semana" en la computadora' : '"4 días" en el teléfono'));
+      revisar(cuatro.columnas === cuatro.celdas, 'la rejilla tiene ' + cuatro.columnas + ' columnas, igual que los días que muestra');
+      revisar(cuatro.paso === (caso.nombre === 'PC' ? 7 : 4) && cuatro.pasoAtras === (caso.nombre === 'PC' ? 7 : 4),
+        'las flechas avanzan ' + (caso.nombre === 'PC' ? '7' : '4') + ' días por clic (' + cuatro.paso + ' y ' + cuatro.pasoAtras + ')');
+      revisar(cuatro.contieneHoy === true, 'al pulsar "Hoy" el bloque que se ve incluye el día de hoy');
 
       /* Con MUCHAS tareas (20) la casilla no debe cortar un renglón a medias: se ve el "+N más". */
       const saturado = JSON.parse(await evaluar(cdp, `(function () {
