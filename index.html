@@ -2262,12 +2262,19 @@ input:focus, select:focus, textarea:focus {
 
         /* La semana es UNA fila: la casilla crece para que se vea el día completo y no
            quede una franja de 82 px con todo apretado. Se declara la medida DESPUÉS del
-           bloque móvil del CRM, así que esta sí gana (es la vista nueva). */
+           bloque móvil del CRM, así que esta sí gana (es la vista nueva).
+           Desde @JS-ALTO-SEMANA (13/10/2026) el alto no es fijo: la rejilla conserva el alto
+           que ocupa el MES y el renglón de días se lo reparte, así que aquí solo queda el
+           mínimo (para pantallas muy bajas). */
         .calendario-grid .dia-semana { min-height: 150px; }
         .calendario-grid .dia-semana .numero { font-size: 15px; }
+        /* Con la casilla tan alta, las etiquetas se leen mejor un poco más grandes. */
+        .calendario-grid .dia-semana .evento { font-size: 11px; padding: 3px 5px; margin-bottom: 3px; }
+        .calendario-grid .dia-semana .evento-mas { font-size: 11px; }
         @media (max-width: 768px) {
             .calendario-grid .dia-semana { min-height: 116px; }
             .calendario-grid .dia-semana .numero { font-size: 13px; }
+            .calendario-grid .dia-semana .evento { font-size: 10px; padding: 2px 5px; margin-bottom: 2px; }
             .tareas-lista-orden { width: 100%; }
             .tareas-lista-orden select { width: 100%; }
             .tareas-lista-controles { gap: 8px; }
@@ -2951,7 +2958,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-13.1';
+        var BUILD_APP = '2026-10-13.2';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -3377,6 +3384,9 @@ input:focus, select:focus, textarea:focus {
         // semana que se está viendo, en formato 'AAAA-MM-DD'.
         var vistaCalActual = 'mes';
         var inicioSemanaCal = null;
+        /* @JS-ALTO-SEMANA: cuántas etiquetas caben en la casilla de un día de la semana. Se
+           recalcula al dibujar, según el alto que ocupa el mes en esa pantalla. */
+        var topeEtiquetasSemanaCal = 12;
         var PREF_TEMA = 'pda_tema';
         var PREF_SIDEBAR = 'pda_sidebar_colapsado';
         var PREF_SESION = 'pda_sesion';
@@ -9155,7 +9165,10 @@ input:focus, select:focus, textarea:focus {
             semana es exactamente lo que se ve en el mes). Se aplican los filtros de la
             barra ANTES de contar, para que el "+N más" no mienta. */
         function eventosDelDiaHTML(fechaISO) {
-            const tope = (typeof window !== 'undefined' && window.innerWidth <= 768) ? 2 : 3;
+            /* @JS-ALTO-SEMANA: en el MES caben 3 etiquetas (2 en el teléfono) porque la casilla
+               mide 116 px; en la SEMANA la casilla es tan alta como el mes completo, así que el
+               tope se calcula solo y se ven muchas más tareas. */
+            const tope = topeEtiquetasDelDia();
             const fFiltro = document.getElementById('filtro-tareas-calendario');
             const fBuscar = document.getElementById('buscar-calendario');
             const ft = fFiltro ? fFiltro.value : 'todas';
@@ -9215,6 +9228,40 @@ input:focus, select:focus, textarea:focus {
             return html;
         }
 
+        /* ─────── @JS-ALTO-SEMANA (13/10/2026) ───────
+           Jorge: "en la vista semanal... el espacio que muestras las tareas dentro de la tarjeta
+           del día está del mismo tamaño que cuando estaban el resto de los días del mes; quiero
+           que los días se vean más largos para mostrar una lista de tareas más extensa... que el
+           tamaño que ocupa el calendario completo se mantenga igual incluso cuando cambias a la
+           vista semanal".
+
+           Cómo se resuelve, sin números mágicos: se le pregunta al propio CSS del mes cuánto mide
+           una fila (`grid-auto-rows`), cuánto mide el renglón de los nombres de día y cuánto el
+           hueco (`gap`), y se calcula lo que ocuparía el MES COMPLETO en esta pantalla. Ese alto
+           se le pone a la rejilla en la vista de semana y se reparte con `grid-template-rows:
+           auto 1fr`: el único renglón de días se estira y se queda con todo el espacio que en el
+           mes ocupaban las 5 o 6 semanas. Así el calendario mide exactamente lo mismo en las dos
+           vistas (en PC y en móvil, porque los valores se leen del CSS, no se suponen). */
+        function altoDelMesEnPixeles() {
+            const grid = document.getElementById('calendario-grid');
+            if (!grid) return 0;
+            const cs = getComputedStyle(grid);
+            const altoFila = parseFloat(cs.gridAutoRows) || 116;
+            const hueco = parseFloat(cs.rowGap || cs.gap) || 2;
+            const pd = new Date(anoActualCal, mesActualCal, 1).getDay();
+            const dm = new Date(anoActualCal, mesActualCal + 1, 0).getDate();
+            const filasMes = Math.ceil((pd + dm) / 7);
+            /* El renglón de los nombres: se mide el que ya está dibujado (o se estima). */
+            const nombre = grid.querySelector('.dia-nombre');
+            const altoNombre = nombre ? nombre.offsetHeight : 34;
+            return Math.round(altoNombre + filasMes * altoFila + filasMes * hueco);
+        }
+        /* Etiquetas que caben en el alto disponible de la semana (se calcula al dibujar). */
+        function topeEtiquetasDelDia() {
+            const movil = typeof window !== 'undefined' && window.innerWidth <= 768;
+            return vistaSemanaActiva() ? topeEtiquetasSemanaCal : (movil ? 2 : 3);
+        }
+
         function renderizarCalendario() {
             const grid = document.getElementById('calendario-grid');
             const tit = document.getElementById('calendario-mes-ano');
@@ -9226,15 +9273,24 @@ input:focus, select:focus, textarea:focus {
             const hy = new Date();
             const hoyISO = fechaLocalToString(hy.getFullYear(), hy.getMonth(), hy.getDate());
             let h = '';
+            /* @JS-ALTO-SEMANA: cuánto ocupa el mes completo en esta pantalla (se lee del CSS).
+               Con eso la vista de semana se queda con el MISMO alto y el único renglón de días
+               se estira para mostrar más tareas. */
+            const altoMesCal = altoDelMesEnPixeles();
+            const movilCal = typeof window !== 'undefined' && window.innerWidth <= 768;
             if (vistaSemanaActiva()) {
                 // ─────── @JS-CALENDARIO-SEMANA (9/10/2026) ───────
                 // Jorge: "quiero que el calendario pueda hacer switch entre el modo MES y
                 // modo semana... creo que cuando haya muchas tareas el modo semana sera
                 // mas util". Son las mismas 7 columnas, una sola fila, con la fecha en el
-                // encabezado; los filtros, el tope de etiquetas y las acciones son los
-                // mismos que en el mes (todo sale de eventosDelDiaHTML).
+                // encabezado; los filtros, las acciones y el alto salen del mes.
                 if (!inicioSemanaCal) inicioSemanaCal = inicioDeSemanaDe(hoyISO);
                 tit.textContent = etiquetaSemanaCalendario(inicioSemanaCal);
+                /* Etiquetas que caben en el alto del mes: cada una mide ~17 px (15 en el
+                   teléfono). Antes eran 3 (2 en móvil), así que la casilla tenía espacio de
+                   sobra sin usar. */
+                const utilSemana = Math.max(0, altoMesCal - 34 - 12);
+                topeEtiquetasSemanaCal = Math.max(4, Math.min(40, Math.floor(utilSemana / (movilCal ? 15 : 17))));
                 for (let i = 0; i < 7; i++) {
                     const fs = sumarDiasISO(inicioSemanaCal, i);
                     const p = fs.split('-');
@@ -9261,6 +9317,16 @@ input:focus, select:focus, textarea:focus {
                 for (let i = 1; i <= dr; i++) h += '<div class="dia otro-mes"><div class="numero">' + i + '</div></div>';
             }
             grid.innerHTML = h;
+            /* @JS-ALTO-SEMANA: en la semana, la rejilla conserva el alto del mes y el único
+               renglón de días se queda con todo el espacio (`auto 1fr`). En el mes se quita
+               cualquier medida puesta a mano para no alterar nada. */
+            if (vistaSemanaActiva() && altoMesCal > 0) {
+                grid.style.height = altoMesCal + 'px';
+                grid.style.gridTemplateRows = 'auto 1fr';
+            } else {
+                grid.style.height = '';
+                grid.style.gridTemplateRows = '';
+            }
             // El botón de "Hoy" vuelve al mes actual: en la semana no tiene que flotar en
             // una semana lejana, así que también reengancha la semana de hoy.
             document.querySelectorAll('.dia:not(.otro-mes)').forEach(function(el) {
