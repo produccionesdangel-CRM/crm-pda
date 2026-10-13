@@ -68,7 +68,9 @@ async function evaluar(cdp, expresion) {
 const PREPARAR = `(function () {
   usuarioActual = { nombre: 'Jorge', rol: 'Administrador', admin: true, email: 'p@local' };
   ocultarPantallaLogin(); actualizarUIUsuario(); aplicarRestriccionesPorRol(); conectarEventListenersApp();
-  paquetes = []; serviciosAdicionales = []; clientes = []; historial = []; papelera = []; prospectos = [];
+  paquetes = []; serviciosAdicionales = []; historial = []; papelera = [];
+  prospectos = [{ id: 'pro-1', nombre: 'Alissa Mota', telefono: '8781234567', email: 'a@x.com', faseActual: 'Interesado',
+    historialFases: [], etiquetas: [], tareasRelacionadas: [], notasGenerales: '' }];
   campanias = []; participaciones = [];
   /* Un día con MUCHAS tareas (ocho) para ver cuántas caben en cada vista. */
   tareas = [];
@@ -77,8 +79,16 @@ const PREPARAR = `(function () {
   var dia = iso(hoy);
   for (var i = 1; i <= 8; i++) {
     tareas.push({ id: 'tar-' + i, tipo: 'Llamada', descripcion: 'Tarea numero ' + i + ' del dia', fecha: dia, hora: '1' + i + ':00',
-      completada: false, todoElDia: false, fechaCreacion: dia, clienteId: null });
+      completada: i === 8, todoElDia: false, fechaCreacion: dia, clienteId: null });
   }
+  /* Una tarea de campaña (con prospecto) y un contrato, para ver la información detallada. */
+  clientes = [{ id: 'cli-1', nombre: 'Luz Ashen', telefono: '8781112233', email: 'l@x.com', estado: 'Activo', fechaRegistro: dia,
+    contratos: [{ id: 'con-1', clienteId: 'cli-1', clienteNombre: 'Luz Ashen', festejado: 'XV Años Luz', tipo: 'paquete',
+      paqueteId: '', serviciosIds: [], precioBase: 8950, precioFinal: 8950, descuentoMonto: 0, cargos: [], pagos: [],
+      estado: 'Pendiente', fechaEvento: dia, horaEvento: '17:00', fechaContrato: dia, notas: '' }] }];
+  /* La tarea de campaña va PRIMERO: así entra siempre en el cupo de renglones visibles. */
+  tareas.unshift({ id: 'tar-camp', tipo: 'Seguimiento', titulo: 'Llamar para agendar cita', fecha: dia, hora: '09:30',
+    estado: 'pendiente', prospectoId: 'pro-1', campaniaId: 'camp-x', participacionId: 'part-x', creadaEn: dia });
   cambiarSeccion('calendario');
   mesActualCal = hoy.getMonth(); anoActualCal = hoy.getFullYear();
   return JSON.stringify({ dia: dia });
@@ -100,6 +110,23 @@ const MEDIR = `(function (vista, ancho, alto) {
   }
   var eventos = conTareas ? conTareas.querySelectorAll('.evento').length : 0;
   var mas = conTareas ? (conTareas.querySelector('.evento-mas') ? conTareas.querySelector('.evento-mas').textContent.trim() : '') : '';
+  /* ¿Se ve la información detallada? (solo en la semana) */
+  var ricos = conTareas ? conTareas.querySelectorAll('.evento-rico').length : 0;
+  var textoCelda = conTareas ? conTareas.textContent.replace(/\\s+/g, ' ').trim() : '';
+  var traeHora = /\\d{1,2}:\\d{2}/.test(textoCelda);
+  var traeTipo = textoCelda.indexOf('Llamada') !== -1;
+  var traeProspecto = textoCelda.indexOf('Alissa Mota') !== -1;
+  var traeTituloCamp = textoCelda.indexOf('Llamar para agendar cita') !== -1;
+  var traeContrato = textoCelda.indexOf('XV Años Luz') !== -1 && textoCelda.indexOf('Luz Ashen') !== -1;
+  /* ¿Algún renglón se sale de la casilla de su día? (comparación con su propia celda) */
+  var desborda = 0;
+  if (conTareas) {
+    var caja = conTareas.getBoundingClientRect();
+    conTareas.querySelectorAll('.evento').forEach(function (ev) {
+      var r2 = ev.getBoundingClientRect();
+      if (r2.right > caja.right + 1 || r2.left < caja.left - 1) desborda++;
+    });
+  }
   /* Alto del calendario COMPLETO: de la primera celda de nombre a la última celda. */
   var nombres = document.querySelectorAll('.calendario-grid .dia-nombre');
   var primeraNombre = nombres[0];
@@ -110,6 +137,8 @@ const MEDIR = `(function (vista, ancho, alto) {
   }
   return JSON.stringify({ vista: vista, altoGrid: Math.round(grid.getBoundingClientRect().height),
     altoTotal: altoTotal, celdas: celdas.length, altoCelda: altoCelda, eventos: eventos, mas: mas,
+    ricos: ricos, traeHora: traeHora, traeTipo: traeTipo, traeProspecto: traeProspecto,
+    traeTituloCamp: traeTituloCamp, traeContrato: traeContrato, desborda: desborda,
     ancho: ancho, alto: alto });
 })`;
 
@@ -152,6 +181,42 @@ async function main() {
       revisar(sem.altoCelda >= mes.altoCelda * 3, 'la casilla del día en la semana es al menos 3 veces más alta (' + sem.altoCelda + ' px contra ' + mes.altoCelda + ' px)');
       revisar(sem.eventos > mes.eventos, 'se ven MÁS tareas en la semana (' + sem.eventos + ' contra ' + mes.eventos + ')');
       revisar(sem.eventos >= 6, 'con 8 tareas en el día, la semana muestra al menos 6 (' + sem.eventos + ')');
+      /* @JS-SEMANA-DETALLADA: en la semana cada renglón muestra hora, título, tipo y a quién
+         pertenece. En el mes la etiqueta sigue compacta (no hay espacio). */
+      console.log('   detalle en la semana: hora ' + sem.traeHora + ' · tipo ' + sem.traeTipo + ' · prospecto ' + sem.traeProspecto +
+        ' · título de campaña ' + sem.traeTituloCamp + ' · contrato ' + sem.traeContrato + ' · renglones ricos ' + sem.ricos + ' · desbordes ' + sem.desborda);
+      revisar(sem.ricos >= 6, 'la semana dibuja los renglones detallados (' + sem.ricos + ')');
+      revisar(sem.traeHora === true, 'la semana muestra la HORA de cada tarea');
+      revisar(sem.traeTipo === true && sem.traeProspecto === true, 'y el TIPO junto con el nombre del prospecto');
+      revisar(sem.traeTituloCamp === true, 'y el TÍTULO real de la tarea de campaña');
+      revisar(sem.traeContrato === true, 'y el contrato con su festejado y su cliente');
+      revisar(sem.desborda === 0, 'ningún renglón se sale de la casilla de su día');
+      revisar(mes.ricos === 0, 'en el MES se conserva la etiqueta compacta de siempre (' + mes.ricos + ' renglones ricos)');
+
+      /* Con MUCHAS tareas (20) la casilla no debe cortar un renglón a medias: se ve el "+N más". */
+      const saturado = JSON.parse(await evaluar(cdp, `(function () {
+        var hoy = new Date();
+        var dia = hoy.getFullYear() + '-' + ('0' + (hoy.getMonth() + 1)).slice(-2) + '-' + ('0' + hoy.getDate()).slice(-2);
+        for (var i = 9; i <= 20; i++) {
+          tareas.push({ id: 'tar-extra-' + i, tipo: 'Llamada', descripcion: 'Tarea extra ' + i + ' con un titulo largo para probar', fecha: dia,
+            hora: '0' + (i % 10) + ':00', completada: false, todoElDA: false, fechaCreacion: dia, clienteId: null });
+        }
+        vistaCalActual = 'semana'; inicioSemanaCal = inicioDeSemanaDe(obtenerFechaActual());
+        renderizarCalendario();
+        var celda = null;
+        document.querySelectorAll('.calendario-grid .dia-semana').forEach(function (c) {
+          if (!celda || c.querySelectorAll('.evento').length > celda.querySelectorAll('.evento').length) celda = c;
+        });
+        var eventos = celda.querySelectorAll('.evento').length;
+        var mas = celda.querySelector('.evento-mas');
+        var desbordaV = celda.scrollHeight - celda.clientHeight;
+        return JSON.stringify({ eventos: eventos, hayMas: !!mas, textoMas: mas ? mas.textContent.trim() : '',
+          desbordaV: desbordaV, tope: topeEtiquetasSemanaCal });
+      })()`));
+      console.log('   con 21 movimientos en el día: se ven ' + saturado.eventos + ' renglones · cupo ' + saturado.tope +
+        ' · "' + saturado.textoMas + '" · desborde vertical ' + saturado.desbordaV + ' px');
+      revisar(saturado.hayMas === true, 'cuando no caben todas, avisa con el "+N más"');
+      revisar(saturado.desbordaV <= 4, 'y ningún renglón queda cortado a medias (desborde ' + saturado.desbordaV + ' px)');
 
       /* El mes sigue funcionando igual después de volver de la semana. */
       const vuelta = JSON.parse(await evaluar(cdp, `(function () {

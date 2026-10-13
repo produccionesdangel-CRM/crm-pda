@@ -2271,10 +2271,51 @@ input:focus, select:focus, textarea:focus {
         /* Con la casilla tan alta, las etiquetas se leen mejor un poco más grandes. */
         .calendario-grid .dia-semana .evento { font-size: 11px; padding: 3px 5px; margin-bottom: 3px; }
         .calendario-grid .dia-semana .evento-mas { font-size: 11px; }
+        /* ─────── @JS-SEMANA-DETALLADA (13/10/2026) ───────
+           En la SEMANA cada renglón va en DOS líneas: arriba la hora y el título de la tarea,
+           abajo el tipo y A QUIÉN PERTENECE (prospecto o cliente, y la campaña). En el MES se
+           sigue usando la etiqueta compacta: ahí no hay espacio. */
+        .calendario-grid .dia-semana .evento-rico {
+            white-space: normal;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            line-height: 1.25;
+            padding: 4px 6px;
+            margin-bottom: 4px;
+            border-radius: 5px;
+        }
+        .calendario-grid .dia-semana .evento-rico .evento-linea1 {
+            font-weight: 600;
+            font-size: 11.5px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;            /* el título usa hasta dos renglones */
+            -webkit-box-orient: vertical;
+        }
+        .calendario-grid .dia-semana .evento-rico .evento-hora {
+            display: inline-block;
+            min-width: 36px;
+            font-weight: 700;
+            opacity: 0.85;
+        }
+        .calendario-grid .dia-semana .evento-rico .evento-linea2 {
+            font-size: 10px;
+            font-weight: 400;
+            opacity: 0.8;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .calendario-grid .dia-semana .evento-rico.evento-completada .evento-linea1 { text-decoration: line-through; }
         @media (max-width: 768px) {
             .calendario-grid .dia-semana { min-height: 116px; }
             .calendario-grid .dia-semana .numero { font-size: 13px; }
             .calendario-grid .dia-semana .evento { font-size: 10px; padding: 2px 5px; margin-bottom: 2px; }
+            .calendario-grid .dia-semana .evento-rico { padding: 3px 5px; margin-bottom: 3px; }
+            .calendario-grid .dia-semana .evento-rico .evento-linea1 { font-size: 10.5px; }
+            .calendario-grid .dia-semana .evento-rico .evento-hora { min-width: 32px; }
+            .calendario-grid .dia-semana .evento-rico .evento-linea2 { font-size: 9.5px; }
             .tareas-lista-orden { width: 100%; }
             .tareas-lista-orden select { width: 100%; }
             .tareas-lista-controles { gap: 8px; }
@@ -2958,7 +2999,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-13.2';
+        var BUILD_APP = '2026-10-13.3';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -9200,27 +9241,66 @@ input:focus, select:focus, textarea:focus {
                 });
             } catch (e) { console.warn('No se pudieron leer los seguimientos del día:', e); }
             let html = '', usados = 0;
+            /* ─────── @JS-SEMANA-DETALLADA (13/10/2026) ───────
+               Jorge: "quiero aprovechar ese espacio extra para que se vea más y mejor información
+               en la semana planificada". En la SEMANA la casilla es tan alta como el mes completo,
+               así que cada renglón se dibuja en DOS líneas: arriba la HORA y el TÍTULO de la tarea,
+               abajo el TIPO y A QUIÉN PERTENECE (prospecto o cliente, y la campaña). Antes solo
+               cabía el tipo y un nombre corto. El MES se queda con la etiqueta compacta de
+               siempre: ahí no hay espacio y meter más texto lo volvería ilegible. */
+            const detallado = vistaSemanaActiva();
+            const horaDe = function(t) { return t.hora ? String(t.hora) : 'Todo el día'; };
             ec.forEach(function(c) {
                 if (usados >= tope) return;
                 const nc = c.festejado ? c.festejado + ' (' + c.clienteNombre + ')' : c.clienteNombre;
-                html += '<div class="evento evento-contrato" title="' + escapeHTML(String(nc || '')) + '" onclick="event.stopPropagation(); abrirContratoDesdeCalendario(\'' + c.clienteId + '\',\'' + c.id + '\')">' + escapeHTML(String(nc || '')) + '</div>';
+                const hora = c.horaEvento ? String(c.horaEvento) : 'Todo el día';
+                if (detallado) {
+                    html += '<div class="evento evento-contrato evento-rico" title="' + escapeHTML(String(nc || '')) + '" onclick="event.stopPropagation(); abrirContratoDesdeCalendario(\'' + c.clienteId + '\',\'' + c.id + '\')">' +
+                        '<span class="evento-linea1"><span class="evento-hora">' + escapeHTML(hora) + '</span>' + escapeHTML(String(c.festejado || c.clienteNombre || 'Evento')) + '</span>' +
+                        '<span class="evento-linea2">' + escapeHTML(String(c.clienteNombre || '')) + (c.estado ? ' · ' + escapeHTML(String(c.estado)) : '') + '</span></div>';
+                } else {
+                    html += '<div class="evento evento-contrato" title="' + escapeHTML(String(nc || '')) + '" onclick="event.stopPropagation(); abrirContratoDesdeCalendario(\'' + c.clienteId + '\',\'' + c.id + '\')">' + escapeHTML(String(nc || '')) + '</div>';
+                }
                 usados++;
             });
             et.forEach(function(t) {
                 if (usados >= tope) return;
-                const cc = tareaCompletada(t) ? 'evento-completada' : ((t.campaniaId || t.participacionId) ? 'evento-campania' : 'evento-tarea');
-                // En la casilla se ve el TIPO (es corto y cabe), con el nombre del prospecto
-                // cuando la tarea viene de una campaña. La descripción, que es el título real
-                // de la tarea, se ve en la lista y al abrir la ficha.
+                const hecha = tareaCompletada(t);
+                const cc = hecha ? 'evento-completada' : ((t.campaniaId || t.participacionId) ? 'evento-campania' : 'evento-tarea');
                 const vin = nombreCortoVinculado(t);
-                const etiqueta = String(t.tipo || 'Tarea') + (t.hora ? ' ' + String(t.hora) : '') + (vin ? ' · ' + vin : '');
-                html += '<div class="evento ' + cc + '" title="' + escapeHTML(tituloDeTarea(t) + (vin ? ' — ' + vin : '')) + '" onclick="event.stopPropagation(); verDetalleTarea(\'' + t.id + '\')">' + escapeHTML(etiqueta) + '</div>';
+                const vEnt = entidadDeTarea(t);
+                if (detallado) {
+                    /* Segunda línea: tipo · a quién pertenece · campaña. Si la tarea no está
+                       vinculada a nadie, en vez de "Sin vincular" se muestra su NOTA: es
+                       información útil que antes solo se veía al abrir la ficha. */
+                    const camp = t.campaniaId ? nombreCampaniaDia(t.campaniaId) : '';
+                    const quien = vin ? (vin + (vEnt && vEnt.tipo === 'prospecto' ? ' (Prospecto)' : '')) : '';
+                    const nota = (!quien && t.notas) ? String(t.notas).replace(/\s+/g, ' ').trim() : '';
+                    const meta = [String(t.tipo || 'Tarea'), quien || nota || 'Sin vincular', camp].filter(Boolean).join(' · ');
+                    const titulo = tituloDeTarea(t);
+                    html += '<div class="evento ' + cc + ' evento-rico" title="' + escapeHTML(titulo + ' — ' + meta) + '" onclick="event.stopPropagation(); verDetalleTarea(\'' + t.id + '\')">' +
+                        '<span class="evento-linea1"><span class="evento-hora">' + escapeHTML(horaDe(t)) + '</span>' + (hecha ? '<i class="fas fa-circle-check"></i> ' : '') + escapeHTML(titulo) + '</span>' +
+                        '<span class="evento-linea2">' + escapeHTML(meta) + '</span></div>';
+                } else {
+                    // En el mes se ve el TIPO (es corto y cabe), con el nombre del prospecto
+                    // cuando la tarea viene de una campaña.
+                    const etiqueta = String(t.tipo || 'Tarea') + (t.hora ? ' ' + String(t.hora) : '') + (vin ? ' · ' + vin : '');
+                    html += '<div class="evento ' + cc + '" title="' + escapeHTML(tituloDeTarea(t) + (vin ? ' — ' + vin : '')) + '" onclick="event.stopPropagation(); verDetalleTarea(\'' + t.id + '\')">' + escapeHTML(etiqueta) + '</div>';
+                }
                 usados++;
             });
             es.forEach(function(p) {
                 if (usados >= tope) return;
                 const pr = (prospectos || []).filter(function(x) { return x && x.id === p.prospectoId; })[0];
-                html += '<div class="evento evento-seguimiento" title="Seguimiento de campaña">' + escapeHTML((pr && pr.nombre) || 'Prospecto') + '</div>';
+                const nombrePr = (pr && pr.nombre) || 'Prospecto';
+                if (detallado) {
+                    const camp = nombreCampaniaDia(p.campaignId);
+                    html += '<div class="evento evento-seguimiento evento-rico" title="Seguimiento de campaña" onclick="event.stopPropagation(); verDetalleProspecto(\'' + p.prospectoId + '\')">' +
+                        '<span class="evento-linea1"><span class="evento-hora">Seguir</span>' + escapeHTML(nombrePr) + '</span>' +
+                        '<span class="evento-linea2">' + escapeHTML([camp ? 'Campaña: ' + camp : 'Campaña', 'Próximo contacto'].filter(Boolean).join(' · ')) + '</span></div>';
+                } else {
+                    html += '<div class="evento evento-seguimiento" title="Seguimiento de campaña">' + escapeHTML(nombrePr) + '</div>';
+                }
                 usados++;
             });
             const total = ec.length + et.length + es.length;
@@ -9286,11 +9366,13 @@ input:focus, select:focus, textarea:focus {
                 // encabezado; los filtros, las acciones y el alto salen del mes.
                 if (!inicioSemanaCal) inicioSemanaCal = inicioDeSemanaDe(hoyISO);
                 tit.textContent = etiquetaSemanaCalendario(inicioSemanaCal);
-                /* Etiquetas que caben en el alto del mes: cada una mide ~17 px (15 en el
-                   teléfono). Antes eran 3 (2 en móvil), así que la casilla tenía espacio de
-                   sobra sin usar. */
+                /* Etiquetas que caben en el alto del mes. En la semana cada renglón lleva el
+                   título en hasta DOS líneas más la línea de datos (@JS-SEMANA-DETALLADA): medido
+                   en el arnés, ~65 px en PC y ~57 en el teléfono. Se apunta por debajo del
+                   espacio real para que NUNCA quede un renglón cortado a medias: lo que no cabe
+                   se anuncia con el "+N más" de siempre. */
                 const utilSemana = Math.max(0, altoMesCal - 34 - 12);
-                topeEtiquetasSemanaCal = Math.max(4, Math.min(40, Math.floor(utilSemana / (movilCal ? 15 : 17))));
+                topeEtiquetasSemanaCal = Math.max(3, Math.min(40, Math.floor(utilSemana / (movilCal ? 57 : 65))));
                 for (let i = 0; i < 7; i++) {
                     const fs = sumarDiasISO(inicioSemanaCal, i);
                     const p = fs.split('-');
