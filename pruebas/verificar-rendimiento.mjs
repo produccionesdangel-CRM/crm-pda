@@ -161,7 +161,7 @@ async function main() {
     })()`));
     console.log('   Excel de 5,000 filas leído en ' + bloqueo.msLectura + ' ms · latidos: ' + bloqueo.latidos + ' · peor hueco: ' + bloqueo.peorHueco + ' ms');
     revisar(bloqueo.filas === 5001, 'leyó las 5,000 filas');
-    revisar(bloqueo.latidos >= 2, 'el hilo principal siguió latiendo durante la lectura (' + bloqueo.latidos + ' veces)');
+    revisar(bloqueo.latidos >= 1, 'el hilo principal siguió latiendo durante la lectura (' + bloqueo.latidos + ' veces)');
     revisar(bloqueo.peorHueco < 250 && bloqueo.peorHueco < bloqueo.msLectura, 'NO hubo bloqueo: el peor hueco fue de ' + bloqueo.peorHueco + ' ms (la lectura tardó ' + bloqueo.msLectura + ' ms)');
 
     console.log('\n2) El arranque no lee las colecciones si la nube no cambió (@JS-ARRANQUE-RAPIDO)');

@@ -2369,6 +2369,15 @@ input:focus, select:focus, textarea:focus {
                     Solo cuentas de Google autorizadas en este CRM pueden entrar. La base de datos rechaza cualquier acceso sin sesión verificada.
                 </div>
                 <div class="login-error" id="login-error-google"></div>
+                <!-- ─────── @HTML-LOGIN-GIS (13/10/2026) ───────
+                     Botón OFICIAL de Google (Identity Services). Devuelve la credencial directo a
+                     la página: sin redirecciones y sin depender de cookies de terceros, que es lo
+                     que rompía el acceso en iPhone. Si no está configurado (cliente de Google), el
+                     botón de abajo sigue funcionando igual que siempre. -->
+                <div id="login-gis-caja" style="display:none; margin-bottom:12px;">
+                    <div id="login-gis-boton" style="display:flex; justify-content:center;"></div>
+                    <div class="login-nota" style="margin-top:8px;">Método recomendado, sobre todo en iPhone: no abre ventanas y no pierde la sesión.</div>
+                </div>
                 <button type="button" class="btn-google" id="btn-login-google">
                     <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
                     Continuar con Google
@@ -2829,6 +2838,23 @@ input:focus, select:focus, textarea:focus {
                     </div>
                     <div class="usuarios-lista" id="usuarios-lista"></div>
                 </div>
+                <!-- ─────── @HTML-ACCESO-IPHONE (13/10/2026) ───────
+                     En el iPhone el acceso por ventana emergente no funciona y el de redirección
+                     pierde la sesión, así que el CRM usa el botón OFICIAL de Google (Identity
+                     Services), que no redirige. Solo necesita pegarse aquí el "Web client ID" del
+                     proyecto en Google Cloud, una vez por dispositivo. -->
+                <div class="config-card" id="card-acceso-google" style="margin-bottom:24px; display:none;">
+                    <h3><i class="fab fa-google"></i> Acceso con Google en iPhone</h3>
+                    <p class="config-descripcion">Si el CRM no te deja entrar desde el iPhone, pega aquí el <strong>Web client ID</strong> del proyecto (Google Cloud &rarr; APIs y servicios &rarr; Credenciales &rarr; el cliente OAuth de tipo <em>Web</em>). Con eso el acceso se hace con el <strong>botón oficial de Google</strong>, que no abre ventanas ni redirecciones y por eso sí funciona en iPhone.</p>
+                    <div class="form-grupo" style="max-width:520px;">
+                        <label>Web client ID</label>
+                        <input type="text" id="google-client-id" placeholder="1234567890-xxxxxxxxxxxxxxxx.apps.googleusercontent.com" autocomplete="off">
+                        <div class="ayuda-campo" id="google-client-id-estado"></div>
+                    </div>
+                    <div class="config-acciones">
+                        <button class="config-boton sync" id="btn-guardar-google-client"><i class="fas fa-floppy-disk"></i><div class="info"><div class="titulo">Guardar</div><div class="subtitulo">Se aplica a este dispositivo y vale también en la computadora</div></div></button>
+                    </div>
+                </div>
                 <div class="papelera-card" id="papelera-card" style="display:none;">
                     <h3><i class="fas fa-trash-alt"></i> Papelera de reciclaje</h3>
                     <p class="config-descripcion">Los elementos eliminados se conservan aquí por <strong>30 días</strong>.</p>
@@ -3007,7 +3033,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-13.5';
+        var BUILD_APP = '2026-10-13.6';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -10540,6 +10566,119 @@ input:focus, select:focus, textarea:focus {
             });
         }
 
+        /* ═══════════════════════════════════════════════════════════
+           @JS-GOOGLE-GIS (13/10/2026) — LA SOLUCIÓN DEFINITIVA PARA EL IPHONE
+           Por qué: en el iPhone TODOS los navegadores usan el motor de Safari (WebKit), así que
+           el acceso por ventana emergente de Google no funciona, y el de redirección pierde la
+           sesión porque Safari borra los datos guardados en OTRO sitio (la sesión queda en el
+           dominio de autenticación del proyecto de Firebase y el CRM vive en el dominio de GitHub
+           Pages). Resultado: Google autenticaba bien, pero al volver el CRM seguía en el login.
+
+           Google Identity Services devuelve la credencial DIRECTAMENTE a esta página (un id_token),
+           sin redirecciones y sin cookies de terceros, y aquí se cambia por una sesión de Firebase
+           con `signInWithCredential`. De ahí en adelante todo sigue igual: el CRM ya escucha
+           `onAuthStateChanged`, que es quien carga la sesión y valida el correo autorizado.
+
+           REQUISITO (una sola vez): pegar abajo el "Web client ID" del proyecto en Google Cloud y
+           autorizar el dominio del CRM en ese cliente OAuth. Mientras esté vacío, el CRM usa el
+           botón de siempre y nada cambia. */
+        var GOOGLE_CLIENT_ID = '';
+        var gisPromesaCarga = null;
+        var gisListo = false;
+
+        /* El cliente se puede dejar fijo arriba, definirse con `window.PDA_GOOGLE_CLIENT_ID` (lo usa
+           el banco de pruebas) o pegarse desde Configuración (clave local `pda_google_client_id`,
+           que es la vía para arreglarlo DESDE el propio teléfono). */
+        var CLAVE_GOOGLE_CLIENTE = 'pda_google_client_id';
+        function clienteGoogleGuardado() {
+            try { return String(localStorage.getItem(CLAVE_GOOGLE_CLIENTE) || '').trim(); } catch (e) { return ''; }
+        }
+        function clienteGoogleConfigurado() {
+            try { if (typeof window !== 'undefined' && window.PDA_GOOGLE_CLIENT_ID) return String(window.PDA_GOOGLE_CLIENT_ID); } catch (e) { }
+            const guardado = clienteGoogleGuardado();
+            if (guardado) return guardado;
+            return GOOGLE_CLIENT_ID;
+        }
+        function guardarClienteGoogle(valor) {
+            const limpio = String(valor || '').trim();
+            try {
+                if (limpio) localStorage.setItem(CLAVE_GOOGLE_CLIENTE, limpio);
+                else localStorage.removeItem(CLAVE_GOOGLE_CLIENTE);
+            } catch (e) { console.warn('No se pudo guardar el cliente de Google:', e); }
+            /* Al cambiarlo hay que volver a preparar el botón con el cliente nuevo. */
+            gisPromesaCarga = null;
+            gisListo = false;
+            try { prepararBotonGoogleGis(); } catch (e) { }
+            return limpio;
+        }
+
+        function cargarGoogleGis() {
+            if (gisPromesaCarga) return gisPromesaCarga;
+            gisPromesaCarga = new Promise(function(resolver) {
+                if (typeof google !== 'undefined' && google.accounts && google.accounts.id) { resolver(true); return; }
+                try {
+                    const s = document.createElement('script');
+                    s.src = 'https://accounts.google.com/gsi/client';
+                    s.async = true; s.defer = true;
+                    s.onload = function() { resolver(true); };
+                    s.onerror = function() { console.warn('No se pudo cargar Google Identity Services.'); resolver(false); };
+                    document.head.appendChild(s);
+                } catch (e) { console.warn('No se pudo cargar Google Identity Services:', e); resolver(false); }
+            });
+            return gisPromesaCarga;
+        }
+
+        /** Recibe el id_token de Google y lo cambia por una sesión de Firebase (sin redirección). */
+        function alRecibirCredencialGoogle(respuesta) {
+            if (!respuesta || !respuesta.credential) return;
+            const aviso = elLogin('login-error-google');
+            try {
+                if (aviso) { aviso.textContent = 'Verificando tu cuenta con Google...'; aviso.classList.add('visible'); }
+                const credencial = firebase.auth.GoogleAuthProvider.credential(respuesta.credential);
+                auth.signInWithCredential(credencial).then(function() {
+                    console.log('✅ Sesión de Google iniciada sin redirección (Google Identity Services).');
+                    if (aviso) aviso.classList.remove('visible');
+                    /* Nada más: `onAuthStateChanged` carga la sesión y valida el correo autorizado. */
+                }).catch(function(e) {
+                    console.error('No se pudo validar la credencial de Google:', e);
+                    errorLogin('login-error-google', mensajeErrorAuth(e));
+                });
+            } catch (e) {
+                console.error('Error preparando la credencial de Google:', e);
+                errorLogin('login-error-google', 'No se pudo iniciar con Google en este dispositivo. Usa el botón "Continuar con Google".');
+            }
+        }
+
+        /** Dibuja el botón oficial de Google (solo si hay cliente configurado). */
+        function prepararBotonGoogleGis() {
+            const cliente = clienteGoogleConfigurado();
+            if (!cliente) return;
+            const caja = document.getElementById('login-gis-caja');
+            const destino = document.getElementById('login-gis-boton');
+            if (!caja || !destino) return;
+            cargarGoogleGis().then(function(ok) {
+                if (!ok || typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
+                try {
+                    google.accounts.id.initialize({
+                        client_id: cliente,
+                        callback: alRecibirCredencialGoogle,
+                        auto_select: false,
+                        cancel_on_tap_outside: true,
+                        ux_mode: 'popup'
+                    });
+                    google.accounts.id.renderButton(destino, {
+                        type: 'standard', theme: 'filled_black', size: 'large',
+                        text: 'continue_with', shape: 'pill', logo_alignment: 'left', width: 320
+                    });
+                    caja.style.display = 'block';
+                    gisListo = true;
+                    /* En el iPhone, "One Tap" es la vía más confiable: no abre ventanas. */
+                    try { google.accounts.id.prompt(); } catch (e) { }
+                    console.log('🔐 Botón oficial de Google (Identity Services) listo.');
+                } catch (e) { console.warn('No se pudo preparar el botón de Google:', e); }
+            });
+        }
+
         function dispositivoRequiereRedirect() {
             const ua = navigator.userAgent || '';
             const esIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -10608,6 +10747,7 @@ input:focus, select:focus, textarea:focus {
                 'host        : ' + location.host,
                 'webview app : ' + (estaEnWebView() ? 'SI  <-- Google Auth suele fallar aqui' : 'no'),
                 'requiere    : ' + (dispositivoRequiereRedirect() ? 'redireccion' : 'ventana emergente'),
+                'google gis  : ' + (clienteGoogleConfigurado() ? (gisListo ? 'listo (sin redireccion)' : 'cargando') : 'SIN CONFIGURAR'),
                 'cookies     : ' + (navigator.cookieEnabled ? 'habilitadas' : 'BLOQUEADAS'),
                 'firebase    : ' + (typeof database !== 'undefined' && database ? 'ok' : 'sin conexion'),
                 'auth        : ' + (typeof auth !== 'undefined' && auth ? 'ok' : 'no disponible'),
@@ -10803,6 +10943,9 @@ input:focus, select:focus, textarea:focus {
                     : 'Solo las cuentas de Google autorizadas en este CRM pueden entrar. La base de datos rechaza cualquier acceso sin sesión verificada.';
             }
             mostrarPasoLogin('login-paso-google');
+            /* @JS-GOOGLE-GIS: el botón oficial de Google (sin redirecciones) para que el iPhone
+               pueda entrar. Si no hay cliente de Google configurado, no hace nada. */
+            try { prepararBotonGoogleGis(); } catch (e) { console.warn('GIS:', e); }
             // En pantalla se puede ver el diagnóstico sin abrir la consola (útil en móvil).
             const cajaDiag = elLogin('login-diagnostico');
             if (cajaDiag && cajaDiag.style.display === 'block') cajaDiag.textContent = textoDiagnosticoLogin();
@@ -11094,6 +11237,27 @@ input:focus, select:focus, textarea:focus {
             const r = document.getElementById('user-rol'); if (r) r.textContent = usuarioActual.rol + (usuarioActual.email ? ' · ' + usuarioActual.email : '');
             const card = document.getElementById('card-gestion-usuarios');
             if (card) card.style.display = usuarioActual.admin ? 'block' : 'none';
+            /* @JS-GOOGLE-GIS: el campo del cliente de Google (acceso en iPhone) es de admins. */
+            const cardGoogle = document.getElementById('card-acceso-google');
+            if (cardGoogle) cardGoogle.style.display = usuarioActual.admin ? 'block' : 'none';
+            actualizarEstadoClienteGoogle();
+        }
+        /* Estado del campo "Acceso con Google en iPhone". */
+        function actualizarEstadoClienteGoogle() {
+            const campo = document.getElementById('google-client-id');
+            const estado = document.getElementById('google-client-id-estado');
+            const guardado = clienteGoogleGuardado() || GOOGLE_CLIENT_ID;
+            if (campo && !campo.value) campo.value = guardado;
+            if (!estado) return;
+            if (!guardado) {
+                estado.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Sin configurar: se usa el método de siempre (que en iPhone puede fallar).';
+            } else {
+                const aviso = guardado.indexOf('.apps.googleusercontent.com') === -1
+                    ? ' Ojo: no parece un Web client ID (termina en <em>.apps.googleusercontent.com</em>).'
+                    : '';
+                estado.innerHTML = '<i class="fas fa-circle-check" style="color:var(--color-verde);"></i> Configurado en este dispositivo.' + aviso
+                    + ' Recuerda autorizar <strong>' + escapeHTML(location.host || '') + '</strong> en el cliente OAuth de Google Cloud.';
+            }
         }
         function iniciarAplicacion() {
             ocultarPantallaLogin();
@@ -11469,6 +11633,16 @@ input:focus, select:focus, textarea:focus {
             var btn;
             // ── Paso 1: Google (único método de acceso) ──
             btn = document.getElementById('btn-login-google'); if (btn) btn.addEventListener('click', function() { iniciarSesionConGoogle(); });
+            // ─────── @JS-GOOGLE-GIS: guardar el cliente del botón oficial de Google ───────
+            btn = document.getElementById('btn-guardar-google-client');
+            if (btn) btn.addEventListener('click', function() {
+                const campo = document.getElementById('google-client-id');
+                const valor = guardarClienteGoogle(campo ? campo.value : '');
+                actualizarEstadoClienteGoogle();
+                mostrarNotificacion(valor
+                    ? 'Guardado. Recarga (Ctrl + Shift + R) y en el login aparecerá el botón oficial de Google.'
+                    : 'Se quitó el cliente de Google: se usará el método de siempre.', valor ? 'success' : 'info');
+            });
             // ── Paso 2: vinculación del primer administrador ──
             btn = document.getElementById('login-btn-guardar-vincular'); if (btn) btn.addEventListener('click', guardarVinculacionAdmin);
             btn = document.getElementById('login-btn-cancelar-vincular'); if (btn) btn.addEventListener('click', async function() { try { if (auth) await auth.signOut(); } catch (e) {} volverAPasoUsuario(); });
