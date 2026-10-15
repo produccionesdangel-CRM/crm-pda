@@ -74,7 +74,8 @@ async function evaluar(cdp, expresion) {
 const XLSX = path.join(os.tmpdir(), 'formulario-500.xlsx');
 const XLSX_GRANDE = path.join(os.tmpdir(), 'formulario-5000.xlsx');
 if (!fs.existsSync(XLSX) || !fs.existsSync(XLSX_GRANDE)) {
-  console.error('Faltan los Excel de prueba. Genera con:\n  node ' + path.join(os.tmpdir(), 'generar-xlsx.mjs') + ' 500\n  node ' + path.join(os.tmpdir(), 'generar-xlsx.mjs') + ' 5000');
+  /* 14/10/2026: el generador ya vive en el repositorio (antes estaba solo en %TEMP% y se perdía). */
+  console.error('Faltan los Excel de prueba. Genera con:\n  node ' + path.join(AQUI, 'generar-xlsx-rendimiento.mjs'));
   process.exit(1);
 }
 const B64 = fs.readFileSync(XLSX).toString('base64');

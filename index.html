@@ -2852,7 +2852,7 @@ input:focus, select:focus, textarea:focus {
                         <div class="ayuda-campo" id="google-client-id-estado"></div>
                     </div>
                     <div class="config-acciones">
-                        <button class="config-boton sync" id="btn-guardar-google-client"><i class="fas fa-floppy-disk"></i><div class="info"><div class="titulo">Guardar</div><div class="subtitulo">Se aplica a este dispositivo y vale también en la computadora</div></div></button>
+                        <button class="config-boton sync" id="btn-guardar-google-client"><i class="fas fa-floppy-disk"></i><div class="info"><div class="titulo">Guardar</div><div class="subtitulo">Se guarda solo en este dispositivo (el CRM ya trae uno puesto para todos)</div></div></button>
                     </div>
                 </div>
                 <div class="papelera-card" id="papelera-card" style="display:none;">
@@ -2912,6 +2912,7 @@ input:focus, select:focus, textarea:focus {
                     </div>
                     <div class="changelog-section">
                         <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v5.0)</h4>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fab fa-google"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Entrar desde el iPhone</div><div class="changelog-desc">En el iPhone <strong>todos</strong> los navegadores usan el motor de Safari: la ventana de Google no se abre y la redirección perdía la sesión, así que volvía al login una y otra vez. Ahora el acceso se hace con el <strong>botón oficial de Google</strong>, que entrega la credencial directamente a la página: <strong>sin ventanas y sin redirecciones</strong>, y por eso sí funciona en iPhone. En la computadora y en Android nada se rompe: el botón de siempre sigue ahí. Si el teléfono abre el enlace desde <strong>WhatsApp, Instagram o el correo</strong>, hay que abrirlo en <strong>Safari</strong>, porque Google no permite entrar en navegadores incrustados.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-filter"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Filtrar las tareas por tipo</div><div class="changelog-desc">La barra de filtros del calendario trae un desplegable <strong>Tipo de tarea</strong> que se llena solo con los tipos del catálogo y con los que ya estén en uso en tus tareas. Filtra <strong>la lista y las etiquetas del calendario</strong> al mismo tiempo; los eventos de contrato y los seguimientos de campaña siguen visibles, porque no son tareas.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-list-check"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Tareas del calendario: título claro, orden a tu gusto y ficha con todo</div><div class="changelog-desc">El título de cada tarea ahora es <strong>la descripción</strong> (antes era el tipo, que no decía de qué se trataba) y el <strong>tipo quedó como etiqueta</strong> para filtrar y ordenar. La lista se puede ordenar por <strong>fecha de vencimiento</strong> (lo próximo primero y lo vencido hasta arriba), por <strong>cliente o prospecto</strong> y por <strong>campañas contra tareas normales</strong>. Al tocar una tarea se abre <strong>su ficha</strong> con los datos y los botones de <strong>WhatsApp y email</strong> (también en la tarjeta), para no tener que salir a buscar al cliente. Al crear la tarea se elige <strong>hora específica o "a cualquier hora del día"</strong>, y se puede mandar a <strong>Google Calendar</strong> o bajar un archivo <strong>.ics</strong> para el calendario del teléfono. El evento de un contrato ya no se llama "Sesión de fotos": lleva <strong>solo el nombre del festejado</strong>; el de una tarea dice <strong>"Tarea: (cliente o prospecto)"</strong>.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-calendar-week"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Calendario: conmutador Mes / Semana</div><div class="changelog-desc">Arriba del calendario hay dos botones, <strong>Mes</strong> y <strong>Semana</strong>. En modo semana se ve <strong>una sola semana de domingo a sábado</strong>, con los mismos filtros, las mismas etiquetas y las mismas acciones; los botones ‹ › avanzan una semana (en modo mes siguen avanzando un mes) y <strong>Hoy</strong> vuelve a la semana o al mes en curso. Es la vista cómoda cuando hay muchas tareas. También hay un botón para <strong>descargar la vista en un archivo .ics</strong>.</div></div></div>
@@ -3033,7 +3034,7 @@ input:focus, select:focus, textarea:focus {
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
         var VERSION = '5.0';
-        var BUILD_APP = '2026-10-13.6';
+        var BUILD_APP = '2026-10-14.1';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -10579,10 +10580,22 @@ input:focus, select:focus, textarea:focus {
            con `signInWithCredential`. De ahí en adelante todo sigue igual: el CRM ya escucha
            `onAuthStateChanged`, que es quien carga la sesión y valida el correo autorizado.
 
-           REQUISITO (una sola vez): pegar abajo el "Web client ID" del proyecto en Google Cloud y
-           autorizar el dominio del CRM en ese cliente OAuth. Mientras esté vacío, el CRM usa el
-           botón de siempre y nada cambia. */
-        var GOOGLE_CLIENT_ID = '';
+           REQUISITO (una sola vez): el "Web client ID" del proyecto en Google Cloud (ver abajo,
+           ya viene puesto) debe tener autorizado el dominio del CRM en ese cliente OAuth. Si no
+           lo estuviera, el botón se dibuja igual pero Google rechaza el acceso al pulsarlo. */
+        /* ─────── @JS-GOOGLE-GIS-CLIENTE (14/10/2026) ───────
+           El cliente vive AQUÍ, en el archivo, a propósito: el campo de Configuración se guarda
+           por dispositivo (`localStorage`) y en el iPhone no se puede llegar a Configuración si
+           no se puede entrar — era un círculo cerrado. Puesto aquí, el botón oficial aparece en
+           el teléfono desde la pantalla de login, sin configurar nada en él.
+
+           El "Web client ID" NO es un secreto: viaja dentro de la página y cualquiera puede verlo.
+           Lo que NUNCA debe escribirse en este archivo es el "client secret" de Google Cloud.
+
+           REQUISITO (una sola vez, en Google Cloud): este cliente OAuth debe tener autorizado el
+           origen del CRM en "Orígenes de JavaScript autorizados" (https://produccionesdangel-crm.github.io).
+           Si no está autorizado, el botón se dibuja pero Google rechaza el acceso al pulsarlo. */
+        var GOOGLE_CLIENT_ID = '308550111377-rlod5v392p7205ed9ln7falrbhcgeuvu.apps.googleusercontent.com';
         var gisPromesaCarga = null;
         var gisListo = false;
 
@@ -11255,7 +11268,12 @@ input:focus, select:focus, textarea:focus {
                 const aviso = guardado.indexOf('.apps.googleusercontent.com') === -1
                     ? ' Ojo: no parece un Web client ID (termina en <em>.apps.googleusercontent.com</em>).'
                     : '';
-                estado.innerHTML = '<i class="fas fa-circle-check" style="color:var(--color-verde);"></i> Configurado en este dispositivo.' + aviso
+                /* @JS-GOOGLE-GIS-CLIENTE (14/10/2026): decir DE DÓNDE sale el cliente. El del
+                   archivo vale en todos los dispositivos; el de este campo, solo aquí. */
+                const origen = clienteGoogleGuardado()
+                    ? 'Configurado en este dispositivo (puesto aquí).'
+                    : 'Configurado en el CRM: vale en todos los dispositivos, también en el iPhone.';
+                estado.innerHTML = '<i class="fas fa-circle-check" style="color:var(--color-verde);"></i> ' + origen + aviso
                     + ' Recuerda autorizar <strong>' + escapeHTML(location.host || '') + '</strong> en el cliente OAuth de Google Cloud.';
             }
         }
@@ -11641,7 +11659,9 @@ input:focus, select:focus, textarea:focus {
                 actualizarEstadoClienteGoogle();
                 mostrarNotificacion(valor
                     ? 'Guardado. Recarga (Ctrl + Shift + R) y en el login aparecerá el botón oficial de Google.'
-                    : 'Se quitó el cliente de Google: se usará el método de siempre.', valor ? 'success' : 'info');
+                    : (GOOGLE_CLIENT_ID
+                        ? 'Se quitó el cliente guardado en este dispositivo: se usará el que trae el CRM.'
+                        : 'Se quitó el cliente de Google: se usará el método de siempre.'), valor ? 'success' : 'info');
             });
             // ── Paso 2: vinculación del primer administrador ──
             btn = document.getElementById('login-btn-guardar-vincular'); if (btn) btn.addEventListener('click', guardarVinculacionAdmin);
@@ -18197,8 +18217,13 @@ input:focus, select:focus, textarea:focus {
     function fuenteDelLector() {
         if (fuenteLectorCache) return fuenteLectorCache;
         /* `decodificar` NO va en la lista: es una función interna de leerZip, y leerZip ya se
-           manda completa. `columnaANumero` sí es de módulo y la usa leerXlsxBuffer. */
-        var piezas = [inflar, leerZip, desescaparXml, estilosDeFecha, columnaANumero,
+           manda completa. `columnaANumero` y `fechaDeSerie` sí son de módulo y las usa
+           leerXlsxBuffer. ─────── @JS-LECTOR-EN-HILO-FECHAS (14/10/2026) ───────
+           Faltaba `fechaDeSerie`: las celdas de fecha de Excel vienen como NÚMERO DE SERIE y esa
+           función es la que las convierte, así que al leer en el hilo aparte CUALQUIER hoja con
+           fechas reales fallaba entera con «fechaDeSerie is not defined» (y la fecha dejaba de
+           importarse). Se agrega aquí, que es el único lugar donde se arma el hilo. */
+        var piezas = [inflar, leerZip, desescaparXml, estilosDeFecha, columnaANumero, fechaDeSerie,
             leerXlsxBuffer, leerOdsBuffer, decodificarTexto, textoAFilas, leerBuffer];
         var codigo = 'var MAX_FILAS = ' + Number(MAX_FILAS) + ';\n' +
             piezas.map(function (f) { return String(f); }).join('\n\n') +

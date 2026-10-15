@@ -12,6 +12,8 @@
  * su camino normal (`onAuthStateChanged`).
  *
  * Comprueba, con Google y Firebase SIMULADOS (no se toca nada real):
+ *   0. El archivo que se publica YA trae el "Web client ID" puesto (por eso el iPhone no tiene que
+ *      configurar nada: el botón oficial aparece solo, desde la pantalla de login). 14/10/2026.
  *   1. Sin cliente de Google configurado, el CRM se comporta como siempre (no rompe nada).
  *   2. Con cliente configurado: se carga el script de Google, se inicializa, se dibuja el botón
  *      oficial y se muestra la caja.
@@ -100,9 +102,26 @@ async function main() {
     await cdp.enviar('Page.navigate', { url: 'http://127.0.0.1:' + puertoHttp + '/' + path.basename(PAGINA) });
     await dormir(4200);
 
+    console.log('\n0) El archivo que se publica YA trae el cliente de Google puesto (el iPhone entra sin configurarse)');
+    const traeCliente = JSON.parse(await evaluar(cdp, `(function () {
+      /* Se lee del propio archivo: no se escribe aquí el identificador real (regla del sandbox:
+         los arneses no llevan datos de producción escritos). */
+      var c = clienteGoogleConfigurado();
+      var linea = (textoDiagnosticoLogin().split('\\n').filter(function (l) { return l.indexOf('google gis') === 0; })[0] || '').trim();
+      return JSON.stringify({ tiene: !!c, forma: /\\.apps\\.googleusercontent\\.com$/.test(String(c)), linea: linea });
+    })()`));
+    console.log('   cliente puesto en el archivo: ' + (traeCliente.tiene ? 'sí' : 'NO') + ' · con la forma correcta (*.apps.googleusercontent.com): ' + traeCliente.forma + ' · diagnóstico: ' + traeCliente.linea);
+    revisar(traeCliente.tiene === true, 'el CRM trae el Web client ID puesto en el propio archivo');
+    revisar(traeCliente.forma === true, 'y tiene la forma de un Web client ID (*.apps.googleusercontent.com)');
+
     console.log('\n1) Sin cliente de Google configurado, el CRM se comporta como siempre');
     const sinCliente = JSON.parse(await evaluar(cdp, `(function () {
-      /* La app arranca en la pantalla de login (sin Firebase, sin sesión). */
+      /* La app arranca en la pantalla de login (sin Firebase, sin sesión).
+         Se vacía el cliente (el del archivo y el guardado) para probar el camino de siempre. */
+      GOOGLE_CLIENT_ID = '';
+      window.PDA_GOOGLE_CLIENT_ID = '';
+      try { localStorage.removeItem('pda_google_client_id'); } catch (e) {}
+      gisListo = false; gisPromesaCarga = null;
       var caja = document.getElementById('login-gis-caja');
       var btn = document.getElementById('btn-login-google');
       return JSON.stringify({
