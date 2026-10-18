@@ -11,17 +11,19 @@
   h1{font-size:23px;margin:0 0 4px}
   .sub{color:#8b9ab0;font-size:14px;margin:0 0 22px}
   .caja{background:#141b26;border:1px solid #23324a;border-radius:12px;padding:16px;margin:16px 0}
-  .url{word-break:break-all;font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#cfe0f5;
+  .ok{border-left:3px solid #2ecc71}
+  .mal{border-left:3px solid #e74c3c}
+  .espera{border-left:3px solid #3b82f6}
+  .url{word-break:break-all;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:#cfe0f5;
        background:#0b111a;border:1px solid #1d2735;border-radius:8px;padding:10px;margin:10px 0}
-  button{background:#3b82f6;color:#fff;border:0;border-radius:9px;padding:11px 18px;font-size:15px;
-         font-weight:600;cursor:pointer}
+  button{background:#3b82f6;color:#fff;border:0;border-radius:9px;padding:10px 16px;font-size:14px;
+         font-weight:600;cursor:pointer;margin-top:6px}
   button:hover{background:#2f6fd8}
   ol{padding-left:22px}
   li{margin:6px 0;color:#c9d5e5}
-  .ok{border-left:3px solid #2ecc71}
-  .mal{border-left:3px solid #e74c3c}
   .nota{color:#8b9ab0;font-size:13px}
   a{color:#6aa8ff}
+  .grande{font-size:42px;line-height:1}
 </style>
 </head>
 <body>
@@ -29,76 +31,96 @@
   <h1 id="titulo">Conectar TikTok con el Planificador JFR Media</h1>
   <p class="sub">Planificador JFR Media</p>
 
-  <div id="caja" class="caja">Leyendo la respuesta de TikTok…</div>
-
-  <div id="pasos" class="caja ok" hidden>
-    <strong>Últimos 2 pasos (en tu computadora):</strong>
-    <ol>
-      <li>Copia la dirección de arriba con el botón <strong>Copiar dirección</strong>.</li>
-      <li>Abre el Planificador → <strong>Conectar redes</strong> → tarjeta <strong>TikTok</strong> →
-        pega la dirección en <strong>“¿TikTok te redirigió pero no volvió al planner?”</strong> y pulsa
-        <strong>Terminar la conexión</strong>.</li>
-    </ol>
-    <p class="nota">El permiso se termina de guardar en tu computadora (la dirección sólo se puede usar
-      una vez y caduca a los 30 minutos).</p>
+  <div id="caja" class="caja espera">
+    <div class="grande">⏳</div>
+    <strong>Conectando con tu planner…</strong>
+    <p class="nota">Estoy avisándole a tu computadora que ya autorizaste TikTok. No cierres esta página.</p>
   </div>
 
-  <p class="nota">Esta página sólo sirve para completar la conexión de tu propia cuenta de TikTok con tu
-    propia instalación del planificador. No guarda ni envía datos a ningún servidor.</p>
+  <div id="manual" class="caja" hidden>
+    <strong>Si no se conectó solo, hazlo a mano (30 segundos):</strong>
+    <p class="nota">Copia esta dirección y pégala en el planner → <b>Conectar redes</b> → <b>TikTok</b> →
+      <b>“¿TikTok te redirigió pero no volvió al planner?”</b> → <b>Terminar la conexión</b>.</p>
+    <div class="url" id="url">—</div>
+    <button id="copiar">Copiar dirección</button>
+  </div>
+
+  <p class="nota">Esta página sólo sirve para terminar de conectar tu propia cuenta de TikTok con tu
+    propia instalación del planificador. No guarda ni envía datos a ningún servidor de terceros.</p>
 </main>
 
 <script>
 (function () {
   var params = new URLSearchParams(location.search);
   var code = params.get('code');
-  var estado = params.get('state');
+  var state = params.get('state');
   var error = params.get('error') || params.get('error_code');
   var caja = document.getElementById('caja');
-  var pasos = document.getElementById('pasos');
+  var manual = document.getElementById('manual');
+  var urlBox = document.getElementById('url');
+
+  function mostrar(clase, emoji, titulo, texto) {
+    caja.className = 'caja ' + clase;
+    caja.innerHTML = '<div class="grande">' + emoji + '</div><strong>' + titulo + '</strong>'
+      + (texto ? '<p class="nota">' + texto + '</p>' : '');
+  }
 
   if (error) {
-    document.getElementById('titulo').textContent = 'TikTok no autorizó la conexión';
-    caja.className = 'caja mal';
-    caja.innerHTML = '<strong>Error:</strong> ' + String(error).replace(/[<>&]/g, '')
-      + (params.get('error_description') ? '<p class="nota">' + String(params.get('error_description')).slice(0, 300) + '</p>' : '')
-      + '<p class="nota">Vuelve al planificador y pulsa otra vez "Conectar con TikTok".</p>';
+    mostrar('mal', '⚠️', 'TikTok no autorizó la conexión',
+      'Error: ' + String(error).replace(/[<>&]/g, '') + '. Vuelve al planner y pulsa otra vez “Conectar con TikTok”.');
     return;
   }
 
   if (!code) {
-    caja.className = 'caja';
-    caja.innerHTML = '<strong>Todavía no hay nada que conectar.</strong>'
-      + '<p class="nota">Esta página se usa cuando TikTok te devuelve aquí después de autorizar. '
-      + 'Empieza el proceso desde el planificador: <b>Conectar redes → TikTok → Conectar con TikTok</b>.</p>';
+    mostrar('', '👋', 'Aquí no hay nada que conectar',
+      'Esta página se usa cuando TikTok te devuelve después de autorizar. Empieza desde el planner: Conectar redes → TikTok → Conectar con TikTok.');
     return;
   }
 
-  caja.className = 'caja ok';
-  caja.innerHTML = '<strong>✅ Autorizaste TikTok.</strong>'
-    + '<p class="nota">Copia esta dirección completa (ya trae el código de un solo uso):</p>'
-    + '<div class="url" id="url">' + location.href.replace(/[<>&]/g, '') + '</div>';
+  /* 1) Intento automático: avisar al planner (http://127.0.0.1 es de confianza, el navegador lo permite) */
+  urlBox.textContent = location.href;
+  var opiniones = ['http://127.0.0.1:4321', 'http://localhost:4321'];
+  var i = 0;
+  function intentar() {
+    if (i >= opiniones.length) {
+      mostrar('mal', '⚠️', 'No pude avisarle al planner',
+        'Abre el planner en esta computadora (INICIAR.cmd) y usa el paso manual de abajo.');
+      manual.hidden = false;
+      return;
+    }
+    var base = opiniones[i++];
+    var url = base + '/api/tiktok/auto?code=' + encodeURIComponent(code) + '&state=' + encodeURIComponent(state || '');
+    var control = (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(12000) : undefined;
+    fetch(url, { mode: 'cors', signal: control, cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.ok) {
+          mostrar('ok', '✅', '¡TikTok conectado!' + (j.usuario ? ' (' + String(j.usuario).replace(/[<>&]/g, '') + ')' : ''),
+            'Ya puedes cerrar esta página y volver al planner. La cuenta quedó conectada.');
+        } else {
+          mostrar('mal', '⚠️', 'El planner no pudo conectar la cuenta',
+            (j && j.error ? String(j.error).replace(/[<>&]/g, '') : 'Error desconocido') + '. Puedes usar el paso manual de abajo.');
+          manual.hidden = false;
+        }
+      })
+      .catch(function () { intentar(); });
+  }
+  intentar();
 
-  var b = document.createElement('button');
-  b.textContent = 'Copiar dirección';
-  b.onclick = function () {
+  document.getElementById('copiar').onclick = function () {
     var texto = location.href;
+    var b = this;
     var listo = function () { b.textContent = '¡Copiada!'; setTimeout(function () { b.textContent = 'Copiar dirección'; }, 2000); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(texto).then(listo, function () { seleccionar(); });
-    } else { seleccionar(); }
-    function seleccionar() {
-      var r = document.createRange();
-      r.selectNodeContents(document.getElementById('url'));
-      var s = window.getSelection();
-      s.removeAllRanges(); s.addRange(r);
+      navigator.clipboard.writeText(texto).then(listo, sel);
+    } else { sel(); }
+    function sel() {
+      var r = document.createRange(); r.selectNodeContents(urlBox);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
       try { document.execCommand('copy'); } catch (e) {}
       listo();
     }
   };
-  caja.appendChild(b);
-  pasos.hidden = false;
-  pasos.className = 'caja ok';
-  void estado;
 })();
 </script>
 </body>
