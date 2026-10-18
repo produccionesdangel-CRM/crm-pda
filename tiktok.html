@@ -95,8 +95,16 @@
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (j && j.ok) {
-          mostrar('ok', '✅', '¡TikTok conectado!' + (j.usuario ? ' (' + String(j.usuario).replace(/[<>&]/g, '') + ')' : ''),
-            'Ya puedes cerrar esta página y volver al planner. La cuenta quedó conectada.');
+          var nombre = j.usuario ? ' (' + String(j.usuario).replace(/[<>&]/g, '') + ')' : '';
+          if (j.ya) {
+            /* la cuenta ya estaba conectada: TikTok no dejó elegir otra */
+            mostrar('ok', '✅', 'Esa cuenta ya estaba conectada' + nombre,
+              'Si querías agregar OTRA cuenta de TikTok: vuelve al planner, pulsa "+ Conectar otra cuenta" y '
+              + 'abre el enlace en una <b>ventana de incógnito</b> (así TikTok no reutiliza la sesión).');
+          } else {
+            mostrar('ok', '✅', '¡TikTok conectado!' + nombre,
+              'Ya puedes cerrar esta página y volver al planner. La cuenta quedó conectada.');
+          }
         } else {
           mostrar('mal', '⚠️', 'El planner no pudo conectar la cuenta',
             (j && j.error ? String(j.error).replace(/[<>&]/g, '') : 'Error desconocido') + '. Puedes usar el paso manual de abajo.');
