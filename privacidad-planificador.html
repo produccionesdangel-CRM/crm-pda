@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Planificador JFR Media — Política de privacidad</title>
+<style>
+  :root{color-scheme:dark}
+  body{margin:0;background:#0e1420;color:#e7edf5;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:760px;margin:0 auto;padding:40px 22px 80px}
+  h1{font-size:26px;margin:0 0 6px}
+  h2{font-size:18px;margin:30px 0 8px;color:#9fc0ee}
+  p,li{color:#c9d5e5}
+  a{color:#6aa8ff}
+  .sub{color:#8b9ab0;font-size:14px;margin:0 0 26px}
+  code{background:#18202e;padding:1px 6px;border-radius:5px;font-size:14px}
+  .nota{background:#141b26;border:1px solid #23324a;border-radius:10px;padding:14px 16px;margin:18px 0}
+  footer{margin-top:40px;border-top:1px solid #1d2735;padding-top:16px;color:#8b9ab0;font-size:13px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Política de privacidad — Planificador JFR Media</h1>
+  <p class="sub">Última actualización: 18 de octubre de 2026</p>
+
+  <p><strong>Planificador JFR Media</strong> es una aplicación de escritorio que corre
+  <strong>en la computadora del propio usuario</strong> y sirve para programar y publicar su
+  contenido de video en sus propias cuentas de redes sociales (Facebook, Instagram, YouTube y TikTok).</p>
+
+  <h2>1. Qué datos trata la aplicación</h2>
+  <ul>
+    <li><strong>Los videos e imágenes del usuario:</strong> se leen del disco de la propia computadora y se
+      envían únicamente a la red social que el usuario elige publicar. <strong>No se copian a ningún
+      servidor del desarrollador</strong>: la aplicación no tiene servidor propio.</li>
+    <li><strong>Datos de la cuenta conectada:</strong> cuando el usuario autoriza una red social, la
+      aplicación recibe los permisos que la red concede (por ejemplo el nombre y la foto de perfil, o el
+      identificador de la cuenta) y los tokens de acceso necesarios para publicar.</li>
+    <li><strong>La programación del contenido:</strong> fechas, horas, títulos y descripciones que el
+      usuario escribe.</li>
+  </ul>
+
+  <h2>2. Dónde se guarda todo</h2>
+  <div class="nota">
+    <p><strong>Todo se guarda en la computadora del usuario</strong>, en la carpeta
+    <code>data</code> del programa. Los tokens de acceso se guardan en el archivo
+    <code>data/conexiones.json</code>. No hay nube, ni base de datos, ni servidores del desarrollador.</p>
+  </div>
+
+  <h2>3. Para qué se usa</h2>
+  <ul>
+    <li>Publicar el contenido que el usuario programó, en las fechas y horas que él eligió.</li>
+    <li>Mostrar el estado de las publicaciones (pendiente, publicada o con error).</li>
+    <li>Mostrar estadísticas propias de las cuentas del usuario, cuando la red social lo permite.</li>
+  </ul>
+
+  <h2>4. Qué NO hace la aplicación</h2>
+  <ul>
+    <li><strong>No</strong> publica en cuentas de terceras personas: sólo en las cuentas que el usuario
+      autoriza expresamente.</li>
+    <li><strong>No</strong> vende, alquila ni comparte datos con nadie.</li>
+    <li><strong>No</strong> usa analítica, rastreadores ni publicidad.</li>
+    <li><strong>No</strong> lee mensajes privados ni datos de otros usuarios de las redes sociales.</li>
+  </ul>
+
+  <h2>5. Con quién se comparte</h2>
+  <p>Sólo con la red social que el usuario elige: los videos y los textos se envían a través de las
+  interfaces oficiales (APIs) de Facebook/Meta, Google/YouTube y TikTok, aplicando las políticas de
+  privacidad de cada una de esas plataformas.</p>
+
+  <h2>6. Cuánto tiempo se guarda</h2>
+  <p>Mientras el usuario no borre los datos. El usuario puede desconectar una cuenta desde la propia
+  aplicación (botón <strong>Desconectar</strong>), lo que elimina los tokens guardados, o borrar la
+  carpeta <code>data</code> para eliminar todo.</p>
+
+  <h2>7. Derechos y contacto</h2>
+  <p>Para solicitar el acceso, la corrección o la eliminación de cualquier dato, o para preguntar
+  cualquier cosa sobre esta política, escribe a:
+  <a href="mailto:produccionesdangel@gmail.com">produccionesdangel@gmail.com</a>.
+  Si la solicitud se refiere a datos de una red social concreta, también se puede revocar el permiso
+  desde la configuración de esa red social.</p>
+
+  <footer>
+    Planificador JFR Media · Aplicación de escritorio para programar y publicar contenido propio.
+  </footer>
+</main>
+</body>
+</html>

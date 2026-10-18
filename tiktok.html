@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Planificador JFR Media — Conectar TikTok</title>
+<style>
+  :root{color-scheme:dark}
+  body{margin:0;background:#0e1420;color:#e7edf5;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:720px;margin:0 auto;padding:36px 22px 70px}
+  h1{font-size:23px;margin:0 0 4px}
+  .sub{color:#8b9ab0;font-size:14px;margin:0 0 22px}
+  .caja{background:#141b26;border:1px solid #23324a;border-radius:12px;padding:16px;margin:16px 0}
+  .url{word-break:break-all;font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#cfe0f5;
+       background:#0b111a;border:1px solid #1d2735;border-radius:8px;padding:10px;margin:10px 0}
+  button{background:#3b82f6;color:#fff;border:0;border-radius:9px;padding:11px 18px;font-size:15px;
+         font-weight:600;cursor:pointer}
+  button:hover{background:#2f6fd8}
+  ol{padding-left:22px}
+  li{margin:6px 0;color:#c9d5e5}
+  .ok{border-left:3px solid #2ecc71}
+  .mal{border-left:3px solid #e74c3c}
+  .nota{color:#8b9ab0;font-size:13px}
+  a{color:#6aa8ff}
+</style>
+</head>
+<body>
+<main>
+  <h1 id="titulo">Conectar TikTok con el Planificador JFR Media</h1>
+  <p class="sub">Planificador JFR Media</p>
+
+  <div id="caja" class="caja">Leyendo la respuesta de TikTok…</div>
+
+  <div id="pasos" class="caja ok" hidden>
+    <strong>Últimos 2 pasos (en tu computadora):</strong>
+    <ol>
+      <li>Copia la dirección de arriba con el botón <strong>Copiar dirección</strong>.</li>
+      <li>Abre el Planificador → <strong>Conectar redes</strong> → tarjeta <strong>TikTok</strong> →
+        pega la dirección en <strong>“¿TikTok te redirigió pero no volvió al planner?”</strong> y pulsa
+        <strong>Terminar la conexión</strong>.</li>
+    </ol>
+    <p class="nota">El permiso se termina de guardar en tu computadora (la dirección sólo se puede usar
+      una vez y caduca a los 30 minutos).</p>
+  </div>
+
+  <p class="nota">Esta página sólo sirve para completar la conexión de tu propia cuenta de TikTok con tu
+    propia instalación del planificador. No guarda ni envía datos a ningún servidor.</p>
+</main>
+
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var code = params.get('code');
+  var estado = params.get('state');
+  var error = params.get('error') || params.get('error_code');
+  var caja = document.getElementById('caja');
+  var pasos = document.getElementById('pasos');
+
+  if (error) {
+    document.getElementById('titulo').textContent = 'TikTok no autorizó la conexión';
+    caja.className = 'caja mal';
+    caja.innerHTML = '<strong>Error:</strong> ' + String(error).replace(/[<>&]/g, '')
+      + (params.get('error_description') ? '<p class="nota">' + String(params.get('error_description')).slice(0, 300) + '</p>' : '')
+      + '<p class="nota">Vuelve al planificador y pulsa otra vez "Conectar con TikTok".</p>';
+    return;
+  }
+
+  if (!code) {
+    caja.className = 'caja';
+    caja.innerHTML = '<strong>Todavía no hay nada que conectar.</strong>'
+      + '<p class="nota">Esta página se usa cuando TikTok te devuelve aquí después de autorizar. '
+      + 'Empieza el proceso desde el planificador: <b>Conectar redes → TikTok → Conectar con TikTok</b>.</p>';
+    return;
+  }
+
+  caja.className = 'caja ok';
+  caja.innerHTML = '<strong>✅ Autorizaste TikTok.</strong>'
+    + '<p class="nota">Copia esta dirección completa (ya trae el código de un solo uso):</p>'
+    + '<div class="url" id="url">' + location.href.replace(/[<>&]/g, '') + '</div>';
+
+  var b = document.createElement('button');
+  b.textContent = 'Copiar dirección';
+  b.onclick = function () {
+    var texto = location.href;
+    var listo = function () { b.textContent = '¡Copiada!'; setTimeout(function () { b.textContent = 'Copiar dirección'; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(texto).then(listo, function () { seleccionar(); });
+    } else { seleccionar(); }
+    function seleccionar() {
+      var r = document.createRange();
+      r.selectNodeContents(document.getElementById('url'));
+      var s = window.getSelection();
+      s.removeAllRanges(); s.addRange(r);
+      try { document.execCommand('copy'); } catch (e) {}
+      listo();
+    }
+  };
+  caja.appendChild(b);
+  pasos.hidden = false;
+  pasos.className = 'caja ok';
+  void estado;
+})();
+</script>
+</body>
+</html>
