@@ -19559,5 +19559,279 @@ input:focus, select:focus, textarea:focus {
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
+
+<!-- @PDA-AUTO-EXPORT v1: respaldo del catalogo para Fotografias PDA -->
+<script>
+/* Respaldo automático del CRM para Fotografías PDA.
+   Guarda un catálogo compacto en Descargas cada vez que cambian clientes o contratos.
+   Requiere autorizar la carpeta una vez por PC (Chrome/Edge). */
+(function () {
+  'use strict';
+  if (window.PDA_AUTO_EXPORT) return;
+
+  const ARCHIVO = 'pda-catalogo_actual.json';
+  const DB = 'pda-auto-export';
+  const TIENDA = 'handles';
+  const LLAVE = 'descargas';
+  const CADA = 5000;
+
+  const esPC = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  if (!esPC || !('showDirectoryPicker' in window)) {
+    window.PDA_AUTO_EXPORT = { disponible: false };
+    return;
+  }
+
+  let handle = null;
+  let estadoPermiso = 'sin';
+  let ultimaHuella = '';
+  let escribiendo = false;
+  let vigilando = false;
+  let boton = null;
+  let etiqueta = null;
+
+  const aviso = (texto, tipo) => {
+    try {
+      if (typeof mostrarNotificacion === 'function') mostrarNotificacion(texto, tipo || 'info');
+    } catch (e) { /* sin sesión todavía */ }
+  };
+
+  function catalogo() {
+    const listaPaquetes = (window.paquetes || []).map((p) => ({
+      id: p.id,
+      nombre: p.nombre || '',
+      estatus: p.estatus || '',
+      descripcion: p.descripcion || '',
+      items: (p.items || []).map((it) => ({
+        nombre: it.nombre || '',
+        cantidad: it.cantidad || 1,
+        tipo: it.tipo || 'personalizado',
+      })),
+    }));
+    const listaClientes = (window.clientes || []).map((c) => ({
+      id: c.id,
+      nombre: c.nombre || '',
+      telefono: c.telefono || '',
+      email: c.email || '',
+      estado: c.estado || '',
+      contratos: (c.contratos || []).map((ct) => ({
+        id: ct.id,
+        clienteId: c.id,
+        tipo: ct.tipo || '',
+        paqueteId: ct.paqueteId || '',
+        servicioId: ct.servicioId || '',
+        festejado: ct.festejado || '',
+        fechaEvento: ct.fechaEvento || '',
+        estado: ct.estado || '',
+      })),
+    }));
+    const fecha = (typeof obtenerFechaActual === 'function')
+      ? obtenerFechaActual()
+      : new Date().toISOString().slice(0, 10);
+    return {
+      version: (typeof VERSION !== 'undefined' ? VERSION : ''),
+      fechaExportacion: fecha,
+      paquetes: listaPaquetes,
+      clientes: listaClientes,
+    };
+  }
+
+  function huella(texto) {
+    let h = 5381;
+    for (let i = 0; i < texto.length; i++) h = ((h << 5) + h + texto.charCodeAt(i)) | 0;
+    return texto.length + ':' + h;
+  }
+
+  function abrirDB() {
+    return new Promise((ok, mal) => {
+      const req = indexedDB.open(DB, 1);
+      req.onupgradeneeded = () => req.result.createObjectStore(TIENDA);
+      req.onsuccess = () => ok(req.result);
+      req.onerror = () => mal(req.error);
+    });
+  }
+
+  async function guardarHandle(h) {
+    const db = await abrirDB();
+    await new Promise((ok, mal) => {
+      const tx = db.transaction(TIENDA, 'readwrite');
+      tx.objectStore(TIENDA).put(h, LLAVE);
+      tx.oncomplete = ok;
+      tx.onerror = () => mal(tx.error);
+    });
+    db.close();
+  }
+
+  async function leerHandle() {
+    try {
+      const db = await abrirDB();
+      const h = await new Promise((ok) => {
+        const tx = db.transaction(TIENDA, 'readonly');
+        const req = tx.objectStore(TIENDA).get(LLAVE);
+        req.onsuccess = () => ok(req.result || null);
+        req.onerror = () => ok(null);
+      });
+      db.close();
+      return h;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function consultarPermiso() {
+    if (!handle) return 'sin';
+    try {
+      estadoPermiso = await handle.queryPermission({ mode: 'readwrite' });
+    } catch (e) {
+      estadoPermiso = 'prompt';
+    }
+    return estadoPermiso;
+  }
+
+  async function pedirPermiso() {
+    if (!handle) return false;
+    try {
+      estadoPermiso = await handle.requestPermission({ mode: 'readwrite' });
+    } catch (e) {
+      estadoPermiso = 'prompt';
+    }
+    return estadoPermiso === 'granted';
+  }
+
+  function pintar(extra) {
+    if (!boton || !etiqueta) return;
+    const titulo = boton.querySelector('.titulo');
+    if (estadoPermiso === 'granted') {
+      titulo.textContent = 'Respaldo automático activo';
+      etiqueta.textContent = extra || 'Se actualiza solo al cambiar un cliente o contrato';
+    } else if (handle) {
+      titulo.textContent = 'Activar respaldo automático';
+      etiqueta.textContent = 'Falta dar permiso a la carpeta (un clic)';
+    } else {
+      titulo.textContent = 'Activar respaldo automático';
+      etiqueta.textContent = 'Elige la carpeta Descargas una vez';
+    }
+  }
+
+  async function escribir() {
+    if (!handle || escribiendo) return false;
+    if (await consultarPermiso() !== 'granted') {
+      pintar();
+      return false;
+    }
+    const texto = JSON.stringify(catalogo(), null, 2);
+    const marca = huella(texto);
+    if (marca === ultimaHuella) return false;
+    escribiendo = true;
+    try {
+      const archivo = await handle.getFileHandle(ARCHIVO, { create: true });
+      const w = await archivo.createWritable();
+      await w.write(new Blob([texto], { type: 'application/json' }));
+      await w.close();
+      ultimaHuella = marca;
+      pintar('Guardado ' + new Date().toLocaleTimeString('es-MX', {
+        hour: '2-digit', minute: '2-digit',
+      }));
+      return true;
+    } catch (e) {
+      pintar('No se pudo guardar: ' + e.message);
+      return false;
+    } finally {
+      escribiendo = false;
+    }
+  }
+
+  function vigilar() {
+    if (vigilando) return;
+    vigilando = true;
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && estadoPermiso === 'granted') escribir();
+    }, CADA);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && estadoPermiso === 'granted') escribir();
+    });
+  }
+
+  async function activar() {
+    try {
+      const dir = await window.showDirectoryPicker({
+        id: 'pda-descargas', mode: 'readwrite', startIn: 'downloads',
+      });
+      handle = dir;
+      estadoPermiso = 'granted';
+      await guardarHandle(dir);
+      pintar();
+      aviso('Respaldo automático activado para Fotografías PDA.', 'success');
+      await escribir();
+      vigilar();
+    } catch (e) {
+      if (e && e.name !== 'AbortError') aviso('No se pudo activar: ' + e.message, 'error');
+    }
+  }
+
+  function insertarTarjeta() {
+    const btnExport = document.getElementById('btn-exportar-datos');
+    if (!btnExport || document.getElementById('btn-auto-export')) return;
+    const card = document.createElement('div');
+    card.className = 'config-card';
+    card.innerHTML = '<h3><i class="fas fa-sync-alt"></i> Respaldo automático para el selector</h3>'
+      + '<p class="config-descripcion">Guarda <strong>pda-catalogo_actual.json</strong> en Descargas '
+      + 'cuando cambie un cliente o contrato, para que Fotografías PDA lo tome solo al abrir. '
+      + 'Solo nombres y fechas: sin credenciales, pagos ni notas.</p>'
+      + '<div class="config-acciones"><button class="config-boton exportar" id="btn-auto-export">'
+      + '<i class="fas fa-folder-open"></i><div class="info">'
+      + '<div class="titulo">Activar respaldo automático</div>'
+      + '<div class="subtitulo" id="auto-export-estado">Elige la carpeta Descargas una vez</div>'
+      + '</div></button></div>';
+    const contenedor = btnExport.closest('.config-card');
+    if (contenedor) contenedor.after(card);
+
+    boton = card.querySelector('#btn-auto-export');
+    etiqueta = card.querySelector('#auto-export-estado');
+    boton.addEventListener('click', async () => {
+      if (handle && estadoPermiso !== 'granted') {
+        if (await pedirPermiso()) {
+          pintar();
+          await escribir();
+          vigilar();
+        } else {
+          pintar('Permiso pendiente');
+        }
+        return;
+      }
+      await activar();
+    });
+  }
+
+  async function iniciar() {
+    insertarTarjeta();
+    handle = await leerHandle();
+    if (!handle) {
+      pintar();
+      return;
+    }
+    await consultarPermiso();
+    pintar();
+    if (estadoPermiso === 'granted') {
+      setTimeout(() => escribir(), 1500);
+      vigilar();
+    }
+  }
+
+  window.PDA_AUTO_EXPORT = {
+    disponible: true,
+    catalogo,
+    escribir,
+    activar,
+    estado: () => ({ handle: !!handle, permiso: estadoPermiso }),
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', iniciar);
+  } else {
+    iniciar();
+  }
+})();
+
+</script>
 </body>
 </html>
