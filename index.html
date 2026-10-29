@@ -2450,7 +2450,7 @@ input:focus, select:focus, textarea:focus {
             <div class="sidebar-footer">
                 <button class="btn-colapsar" id="btn-colapsar" title="Colapsar menú"><i class="fas fa-chevron-left"></i><span>Colapsar</span></button>
                 <button class="btn-logout" id="btn-logout" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></button>
-                <div class="version">v5.0</div>
+                <div class="version">v5.0.26</div>
             </div>
         </nav>
 
@@ -2903,15 +2903,16 @@ input:focus, select:focus, textarea:focus {
                     </div>
                 </div>
                 <div class="version-card">
-                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v5.0</span></h3>
+                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v5.0.26</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">5.0</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">5.0.26</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
                     </div>
                     <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v5.0)</h4>
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v5.0.26)</h4>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-cloud-download-alt"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Corregido: el aviso de “Cargar desde la nube” tenía las respuestas invertidas</div><div class="changelog-desc">El aviso que ofrecía <strong>sincronizar antes de cargar</strong> hacía lo contrario: al pulsar <strong>Aceptar</strong> no sincronizaba y seguía al descarte; solo <strong>Cancelar</strong> sincronizaba. Ahora <strong>Aceptar sincroniza</strong> (respeta versiones y, si hay conflicto, se detiene para que lo resuelvas) y <strong>Cancelar</strong> es el único camino para cargar de todos modos. El descarte advierte cuántos cambios locales se van a perder. Esto evita que un pago guardado solo en la PC se borre al cargar la nube.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fab fa-google"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Entrar desde el iPhone</div><div class="changelog-desc">En el iPhone <strong>todos</strong> los navegadores usan el motor de Safari: la ventana de Google no se abre y la redirección perdía la sesión, así que volvía al login una y otra vez. Ahora el acceso se hace con el <strong>botón oficial de Google</strong>, que entrega la credencial directamente a la página: <strong>sin ventanas y sin redirecciones</strong>, y por eso sí funciona en iPhone. En la computadora y en Android nada se rompe: el botón de siempre sigue ahí. Si el teléfono abre el enlace desde <strong>WhatsApp, Instagram o el correo</strong>, hay que abrirlo en <strong>Safari</strong>, porque Google no permite entrar en navegadores incrustados.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-filter"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Filtrar las tareas por tipo</div><div class="changelog-desc">La barra de filtros del calendario trae un desplegable <strong>Tipo de tarea</strong> que se llena solo con los tipos del catálogo y con los que ya estén en uso en tus tareas. Filtra <strong>la lista y las etiquetas del calendario</strong> al mismo tiempo; los eventos de contrato y los seguimientos de campaña siguen visibles, porque no son tareas.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-list-check"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Tareas del calendario: título claro, orden a tu gusto y ficha con todo</div><div class="changelog-desc">El título de cada tarea ahora es <strong>la descripción</strong> (antes era el tipo, que no decía de qué se trataba) y el <strong>tipo quedó como etiqueta</strong> para filtrar y ordenar. La lista se puede ordenar por <strong>fecha de vencimiento</strong> (lo próximo primero y lo vencido hasta arriba), por <strong>cliente o prospecto</strong> y por <strong>campañas contra tareas normales</strong>. Al tocar una tarea se abre <strong>su ficha</strong> con los datos y los botones de <strong>WhatsApp y email</strong> (también en la tarjeta), para no tener que salir a buscar al cliente. Al crear la tarea se elige <strong>hora específica o "a cualquier hora del día"</strong>, y se puede mandar a <strong>Google Calendar</strong> o bajar un archivo <strong>.ics</strong> para el calendario del teléfono. El evento de un contrato ya no se llama "Sesión de fotos": lleva <strong>solo el nombre del festejado</strong>; el de una tarea dice <strong>"Tarea: (cliente o prospecto)"</strong>.</div></div></div>
@@ -3033,8 +3034,8 @@ input:focus, select:focus, textarea:focus {
         /* ═══════════════════════════════════════════════════════════ */
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
-        var VERSION = '5.0';
-        var BUILD_APP = '2026-10-14.1';
+        var VERSION = '5.0.26';
+        var BUILD_APP = '2026-10-29.1';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -11544,13 +11545,25 @@ input:focus, select:focus, textarea:focus {
             }
             btn = document.getElementById('btn-cargar-firebase'); if (btn) btn.addEventListener('click', async function() {
                 if (!database) { mostrarNotificacion('Firebase no disponible', 'error'); return; }
-                if (hayEntidadesSucias() && !confirm('Tienes ' + contarEntidadesSucias() + ' cambio(s) local(es) sin sincronizar.\nSi cargas desde la nube podrías perderlos.\n\n¿Sincronizar primero en lugar de cargar?')) {
-                    const ok = await guardarEnFirebase(true);
-                    if (ok) mostrarNotificacion('Cambios locales sincronizados.', 'success');
-                    return;
-                }
                 if (hayEntidadesSucias()) {
-                    if (!confirm('¿Cargar de todos modos desde la nube? Se descartarán tus cambios locales.')) return;
+                    const pendientes = contarEntidadesSucias();
+                    /* @JS-CONFIRM-CARGAR (29/10/2026) — el aviso estaba INVERTIDO.
+                       Antes: "¿Sincronizar primero?" con Aceptar NO sincronizaba (seguía
+                       al descarte) y solo Cancelar sincronizaba. Eso hizo que un pago
+                       guardado solo en la PC se borrara al cargar la nube.
+                       Ahora: Aceptar = sincronizar (respeta versiones y, si hay
+                       conflicto, se detiene); Cancelar = no sincronizar y solo
+                       entonces ofrecer el descarte, avisando cuántos cambios se pierden. */
+                    const quiereSincronizar = confirm('Tienes ' + pendientes + ' cambio(s) local(es) sin sincronizar.\n\n' +
+                        'Aceptar = SINCRONIZAR ahora (recomendado).\n' +
+                        'Cancelar = NO sincronizar y decidir si cargar de todos modos.');
+                    if (quiereSincronizar) {
+                        const ok = await guardarEnFirebase(false);
+                        if (ok) mostrarNotificacion('Cambios locales sincronizados.', 'success');
+                        else mostrarNotificacion('No se pudieron subir todos los cambios. Revisa el aviso de conflicto antes de cargar.', 'warning');
+                        return;
+                    }
+                    if (!confirm('¿Cargar de todos modos desde la nube? Se descartarán tus ' + pendientes + ' cambio(s) local(es).')) return;
                     limpiarEntidadesSucias();
                 } else if (!confirm('¿Cargar datos desde Firebase? Se reemplazará la copia local.')) return;
                 await cargarDesdeFirebase(true);
