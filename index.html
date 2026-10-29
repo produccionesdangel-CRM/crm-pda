@@ -2450,7 +2450,7 @@ input:focus, select:focus, textarea:focus {
             <div class="sidebar-footer">
                 <button class="btn-colapsar" id="btn-colapsar" title="Colapsar menú"><i class="fas fa-chevron-left"></i><span>Colapsar</span></button>
                 <button class="btn-logout" id="btn-logout" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></button>
-                <div class="version">v5.1.0</div>
+                <div class="version">v5.2.0</div>
             </div>
         </nav>
 
@@ -2903,16 +2903,17 @@ input:focus, select:focus, textarea:focus {
                     </div>
                 </div>
                 <div class="version-card">
-                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v5.1.0</span></h3>
+                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v5.2.0</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">5.1.0</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">5.2.0</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
                     </div>
                     <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v5.1.0)</h4>
-                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-bolt"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Sincronización en tiempo real: los cambios llegan solos</div><div class="changelog-desc">La app ahora está <strong>suscrita a los clientes en Firebase</strong>: cuando otra PC guarda un cliente, un contrato o un pago, el cambio llega aquí en segundos, sin pulsar “Cargar desde la nube”. Si no hay internet, el estado dice <strong>“Sin conexión · copia local”</strong> y no se hace pasar por datos al día. Si hay una ventana abierta, avisa que hay datos nuevos y los aplica al cerrarla. La protección de cambios locales se mantiene: un cliente con cambios pendientes no se pisa.</div></div></div>
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v5.2.0)</h4>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-database"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Contratos y pagos en registros propios</div><div class="changelog-desc">Los contratos viven ahora en <strong>contratos/</strong> y cada pago o cargo en <strong>movimientos/</strong>, separado del cliente. Un conflicto en el teléfono o las notas del cliente ya no puede bloquear un pago. Los movimientos no se borran: se anulan con estado y auditoría. Durante la transición se sigue guardando también la copia anidada, así la v5.1.0 puede volver a leer los datos.</div></div></div>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-bolt"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Sincronización en tiempo real: los cambios llegan solos</div><div class="changelog-desc">La app está suscrita a los clientes, contratos y movimientos: cuando otra PC guarda un pago, un contrato o un cliente, el cambio llega en segundos sin pulsar “Cargar desde la nube”. Si no hay internet, el estado dice “Sin conexión · copia local” y no se hace pasar por datos al día.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-cloud-download-alt"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Corregido: el aviso de “Cargar desde la nube” tenía las respuestas invertidas</div><div class="changelog-desc">El aviso que ofrecía <strong>sincronizar antes de cargar</strong> hacía lo contrario: al pulsar <strong>Aceptar</strong> no sincronizaba y seguía al descarte; solo <strong>Cancelar</strong> sincronizaba. Ahora <strong>Aceptar sincroniza</strong> (respeta versiones y, si hay conflicto, se detiene para que lo resuelvas) y <strong>Cancelar</strong> es el único camino para cargar de todos modos. El descarte advierte cuántos cambios locales se van a perder. Esto evita que un pago guardado solo en la PC se borre al cargar la nube.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fab fa-google"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Entrar desde el iPhone</div><div class="changelog-desc">En el iPhone <strong>todos</strong> los navegadores usan el motor de Safari: la ventana de Google no se abre y la redirección perdía la sesión, así que volvía al login una y otra vez. Ahora el acceso se hace con el <strong>botón oficial de Google</strong>, que entrega la credencial directamente a la página: <strong>sin ventanas y sin redirecciones</strong>, y por eso sí funciona en iPhone. En la computadora y en Android nada se rompe: el botón de siempre sigue ahí. Si el teléfono abre el enlace desde <strong>WhatsApp, Instagram o el correo</strong>, hay que abrirlo en <strong>Safari</strong>, porque Google no permite entrar en navegadores incrustados.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-filter"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Filtrar las tareas por tipo</div><div class="changelog-desc">La barra de filtros del calendario trae un desplegable <strong>Tipo de tarea</strong> que se llena solo con los tipos del catálogo y con los que ya estén en uso en tus tareas. Filtra <strong>la lista y las etiquetas del calendario</strong> al mismo tiempo; los eventos de contrato y los seguimientos de campaña siguen visibles, porque no son tareas.</div></div></div>
@@ -3035,8 +3036,8 @@ input:focus, select:focus, textarea:focus {
         /* ═══════════════════════════════════════════════════════════ */
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
-        var VERSION = '5.1.0';
-        var BUILD_APP = '2026-10-29.3';
+        var VERSION = '5.2.0';
+        var BUILD_APP = '2026-10-29.5';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -5188,6 +5189,7 @@ input:focus, select:focus, textarea:focus {
                 paquetes = paquetesR; serviciosAdicionales = serviciosR; prospectos = prospectosR; clientes = clientesR; tareas = tareasR;
                 campanias = campaniasR; participaciones = participacionesR;
                 normalizarRegistros();
+                await hidratarF2();
                 if (Array.isArray(historialRemoto) && historialRemoto.length > 0) historial = historialRemoto;
                 if (Array.isArray(papeleraRemota)) papelera = papeleraRemota;
                 ultimaActualizacionRemota = versionData && versionData.ultimaActualizacion ? versionData.ultimaActualizacion : null;
@@ -5255,7 +5257,7 @@ input:focus, select:focus, textarea:focus {
         }
 
         /* ═══════════════════════════════════════════════════════════ */
-        /* @JS-TIEMPO-REAL (v5.1.0) — la nube empuja los cambios          */
+        /* @JS-TIEMPO-REAL (v5.1.0 F1) — la nube empuja los cambios       */
         /* ═══════════════════════════════════════════════════════════ */
         /* Escucha /clientes en tiempo real. Cada cambio de otra PC llega
            aquí y se aplica a la copia local, sin "Cargar desde la nube".
@@ -5329,14 +5331,16 @@ input:focus, select:focus, textarea:focus {
             normalizarRegistros();
             console.log('🔄 [tiempo real] /clientes aplicado (' + resultado.length + ' clientes)');
 
-            if (timeoutGuardadoLocalRemoto) clearTimeout(timeoutGuardadoLocalRemoto);
-            timeoutGuardadoLocalRemoto = setTimeout(function() {
-                guardarDatosLocal().then(function() {
-                    if (estadoSync.conectado && !hayEntidadesSucias()) actualizarEstadoSync('online', 'En vivo');
-                }).catch(function() {});
-            }, 450);
+            hidratarF2().then(function() {
+                if (timeoutGuardadoLocalRemoto) clearTimeout(timeoutGuardadoLocalRemoto);
+                timeoutGuardadoLocalRemoto = setTimeout(function() {
+                    guardarDatosLocal().then(function() {
+                        if (estadoSync.conectado && !hayEntidadesSucias()) actualizarEstadoSync('online', 'En vivo');
+                    }).catch(function() {});
+                }, 450);
 
-            programarRenderPorCambioRemoto();
+                programarRenderPorCambioRemoto();
+            });
         }
 
         function programarRenderPorCambioRemoto() {
@@ -5358,6 +5362,161 @@ input:focus, select:focus, textarea:focus {
             if (!renderRemotoPendiente) return;
             renderRemotoPendiente = false;
             renderizarTrasCargarNube();
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-F2-ADAPTADOR (v5.2.0-pruebas) — contratos y movimientos   */
+        /* ═══════════════════════════════════════════════════════════ */
+        /* Lee contratos/ y movimientos/ y arma en memoria la forma que
+           la UI ya conoce: cliente.contratos[] y contrato.pagos/cargos[].
+           Es solo lectura: no escribe nada. */
+        var hidratandoF2 = null;
+        var escuchaF2Activa = false;
+
+        function aArrayF2(obj) {
+            if (!obj) return [];
+            if (Array.isArray(obj)) return obj.filter(Boolean);
+            return Object.keys(obj).map(function(k) { return obj[k]; }).filter(Boolean);
+        }
+
+        function hidratarF2() {
+            if (!database) return Promise.resolve(false);
+            if (hidratandoF2) return hidratandoF2;
+
+            hidratandoF2 = Promise.all([
+                database.ref('contratos').once('value'),
+                database.ref('movimientos').once('value')
+            ]).then(function(snaps) {
+                var contratos = aArrayF2(snaps[0].val());
+                var movimientos = aArrayF2(snaps[1].val());
+
+                var contratosPorCliente = {};
+                contratos.forEach(function(co) {
+                    if (!co || !co.clienteId) return;
+                    (contratosPorCliente[co.clienteId] = contratosPorCliente[co.clienteId] || []).push(co);
+                });
+
+                var movimientosPorContrato = {};
+                movimientos.forEach(function(m) {
+                    if (!m || !m.contratoId) return;
+                    (movimientosPorContrato[m.contratoId] = movimientosPorContrato[m.contratoId] || []).push(m);
+                });
+
+                (clientes || []).forEach(function(c) {
+                    if (!c || !c.id) return;
+                    var lista = (contratosPorCliente[c.id] || []).slice();
+                    lista.sort(function(a, b) {
+                        var fa = String(a.fechaContrato || a.fechaEvento || '');
+                        var fb = String(b.fechaContrato || b.fechaEvento || '');
+                        return fa === fb ? String(a.id).localeCompare(String(b.id)) : fa.localeCompare(fb);
+                    });
+
+                    c.contratos = lista.map(function(co) {
+                        var copia = Object.assign({}, co);
+                        var movs = (movimientosPorContrato[co.id] || []).slice();
+                        movs.sort(function(a, b) {
+                            var fa = String(a.fecha || '');
+                            var fb = String(b.fecha || '');
+                            return fa === fb ? String(a.id).localeCompare(String(b.id)) : fa.localeCompare(fb);
+                        });
+                        copia.pagos = movs.filter(function(m) { return m.tipo === 'pago'; }).map(function(m) {
+                            return Object.assign({}, m, { eliminado: m.estado === 'anulado' || m.eliminado === true });
+                        });
+                        copia.cargos = movs.filter(function(m) { return m.tipo === 'cargo'; }).map(function(m) {
+                            return Object.assign({}, m, { eliminado: m.estado === 'anulado' || m.eliminado === true });
+                        });
+                        return copia;
+                    });
+                });
+
+                normalizarRegistros();
+                console.log('🧩 [F2] ' + contratos.length + ' contratos · ' + movimientos.length + ' movimientos hidratados en ' + (clientes || []).length + ' clientes');
+                return true;
+            }).catch(function(e) {
+                console.warn('No se pudo hidratar F2:', e);
+                return false;
+            }).then(function(r) {
+                hidratandoF2 = null;
+                return r;
+            });
+
+            return hidratandoF2;
+        }
+
+        function iniciarEscuchaF2() {
+            if (!database || escuchaF2Activa) return;
+            escuchaF2Activa = true;
+            var debounce = null;
+            var refrescar = function() {
+                if (debounce) clearTimeout(debounce);
+                debounce = setTimeout(function() {
+                    hidratarF2().then(function() { programarRenderPorCambioRemoto(); });
+                }, 200);
+            };
+            database.ref('contratos').on('value', refrescar);
+            database.ref('movimientos').on('value', refrescar);
+        }
+
+        /* ── Escritura F2: doble escritura ──
+           Guarda el contrato en contratos/ y sus pagos/cargos en movimientos/.
+           Los datos anidados de clientes se siguen guardando por el camino normal,
+           así la v5.1.0 puede volver a leerlos. */
+        function movimientoF2Desde(p, clienteId, contratoId, tipo) {
+            return Object.assign({}, p, {
+                id: p.id,
+                tipo: tipo,
+                clienteId: clienteId,
+                contratoId: contratoId,
+                estado: p.eliminado ? 'anulado' : 'vigente',
+                eliminado: p.eliminado === true,
+                codigo: p.codigo || null,
+                _origen: 'v5.2.0'
+            });
+        }
+
+        async function sincronizarContratoF2(clienteId, contrato) {
+            if (!database || !contrato || !contrato.id) return false;
+            try {
+                const refCo = database.ref('contratos/' + contrato.id);
+                const snapCo = await refCo.once('value');
+                const actual = snapCo.val();
+                const copia = JSON.parse(JSON.stringify(contrato));
+                delete copia.pagos;
+                delete copia.cargos;
+                copia.clienteId = clienteId;
+                copia._version = ((actual && Number(actual._version)) || 0) + 1;
+                copia._migrado = true;
+                await refCo.set(copia);
+
+                const movsSnap = await database.ref('movimientos').once('value');
+                const movs = movsSnap.val() || {};
+                const items = [];
+                (contrato.pagos || []).forEach(function(p) { items.push({ tipo: 'pago', p: p }); });
+                (contrato.cargos || []).forEach(function(p) { items.push({ tipo: 'cargo', p: p }); });
+
+                for (const it of items) {
+                    const p = it.p;
+                    if (!p || !p.id) continue;
+                    const mov = movimientoF2Desde(p, clienteId, contrato.id, it.tipo);
+                    const ya = movs[p.id];
+                    if (!ya) {
+                        await database.ref('movimientos/' + p.id).set(mov);
+                    } else if (ya.estado !== 'anulado' && mov.estado === 'anulado') {
+                        await database.ref('movimientos/' + p.id).update({
+                            estado: 'anulado',
+                            eliminado: true,
+                            anuladoPor: p.anuladoPor || p.eliminadoPor || (usuarioActual && usuarioActual.nombre) || 'Sistema',
+                            fechaAnulacion: p.fechaAnulacion || p.fechaEliminacion || obtenerFechaHoraActual(),
+                            motivoAnulacion: p.motivoAnulacion || ya.motivoAnulacion || null
+                        });
+                    }
+                }
+                console.log('🧩 [F2] contrato ' + contrato.id + ' sincronizado (' + items.length + ' movimientos)');
+                return true;
+            } catch (e) {
+                console.warn('No se pudo sincronizar F2 el contrato ' + (contrato && contrato.id) + ':', e);
+                return false;
+            }
         }
 
         var intentosConexionFirebase = 0;
@@ -5392,6 +5551,7 @@ input:focus, select:focus, textarea:focus {
                 primerCarga = false;
                 escucharCambiosFirebase();
                 iniciarEscuchaDatosTiempoReal();
+                iniciarEscuchaF2();
                 if (firebaseIntervalId) clearInterval(firebaseIntervalId);
                 firebaseIntervalId = setInterval(async function() {
                     if (!sincronizandoFirebase && estadoSync.modo === 'firebase' && (cambiosPendientes || hayEntidadesSucias())) await guardarEnFirebase();
@@ -8202,6 +8362,7 @@ input:focus, select:focus, textarea:focus {
                     coReal._fechaModificacion = obtenerFechaHoraActual();
                     if (cliDueno && cliDueno.id) marcarSucia('clientes', cliDueno.id);
                     guardarDatos();
+                    if (cliDueno && cliDueno.id) sincronizarContratoF2(cliDueno.id, coReal);
                     return true;
                 } catch (e) {
                     console.warn('No se pudieron persistir los movimientos del formulario:', e);
@@ -8574,6 +8735,7 @@ input:focus, select:focus, textarea:focus {
                 descuentoTemporal = null;
                 precioPactadoContrato = null;
                 marcarSucia('clientes', clid);
+                sincronizarContratoF2(clid, nc);
                 guardarDatos().then(function() {
                     cerrarModal();
                     renderizarContratos();
@@ -8715,6 +8877,7 @@ input:focus, select:focus, textarea:focus {
                     marcarSucia('clientes', clienteId);
                     registrarHistorial('pago', 'crear', 'Pago de ' + formatearMoneda(m) + ' para "' + c.nombre + '" - Código: ' + nuevoPago.codigo, { id: nuevoPago.id, nombre: c.nombre });
                     guardarDatos(); cerrarModal(); renderizarContratos(); renderizarClientes(); renderizarInformes();
+                    sincronizarContratoF2(clienteId, co);
                     setTimeout(function() { abrirSelectorComprobante(clienteId, contratoId, nuevoPago.id); }, 200);
                 };
                 // El formulario de pago rápido ya quedó marcado arriba (su propio envío).
