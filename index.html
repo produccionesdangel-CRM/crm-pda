@@ -2450,7 +2450,7 @@ input:focus, select:focus, textarea:focus {
             <div class="sidebar-footer">
                 <button class="btn-colapsar" id="btn-colapsar" title="Colapsar menú"><i class="fas fa-chevron-left"></i><span>Colapsar</span></button>
                 <button class="btn-logout" id="btn-logout" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></button>
-                <div class="version">v5.0.26</div>
+                <div class="version">v5.1.0</div>
             </div>
         </nav>
 
@@ -2903,15 +2903,16 @@ input:focus, select:focus, textarea:focus {
                     </div>
                 </div>
                 <div class="version-card">
-                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v5.0.26</span></h3>
+                    <h3><i class="fas fa-info-circle"></i> Información de la versión <span class="version-badge">v5.1.0</span></h3>
                     <div class="version-info">
                         <div class="version-info-item"><div class="label">Nombre</div><div class="valor">Registro PDA</div></div>
-                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">5.0.26</div></div>
+                        <div class="version-info-item"><div class="label">Versión</div><div class="valor">5.1.0</div></div>
                         <div class="version-info-item"><div class="label">Fecha de lanzamiento</div><div class="valor">Actual</div></div>
                         <div class="version-info-item"><div class="label">Estado</div><div class="valor" style="color:var(--color-verde);">● Estable</div></div>
                     </div>
                     <div class="changelog-section">
-                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v5.0.26)</h4>
+                        <h4><i class="fas fa-code-branch"></i> Novedades en esta versión (v5.1.0)</h4>
+                        <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-bolt"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Sincronización en tiempo real: los cambios llegan solos</div><div class="changelog-desc">La app ahora está <strong>suscrita a los clientes en Firebase</strong>: cuando otra PC guarda un cliente, un contrato o un pago, el cambio llega aquí en segundos, sin pulsar “Cargar desde la nube”. Si no hay internet, el estado dice <strong>“Sin conexión · copia local”</strong> y no se hace pasar por datos al día. Si hay una ventana abierta, avisa que hay datos nuevos y los aplica al cerrarla. La protección de cambios locales se mantiene: un cliente con cambios pendientes no se pisa.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-cloud-download-alt"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Corregido: el aviso de “Cargar desde la nube” tenía las respuestas invertidas</div><div class="changelog-desc">El aviso que ofrecía <strong>sincronizar antes de cargar</strong> hacía lo contrario: al pulsar <strong>Aceptar</strong> no sincronizaba y seguía al descarte; solo <strong>Cancelar</strong> sincronizaba. Ahora <strong>Aceptar sincroniza</strong> (respeta versiones y, si hay conflicto, se detiene para que lo resuelvas) y <strong>Cancelar</strong> es el único camino para cargar de todos modos. El descarte advierte cuántos cambios locales se van a perder. Esto evita que un pago guardado solo en la PC se borre al cargar la nube.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fab fa-google"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Entrar desde el iPhone</div><div class="changelog-desc">En el iPhone <strong>todos</strong> los navegadores usan el motor de Safari: la ventana de Google no se abre y la redirección perdía la sesión, así que volvía al login una y otra vez. Ahora el acceso se hace con el <strong>botón oficial de Google</strong>, que entrega la credencial directamente a la página: <strong>sin ventanas y sin redirecciones</strong>, y por eso sí funciona en iPhone. En la computadora y en Android nada se rompe: el botón de siempre sigue ahí. Si el teléfono abre el enlace desde <strong>WhatsApp, Instagram o el correo</strong>, hay que abrirlo en <strong>Safari</strong>, porque Google no permite entrar en navegadores incrustados.</div></div></div>
                         <div class="changelog-item"><div class="changelog-icono"><i class="fas fa-filter"></i></div><div class="changelog-contenido"><div class="changelog-titulo">Filtrar las tareas por tipo</div><div class="changelog-desc">La barra de filtros del calendario trae un desplegable <strong>Tipo de tarea</strong> que se llena solo con los tipos del catálogo y con los que ya estén en uso en tus tareas. Filtra <strong>la lista y las etiquetas del calendario</strong> al mismo tiempo; los eventos de contrato y los seguimientos de campaña siguen visibles, porque no son tareas.</div></div></div>
@@ -3034,8 +3035,8 @@ input:focus, select:focus, textarea:focus {
         /* ═══════════════════════════════════════════════════════════ */
         /* @JS-CONFIG — Configuración y constantes globales             */
         /* ═══════════════════════════════════════════════════════════ */
-        var VERSION = '5.0.26';
-        var BUILD_APP = '2026-10-29.1';
+        var VERSION = '5.1.0';
+        var BUILD_APP = '2026-10-29.3';
         var DOMINIO_CORREO_PERMITIDO = '';
         var PROVEEDOR_LOGIN = 'google.com';
         var CLAVE_PENDIENTES_OUTBOX = '__pda_outbox_pendientes__';
@@ -5253,6 +5254,112 @@ input:focus, select:focus, textarea:focus {
             });
         }
 
+        /* ═══════════════════════════════════════════════════════════ */
+        /* @JS-TIEMPO-REAL (v5.1.0) — la nube empuja los cambios          */
+        /* ═══════════════════════════════════════════════════════════ */
+        /* Escucha /clientes en tiempo real. Cada cambio de otra PC llega
+           aquí y se aplica a la copia local, sin "Cargar desde la nube".
+           - Si el cliente tiene cambios locales pendientes, NO se pisa:
+             se conserva el local y el aviso de "Cambios pendientes" sigue.
+           - Si la nube devuelve vacío, no se borra la copia local.
+           - El render se agrupa para no parpadear. */
+        var escuchaDatosActiva = false;
+        var primeraFotoClientes = false;
+        var timeoutGuardadoLocalRemoto = null;
+        var timeoutRenderRemoto = null;
+        var renderRemotoPendiente = false;
+
+        function iniciarEscuchaDatosTiempoReal() {
+            if (!database || escuchaDatosActiva) return;
+            escuchaDatosActiva = true;
+
+            database.ref('.info/connected').on('value', function(snap) {
+                if (snap.val() === true) {
+                    if (estadoSync.modo === 'firebase') {
+                        actualizarEstadoSync('online', primeraFotoClientes ? 'En vivo' : 'Sincronizando...');
+                    }
+                } else {
+                    actualizarEstadoSync('offline', 'Sin conexión · copia local');
+                }
+            });
+
+            database.ref('clientes').on('value', function(snap) {
+                if (recargaRemotaEnCurso || sincronizandoFirebase) return;
+                aplicarClientesRemotos(snap.val());
+            }, function(error) {
+                console.warn('La escucha de /clientes se cerró:', error && (error.code || error.message));
+                escuchaDatosActiva = false;
+            });
+        }
+
+        function aplicarClientesRemotos(obj) {
+            var remotos;
+            if (!obj) remotos = [];
+            else if (Array.isArray(obj)) remotos = obj.filter(function(x) { return x && !x._eliminado; });
+            else remotos = Object.keys(obj).map(function(k) { return obj[k]; }).filter(function(x) { return x && !x._eliminado; });
+
+            if (remotos.length === 0 && (clientes || []).length > 0) {
+                console.warn('⚠️ /clientes llegó vacío; se conserva la copia local.');
+                return;
+            }
+
+            var sucias = (entidadesSucias && entidadesSucias.clientes) || {};
+            var mapaLocal = {};
+            (clientes || []).forEach(function(c) { if (c && c.id) mapaLocal[c.id] = c; });
+            var mapaRemoto = {};
+            remotos.forEach(function(c) { if (c && c.id) mapaRemoto[c.id] = c; });
+
+            var resultado = [];
+            remotos.forEach(function(r) {
+                var local = mapaLocal[r.id];
+                resultado.push(local && sucias[r.id] ? local : r);
+            });
+            (clientes || []).forEach(function(l) {
+                if (l && l.id && !mapaRemoto[l.id] && sucias[l.id]) resultado.push(l);
+            });
+
+            primeraFotoClientes = true;
+            if (estadoSync.conectado && !hayEntidadesSucias()) actualizarEstadoSync('online', 'En vivo');
+
+            var antes = JSON.stringify(clientes);
+            var despues = JSON.stringify(resultado);
+            if (antes === despues) return;
+
+            clientes = resultado;
+            normalizarRegistros();
+            console.log('🔄 [tiempo real] /clientes aplicado (' + resultado.length + ' clientes)');
+
+            if (timeoutGuardadoLocalRemoto) clearTimeout(timeoutGuardadoLocalRemoto);
+            timeoutGuardadoLocalRemoto = setTimeout(function() {
+                guardarDatosLocal().then(function() {
+                    if (estadoSync.conectado && !hayEntidadesSucias()) actualizarEstadoSync('online', 'En vivo');
+                }).catch(function() {});
+            }, 450);
+
+            programarRenderPorCambioRemoto();
+        }
+
+        function programarRenderPorCambioRemoto() {
+            if (timeoutRenderRemoto) clearTimeout(timeoutRenderRemoto);
+            timeoutRenderRemoto = setTimeout(function() {
+                timeoutRenderRemoto = null;
+                var modal = document.getElementById('modal');
+                if (modal && modal.classList.contains('active')) {
+                    renderRemotoPendiente = true;
+                    mostrarNotificacion('Hay datos nuevos de otro dispositivo. Se aplicarán al cerrar esta ventana.', 'info');
+                    return;
+                }
+                renderRemotoPendiente = false;
+                renderizarTrasCargarNube();
+            }, 350);
+        }
+
+        function aplicarRenderRemotoPendiente() {
+            if (!renderRemotoPendiente) return;
+            renderRemotoPendiente = false;
+            renderizarTrasCargarNube();
+        }
+
         var intentosConexionFirebase = 0;
         var MAX_INTENTOS_CONEXION = 6;
         async function inicializarFirebase() {
@@ -5284,6 +5391,7 @@ input:focus, select:focus, textarea:focus {
                 await cargarDesdeFirebase();
                 primerCarga = false;
                 escucharCambiosFirebase();
+                iniciarEscuchaDatosTiempoReal();
                 if (firebaseIntervalId) clearInterval(firebaseIntervalId);
                 firebaseIntervalId = setInterval(async function() {
                     if (!sincronizandoFirebase && estadoSync.modo === 'firebase' && (cambiosPendientes || hayEntidadesSucias())) await guardarEnFirebase();
@@ -5525,6 +5633,7 @@ input:focus, select:focus, textarea:focus {
                 // rutinas y pruebas). Un envío repetido se frena con la antirrepetición.
                 modal.classList.remove('active');
                 modalContent.classList.remove('modal-wide');
+                aplicarRenderRemotoPendiente();
                 // El formulario se libera SOLO aquí: al cerrarse de verdad el modal. No se
                 // libera cuando se abre una ventana encima, porque el envío que la abrió
                 // todavía está corriendo y el segundo envío del mismo tick debe frenarse.
@@ -11566,7 +11675,8 @@ input:focus, select:focus, textarea:focus {
                     if (!confirm('¿Cargar de todos modos desde la nube? Se descartarán tus ' + pendientes + ' cambio(s) local(es).')) return;
                     limpiarEntidadesSucias();
                 } else if (!confirm('¿Cargar datos desde Firebase? Se reemplazará la copia local.')) return;
-                await cargarDesdeFirebase(true);
+                recargaRemotaEnCurso = true;
+                try { await cargarDesdeFirebase(true); } finally { recargaRemotaEnCurso = false; }
             });
             btn = document.getElementById('btn-exportar-datos'); if (btn) btn.addEventListener('click', function() {
                 if (!esAdmin()) { mostrarNotificacion('Solo administradores pueden exportar la base completa.', 'warning'); return; }
